@@ -1,35 +1,59 @@
 //
 //
 //
+// https://de.khanacademy.org/computing/computer-programming/programming-natural-simulations/programming-randomness/a/normal-distribution-of-random-numbers
 
-/*
-Ideen:
-- Grösse ändern, wenn Fenster geäandert wird
-- Bei der letzten Figur die Möglichkeit einbauen, Häuschen anzubauen
-- GUI mit schöneren slidern verwenden
-*/
+// todo:
+// add launch button
+// ?
 
+var bg = 50;
+var img = [];
+let button;
 
-
-var bg = 25;
-let img1;
-
-/*function preload() {
-  img1 = loadImage('assets/orange.jpg');
+function preload() {
+  img[1] = loadImage('assets/orange.png');
+	img[2] = loadImage('assets/gelb.png');
+	img[3] = loadImage('assets/hellrot.png');
+	img[4] = loadImage('assets/dunkelrot.png');
+	img[5] = loadImage('assets/gruen.png');
+	img[6] = loadImage('assets/weiss.png');
 }
-*/
+
 
 
 function setup() {
+	angleMode(DEGREES);
 	createCanvas(500, 500);
 	colorMode(HSB);
 	background(bg);
-	img1 = loadImage('assets/orange.jpg');
+	button = createButton('neu laden');
+	button.position(19, 19);
+	button.mousePressed(newPackage);
+	noLoop();
 
 }
 
 function draw() {
 
-	image(img1, 250, 250);
+	num = round(randomGaussian(9,0.5));
+	print(num)
 
+	for (let i = 0; i < num; i++) {
+			push();
+			//translate(randomGaussian(250,80),randomGaussian(250,80));
+			// check for similar coordinates
+			translate(random(50,450),random(50,450))
+			rotate(random()*360);
+			j = random([1,2,3,4,5,6]);
+			image(img[j], 0, 0, 56,82);
+			pop();
+	}
+
+}
+
+function newPackage() {
+			clear();
+			background(bg);
+			draw();
 }
