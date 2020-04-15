@@ -36,8 +36,14 @@ function setup() {
 
 function draw() {
 
-	num = round(randomGaussian(9,0.5));
-	print(num)
+	average = 9
+	num = round(randomGaussian(average,0.5));
+	if (num < average - 2) {
+	num = average - 2;
+	}
+	if (num > average - 2) {
+	num = average + 2
+	}
 
 	for (let i = 0; i < num; i++) {
 			push();
