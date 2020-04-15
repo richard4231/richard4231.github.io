@@ -41,8 +41,8 @@ function draw() {
 	if (num < average - 2) {
 	num = average - 2;
 	}
-	if (num > average - 2) {
-	num = average + 2
+	if (num > average + 2) {
+	num = average + 2;
 	}
 
 	for (let i = 0; i < num; i++) {
