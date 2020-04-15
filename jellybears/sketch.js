@@ -55,7 +55,7 @@ function draw() {
 		counter = 0;
 		while (counter < i) {
 			for (let j = 0; j < i; j++) {
-				if (abs(posx[i]-posx[j])<10 && abs(posy[i]-posy[j])<10){
+				if (abs(posx[i]-posx[j])<50 && abs(posy[i]-posy[j])<50){
 					posx[i] = random(50,450);
 					posy[i] = random(50,450);
 				} else {
