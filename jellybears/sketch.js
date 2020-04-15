@@ -29,7 +29,7 @@ function setup() {
 	createCanvas(500, 500);
 	colorMode(HSB);
 	background(bg);
-	button = createButton('neu x1');
+	button = createButton('neu');
 	button.position(19, 19);
 	button.mousePressed(newPackage);
 	noLoop();
