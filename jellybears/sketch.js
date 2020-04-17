@@ -38,7 +38,7 @@ function setup() {
 
 function draw() {
 
-	average = 9
+	average = 10 // either 10 for 12g packages or 8 for 10g packages
 	num = round(randomGaussian(average,0.5));
 	if (num < average - 2) {
 		num = average - 2;
