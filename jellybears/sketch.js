@@ -1,17 +1,14 @@
-//
-//
-//
 // https://de.khanacademy.org/computing/computer-programming/programming-natural-simulations/programming-randomness/a/normal-distribution-of-random-numbers
 
-// todo:
-// add launch button
-// ?
+/* ideas/todo:
+- add launch button
+*/
 
 var bg = 50;
 var img = [];
 let button;
-let posx = []
-let posy = []
+let posx = [];
+let posy = [];
 
 function preload() {
   img[1] = loadImage('assets/orange.png');
@@ -70,7 +67,7 @@ function draw() {
 			
 			//translate(randomGaussian(250,80),randomGaussian(250,80));
 			// check for similar coordinates
-			translate(posx[i],posy[i])
+			translate(posx[i],posy[i]);
 			rotate(random()*360);
 			j = random([1,2,3,4,5,6]);
 			image(img[j], 0, 0, 56,82);
