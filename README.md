@@ -3,6 +3,7 @@
 ## mathematische Simulationen
 - [Gummibärchen](https://richard4231.github.io/jellybears)
 - [Pascal meets Sierpinksi](https://richard4231.github.io/pasclatriangleoptimized)
+- [Würfelsierpinski]()
 <br/> 
 <br/> 
 more to follow...
