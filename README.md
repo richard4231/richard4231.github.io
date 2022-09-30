@@ -6,6 +6,8 @@
 - [Würfelsierpinski](https://richard4231.github.io/xplodingsierpinski)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri)
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol)
+- [Pi Paths](https://richard4231.github.io/22-09-PiPaths-v02)
+- [Spikey](https://richard4231.github.io/22-09-Spikey-v02)
 <br/> 
 <br/> 
 more to follow...
