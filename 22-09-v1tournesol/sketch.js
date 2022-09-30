@@ -81,7 +81,7 @@ planned features:
 
 
  //
- var rotation_speedMin = 0;
+ var rotation_speedMin = -25;
  var rotation_speedMax = 25;
  var rotation_speedStep = 1;
 
