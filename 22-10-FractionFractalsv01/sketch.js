@@ -2,7 +2,7 @@
 
 let s = 480;
 let width = 700
-let depth = 6;
+let depth = 7;
 let slider1;
 
 function setup() {
