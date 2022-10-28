@@ -8,6 +8,7 @@
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol)
 - [Pi Paths](https://richard4231.github.io/22-09-PiPaths-v02)
 - [Spikey](https://richard4231.github.io/22-09-Spikey-v02)
+- [FractionPatterns](https://richard4231.github.io/22-10-FractionFractalsv01)
 <br/> 
 <br/> 
 more to follow...
