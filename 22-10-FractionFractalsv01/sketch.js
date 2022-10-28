@@ -8,7 +8,7 @@ let slider1;
 function setup() {
   createCanvas(700, 700);
 
-  slider1 = createSlider(1, depth, 4, 1);
+  slider1 = createSlider(1, depth, 2, 1);
 	slider1.position(10, 30);
 	slider1.style('width', '200px');
 }
