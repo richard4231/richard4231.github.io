@@ -8,17 +8,37 @@ Code for video https://vimeo.com/channels/learningp5js/141919520
 //ternary operators: https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/conditionals
 
 var triangles = [];
-var sum = 0;
-
+var sum_blue = 0;
+var sum_green = 0;
+var sum_yellow = 0;
+var c_yellow = false;
+var c_green = false;
+var c_blue = false;
+current_r = 255;
+current_g = 255;
+current_b = 255;
+var checker_array = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+var color_code;
 
 function setup() {
-  createCanvas(600, 600);
-  background(125);
+  createCanvas(600, 300);
+  background(200);
   for (var i = 0; i < 6; i++) {
     triangles.push(new Triangle(i));
   }
   button = createButton('Überprüfen');
   button.position(300, 50);
+  
+  radio1 = createRadio();
+
+  //.option([value], [contentLabel])
+  //If 1 param, it's both content AND
+  //value. Values treated as strings.
+  radio1.option(1, "blue");
+  radio1.option(2, "green");
+  radio1.option(3, "yellow");
+
+  radio1.value("1"); //set init value
   
   
 }
@@ -30,13 +50,48 @@ function mouseClicked() {
 }
 
 function draw() {
-  sum = 0;
+  switch (radio1.value()) {
+    //radio value is always a string
+    case "1":
+      current_r = 100;
+      current_g = 150;
+      current_b = 255;
+      color_code = 0;
+      c_blue = true;
+      c_green = false;
+      c_yellow = false;
+      break;
+    case "2":
+      current_r = 100;
+      current_g = 240;
+      current_b = 100;
+      color_code = 1;
+      c_green = true;
+      c_yellow = false;
+      c_blue = false;
+      break;
+    case "3":
+      current_r = 255;
+      current_g = 255;
+      current_b = 100;
+      color_code = 2;
+      c_yellow = true;
+      c_green = false;
+      c_blue = false;
+      break;
+  }
+  sum_blue = 0;
+  sum_green = 0;
+  sum_yellow = 0;
+
   for (var i = 0; i < triangles.length; i++) {
     triangles[i].display();
-
-    sum = sum + triangles[i].area();
+    sum_blue = sum_blue + checker_array[i][0];
+    sum_green = sum_green + checker_array[i][1]; 
+    sum_yellow = sum_yellow + checker_array[i][2];   
     
   }
+
   button.mousePressed(check_answer);
 
 }
@@ -63,7 +118,7 @@ function Triangle(num) {
   this.clicked = function(x,y) {
     this.count = 0;
     
-    for (let i = 0,j=2;i<3;j=i++) {
+    for (let i=0,j=2;i<3;j=i++) {
       //j = (i + 1) % 3;
       if ((y > this.vert_y[i]) != (y > this.vert_y[j])) {
         this.slope = (this.vert_y[i]-this.vert_y[j])/(this.vert_x[i]-this.vert_x[j]);
@@ -75,40 +130,33 @@ function Triangle(num) {
     }
     
     if (this.count == 1 && !this.c) {
-      this.col = color(255, 0, 200);
+      this.col = color(current_r,current_g,current_b);
       this.c = !this.c;
+      checker_array[num][color_code] = this.area_t;
     }
     else if (this.count == 1 && this.c) {
       this.col = color(255, 255, 255);
       this.c = !this.c;
-    }
-  }
-
-
-  this.area = function() {
-    if (this.c) {
-    return this.area_t;
-    }
-    else {
-      return 0;
+      checker_array[num] = [0,0,0];
     }
   }
 
 }
 
 function check_answer() {
-  background(125);
+  background(200);
   textSize(20);
 
-  if (sum == 4){
-    stroke(0);
+  if (sum_blue == 4 && sum_green == 2 && sum_yellow == 1){
+    noStroke;
     fill(255, 102, 153);
     text('Richtig', 300, 200);
   }
-  else if (sum != 4){
-    stroke(0);
-    fill(200, 102, 153);
-    text('Versuche es nochmals', 300, 200);
+  else {
+    noStroke;
+    fill(20, 20, 20);
+    text('Versuche es', 300, 200);
+    text('nochmals', 300, 230);
   }
   
 }
