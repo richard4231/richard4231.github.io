@@ -35,8 +35,10 @@ function setup() {
   slider2b = createSlider(0,mult4,1,1);
   slider2b.position(320, 40);
 
-  slider3a = createSlider(0,224,0,16);
+  slider3a = createSlider(0,224,224,16);
+  slider3a.position(320, 340);
   slider3b = createSlider(1,sl4max,sl4max,1);
+  slider3b.position(320, 360);
   
   slider_zoom = createSlider(5,40,30,1);
   slider_zoom.position(20, 360);
@@ -48,7 +50,9 @@ function draw() {
   stroke (0,0,0);
   fill(0);
   strokeWeight(0);  
-  text('Zoom', slider_zoom.x * 2 + slider_zoom.width, slider_zoom.y+13);
+  text('Zoom', slider_zoom.x + slider_zoom.width + 20, slider_zoom.y+13);
+  text('Transparenz', slider3a.x + slider3a.width + 20, slider3a.y+13);
+  text('Teiler', slider3b.x + slider3b.width + 20, slider3b.y+13);
   strokeWeight(1);
   line(x_offset-(20*slider_zoom.value()/30),200,(maxlength+40)*slider_zoom.value()+x_offset,200);
   
@@ -101,7 +105,7 @@ function draw() {
   // putting the multiples on the canvas
   for (let j = 0; j < maxlength / slider3b.value(); j ++) {
     noFill();
-    stroke(0, 0, 0, slider3a.value());
+    stroke(0, 0, 0, 224 - slider3a.value());
     strokeWeight(2);
     bezier(x_offset+slider_zoom.value()*slider3b.value()*j,200,x_offset+slider_zoom.value()*slider3b.value()*j+slider3b.value()*2.5*slider_zoom.value()/30,270,x_offset+slider_zoom.value()*slider3b.value()*(j+1)-slider3b.value()*2.5*slider_zoom.value()/30,270,x_offset+slider_zoom.value()*slider3b.value()*(j+1),200);
     strokeWeight(0.2);
