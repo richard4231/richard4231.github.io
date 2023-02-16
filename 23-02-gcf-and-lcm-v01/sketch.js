@@ -1,5 +1,5 @@
 //applet to explore gcf and lcm, implicit euclidean algorithm
-//Copyright 2023 by Andreas Richard
+//Copyright 2023 Andreas Richard
 
 //next steps: enable zoom around fixpoint at center of canvas
 //show bar, when divisor is equal to red factor or remainder of division
