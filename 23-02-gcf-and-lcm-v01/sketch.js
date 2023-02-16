@@ -1,3 +1,9 @@
+//applet to explore gcf and lcm, implicit euclidean algorithm
+//Copyright 2023 by Andreas Richard
+
+//next steps: enable zoom around fixpoint at center of canvas
+//show bar, when divisor is equal to red factor or remainder of division
+
 var x_offset = 50; //define distance from left border
 var slider1a; //first factor
 var slider1b; //number of repetitions
@@ -10,8 +16,8 @@ var slider3b; //multiples
 var slider_zoom;
 
 var maxlength = 400;
-var sl3max = 30;
-var sl4max = 45; //Maximum for slider 2a, second number
+var sl3max = 100;
+var sl4max = 200; //Maximum for slider 2a, second number
 var mult3 = 40; //number of times, number 1 can be displayed
 var mult4 = 40;
 var x1;
@@ -40,7 +46,7 @@ function setup() {
   slider3b = createSlider(1,sl4max,sl4max,1);
   slider3b.position(320, 360);
   
-  slider_zoom = createSlider(5,40,30,1);
+  slider_zoom = createSlider(1,40,30,1);
   slider_zoom.position(20, 360);
 
 }
@@ -54,9 +60,10 @@ function draw() {
   text('Transparenz', slider3a.x + slider3a.width + 20, slider3a.y+13);
   text('Teiler', slider3b.x + slider3b.width + 20, slider3b.y+13);
   strokeWeight(1);
-  line(x_offset-(20*slider_zoom.value()/30),200,(maxlength+40)*slider_zoom.value()+x_offset,200);
-  
-  for (let i = 0; i < maxlength + 40; i++) {
+  //line(x_offset-(20*slider_zoom.value()/30),200,(maxlength+40)*slider_zoom.value()+x_offset,200);
+  line(x_offset-(20*slider_zoom.value()/30),200,windowWidth,200);
+
+  for (let i = 0; i < (windowWidth - x_offset)/slider_zoom.value(); i++) {
     if (i % 5 == 0) {
     strokeWeight(2);
     height = 8
@@ -109,7 +116,7 @@ function draw() {
     strokeWeight(2);
     bezier(x_offset+slider_zoom.value()*slider3b.value()*j,200,x_offset+slider_zoom.value()*slider3b.value()*j+slider3b.value()*2.5*slider_zoom.value()/30,270,x_offset+slider_zoom.value()*slider3b.value()*(j+1)-slider3b.value()*2.5*slider_zoom.value()/30,270,x_offset+slider_zoom.value()*slider3b.value()*(j+1),200);
     strokeWeight(0.2);
-    fill(0, 0, 0, slider3a.value());
+    fill(0, 0, 0, 224 - slider3a.value());
     text(slider3b.value(),(x_offset+slider_zoom.value()*slider3b.value()*(j)+x_offset+slider_zoom.value()*slider3b.value()*(j+1))/2-5,280);
     /*if (j == 0) {
       text(slider3b.value(),x_offset+slider_zoom.value()*slider3b.value()-5,250);
