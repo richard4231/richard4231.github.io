@@ -5,13 +5,21 @@
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-pascaltriangleoptimized)
 - [Würfelsierpinski](https://richard4231.github.io/xplodingsierpinski)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri)
+
+## Mathematische Spielereien
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol)
 - [Pi Paths](https://richard4231.github.io/22-09-PiPaths-v02)
 - [Pi Paths 3D](https://richard4231.github.io/22-09-PiPaths-v03-3D)
 - [Spikey](https://richard4231.github.io/22-09-Spikey-v02)
+
+## Mathbuch
 - [FractionPatterns](https://richard4231.github.io/22-10-FractionFractalsv01)
 - [Bruchbilder überprüfen](https://richard4231.github.io/22-12-clickable-surfaces-v02)
 - [kgV und ggT](https://richard4231.github.io/23-02-gcf-and-lcm-v01)
+
+## Radargraphen
+- [Handlungsfelder PH ABC](https://richard4231.github.io/20-radargraphBPA)
+- [Aspekte guten Mathematikunterrichts](https://richard4231.github.io/20-12-radargraphRGMU)
 
 <br/> 
 <br/> 
