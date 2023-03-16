@@ -5,10 +5,11 @@ Code for video https://vimeo.com/channels/learningp5js/141919520
 
 var bubbles = [];
 var sum = 0;
+var length = 6;
 
 function setup() {
   createCanvas(600, 600);
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < length; i++) {
     var x = 50 + i * 60;
     var y = 100;
     bubbles.push(new Bubble(x, y,i));
@@ -62,7 +63,9 @@ function Bubble(x, y, i) {
     stroke(255);
     fill(this.col);
     ellipse(this.x, this.y, 48, 48);
-    text(pow(2,(4-this.i)), this.x-5,160);
+    textSize(20);
+    textAlign(CENTER,CENTER)
+    text(pow(2,(length-1-this.i)), this.x,160);
   }
   
   this.clicked = function() {
