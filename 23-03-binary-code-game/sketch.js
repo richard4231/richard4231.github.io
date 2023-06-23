@@ -18,8 +18,10 @@ function setup() {
     var y = 100;
     bubbles.push(new Bubble(x, y,i));
     print(rand);
-    
   }
+  checkButton = createButton('Überprüfen');
+  checkButton.position(300, 450);
+  checkButton.mousePressed(checkSolution);
 }
 
 function mouseClicked() {
