@@ -5,6 +5,7 @@
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-pascaltriangleoptimized)
 - [Würfelsierpinski](https://richard4231.github.io/xplodingsierpinski)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri)
+- [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes)
 
 ## Mathematische Spielereien
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol)
