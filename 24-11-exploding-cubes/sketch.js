@@ -40,7 +40,7 @@ var DrehgeschwindigkeitMax = 2;
 var DrehgeschwindigkeitStep = 0.5;
 
 var GrösseMin = 1;
-var GrösseMax = 61;
+var GrösseMax = 16;
 var GrösseStep = 5;
 
 var orbControlMin = 0;
