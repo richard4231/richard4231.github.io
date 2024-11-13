@@ -1,12 +1,5 @@
 /*
-planned improvements:
-- touchoptimized
--OR: distinguish between mobile and desktop browsers
 
-new:
--looks also nice on mobile browsers
--nicer gui
--nice colors
 */
 
 var blauer_Quader = 0;
