@@ -9,15 +9,15 @@ new:
 -nice colors
 */
 
-var blauer_Quader = 1;
-var grüner_Quader = 1;
-var gelber_Quader = 1;
+var blauer_Quader = 0;
+var grüner_Quader = 0;
+var gelber_Quader = 0;
 
 var Transparenz = 255;
 
 var Drehgeschwindigkeit = 0;
 
-var Grösse = 3; //2,4,8,16,32,64 default 2^3
+var Grösse = 3; //Kantenlänge
 
 var orbControl = 1;
 
@@ -72,7 +72,7 @@ function setup() {
 
 function draw() {
 
-	n = (Grösse);
+	n = ceil(Grösse/2);
   
   ambientLight(100);
   pointLight(255, 255, 255, 1000, -1000, 1000);
@@ -96,7 +96,7 @@ function draw() {
 	/**/
 
 	size = 100;
-  a = -(n-1)/2;
+  a = -ceil(Grösse/2); //1 und 2, 3 und 4, 5 und 6
 
 	translate(a*size,a*size,a*size);
 
@@ -119,7 +119,7 @@ function figurate_cubes(n,hx,hy,hz) {
 	normalMaterial();
 	fill(100, 200, 255,100);
   str_weight = 1;
-	size1 = 100;
+	size1 = size;
 
 	for (var i = 0; i < n; i++) { //Kernquader, ausgehöhlt
 		for (var j = 0; j < n; j++) {
@@ -138,10 +138,11 @@ function figurate_cubes(n,hx,hy,hz) {
       }
 		}
 	}
+  if (Grösse % 2 == 0) {
   for (var i = -1; i < n; i++) { //gelber Quader
     for (var j = -1; j < n; j ++) {
         push();
-        translate(i*size1,j*size1,n*size1 + size1*(hz)*5);
+        translate(i*size1,j*size1,-size1*(hz+0.2)*5);
         strokeWeight(str_weight);
         stroke(51);
         fill(250, 210, 50,Transparenz);
@@ -172,6 +173,7 @@ function figurate_cubes(n,hx,hy,hz) {
         pop();
     }
   }
+}
 
 }
 
