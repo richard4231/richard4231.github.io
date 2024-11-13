@@ -1,5 +1,5 @@
 /*
-
+https://p5js.org/reference/p5/p5.Camera/
 */
 
 var blauer_Quader = 0;
@@ -46,6 +46,7 @@ let camz;
 
 let margin = 20;
 p5.disableFriendlyErrors = true;
+let cam1;
 
 var gui;
 
@@ -54,7 +55,11 @@ function setup() {
 	createCanvas(windowWidth-2*margin, windowHeight-2*margin,WEBGL);
   setAttributes('antialias', true);
 	setAttributes('perPixelLighting', true);
-	camera(-440,-160,1100,-100,0,0,0,1,0);
+  cam1 = createCamera();
+  cam1.setPosition(-800, -400, -1000);
+  cam1.lookAt(0, 0*-400, 0);
+  cam1.move(0,-200,0);
+	//camera(-440,-160,1100,-100,0,0,0,1,0);
 	//colorMode(RGB,255,255,255,100);
 
 	gui = createGui('Regler');
@@ -66,11 +71,12 @@ function setup() {
 function draw() {
 
 	n = ceil(Grösse/2);
+  size = 100;
   
   ambientLight(100);
-  pointLight(255, 255, 255, 1000, -1000, 1000);
-  pointLight(255, 255, 255, -1000, -1000, 0
-  );
+  directionalLight(255, 255, 255, 1000, -1000, 1000); //R,G,B, x,y,z
+  //directionalLight(255, 255, 255, -1000, -5000, 0);
+  directionalLight(255, 255, 255, 0, 1000, 0);
 
 	if (orbControl == 1 && mouseX > 220 ) {
     // Enable orbit control
@@ -88,7 +94,7 @@ function draw() {
   
 	/**/
 
-	size = 100;
+	
   a = -ceil(Grösse/2); //1 und 2, 3 und 4, 5 und 6
 
 	translate(a*size,a*size,a*size);
