@@ -13,12 +13,11 @@
 - [Pi Paths 3D](https://richard4231.github.io/22-09-PiPaths-v03-3D)
 - [Spikey](https://richard4231.github.io/22-09-Spikey-v02)
 
-<!-## Mathbuch
+## Mathbuch
 - [FractionPatterns](https://richard4231.github.io/22-10-FractionFractalsv01)
 - [Bruchbilder überprüfen](https://richard4231.github.io/22-12-clickable-surfaces-v02)
 - [kgV und ggT](https://richard4231.github.io/23-02-gcf-and-lcm-v01)
 - [klick und weg](https://richard4231.github.io/23-03-binary-code-game)
-->
 
 ## Radargraphen
 - [Handlungsfelder PH ABC](https://richard4231.github.io/20-radargraphBPA)
