@@ -61,5 +61,4 @@ export const INPUT_LIMITS = Object.freeze({
 });
 
 // Pfad zu den Assets für die Würfelbox
-//export const ASSET_PATH = "./lib/@3d-dice/dice-box/dist/assets/";
-export const ASSET_PATH = "/07Mathbuch/DiceRoller/25-01-dicerollerv5locallib/lib/@3d-dice/dice-box/dist/assets/";
+export const ASSET_PATH = "./lib/@3d-dice/dice-box/dist/assets/";
