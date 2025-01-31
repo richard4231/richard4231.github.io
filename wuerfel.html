@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Würfel-App</title>
+    <style>
+        .dice-container {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f3f4f6;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .dice {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dice-type {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+
+        .dice-button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            width: 80%;
+        }
+
+        .dice-button:hover {
+            background-color: #2563eb;
+        }
+
+        .dice-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .dice-emoji {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
+        .dice-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #1f2937;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin 0.5s linear infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dice-container">
+        <div class="title">Multi-Würfel-App</div>
+        <div class="dice-grid">
+            <div class="dice" id="d6">
+                <div class="dice-type">D6 (1-6)</div>
+                <button class="dice-button">
+                    <span class="dice-emoji">🎲</span>
+                    <span class="button-text">Würfeln</span>
+                </button>
+                <div class="dice-number">1</div>
+            </div>
+            
+            <div class="dice" id="d8">
+                <div class="dice-type">D8 (1-8)</div>
+                <button class="dice-button">
+                    <span class="dice-emoji">🎲</span>
+                    <span class="button-text">Würfeln</span>
+                </button>
+                <div class="dice-number">1</div>
+            </div>
+            
+            <div class="dice" id="d10">
+                <div class="dice-type">D10 (1-10)</div>
+                <button class="dice-button">
+                    <span class="dice-emoji">🎲</span>
+                    <span class="button-text">Würfeln</span>
+                </button>
+                <div class="dice-number">1</div>
+            </div>
+            
+            <div class="dice" id="d20">
+                <div class="dice-type">D20 (1-20)</div>
+                <button class="dice-button">
+                    <span class="dice-emoji">🎲</span>
+                    <span class="button-text">Würfeln</span>
+                </button>
+                <div class="dice-number">1</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const diceTypes = {
+            'd6': 6,
+            'd8': 8,
+            'd10': 10,
+            'd20': 20
+        };
+
+        function setupDice(diceId, maxValue) {
+            const diceElement = document.getElementById(diceId);
+            const button = diceElement.querySelector('.dice-button');
+            const number = diceElement.querySelector('.dice-number');
+            const emoji = diceElement.querySelector('.dice-emoji');
+            const buttonText = diceElement.querySelector('.button-text');
+
+            button.addEventListener('click', () => {
+                button.disabled = true;
+                emoji.classList.add('spinning');
+                buttonText.textContent = 'Würfelt...';
+                
+                setTimeout(() => {
+                    const newNumber = Math.floor(Math.random() * maxValue) + 1;
+                    number.textContent = newNumber;
+                    
+                    button.disabled = false;
+                    emoji.classList.remove('spinning');
+                    buttonText.textContent = 'Würfeln';
+                }, 500);
+            });
+        }
+
+        // Initialisiere alle Würfel
+        Object.entries(diceTypes).forEach(([diceId, maxValue]) => {
+            setupDice(diceId, maxValue);
+        });
+    </script>
+</body>
+</html>
