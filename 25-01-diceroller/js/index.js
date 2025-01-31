@@ -1,5 +1,5 @@
 // @ts-ignore
-import DiceBox from '/lib/@3d-dice/dice-box/dist/dice-box.es.min.js'
+import DiceBox from '/25-01-diceroller/lib/@3d-dice/dice-box/dist/dice-box.es.min.js'
 import { THEMES, COLORS, DEFAULT_DICE_CONFIG, MANY_DICE_CONFIG, ASSET_PATH } from './config.js';
 import { DiceValidation } from './validation.js';
 
