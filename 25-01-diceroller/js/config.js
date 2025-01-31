@@ -61,4 +61,4 @@ export const INPUT_LIMITS = Object.freeze({
 });
 
 // Pfad zu den Assets für die Würfelbox
-export const ASSET_PATH = "./lib/@3d-dice/dice-box/dist/assets/";
+export const ASSET_PATH = "/lib/@3d-dice/dice-box/dist/assets/";
