@@ -1,6 +1,5 @@
 let bg = 50;
 let img = [];
-let button;
 let bears = [];
 let histogram = [];
 const HISTOGRAM_Y = 450;
@@ -9,9 +8,9 @@ const PLAY_AREA = 400;
 
 // Konfiguration für verschiedene Packungsgrößen
 const packageConfigs = {
-  '8g': { average: 7, stdDev: 0.4, scale: 0.85, deviation: 1},  // kleiner
-  '10g': { average: 8, stdDev: 0.5, scale: 0.85, deviation: 1}, // kleiner
-  '15g': { average: 15, stdDev: 0.5, scale: 0.95, deviation: 2}  // normale Größe
+  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
+  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1 }, // klein
+  '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2 } // normal
 };
 let selectedPackage = '10g';
 
@@ -50,7 +49,6 @@ class GummyBear {
   }
 }
 
-// [Preload Funktion bleibt unverändert]
 function preload() {
   img[1] = loadImage('assets/orange.png');
   img[2] = loadImage('assets/gelb.png');
@@ -61,29 +59,39 @@ function preload() {
   bgImage = loadImage('assets/hintergrund.png');
 }
 
-function createPackageSizeControls() {
-  const radioHolder = select('#radio-holder');
+function createButtons() {
+  const buttonHolder = select('#button-holder');
   
-  // Erstelle eine Radio-Button-Gruppe
-  const radioGroup = createRadio();
-  radioGroup.class('radio-group');
-  radioGroup.parent(radioHolder);
+  // Überschrift/Titel
+  let titleButton = createButton('Neue Gummibärchenpackung');
+  titleButton.parent(buttonHolder);
+  titleButton.class('fancy-button title');
+  titleButton.attribute('disabled', '');
   
-  // Füge Optionen hinzu
+  // Container für die Größen-Buttons
+  let sizeButtonContainer = createDiv('');
+  sizeButtonContainer.parent(buttonHolder);
+  sizeButtonContainer.class('size-button-container');
+  
+  // Größen-Buttons erstellen
   Object.keys(packageConfigs).forEach(size => {
-    radioGroup.option(size);
-  });
-  
-  // Setze Standardwert
-  radioGroup.selected(selectedPackage);
-  
-  // Event-Handler für Änderungen
-  radioGroup.changed(() => {
-    selectedPackage = radioGroup.value();
+    let button = createButton(size);
+    button.parent(sizeButtonContainer);
+    button.class('fancy-button size');
+    if (size === selectedPackage) {
+      button.addClass('active');
+    }
+    button.mousePressed(() => {
+      // Entferne active Klasse von allen Buttons
+      selectAll('.fancy-button.size').forEach(b => b.removeClass('active'));
+      // Füge active Klasse zum geklickten Button hinzu
+      button.addClass('active');
+      selectedPackage = size;
+      newPackage();
+    });
   });
 }
 
-// [Setup Funktion bleibt unverändert]
 function setup() {
   angleMode(DEGREES);
   let canvas = createCanvas(500, 600, {
@@ -93,24 +101,34 @@ function setup() {
   colorMode(HSB);
   background(bgImage);
   
-  button = createButton('Neue Gummibärchenpackung');
-  button.parent('button-holder');
-  button.mousePressed(newPackage);
-  button.class('fancy-button');
-  
-  createPackageSizeControls();
+  createButtons();
   
   let style = createElement('style');
   style.html(`
+    #button-holder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .size-button-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 5px;
+      justify-content: center;
+      width: 100%;
+    }
+    
     .fancy-button {
       background: linear-gradient(45deg, #FFD700, #FDB931);
       border: 2px solid #FDB931;
       color: #000;
-      padding: 8px 16px;
+      padding: 12px 24px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 16px;
+      font-size: 18px;
       margin: 4px 2px;
       cursor: pointer;
       border-radius: 4px;
@@ -118,16 +136,42 @@ function setup() {
       font-weight: bold;
       text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      min-width: 120px;
     }
-    .fancy-button:hover {
+    
+    .fancy-button:hover:not([disabled]) {
       background: linear-gradient(45deg, #FDB931, #FFD700);
       transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .fancy-button.title {
+      cursor: default;
+      font-size: 20px;
+      padding: 15px 30px;
+      background: linear-gradient(45deg, #FFE97F, #FFDD45);
+      opacity: 0.9;
+      min-width: 300px;
+    }
+    
+    .fancy-button.title:hover {
+      transform: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .fancy-button.size {
+      padding: 12px 24px;
+      font-size: 18px;
+    }
+
+    .fancy-button.size.active {
+      border: 4px solid #FDB931;
+      background: linear-gradient(45deg, #FDB931, #FFD700);
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
   `);
   
   resetHistogram();
-  //newPackage();
 }
 
 function draw() {
@@ -146,7 +190,7 @@ function handleInteraction(x, y) {
       bear.active = false;
       bear.grayscale = 50;
       histogram[bear.type]++;
-      return false; // Prevents default behavior
+      return false;
     }
   }
   return true;
@@ -158,7 +202,7 @@ function mousePressed() {
 
 function touchStarted() {
   if (touches.length > 0) {
-    // touch Koordinaten in Canvas Koordinaten übersetzen
+    // Convert touch coordinates to canvas coordinates
     let touch = touches[0];
     let rect = document.querySelector('#defaultCanvas0').getBoundingClientRect();
     let x = touch.clientX - rect.left;
@@ -218,7 +262,7 @@ function newPackage() {
       positions[i].y,
       type,
       random(360),
-      config.scale  // Übergebe den Skalierungsfaktor
+      config.scale
     );
     bears.push(bear);
   }
