@@ -11,7 +11,7 @@ const PLAY_AREA = 400;
 const packageConfigs = {
   '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1},  // kleiner
   '12g': { average: 10, stdDev: 0.5, scale: 0.95, deviation: 2}, // normale Größe
-  '20g': { average: 12, stdDev: 0.8, scale: 0.95 }  // normale Größe
+  '20g': { average: 12, stdDev: 0.8, scale: 0.95, deviation: 2}  // normale Größe
 };
 let selectedPackage = '10g';
 
@@ -147,6 +147,18 @@ function mousePressed() {
       return;
     }
   }
+}
+
+function touchStarted() {
+  if (touches.length > 0) {
+    // Konvertiere Touch-Koordinaten zu Canvas-Koordinaten
+    let touch = touches[0];
+    let rect = document.querySelector('#defaultCanvas0').getBoundingClientRect();
+    let x = touch.clientX - rect.left;
+    let y = touch.clientY - rect.top;
+    return handleInteraction(x, y);
+  }
+  return true;
 }
 
 function drawHistogram() {
