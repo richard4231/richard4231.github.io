@@ -1,21 +1,32 @@
 let bg = 50;
 let img = [];
 let button;
-let bears = [];  // Array für alle Gummibärchen
-let histogram = [];  // Array für das Säulendiagramm
-const HISTOGRAM_Y = 450;  // Y-Position wo das Histogramm beginnt
-const COLUMN_WIDTH = 60;  // Breite der Säulen
-const PLAY_AREA = 400;  // Spielbereich für Gummibärchen
+let bears = [];
+let histogram = [];
+const HISTOGRAM_Y = 450;
+const COLUMN_WIDTH = 60;
+const PLAY_AREA = 400;
+
+// Konfiguration für verschiedene Packungsgrößen
+const packageConfigs = {
+  '10g': { average: 8, stdDev: 0.3, scale: 0.8 },  // 20% kleiner
+  '15g': { average: 10, stdDev: 0.5, scale: 1.0 }, // normale Größe
+  '20g': { average: 12, stdDev: 0.8, scale: 1.0 }  // normale Größe
+};
+let selectedPackage = '15g';
 
 class GummyBear {
-  constructor(x, y, type, rotation) {
+  constructor(x, y, type, rotation, scale) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.rotation = rotation;
-    this.width = 56;
-    this.height = 82;
-    this.active = true; // ob das Gummibärchen noch klickbar ist
+    this.baseWidth = 56;
+    this.baseHeight = 82;
+    this.scale = scale;
+    this.width = this.baseWidth * scale;
+    this.height = this.baseHeight * scale;
+    this.active = true;
   }
 
   display() {
@@ -33,7 +44,6 @@ class GummyBear {
     
     let dx = px - this.x;
     let dy = py - this.y;
-    // Berücksichtige die Rotation
     let rotatedX = dx * cos(-this.rotation) - dy * sin(-this.rotation);
     let rotatedY = dx * sin(-this.rotation) + dy * cos(-this.rotation);
     
@@ -41,6 +51,7 @@ class GummyBear {
   }
 }
 
+// [Preload Funktion bleibt unverändert]
 function preload() {
   img[1] = loadImage('assets/orange.png');
   img[2] = loadImage('assets/gelb.png');
@@ -50,9 +61,32 @@ function preload() {
   img[6] = loadImage('assets/weiss.png');
 }
 
+function createPackageSizeControls() {
+  const radioHolder = select('#radio-holder');
+  
+  // Erstelle eine Radio-Button-Gruppe
+  const radioGroup = createRadio();
+  radioGroup.class('radio-group');
+  radioGroup.parent(radioHolder);
+  
+  // Füge Optionen hinzu
+  Object.keys(packageConfigs).forEach(size => {
+    radioGroup.option(size);
+  });
+  
+  // Setze Standardwert
+  radioGroup.selected('15g');
+  
+  // Event-Handler für Änderungen
+  radioGroup.changed(() => {
+    selectedPackage = radioGroup.value();
+  });
+}
+
+// [Setup Funktion bleibt unverändert]
 function setup() {
   angleMode(DEGREES);
-  let canvas = createCanvas(500, 600); // Erhöhte Höhe für Histogramm
+  let canvas = createCanvas(500, 600);
   canvas.parent('sketch-holder');
   colorMode(HSB);
   background(bg);
@@ -61,6 +95,8 @@ function setup() {
   button.parent('button-holder');
   button.mousePressed(newPackage);
   button.class('fancy-button');
+  
+  createPackageSizeControls();
   
   let style = createElement('style');
   style.html(`
@@ -92,53 +128,47 @@ function setup() {
   newPackage();
 }
 
+// [Draw, mousePressed und drawHistogram Funktionen bleiben unverändert]
 function draw() {
   background(bg);
   
-  // Zeichne alle Gummibärchen
   for (let bear of bears) {
     bear.display();
   }
   
-  // Zeichne das Säulendiagramm
   drawHistogram();
 }
 
 function mousePressed() {
-  // Überprüfe von vorne nach hinten (damit vordere Bärchen Priorität haben)
   for (let bear of bears) {
     if (bear.contains(mouseX, mouseY) && bear.active) {
-      // Deaktiviere das Gummibärchen und füge es zum Histogramm hinzu
       bear.active = false;
       histogram[bear.type]++;
-      return; // Beende die Funktion nach dem ersten Treffer
+      return;
     }
   }
 }
 
 function drawHistogram() {
-  // Neue Reihenfolge: Weiss(6), Grün(5), Gelb(2), Orange(1), Hellrot(3), Dunkelrot(4)
   const colorOrder = [6, 5, 2, 1, 3, 4];
   
   for (let i = 0; i < 6; i++) {
-    let x = (i + 0.5) * COLUMN_WIDTH + 50;
+    let x = (i + 0.5) * COLUMN_WIDTH + 80; // Mehr Abstand vom linken Rand
     let colorIndex = colorOrder[i];
-    let h = histogram[colorIndex] * 30;  // Höhe pro Gummibärchen
+    let h = histogram[colorIndex] * 30;
     
     push();
     noStroke();
-    // Verwende verschiedene Farben für verschiedene Typen
     switch(colorIndex) {
       case 6: fill(0, 0, 100); break;     // Weiß
       case 5: fill(120, 100, 80); break;  // Grün
       case 2: fill(60, 100, 100); break;  // Gelb
       case 1: fill(30, 100, 100); break;  // Orange
       case 3: fill(0, 100, 90); break;    // Hellrot
-      case 4: fill(0, 100, 60); break;    // Dunkelrot (dunkler gemacht)
+      case 4: fill(0, 100, 60); break;    // Dunkelrot
     }
     rect(x - COLUMN_WIDTH/4, height - h - 50, COLUMN_WIDTH/2, h);
     
-    // Zeichne den Zähler über der Säule
     if (histogram[colorIndex] > 0) {
       fill(0, 0, 100);
       textAlign(CENTER);
@@ -149,31 +179,27 @@ function drawHistogram() {
 }
 
 function resetHistogram() {
-  // Setze alle Werte auf 0
   histogram = Array(7).fill(0);
 }
 
 function newPackage() {
-  // Lösche alte Gummibärchen und reset Histogram
   bears = [];
   resetHistogram();
   
-  // Erstelle neue Gummibärchen
-  let average = 10; // entweder 10 für 12g Packungen oder 8 für 10g Packungen
-  let num = round(randomGaussian(average, 0.5));
-  num = constrain(num, average - 2, average + 2);
+  const config = packageConfigs[selectedPackage];
+  let num = round(randomGaussian(config.average, config.stdDev));
+  num = constrain(num, config.average - 2, config.average + 2);
   
-  // Erstelle neue Positionen
   let positions = createPositions(num);
   
-  // Erstelle neue Gummibärchen
   for (let i = 0; i < num; i++) {
     let type = random([1, 2, 3, 4, 5, 6]);
     let bear = new GummyBear(
       positions[i].x,
       positions[i].y,
       type,
-      random(360)
+      random(360),
+      config.scale  // Übergebe den Skalierungsfaktor
     );
     bears.push(bear);
   }
@@ -187,7 +213,6 @@ function createPositions(num) {
       y: random(50, 50 + PLAY_AREA)
     };
     
-    // Überprüfe Überlappungen
     let attempts = 0;
     while (attempts < 100 && positions.some(p => 
       dist(p.x, p.y, pos.x, pos.y) < 50)) {

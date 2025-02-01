@@ -11,6 +11,31 @@ html, body {
   gap: 15px;
 }
 
+.radio-group {
+  display: flex;
+  background-color: #FFD700;
+  border: 2px solid #FDB931;
+  border-radius: 4px;
+  padding: 8px;
+  width: 186px;
+  justify-content: space-around;
+}
+
+.radio-group label {
+  display: inline-flex;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  font-size: 14px;
+  color: #000;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.radio-group input[type="radio"] {
+  margin: 0 4px 0 0;
+}
+
 canvas {
   display: block;
 }
