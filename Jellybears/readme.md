@@ -1,1 +1,1 @@
-This Folder is neede to redirect from a deprecated link to the real deal.
+This Folder is needed to redirect from a deprecated link to the real deal.
