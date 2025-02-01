@@ -1,5 +1,6 @@
 # richard4231.github.io
 
+/docs/
 ## mathematische Simulationen
 - [Gummibärchen](https://richard4231.github.io/20-04-jellybears/)
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-pascaltriangleoptimized/)
