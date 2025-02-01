@@ -9,9 +9,9 @@ const PLAY_AREA = 400;
 
 // Konfiguration für verschiedene Packungsgrößen
 const packageConfigs = {
-  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1},  // kleiner
-  '12g': { average: 10, stdDev: 0.5, scale: 0.95, deviation: 2}, // normale Größe
-  '20g': { average: 12, stdDev: 0.8, scale: 0.95, deviation: 2}  // normale Größe
+  '8g': { average: 7, stdDev: 0.4, scale: 0.85, deviation: 1},  // kleiner
+  '10g': { average: 8, stdDev: 0.5, scale: 0.85, deviation: 1}, // kleiner
+  '15g': { average: 15, stdDev: 0.5, scale: 0.95, deviation: 2}  // normale Größe
 };
 let selectedPackage = '10g';
 
@@ -86,7 +86,9 @@ function createPackageSizeControls() {
 // [Setup Funktion bleibt unverändert]
 function setup() {
   angleMode(DEGREES);
-  let canvas = createCanvas(500, 600);
+  let canvas = createCanvas(500, 600, {
+    willReadFrequently: true
+  });
   canvas.parent('sketch-holder');
   colorMode(HSB);
   background(bgImage);
@@ -138,20 +140,25 @@ function draw() {
   drawHistogram();
 }
 
-function mousePressed() {
+function handleInteraction(x, y) {
   for (let bear of bears) {
-    if (bear.contains(mouseX, mouseY) && bear.active) {
+    if (bear.contains(x, y) && bear.active) {
       bear.active = false;
       bear.grayscale = 50;
       histogram[bear.type]++;
-      return;
+      return false; // Prevents default behavior
     }
   }
+  return true;
+}
+
+function mousePressed() {
+  return handleInteraction(mouseX, mouseY);
 }
 
 function touchStarted() {
   if (touches.length > 0) {
-    // Konvertiere Touch-Koordinaten zu Canvas-Koordinaten
+    // touch Koordinaten in Canvas Koordinaten übersetzen
     let touch = touches[0];
     let rect = document.querySelector('#defaultCanvas0').getBoundingClientRect();
     let x = touch.clientX - rect.left;
