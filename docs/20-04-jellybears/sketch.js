@@ -30,13 +30,12 @@ class GummyBear {
   }
 
   display() {
-    if (this.active) {
       push();
       translate(this.x, this.y);
       rotate(this.rotation);
+      tint(this.active? 100 : 50, this.active? 255 : 127);  
       image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
       pop();
-    }
   }
 
   contains(px, py) {
@@ -143,6 +142,7 @@ function mousePressed() {
   for (let bear of bears) {
     if (bear.contains(mouseX, mouseY) && bear.active) {
       bear.active = false;
+      bear.grayscale = 50;
       histogram[bear.type]++;
       return;
     }
