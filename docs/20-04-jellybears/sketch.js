@@ -9,9 +9,9 @@ const PLAY_AREA = 400;
 
 // Konfiguration für verschiedene Packungsgrößen
 const packageConfigs = {
-  '10g': { average: 8, stdDev: 0.3, scale: 0.8 },  // 20% kleiner
-  '15g': { average: 10, stdDev: 0.5, scale: 1.0 }, // normale Größe
-  '20g': { average: 12, stdDev: 0.8, scale: 1.0 }  // normale Größe
+  '10g': { average: 8, stdDev: 0.3, scale: 0.85 },  // 20% kleiner
+  '15g': { average: 10, stdDev: 0.5, scale: 0.95 }, // normale Größe
+  '20g': { average: 12, stdDev: 0.8, scale: 0.95 }  // normale Größe
 };
 let selectedPackage = '15g';
 
@@ -33,7 +33,7 @@ class GummyBear {
       push();
       translate(this.x, this.y);
       rotate(this.rotation);
-      tint(this.active? 100 : 50, this.active? 255 : 127);  
+      tint(this.active? 100 : 50, this.active? 255 : 1);  
       image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
       pop();
   }
@@ -58,6 +58,7 @@ function preload() {
   img[4] = loadImage('assets/dunkelrot.png');
   img[5] = loadImage('assets/gruen.png');
   img[6] = loadImage('assets/weiss.png');
+  bgImage = loadImage('assets/hintergrund.png');
 }
 
 function createPackageSizeControls() {
@@ -88,7 +89,7 @@ function setup() {
   let canvas = createCanvas(500, 600);
   canvas.parent('sketch-holder');
   colorMode(HSB);
-  background(bg);
+  background(bgImage);
   
   button = createButton('Neue Gummibärchenpackung');
   button.parent('button-holder');
@@ -129,7 +130,7 @@ function setup() {
 
 // [Draw, mousePressed und drawHistogram Funktionen bleiben unverändert]
 function draw() {
-  background(bg);
+  background(bgImage);
   
   for (let bear of bears) {
     bear.display();
