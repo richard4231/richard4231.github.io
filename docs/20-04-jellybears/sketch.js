@@ -9,11 +9,11 @@ const PLAY_AREA = 400;
 
 // Konfiguration für verschiedene Packungsgrößen
 const packageConfigs = {
-  '10g': { average: 8, stdDev: 0.3, scale: 0.85 },  // 20% kleiner
-  '15g': { average: 10, stdDev: 0.5, scale: 0.95 }, // normale Größe
+  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1},  // kleiner
+  '12g': { average: 10, stdDev: 0.5, scale: 0.95, deviation: 2}, // normale Größe
   '20g': { average: 12, stdDev: 0.8, scale: 0.95 }  // normale Größe
 };
-let selectedPackage = '15g';
+let selectedPackage = '10g';
 
 class GummyBear {
   constructor(x, y, type, rotation, scale) {
@@ -75,7 +75,7 @@ function createPackageSizeControls() {
   });
   
   // Setze Standardwert
-  radioGroup.selected('15g');
+  radioGroup.selected(selectedPackage);
   
   // Event-Handler für Änderungen
   radioGroup.changed(() => {
@@ -125,10 +125,9 @@ function setup() {
   `);
   
   resetHistogram();
-  newPackage();
+  //newPackage();
 }
 
-// [Draw, mousePressed und drawHistogram Funktionen bleiben unverändert]
 function draw() {
   background(bgImage);
   
@@ -189,7 +188,7 @@ function newPackage() {
   
   const config = packageConfigs[selectedPackage];
   let num = round(randomGaussian(config.average, config.stdDev));
-  num = constrain(num, config.average - 2, config.average + 2);
+  num = constrain(num, config.average - config.deviation, config.average + config.deviation);
   
   let positions = createPositions(num);
   
