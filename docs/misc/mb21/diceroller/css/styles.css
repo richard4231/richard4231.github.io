@@ -59,7 +59,7 @@
      grid-template-columns: repeat(2, 1fr);
      gap: 1rem;
      padding: 1rem;
-     min-height: 100vh;
+     /*min-height: 100vh;*/
      box-sizing: border-box;
    }
    
@@ -338,7 +338,7 @@
      }
      
      .dice-box {
-       min-height: 250px;
+       /*min-height: 250px;*/
      }
    }
    
@@ -401,7 +401,7 @@
      }
      
      .dice-box {
-       min-height: 160px;
+       /*min-height: 160px;*/
      }
      
      .random-result {
