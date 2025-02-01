@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Würfelapp Mathbuch</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    
+    <div class="dice-container">
+      
+      <!-- Box 1 -->
+      <div class="dice-section" data-box-id="1">
+        <button class="help-button">?</button>
+        <div class="help-overlay"></div>
+        
+        <div class="dice-controls">
+          <div class="dice-count">
+            <input type="number" class="dice-number" min="0" max="20" value="1" placeholder="1-20">
+          </div>
+          <button class="dice-btn d4"></button>
+          <button class="dice-btn d6"></button>
+          <button class="dice-btn d8"></button>
+          <button class="dice-btn d10"></button>
+          <button class="dice-btn d12"></button>
+          <button class="dice-btn d20"></button>
+          <button class="dice-btn d100"></button>
+          <div class="flex-spacer" style="width: 40px; flex: 0 1 40px;"></div>
+          <input type="number" class="custom-sides" min="2" max="999" placeholder="N" value="2">
+          <button class="dice-btn dN"></button>
+        </div>
+      <div id="dice-box-1" class="dice-box"></div>
+        <div class="random-result"></div>
+      </div>
+
+      <!-- Box 2 -->
+      <div class="dice-section" data-box-id="2">
+
+      <div class="dice-controls">
+        <div class="dice-count">
+          <input type="number" class="dice-number" min="1" max="20" value = '1' placeholder="Anzahl">
+        </div>
+        <button class="dice-btn d4"></button>
+        <button class="dice-btn d6"></button>
+        <button class="dice-btn d8"></button>
+        <button class="dice-btn d10"></button>
+        <button class="dice-btn d12"></button>
+        <button class="dice-btn d20"></button>
+        <button class="dice-btn d100"></button>
+        <div class="flex-spacer" style="width: 40px; flex: 0 1 40px;"></div>
+        <input type="number" class="custom-sides" min="2" max="999" placeholder="N" value="2">
+        <button class="dice-btn dN"></button>
+      </div>        
+        <div id="dice-box-2" class="dice-box"></div>
+        <div class="random-result"></div>
+      </div>
+
+      <!-- Box 3 -->
+      <div class="dice-section" data-box-id="3">
+        <div class="dice-controls">
+          <div class="dice-count">
+            <input type="number" class="dice-number" min="1" max="20" value="1" placeholder="1-20">
+          </div>
+          <button class="dice-btn d4"></button>
+          <button class="dice-btn d6"></button>
+          <button class="dice-btn d8"></button>
+          <button class="dice-btn d10"></button>
+          <button class="dice-btn d12"></button>
+          <button class="dice-btn d20"></button>
+          <button class="dice-btn d100"></button>
+          <div class="flex-spacer" style="width: 40px; flex: 0 1 40px;"></div>
+          <input type="number" class="custom-sides" min="2" max="999" placeholder="N" value="2">
+          <button class="dice-btn dN"></button>
+        </div>
+        <div id="dice-box-3" class="dice-box"></div>
+        <div class="random-result"></div>
+      </div>
+
+      <!-- Box 4 -->
+      <div class="dice-section" data-box-id="4">
+        <div class="dice-controls">
+          <div class="dice-count">
+            <input type="number" class="dice-number" min="1" max="20" value="1" placeholder="1-20">
+          </div>
+          <button class="dice-btn d4"></button>
+          <button class="dice-btn d6"></button>
+          <button class="dice-btn d8"></button>
+          <button class="dice-btn d10"></button>
+          <button class="dice-btn d12"></button>
+          <button class="dice-btn d20"></button>
+          <button class="dice-btn d100"></button>
+          <div class="flex-spacer" style="width: 40px; flex: 0 1 40px;"></div>
+          <input type="number" class="custom-sides" min="2" max="999" placeholder="N" value="2">
+          <button class="dice-btn dN"></button>
+        </div>
+        <div id="dice-box-4" class="dice-box"></div>
+        <div class="random-result"></div>
+      </div>
+    </div>
+    <script type="module" src="./js/index.js"></script>
+  </body>
+</html>
