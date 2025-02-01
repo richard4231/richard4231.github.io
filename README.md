@@ -1,4 +1,5 @@
 # richard4231.github.io
+nicht mehr die aktuelle Startdatei
 
 ## mathematische Simulationen
 - [Gummibärchen](https://richard4231.github.io/20-04-jellybears/)
