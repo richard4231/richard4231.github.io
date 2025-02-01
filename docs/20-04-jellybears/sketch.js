@@ -1,7 +1,9 @@
 let bg = 50;
 let img = [];
+let buttons = {}; // Objekt zum Speichern der Button-Referenzen
 let bears = [];
 let histogram = [];
+let activeDot;
 const HISTOGRAM_Y = 450;
 const COLUMN_WIDTH = 60;
 const PLAY_AREA = 400;
@@ -62,34 +64,58 @@ function preload() {
 function createButtons() {
   const buttonHolder = select('#button-holder');
   
+  // Äußerer Container mit Rahmen
+  let outerContainer = createDiv('');
+  outerContainer.class('outer-button-container');
+  outerContainer.parent(buttonHolder);
+  
   // Überschrift/Titel
   let titleButton = createButton('Neue Gummibärchenpackung');
-  titleButton.parent(buttonHolder);
+  titleButton.parent(outerContainer);
   titleButton.class('fancy-button title');
   titleButton.attribute('disabled', '');
+  titleButton.style('background', 'linear-gradient(45deg, #FFE97F, #FFDD45)');
+  titleButton.style('opacity', '0.9');
   
   // Container für die Größen-Buttons
   let sizeButtonContainer = createDiv('');
-  sizeButtonContainer.parent(buttonHolder);
+  sizeButtonContainer.parent(outerContainer);
   sizeButtonContainer.class('size-button-container');
+  
+  // Container für den roten Punkt
+  activeDot = createDiv('');
+  activeDot.class('active-dot');
+  activeDot.parent(sizeButtonContainer);
   
   // Größen-Buttons erstellen
   Object.keys(packageConfigs).forEach(size => {
+    let buttonContainer = createDiv('');
+    buttonContainer.class('button-container');
+    buttonContainer.parent(sizeButtonContainer);
+    
     let button = createButton(size);
-    button.parent(sizeButtonContainer);
     button.class('fancy-button size');
-    if (size === selectedPackage) {
-      button.addClass('active');
-    }
+    button.parent(buttonContainer);
+    buttons[size] = buttonContainer;
+    
     button.mousePressed(() => {
-      // Entferne active Klasse von allen Buttons
-      selectAll('.fancy-button.size').forEach(b => b.removeClass('active'));
-      // Füge active Klasse zum geklickten Button hinzu
-      button.addClass('active');
       selectedPackage = size;
+      moveActiveDot(size);
       newPackage();
     });
   });
+}
+
+function moveActiveDot(size) {
+  if (buttons[size]) {
+    // Zeige den Punkt an
+    activeDot.style('display', 'block');
+    
+    let buttonRect = buttons[size].elt.getBoundingClientRect();
+    let containerRect = buttons[size].elt.parentElement.getBoundingClientRect();
+    
+    activeDot.style('left', (buttonRect.left - containerRect.left + buttonRect.width/2 - 5) + 'px');
+  }
 }
 
 function setup() {
@@ -110,14 +136,47 @@ function setup() {
       flex-direction: column;
       align-items: center;
       gap: 15px;
+      margin-bottom: 15px; // Abstand zum canvas
     }
     
+    .outer-button-container {
+      width: 500px;
+      padding: 15px;
+      border: 1px solid #FDB931;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      background-color: white;
+    }
+
     .size-button-container {
       display: flex;
       gap: 15px;
       margin-top: 5px;
       justify-content: center;
       width: 100%;
+      position: relative;
+      //background-color:rgb(250, 224, 75);  /* Goldener Hintergrund */
+      padding: 10px;
+      //border-radius: 8px;   
+    }
+    
+    .button-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .active-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      border-radius: 50%;
+      bottom: -15px;
+      transition: left 0.3s ease;
+      display: none;  /* Initial ausgeblendet */
     }
     
     .fancy-button {
@@ -149,9 +208,8 @@ function setup() {
       cursor: default;
       font-size: 20px;
       padding: 15px 30px;
-      background: linear-gradient(45deg, #FFE97F, #FFDD45);
-      opacity: 0.9;
-      min-width: 300px;
+      min-width: 400px;
+      height: 80px;
     }
     
     .fancy-button.title:hover {
@@ -162,12 +220,6 @@ function setup() {
     .fancy-button.size {
       padding: 12px 24px;
       font-size: 18px;
-    }
-
-    .fancy-button.size.active {
-      border: 4px solid #FDB931;
-      background: linear-gradient(45deg, #FDB931, #FFD700);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
   `);
   
