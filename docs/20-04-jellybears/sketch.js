@@ -10,25 +10,25 @@ let activeDot;
 
 // configuration of various packages
 const packageConfigs = {
-  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
-  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1 }, // klein
-  '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2 } // normal
+  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1, margin: 0.18 },   // kleinste
+  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1, margin: 0.14 }, // klein
+  '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2, margin: 0.1 } // normal
 };
 let selectedPackage = '10g';
 
 function getPlayAreaWidth() {
   let canvasWidth = min(500, windowWidth - 20);
-  return canvasWidth * 0.8; // 80% der Canvas-Breite
+  return canvasWidth * (1-2*packageConfigs[selectedPackage].margin); // 80% der Canvas-Breite
 }
 
 function getPlayAreaHeight() {
   let canvasHeight = min(600, windowHeight - 300);
-  return canvasHeight * 0.8; // 80% der Canvas-Höhe
+  return canvasHeight * (1-2*packageConfigs[selectedPackage].margin); // 80% der Canvas-Höhe
 }
 
 function getPlayAreaMargin() {
   let canvasWidth = min(500, windowWidth - 20);
-  return canvasWidth * 0.1; // 10% Rand auf jeder Seite
+  return canvasWidth * packageConfigs[selectedPackage].margin; // 10% Rand auf jeder Seite
 }
 
 function getColumnWidth() {
