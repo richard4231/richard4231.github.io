@@ -73,6 +73,14 @@ function preload() {
   img[6] = loadImage('assets/weiss.png');
 }
 
+function createSaveButton() {
+  let saveButton = createButton('🖼️ Speichern');
+  saveButton.class('save-button');
+  saveButton.parent('sketch-holder');
+  saveButton.mousePressed(() => saveCanvas('gummybears', 'png'));
+  return saveButton;
+}
+
 function createButtons() {
   const buttonHolder = select('#button-holder');
   
@@ -138,6 +146,9 @@ function setup() {
     willReadFrequently: true
   });
   canvas.parent('sketch-holder');
+  createSaveButton();
+  select('.save-button').style('display', 'none');
+
   colorMode(HSB);
   background(bg);
   
@@ -240,6 +251,25 @@ function setup() {
       font-size: 18px;
     }
 
+    .save-button {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #FDB931;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+    }
+
+    .save-button:hover {
+      background: #FDB931;
+      color: white;
+    }
+
       @media (max-width: 500px) {
     .fancy-button {
       padding: 6px 12px;
@@ -259,11 +289,7 @@ function setup() {
       gap: 0px;
       border: none;
     }
-    
-    .size-button-container {
-      gap: 8px;
-      padding: 5px;
-    }
+
   `);
   
   resetHistogram();
@@ -285,6 +311,11 @@ function handleInteraction(x, y) {
       bear.active = false;
       bear.grayscale = 50;
       histogram[bear.type]++;
+  
+      // Prüfen ob alle Bären deaktiviert sind
+      if (!bears.some(b => b.active)) {
+        select('.save-button').style('display', 'block');
+      }
       return false;
     }
   }
@@ -369,6 +400,7 @@ function resetHistogram() {
 function newPackage() {
   bears = [];
   resetHistogram();
+  select('.save-button').style('display', 'none');
   
   const config = packageConfigs[selectedPackage];
   let num = round(randomGaussian(config.average, config.stdDev));
