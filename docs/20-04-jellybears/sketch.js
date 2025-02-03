@@ -136,18 +136,18 @@ function setup() {
       flex-direction: column;
       align-items: center;
       gap: 15px;
-      margin-bottom: 15px; // Abstand zum canvas
+      margin-bottom: -15px; // Abstand zum canvas
     }
     
     .outer-button-container {
-      width: 500px;
+      width: 465px;
       padding: 15px;
       border: 1px solid #FDB931;
       border-radius: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 15px;
+      gap: 30px;
       background-color: white;
     }
 
@@ -174,7 +174,7 @@ function setup() {
       height: 10px;
       background-color: red;
       border-radius: 50%;
-      bottom: -15px;
+      bottom: -8px; /* distance to buttons */
       transition: left 0.3s ease;
       display: none;  /* Initial ausgeblendet */
     }
@@ -254,11 +254,9 @@ function mousePressed() {
 
 function touchStarted() {
   if (touches.length > 0) {
-    // Convert touch coordinates to canvas coordinates
     let touch = touches[0];
-    let rect = document.querySelector('#defaultCanvas0').getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
+    let x = touch.clientX;
+    let y = touch.clientY;
     return handleInteraction(x, y);
   }
   return true;
