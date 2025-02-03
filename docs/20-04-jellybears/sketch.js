@@ -10,7 +10,7 @@ let activeDot;
 
 // configuration of various packages
 const packageConfigs = {
-  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
+  '8g': { average: 1, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
   '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1 }, // klein
   '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2 } // normal
 };
@@ -21,6 +21,11 @@ function getPlayAreaWidth() {
   return canvasWidth * 0.8; // 80% der Canvas-Breite
 }
 
+function getPlayAreaHeight() {
+  let canvasHeight = min(600, windowHeight - 300);
+  return canvasHeight * 0.8; // 80% der Canvas-Höhe
+}
+
 function getPlayAreaMargin() {
   let canvasWidth = min(500, windowWidth - 20);
   return canvasWidth * 0.1; // 10% Rand auf jeder Seite
@@ -29,6 +34,16 @@ function getPlayAreaMargin() {
 function getColumnWidth() {
   let canvasWidth = min(500, windowWidth - 20);
   return canvasWidth * 0.12; // 12% der Canvas-Breite für jede Spalte
+}
+
+function calculateCanvasSize() {
+  const maxWidth = 500;
+  const maxHeight = 600;
+  
+  let canvasWidth = min(maxWidth, windowWidth - 20);
+  let canvasHeight = min(maxHeight , windowHeight - 220);
+  
+  return { width: canvasWidth, height: canvasHeight };
 }
 
 class GummyBear {
@@ -77,7 +92,7 @@ function preload() {
 }
 
 function createSaveButton() {
-  let saveButton = createButton('🖼️ Speichern');
+  let saveButton = createButton('Bild speichern');
   saveButton.class('save-button');
   saveButton.parent('sketch-holder');
   saveButton.mousePressed(() => saveCanvas('gummybears', 'png'));
@@ -143,9 +158,8 @@ function moveActiveDot(size) {
 
 function setup() {
   angleMode(DEGREES);
-  let canvasWidth = min(500, windowWidth - 20);
-  let canvasHeight = canvasWidth * 1.2;
-  let canvas = createCanvas(canvasWidth, canvasHeight, {
+  const canvasSize = calculateCanvasSize();
+  let canvas = createCanvas(canvasSize.width, canvasSize.height, {
     willReadFrequently: true
   });
   canvas.parent('sketch-holder');
@@ -158,6 +172,7 @@ function setup() {
   createButtons();
 
   getPlayAreaWidth();
+  getPlayAreaHeight();
   getPlayAreaMargin();
   getColumnWidth();
   
@@ -167,7 +182,7 @@ function setup() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 15px;
+      gap: 10px;
       margin-bottom: -15px; // Abstand zum canvas
     }
     
@@ -179,14 +194,14 @@ function setup() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 30px;
+      gap: 5px;
       background-color: white;
     }
 
     .size-button-container {
       display: flex;
-      gap: 15px;
-      margin-top: 5px;
+      gap: 10px;
+      margin-top: 0px;
       justify-content: center;
       width: 100%;
       position: relative;
@@ -220,7 +235,6 @@ function setup() {
       text-decoration: none;
       display: inline-block;
       font-size: 18px;
-      margin: 4px 2px;
       cursor: pointer;
       border-radius: 4px;
       transition: all 0.3s;
@@ -256,13 +270,13 @@ function setup() {
 
     .save-button {
       position: absolute;
-      bottom: 60px;
+      top: 220px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(255, 255, 255, 0.9);
       border: 2px solid #FDB931;
       border-radius: 4px;
-      padding: 8px 16px;
+      padding: 8px 8px;
       cursor: pointer;
       font-size: 14px;
       display: none;
@@ -288,9 +302,18 @@ function setup() {
     
     .outer-button-container {
       width: 99%;
-      padding: 0px;
-      gap: 0px;
+      padding: 15px;
+      gap: 5px;
       border: none;
+    }
+
+    .save-button {
+      position: absolute;
+      top: 220px;
+      height: 20px;
+      padding: 4px 4px;
+      cursor: pointer;
+      font-size: 10px;
     }
 
   `);
@@ -343,18 +366,19 @@ function createPositions(num) {
   let positions = [];
   let margin = getPlayAreaMargin();
   let playArea = getPlayAreaWidth();
+  let playAreah = getPlayAreaHeight();
   
   for (let i = 0; i < num; i++) {
     let pos = {
       x: random(margin, margin + playArea),
-      y: random(margin, margin + playArea)
+      y: random(margin, margin + playAreah)
     };
     
     let attempts = 0;
     while (attempts < 100 && positions.some(p => 
       dist(p.x, p.y, pos.x, pos.y) < width * 0.1)) { // Abstand relativ zur Canvas-Breite
       pos.x = random(margin, margin + playArea);
-      pos.y = random(margin, margin + playArea);
+      pos.y = random(margin, margin + playAreah);
       attempts++;
     }
     
@@ -425,8 +449,6 @@ function newPackage() {
 }
 
 function windowResized() {
-  let canvasWidth = min(500, windowWidth - 20);
-  let canvasHeight = canvasWidth * 1.2;
-  var zoom = canvasWidth / 500;
-  resizeCanvas(canvasWidth, canvasHeight);
+  const canvasSize = calculateCanvasSize();
+  resizeCanvas(canvasSize.width, canvasSize.height);
 }
