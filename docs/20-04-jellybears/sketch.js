@@ -1,14 +1,11 @@
-let bg = 50;
+let bg = 50; // background color
 let img = [];
-let buttons = {}; // Objekt zum Speichern der Button-Referenzen
+let buttons = {}; // saves button references
 let bears = [];
 let histogram = [];
 let activeDot;
-const HISTOGRAM_Y = 450;
-const COLUMN_WIDTH = 60;
-const PLAY_AREA = 400;
 
-// Konfiguration für verschiedene Packungsgrößen
+// configuration of various packages
 const packageConfigs = {
   '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
   '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1 }, // klein
@@ -16,14 +13,30 @@ const packageConfigs = {
 };
 let selectedPackage = '10g';
 
+function getPlayAreaWidth() {
+  let canvasWidth = min(500, windowWidth - 20);
+  return canvasWidth * 0.8; // 80% der Canvas-Breite
+}
+
+function getPlayAreaMargin() {
+  let canvasWidth = min(500, windowWidth - 20);
+  return canvasWidth * 0.1; // 10% Rand auf jeder Seite
+}
+
+function getColumnWidth() {
+  let canvasWidth = min(500, windowWidth - 20);
+  return canvasWidth * 0.12; // 12% der Canvas-Breite für jede Spalte
+}
+
 class GummyBear {
   constructor(x, y, type, rotation, scale) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.rotation = rotation;
-    this.baseWidth = 56;
-    this.baseHeight = 82;
+    // Basis-Größe an Canvas-Breite anpassen
+    this.baseWidth = width * 0.112;  // 56 bei 500px Breite
+    this.baseHeight = this.baseWidth * 1.464; // Verhältnis beibehalten (82/56)
     this.scale = scale;
     this.width = this.baseWidth * scale;
     this.height = this.baseHeight * scale;
@@ -58,7 +71,6 @@ function preload() {
   img[4] = loadImage('assets/dunkelrot.png');
   img[5] = loadImage('assets/gruen.png');
   img[6] = loadImage('assets/weiss.png');
-  bgImage = loadImage('assets/hintergrund.png');
 }
 
 function createButtons() {
@@ -120,14 +132,20 @@ function moveActiveDot(size) {
 
 function setup() {
   angleMode(DEGREES);
-  let canvas = createCanvas(500, 600, {
+  let canvasWidth = min(500, windowWidth - 20);
+  let canvasHeight = canvasWidth * 1.2;
+  let canvas = createCanvas(canvasWidth, canvasHeight, {
     willReadFrequently: true
   });
   canvas.parent('sketch-holder');
   colorMode(HSB);
-  background(bgImage);
+  background(bg);
   
   createButtons();
+
+  getPlayAreaWidth();
+  getPlayAreaMargin();
+  getColumnWidth();
   
   let style = createElement('style');
   style.html(`
@@ -208,7 +226,7 @@ function setup() {
       cursor: default;
       font-size: 20px;
       padding: 15px 30px;
-      min-width: 400px;
+      width: 470px;
       height: 80px;
     }
     
@@ -221,13 +239,38 @@ function setup() {
       padding: 12px 24px;
       font-size: 18px;
     }
+
+      @media (max-width: 500px) {
+    .fancy-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      min-width: 80px;
+    }
+    
+    .fancy-button.title {
+      font-size: 16px;
+      padding: 10px 15px;
+      width: 95vw;
+    }
+    
+    .outer-button-container {
+      width: 99%;
+      padding: 0px;
+      gap: 0px;
+      border: none;
+    }
+    
+    .size-button-container {
+      gap: 8px;
+      padding: 5px;
+    }
   `);
   
   resetHistogram();
 }
 
 function draw() {
-  background(bgImage);
+  background(bg);
   
   for (let bear of bears) {
     bear.display();
@@ -255,20 +298,46 @@ function mousePressed() {
 function touchStarted() {
   if (touches.length > 0) {
     let touch = touches[0];
-    let x = touch.clientX;
-    let y = touch.clientY;
+    let x = touch.x;
+    let y = touch.y;
     return handleInteraction(x, y);
   }
   return true;
 }
 
+function createPositions(num) {
+  let positions = [];
+  let margin = getPlayAreaMargin();
+  let playArea = getPlayAreaWidth();
+  
+  for (let i = 0; i < num; i++) {
+    let pos = {
+      x: random(margin, margin + playArea),
+      y: random(margin, margin + playArea)
+    };
+    
+    let attempts = 0;
+    while (attempts < 100 && positions.some(p => 
+      dist(p.x, p.y, pos.x, pos.y) < width * 0.1)) { // Abstand relativ zur Canvas-Breite
+      pos.x = random(margin, margin + playArea);
+      pos.y = random(margin, margin + playArea);
+      attempts++;
+    }
+    
+    positions.push(pos);
+  }
+  return positions;
+}
+
 function drawHistogram() {
   const colorOrder = [6, 5, 2, 1, 3, 4];
+  const columnWidth = getColumnWidth();
+  const leftMargin = width * 0.16; // 16% vom linken Rand
   
   for (let i = 0; i < 6; i++) {
-    let x = (i + 0.5) * COLUMN_WIDTH + 80; // Mehr Abstand vom linken Rand
+    let x = (i + 0.5) * columnWidth + leftMargin;
     let colorIndex = colorOrder[i];
-    let h = histogram[colorIndex] * 30;
+    let h = histogram[colorIndex] * (height * 0.05); // Höhe relativ zur Canvas-Höhe
     
     push();
     noStroke();
@@ -280,12 +349,14 @@ function drawHistogram() {
       case 3: fill(0, 100, 90); break;    // Hellrot
       case 4: fill(0, 100, 60); break;    // Dunkelrot
     }
-    rect(x - COLUMN_WIDTH/4, height - h - 50, COLUMN_WIDTH/2, h);
+    
+    rect(x - columnWidth/4, height - h - height * 0.083, columnWidth/2, h); // 0.083 ist 50px bei 600px Höhe
     
     if (histogram[colorIndex] > 0) {
       fill(0, 0, 100);
       textAlign(CENTER);
-      text(histogram[colorIndex], x, height - h - 60);
+      textSize(width * 0.024); // Schriftgröße relativ zur Canvas-Breite
+      text(histogram[colorIndex], x, height - h - height * 0.1);
     }
     pop();
   }
@@ -318,23 +389,9 @@ function newPackage() {
   }
 }
 
-function createPositions(num) {
-  let positions = [];
-  for (let i = 0; i < num; i++) {
-    let pos = {
-      x: random(50, 50 + PLAY_AREA),
-      y: random(50, 50 + PLAY_AREA)
-    };
-    
-    let attempts = 0;
-    while (attempts < 100 && positions.some(p => 
-      dist(p.x, p.y, pos.x, pos.y) < 50)) {
-      pos.x = random(50, 50 + PLAY_AREA);
-      pos.y = random(50, 50 + PLAY_AREA);
-      attempts++;
-    }
-    
-    positions.push(pos);
-  }
-  return positions;
+function windowResized() {
+  let canvasWidth = min(500, windowWidth - 20);
+  let canvasHeight = canvasWidth * 1.2;
+  var zoom = canvasWidth / 500;
+  resizeCanvas(canvasWidth, canvasHeight);
 }

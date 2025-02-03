@@ -52,7 +52,7 @@ function setup() {
 	textSize(18);
 
 	checkbox = createCheckbox('Schneller Computer', false);
-  checkbox.changed(myCheckedEvent);
+  	checkbox.changed(myCheckedEvent);
 	checkbox.position(10, 300);
 
 	button = createButton('Save Picture');
