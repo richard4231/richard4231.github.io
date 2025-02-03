@@ -10,7 +10,7 @@ let activeDot;
 
 // configuration of various packages
 const packageConfigs = {
-  '8g': { average: 1, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
+  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1 },   // kleinste
   '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1 }, // klein
   '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2 } // normal
 };
