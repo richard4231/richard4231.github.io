@@ -1,3 +1,6 @@
+// Bild speichern Knopf unten
+// max-height oder height an vh anpassen.
+
 let bg = 50; // background color
 let img = [];
 let buttons = {}; // saves button references
