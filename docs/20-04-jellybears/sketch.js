@@ -182,8 +182,8 @@ function setup() {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
-      margin-bottom: -15px; // Abstand zum canvas
+      //gap: 10px;
+      margin-bottom: -20px; // Abstand zum canvas
     }
     
     .outer-button-container {
@@ -217,13 +217,13 @@ function setup() {
     
     .active-dot {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 11px;
+      height: 11px;
       background-color: red;
       border-radius: 50%;
       bottom: -8px; /* distance to buttons */
       transition: left 0.3s ease;
-      display: none;  /* Initial ausgeblendet */
+      display: none; /* not shown in the beginning */
     }
     
     .fancy-button {
@@ -310,10 +310,14 @@ function setup() {
     .save-button {
       position: absolute;
       top: 220px;
-      height: 20px;
+      height: 25px;
       padding: 4px 4px;
       cursor: pointer;
       font-size: 10px;
+    }
+
+    .active-dot {
+      bottom: -14px; /* distance to buttons */
     }
 
   `);
