@@ -1,68 +1,105 @@
-let bg = 50; // background color
-let img = [];
-let buttons = {}; // saves button references
-let bears = [];
-let histogram = [];
-let activeDot;
+// ========== KONSTANTEN & GLOBALE VARIABLEN ==========
+// Hintergrundfarbe
+let bg = 50;
 
-// Zeichenfolge um Histogramm direkt zu erstellen
-let keyBuffer = '';
-const targetSequence = 'histo';
-const bufferTimeout = 2000; // 2 Sekunden timeout
+// Arrays und Objekte für Spielzustand
+let img = [];                // Speichert die Bilder der Gummibärchen
+let buttons = {};           // Speichert Referenzen zu UI-Buttons
+let bears = [];             // Liste aller Gummibärchen im Spiel
+let histogram = [];         // Speichert die Anzahl der Gummibärchen pro Farbe
+let activeDot;             // UI-Element für aktive Auswahl
 
-// Timer für das Zurücksetzen des Buffers
-let resetBufferTimer = null;
+// Tastatureingabe-Verarbeitung
+let keyBuffer = '';                    // Puffer für Tastatureingaben
+const targetSequence = 'histo';        // Zielsequenz für Schnellauswahl
+const bufferTimeout = 2000;            // Zeitlimit für Tastatureingabe (2 Sekunden)
+let resetBufferTimer = null;           // Timer für Puffer-Reset
 
-// configuration of various packages
+// Konfiguration der verschiedenen Packungsgrößen
 const packageConfigs = {
-  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1, margin: 0.18 },   // kleinste
-  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1, margin: 0.14 }, // klein
-  '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2, margin: 0.1 } // normal
+  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1, margin: 0.18 },   // Kleinste Packung
+  '10g': { average: 8, stdDev: 0.3, scale: 0.85, deviation: 1, margin: 0.14 }, // Kleine Packung
+  '15g': { average: 12, stdDev: 0.5, scale: 0.95, deviation: 2, margin: 0.1 }  // Normale Packung
 };
-let selectedPackage = '10g';
+let selectedPackage = '10g';  // Standardmäßig ausgewählte Packungsgröße
 
+// ========== HILFS-FUNKTIONEN FÜR LAYOUT-BERECHNUNGEN ==========
+/**
+ * Berechnet die Breite des spielbaren Bereichs
+ * @returns {number} Breite in Pixeln
+ */
 function getPlayAreaWidth() {
   let canvasWidth = min(500, windowWidth - 20);
-  return canvasWidth * (1-2*packageConfigs[selectedPackage].margin); // 80% der Canvas-Breite
+  return canvasWidth * (1-2*packageConfigs[selectedPackage].margin);
 }
 
+/**
+ * Berechnet die Höhe des spielbaren Bereichs
+ * @returns {number} Höhe in Pixeln
+ */
 function getPlayAreaHeight() {
   let canvasHeight = min(600, windowHeight - 300);
-  return canvasHeight * (1-2*packageConfigs[selectedPackage].margin); // 80% der Canvas-Höhe
+  return canvasHeight * (1-2*packageConfigs[selectedPackage].margin);
 }
 
+/**
+ * Berechnet den Randabstand des spielbaren Bereichs
+ * @returns {number} Randabstand in Pixeln
+ */
 function getPlayAreaMargin() {
   let canvasWidth = min(500, windowWidth - 20);
-  return canvasWidth * packageConfigs[selectedPackage].margin; // 10% Rand auf jeder Seite
+  return canvasWidth * packageConfigs[selectedPackage].margin;
 }
 
+/**
+ * Berechnet die Breite einer Histogramm-Spalte
+ * @returns {number} Spaltenbreite in Pixeln
+ */
 function getColumnWidth() {
   let canvasWidth = min(500, windowWidth - 20);
-  return canvasWidth * 0.12; // 12% der Canvas-Breite für jede Spalte
+  return canvasWidth * 0.12;
 }
 
+/**
+ * Berechnet die optimale Canvas-Größe basierend auf der Fenstergröße
+ * @returns {Object} Objekt mit width und height Eigenschaften
+ */
 function calculateCanvasSize() {
   const maxWidth = 500;
   const maxHeight = 600;
   
   let canvasWidth = min(maxWidth, windowWidth - 20);
-  let canvasHeight = min(maxHeight , windowHeight - 220);
+  let canvasHeight = min(maxHeight, windowHeight - 220);
   
   return { width: canvasWidth, height: canvasHeight };
 }
 
+// ========== GUMMIBÄRCHEN-KLASSE ==========
 class GummyBear {
+  /**
+   * Berechnet die Basis-Größe eines Gummibärchens
+   * @param {number} canvasWidth - Breite des Canvas
+   * @returns {Object} Objekt mit width und height Eigenschaften
+   */
   static getBaseSize(canvasWidth) {
-    const baseWidth = canvasWidth * 0.112;  // 56 bei 500px Breite
+    const baseWidth = canvasWidth * 0.112;  // 56px bei 500px Breite
     const baseHeight = baseWidth * 1.464;   // Verhältnis beibehalten (82/56)
     return { width: baseWidth, height: baseHeight };
   }
+
+  /**
+   * Erstellt ein neues Gummibärchen
+   * @param {number} x - X-Position
+   * @param {number} y - Y-Position
+   * @param {number} type - Typ/Farbe des Gummibärchens
+   * @param {number} rotation - Rotation in Grad
+   * @param {number} scale - Skalierungsfaktor
+   */
   constructor(x, y, type, rotation, scale) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.rotation = rotation;
-    // Basis-Größe an Canvas-Breite anpassen
     const baseSize = GummyBear.getBaseSize(width);
     this.baseWidth = baseSize.width;
     this.baseHeight = baseSize.height;
@@ -72,18 +109,26 @@ class GummyBear {
     this.active = true;
   }
 
+  /**
+   * Zeichnet das Gummibärchen
+   */
   display() {
     push();
     translate(this.x, this.y);
     rotate(this.rotation);
     if (!this.active) {
-      // Opacity über drawingContext steuern
       drawingContext.globalAlpha = 0.6;
     }
     image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
     pop();
   }
 
+  /**
+   * Prüft, ob ein Punkt innerhalb des Gummibärchens liegt
+   * @param {number} px - X-Koordinate des Punktes
+   * @param {number} py - Y-Koordinate des Punktes
+   * @returns {boolean} true wenn der Punkt innerhalb liegt
+   */
   contains(px, py) {
     if (!this.active) return false;
     
@@ -96,6 +141,10 @@ class GummyBear {
   }
 }
 
+// ========== SETUP & INITIALISIERUNG ==========
+/**
+ * Lädt alle benötigten Bilder
+ */
 function preload() {
   img[1] = loadImage('assets/orange.png');
   img[2] = loadImage('assets/gelb.png');
@@ -105,6 +154,10 @@ function preload() {
   img[6] = loadImage('assets/weiss.png');
 }
 
+/**
+ * Erstellt den "Speichern"-Button
+ * @returns {p5.Element} Der erstellte Button
+ */
 function createSaveButton() {
   let saveButton = createButton('Bild speichern');
   saveButton.class('save-button');
@@ -113,15 +166,18 @@ function createSaveButton() {
   return saveButton;
 }
 
+/**
+ * Erstellt alle UI-Buttons und deren Container
+ */
 function createButtons() {
   const buttonHolder = select('#button-holder');
   
-  // Äußerer Container mit Rahmen
+  // Äußerer Container
   let outerContainer = createDiv('');
   outerContainer.class('outer-button-container');
   outerContainer.parent(buttonHolder);
   
-  // Überschrift/Titel
+  // Titel-Button
   let titleButton = createButton('Neue Gummibärchenpackung');
   titleButton.parent(outerContainer);
   titleButton.class('fancy-button title');
@@ -129,12 +185,12 @@ function createButtons() {
   titleButton.style('background', 'linear-gradient(45deg, #FFE97F, #FFDD45)');
   titleButton.style('opacity', '0.9');
   
-  // Container für die Größen-Buttons
+  // Container für Größen-Buttons
   let sizeButtonContainer = createDiv('');
   sizeButtonContainer.parent(outerContainer);
   sizeButtonContainer.class('size-button-container');
   
-  // Container für den roten Punkt
+  // Aktiver Punkt
   activeDot = createDiv('');
   activeDot.class('active-dot');
   activeDot.parent(sizeButtonContainer);
@@ -158,9 +214,12 @@ function createButtons() {
   });
 }
 
+/**
+ * Bewegt den aktiven Punkt zur ausgewählten Packungsgröße
+ * @param {string} size - Ausgewählte Packungsgröße
+ */
 function moveActiveDot(size) {
   if (buttons[size]) {
-    // Zeige den Punkt an
     activeDot.style('display', 'block');
     
     let buttonRect = buttons[size].elt.getBoundingClientRect();
@@ -170,6 +229,9 @@ function moveActiveDot(size) {
   }
 }
 
+/**
+ * Setup-Funktion: Initialisiert das Spiel
+ */
 function setup() {
   angleMode(DEGREES);
   const canvasSize = calculateCanvasSize();
@@ -185,19 +247,20 @@ function setup() {
   
   createButtons();
 
+  // Layout-Berechnungen initialisieren
   getPlayAreaWidth();
   getPlayAreaHeight();
   getPlayAreaMargin();
   getColumnWidth();
   
+  // CSS-Styles erstellen
   let style = createElement('style');
   style.html(`
     #button-holder {
       display: flex;
       flex-direction: column;
       align-items: center;
-      //gap: 10px;
-      margin-bottom: -20px; // Abstand zum canvas
+      margin-bottom: -20px;
     }
     
     .outer-button-container {
@@ -219,9 +282,7 @@ function setup() {
       justify-content: center;
       width: 100%;
       position: relative;
-      //background-color:rgb(250, 224, 75);  /* Goldener Hintergrund */
       padding: 10px;
-      //border-radius: 8px;   
     }
     
     .button-container {
@@ -235,9 +296,9 @@ function setup() {
       height: 11px;
       background-color: red;
       border-radius: 50%;
-      bottom: -8px; /* distance to buttons */
+      bottom: -8px;
       transition: left 0.3s ease;
-      display: none; /* not shown in the beginning */
+      display: none;
     }
     
     .fancy-button {
@@ -301,44 +362,48 @@ function setup() {
       color: white;
     }
 
-      @media (max-width: 500px) {
-    .fancy-button {
-      padding: 6px 12px;
-      font-size: 14px;
-      min-width: 80px;
-    }
-    
-    .fancy-button.title {
-      font-size: 16px;
-      padding: 10px 15px;
-      width: 95vw;
-    }
-    
-    .outer-button-container {
-      width: 99%;
-      padding: 15px;
-      gap: 5px;
-      border: none;
-    }
+    @media (max-width: 500px) {
+      .fancy-button {
+        padding: 6px 12px;
+        font-size: 14px;
+        min-width: 80px;
+      }
+      
+      .fancy-button.title {
+        font-size: 16px;
+        padding: 10px 15px;
+        width: 95vw;
+      }
+      
+      .outer-button-container {
+        width: 99%;
+        padding: 15px;
+        gap: 5px;
+        border: none;
+      }
 
-    .save-button {
-      position: absolute;
-      top: 220px;
-      height: 25px;
-      padding: 4px 4px;
-      cursor: pointer;
-      font-size: 10px;
-    }
+      .save-button {
+        position: absolute;
+        top: 220px;
+        height: 25px;
+        padding: 4px 4px;
+        cursor: pointer;
+        font-size: 10px;
+      }
 
-    .active-dot {
-      bottom: -14px; /* distance to buttons */
+      .active-dot {
+        bottom: -14px;
+      }
     }
-
   `);
   
   resetHistogram();
 }
 
+// ========== HAUPTSPIEL-FUNKTIONEN ==========
+/**
+ * Haupt-Zeichenschleife
+ */
 function draw() {
   background(bg);
   
@@ -349,6 +414,12 @@ function draw() {
   drawHistogram();
 }
 
+/**
+ * Verarbeitet Benutzerinteraktionen (Maus/Touch)
+ * @param {number} x - X-Koordinate der Interaktion
+ * @param {number} y - Y-Koordinate der Interaktion
+ * @returns {boolean} false wenn die Interaktion verarbeitet wurde
+ */
 function handleInteraction(x, y) {
   for (let bear of bears) {
     if (bear.contains(x, y) && bear.active) {
@@ -366,20 +437,29 @@ function handleInteraction(x, y) {
   return true;
 }
 
+/**
+ * Mausklick-Handler
+ */
 function mousePressed() {
   return handleInteraction(mouseX, mouseY);
 }
 
+/**
+ * Touch-Handler
+ */
 function touchStarted() {
   if (touches.length > 0) {
     let touch = touches[0];
-    let x = touch.x;
-    let y = touch.y;
-    return handleInteraction(x, y);
+    return handleInteraction(touch.x, touch.y);
   }
   return true;
 }
 
+/**
+ * Erstellt zufällige Positionen für die Gummibärchen
+ * @param {number} num - Anzahl der zu erstellenden Positionen
+ * @returns {Array} Array von Positionen {x, y}
+ */
 function createPositions(num) {
   let positions = [];
   let margin = getPlayAreaMargin();
@@ -392,8 +472,7 @@ function createPositions(num) {
   const bearWidth = baseSize.width * scale;
   const bearHeight = baseSize.height * scale;
   
-  // Mindestabstand ist der Durchschnitt von Breite und Höhe, 
-  // multipliziert mit einem Überlappungsfaktor (z.B. 0.7 für 30% Überlappung erlaubt, eigentlich minimale Sichtbarkeit)
+  // Mindestabstand für minimale Überlappung
   const overlapFactor = 1;
   const minDistance = ((bearWidth + bearHeight) / 2) * overlapFactor;
   
@@ -416,12 +495,15 @@ function createPositions(num) {
   return positions;
 }
 
+/**
+ * Zeichnet das Histogramm der Gummibärchen-Verteilung
+ */
 function drawHistogram() {
-  const colorOrder = [6, 5, 2, 1, 3, 4];
+  const colorOrder = [6, 5, 2, 1, 3, 4];  // Reihenfolge: Weiß, Grün, Gelb, Orange, Hellrot, Dunkelrot
   const columnWidth = getColumnWidth();
   
   // Gesamtbreite des Histogramms berechnen
-  const histogramWidth = columnWidth * 6; // 6 Spalten
+  const histogramWidth = columnWidth * 6;
   
   // Zentrieren: Startposition berechnen
   const startX = (width - histogramWidth) / 2;
@@ -439,7 +521,7 @@ function drawHistogram() {
       case 2: fill(60, 100, 100); break;  // Gelb
       case 1: fill(30, 100, 100); break;  // Orange
       case 3: fill(0, 100, 90); break;    // Hellrot
-      case 4: fill(344, 90, 65); break;    // Dunkelrot
+      case 4: fill(344, 90, 65); break;   // Dunkelrot
     }
     
     rect(x - columnWidth/4, height - h - height * 0.083, columnWidth/2, h);
@@ -454,10 +536,16 @@ function drawHistogram() {
   }
 }
 
+/**
+ * Setzt das Histogramm zurück
+ */
 function resetHistogram() {
   histogram = Array(7).fill(0);
 }
 
+/**
+ * Erstellt eine neue Packung Gummibärchen
+ */
 function newPackage() {
   bears = [];
   resetHistogram();
@@ -482,6 +570,9 @@ function newPackage() {
   }
 }
 
+/**
+ * Deaktiviert alle aktiven Gummibärchen
+ */
 function deactivateAllBears() {
   for (let bear of bears) {
     if (bear.active) {
@@ -492,10 +583,14 @@ function deactivateAllBears() {
   select('.save-button').style('display', 'block');
 }
 
+/**
+ * Verarbeitet Tastatureingaben
+ * @param {Event} event - Tastatureingabe-Event
+ * @returns {boolean} false wenn die Eingabe verarbeitet wurde
+ */
 function keyPressed(event) {
   // Nur Buchstaben zum Buffer hinzufügen
   if (key.length === 1 && key.match(/[a-z]/i)) {
-    // Buffer aktualisieren
     keyBuffer += key.toLowerCase();
     
     // Timer zurücksetzen
@@ -509,7 +604,7 @@ function keyPressed(event) {
     if (keyBuffer.includes(targetSequence)) {
       console.log('Sequence detected!');
       deactivateAllBears();
-      keyBuffer = ''; // Buffer zurücksetzen
+      keyBuffer = '';
       if (resetBufferTimer) clearTimeout(resetBufferTimer);
       return false;
     }
@@ -522,8 +617,12 @@ function keyPressed(event) {
   return true;
 }
 
+/**
+ * Passt die Canvas-Größe an die Fenstergröße an
+ */
 function windowResized() {
   const canvasSize = calculateCanvasSize();
   resizeCanvas(canvasSize.width, canvasSize.height);
-  
 }
+
+//
