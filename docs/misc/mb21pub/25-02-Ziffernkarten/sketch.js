@@ -16,8 +16,8 @@ let CARD_HEIGHT = 80;
 let PADDING = 70;
 let GROUP_GAP = 30;
 let START_X; // Wird dynamisch berechnet
-const START_Y1 = 5;
-const START_Y2 = 155;
+const START_Y1 = 20;
+const START_Y2 = 170;
 
 // Help-Sequenz
 let keyBuffer = '';
