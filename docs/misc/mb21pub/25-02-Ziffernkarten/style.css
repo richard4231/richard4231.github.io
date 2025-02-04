@@ -47,6 +47,15 @@ button:active {
     opacity: 1;
 }
 
+canvas {
+    margin-top: 85px;  /* Abstand von oben */
+    /* oder absolute Positionierung: */
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);  /* zentriert den Canvas */
+}
+
 /* Responsive Design */
 @media (max-width: 800px) {
     canvas {
