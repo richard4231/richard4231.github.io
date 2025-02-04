@@ -16,8 +16,8 @@ let CARD_HEIGHT = 80;
 let PADDING = 70;
 let GROUP_GAP = 30;
 let START_X; // Wird dynamisch berechnet
-const START_Y1 = 50;  // von 100 auf 50 geändert
-const START_Y2 = 200; // von 250 auf 200 geändert
+const START_Y1 = 100;
+const START_Y2 = 250;
 
 // Help-Sequenz
 let keyBuffer = '';
@@ -51,8 +51,9 @@ function calculateStartX() {
     // Canvas-Mitte
     const middleOfCanvas = width / 2;
     
-    // Verschiebung nach links, damit die dritte Karte leicht rechts der Mitte ist
-    return middleOfCanvas - (group1Width + GROUP_GAP + CARD_WIDTH/2) - 50;
+    // Verschiebung nach links, damit die dritte Karte in/nahe der Mitte ist
+    // Die 40 verschiebt alles etwas weiter nach links
+    return middleOfCanvas - (group1Width + GROUP_GAP + CARD_WIDTH/2) + 50;
 }
 
 class Card {
