@@ -394,7 +394,7 @@ function createPositions(num) {
   
   // Mindestabstand ist der Durchschnitt von Breite und Höhe, 
   // multipliziert mit einem Überlappungsfaktor (z.B. 0.7 für 30% Überlappung erlaubt, eigentlich minimale Sichtbarkeit)
-  const overlapFactor = 1.0;
+  const overlapFactor = 1;
   const minDistance = ((bearWidth + bearHeight) / 2) * overlapFactor;
   
   for (let i = 0; i < num; i++) {
@@ -439,7 +439,7 @@ function drawHistogram() {
       case 2: fill(60, 100, 100); break;  // Gelb
       case 1: fill(30, 100, 100); break;  // Orange
       case 3: fill(0, 100, 90); break;    // Hellrot
-      case 4: fill(0, 100, 60); break;    // Dunkelrot
+      case 4: fill(344, 79, 65); break;    // Dunkelrot
     }
     
     rect(x - columnWidth/4, height - h - height * 0.083, columnWidth/2, h);
