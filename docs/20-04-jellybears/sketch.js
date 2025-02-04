@@ -1,6 +1,3 @@
-// Bild speichern Knopf unten
-// max-height oder height an vh anpassen.
-
 let bg = 50; // background color
 let img = [];
 let buttons = {}; // saves button references
@@ -8,7 +5,7 @@ let bears = [];
 let histogram = [];
 let activeDot;
 
-// Versuch shortcut
+// Zeichenfolge um Histogramm direkt zu erstellen
 let keyBuffer = '';
 const targetSequence = 'histo';
 const bufferTimeout = 2000; // 2 Sekunden timeout
@@ -81,7 +78,7 @@ class GummyBear {
     rotate(this.rotation);
     if (!this.active) {
       // Opacity über drawingContext steuern
-      drawingContext.globalAlpha = 0.7;
+      drawingContext.globalAlpha = 0.6;
     }
     image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
     pop();
