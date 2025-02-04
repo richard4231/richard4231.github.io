@@ -422,12 +422,17 @@ function createPositions(num) {
 function drawHistogram() {
   const colorOrder = [6, 5, 2, 1, 3, 4];
   const columnWidth = getColumnWidth();
-  const leftMargin = width * 0.16; // 16% vom linken Rand
+  
+  // Gesamtbreite des Histogramms berechnen
+  const histogramWidth = columnWidth * 6; // 6 Spalten
+  
+  // Zentrieren: Startposition berechnen
+  const startX = (width - histogramWidth) / 2;
   
   for (let i = 0; i < 6; i++) {
-    let x = (i + 0.5) * columnWidth + leftMargin;
+    let x = startX + (i + 0.5) * columnWidth;
     let colorIndex = colorOrder[i];
-    let h = histogram[colorIndex] * (height * 0.05); // Höhe relativ zur Canvas-Höhe
+    let h = histogram[colorIndex] * (height * 0.05);
     
     push();
     noStroke();
@@ -440,12 +445,12 @@ function drawHistogram() {
       case 4: fill(0, 100, 60); break;    // Dunkelrot
     }
     
-    rect(x - columnWidth/4, height - h - height * 0.083, columnWidth/2, h); // 0.083 ist 50px bei 600px Höhe
+    rect(x - columnWidth/4, height - h - height * 0.083, columnWidth/2, h);
     
     if (histogram[colorIndex] > 0) {
       fill(0, 0, 100);
       textAlign(CENTER);
-      textSize(width * 0.024); // Schriftgröße relativ zur Canvas-Breite
+      textSize(width * 0.024);
       text(histogram[colorIndex], x, height - h - height * 0.1);
     }
     pop();
