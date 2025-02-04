@@ -323,8 +323,8 @@ function calculatePercentage() {
     let result2 = (num3 / 100) * num4;
     
     document.getElementById('percentage').innerHTML = 
-        `${num1}% von ${num2} = ${result1.toFixed(2)}<br>` +
-        `${num3}% von ${num4} = ${result2.toFixed(2)}`;
+        `${num1}% von ${num2} ≈ ${result1.toFixed(0)}<br>` +
+        `${num3}% von ${num4} ≈ ${result2.toFixed(0)}`;
 }
 
 function keyPressed() {
