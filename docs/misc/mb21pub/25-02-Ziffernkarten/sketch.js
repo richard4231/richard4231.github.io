@@ -16,8 +16,8 @@ let CARD_HEIGHT = 80;
 let PADDING = 70;
 let GROUP_GAP = 30;
 let START_X; // Wird dynamisch berechnet
-const START_Y1 = 100;
-const START_Y2 = 250;
+const START_Y1 = 5;
+const START_Y2 = 155;
 
 // Help-Sequenz
 let keyBuffer = '';
@@ -28,12 +28,12 @@ let resetBufferTimer = null;
 // Kartenfarben
 const cardColors = {
     row1: {
-        group1: '#FFB7C5', // Rosa
-        group2: '#ADD8E6'  // Hellblau
+        group1: '#ECABB3', // Rosa
+        group2: '#BCE4FA'  // Hellblau
     },
     row2: {
-        group1: '#90EE90', // Hellgrün
-        group2: '#FFFFE0'  // Hellgelb
+        group1: '#FFEC76',  // Hellgelb
+        group2: '#C5CE70', // Hellgrün
     }
 };
 
