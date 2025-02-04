@@ -8,6 +8,14 @@ let bears = [];
 let histogram = [];
 let activeDot;
 
+// Versuch shortcut
+let keyBuffer = '';
+const targetSequence = 'histo';
+const bufferTimeout = 2000; // 2 Sekunden timeout
+
+// Timer für das Zurücksetzen des Buffers
+let resetBufferTimer = null;
+
 // configuration of various packages
 const packageConfigs = {
   '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviation: 1, margin: 0.18 },   // kleinste
@@ -470,6 +478,46 @@ function newPackage() {
     );
     bears.push(bear);
   }
+}
+
+function deactivateAllBears() {
+  for (let bear of bears) {
+    if (bear.active) {
+      bear.active = false;
+      histogram[bear.type]++;
+    }
+  }
+  select('.save-button').style('display', 'block');
+}
+
+function keyPressed(event) {
+  // Nur Buchstaben zum Buffer hinzufügen
+  if (key.length === 1 && key.match(/[a-z]/i)) {
+    // Buffer aktualisieren
+    keyBuffer += key.toLowerCase();
+    
+    // Timer zurücksetzen
+    if (resetBufferTimer) clearTimeout(resetBufferTimer);
+    resetBufferTimer = setTimeout(() => {
+      keyBuffer = '';
+      console.log('Buffer reset');
+    }, bufferTimeout);
+    
+    // Prüfen ob die Zielsequenz im Buffer ist
+    if (keyBuffer.includes(targetSequence)) {
+      console.log('Sequence detected!');
+      deactivateAllBears();
+      keyBuffer = ''; // Buffer zurücksetzen
+      if (resetBufferTimer) clearTimeout(resetBufferTimer);
+      return false;
+    }
+    
+    // Buffer auf maximale Länge begrenzen
+    if (keyBuffer.length > 10) {
+      keyBuffer = keyBuffer.slice(-10);
+    }
+  }
+  return true;
 }
 
 function windowResized() {
