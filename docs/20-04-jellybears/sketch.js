@@ -47,14 +47,20 @@ function calculateCanvasSize() {
 }
 
 class GummyBear {
+  static getBaseSize(canvasWidth) {
+    const baseWidth = canvasWidth * 0.112;  // 56 bei 500px Breite
+    const baseHeight = baseWidth * 1.464;   // Verhältnis beibehalten (82/56)
+    return { width: baseWidth, height: baseHeight };
+  }
   constructor(x, y, type, rotation, scale) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.rotation = rotation;
     // Basis-Größe an Canvas-Breite anpassen
-    this.baseWidth = width * 0.112;  // 56 bei 500px Breite
-    this.baseHeight = this.baseWidth * 1.464; // Verhältnis beibehalten (82/56)
+    const baseSize = GummyBear.getBaseSize(width);
+    this.baseWidth = baseSize.width;
+    this.baseHeight = baseSize.height;
     this.scale = scale;
     this.width = this.baseWidth * scale;
     this.height = this.baseHeight * scale;
@@ -62,12 +68,15 @@ class GummyBear {
   }
 
   display() {
-      push();
-      translate(this.x, this.y);
-      rotate(this.rotation);
-      tint(this.active? 100 : 50, this.active? 255 : 1);  
-      image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
-      pop();
+    push();
+    translate(this.x, this.y);
+    rotate(this.rotation);
+    if (!this.active) {
+      // Opacity über drawingContext steuern
+      drawingContext.globalAlpha = 0.7;
+    }
+    image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
+    pop();
   }
 
   contains(px, py) {
@@ -372,6 +381,17 @@ function createPositions(num) {
   let playArea = getPlayAreaWidth();
   let playAreah = getPlayAreaHeight();
   
+  // Berechne Mindestabstand basierend auf der Bärchengröße
+  const baseSize = GummyBear.getBaseSize(width);
+  const scale = packageConfigs[selectedPackage].scale;
+  const bearWidth = baseSize.width * scale;
+  const bearHeight = baseSize.height * scale;
+  
+  // Mindestabstand ist der Durchschnitt von Breite und Höhe, 
+  // multipliziert mit einem Überlappungsfaktor (z.B. 0.7 für 30% Überlappung erlaubt, eigentlich minimale Sichtbarkeit)
+  const overlapFactor = 1.0;
+  const minDistance = ((bearWidth + bearHeight) / 2) * overlapFactor;
+  
   for (let i = 0; i < num; i++) {
     let pos = {
       x: random(margin, margin + playArea),
@@ -380,7 +400,7 @@ function createPositions(num) {
     
     let attempts = 0;
     while (attempts < 100 && positions.some(p => 
-      dist(p.x, p.y, pos.x, pos.y) < width * 0.1)) { // Abstand relativ zur Canvas-Breite
+      dist(p.x, p.y, pos.x, pos.y) < minDistance)) {
       pos.x = random(margin, margin + playArea);
       pos.y = random(margin, margin + playAreah);
       attempts++;
@@ -455,4 +475,5 @@ function newPackage() {
 function windowResized() {
   const canvasSize = calculateCanvasSize();
   resizeCanvas(canvasSize.width, canvasSize.height);
+  
 }
