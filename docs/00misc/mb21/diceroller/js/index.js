@@ -84,7 +84,7 @@ const initApp = async () => {
           
           // Warten bis ein Test-Würfel geladen werden kann
           this.box.updateConfig({
-            settleTimeout: 100,  // Wurfdauer zeitlich einschränken
+            settleTimeout: 10000,  // Wurfdauer zeitlich einschränken
           });
           await this.box.roll(['1dpip']); // Lädt die Assets für einen d6
           await this.box.clear();       // Räumt gleich wieder auf
