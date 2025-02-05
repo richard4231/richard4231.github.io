@@ -23,7 +23,7 @@
      font-size: 20px;
      font-weight: bold;
      -moz-appearance: textfield; /* Eingabefeld ohne Pfeile für Firefox */ 
-     width: 39px;
+     width: 36px;
      height: 35px;
      padding: 0 0.5rem;
      border: none;
@@ -32,9 +32,8 @@
    }
 
    input[class="custom-sides"]::placeholder {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: normal;
-    font-stretch: condensed;
     font-stretch: extra-condensed;
   }
    
@@ -42,7 +41,7 @@
    input[class="dice-number"] {
      font-size: 14px;
      font-weight: bold;
-     width: 30px;
+     width: 31px;
      height: 35px;
      padding: 0 0.5rem;
      border: none;
@@ -50,6 +49,12 @@
      text-align: center;
      background-color: white;
    }
+
+   input[class="dice-number"]::placeholder {
+    font-size: 13px;
+    font-weight: normal;
+    font-stretch: extra-condensed;
+  }
    
    /* Entfernt Spinner-Pfeile in Webkit-Browsern */
    input[class="custom-sides"]::-webkit-outer-spin-button,
@@ -112,6 +117,7 @@
    /* Spezieller dN-Button */
    .dice-btn.dN {
      width: 50px;
+     font-weight: bold;
    }
    
    .dice-btn.dN::after {
@@ -429,7 +435,7 @@
     }
     
     .dice-btn.dN::after {
-      content: "Z";
+      content: "W";
     }
    }
 
