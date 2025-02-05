@@ -77,8 +77,8 @@ const initApp = async () => {
         this.box = await this.initDiceBox();
 
         // Warten bis ein Test-Würfel geladen werden kann
-        //await this.box.roll(['1d6']); // Lädt die Assets für einen d6
-        //await this.box.clear();       // Räumt gleich wieder auf
+        await this.box.roll(['1d6']); // Lädt die Assets für einen d6
+        await this.box.clear();       // Räumt gleich wieder auf
 
         await this.setupEventListeners();
         DiceValidation.setupInputValidation(this.container);
