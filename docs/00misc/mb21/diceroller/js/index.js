@@ -21,6 +21,10 @@ const getRandomDiceConfig = () => ({
 class DiceSection {
   constructor(container) {
     this.container = container;
+    // Hilfe sofort initialisieren, nicht auf async/await warten
+    this.setupHelpOverlay();
+    
+    // Dann die async Initialisierung
     this.init().then(() => {
         loadedSections++;
         if (loadedSections === totalSections) {
@@ -33,24 +37,28 @@ class DiceSection {
             hideLoader();
         }
     });
-}
+  }
 
   // Overlay für Hilfe-Funktionalität
   setupHelpOverlay() {
     const helpButton = this.container.querySelector('.help-button');
     const helpOverlay = this.container.querySelector('.help-overlay');
+    const randomResult = this.container.querySelector('.random-result');
     
     if (!helpButton || !helpOverlay) return;
     
-    const closeOverlay = () => {
-      helpOverlay.classList.remove('show');
-      document.removeEventListener('click', closeOverlay);
-    };
-    
     helpButton.addEventListener('click', (e) => {
-      e.stopPropagation();
-      helpOverlay.classList.add('show');
-      setTimeout(() => document.addEventListener('click', closeOverlay), 0);
+        e.stopPropagation();
+        helpOverlay.classList.toggle('show');
+        // Zahlen ausblenden wenn Hilfe angezeigt wird
+        if (helpOverlay.classList.contains('show')) {
+            randomResult.classList.remove('show');
+        }
+    });
+
+    // Klick auf das Overlay selbst schließt es auch
+    helpOverlay.addEventListener('click', () => {
+        helpOverlay.classList.remove('show');
     });
   }
 
