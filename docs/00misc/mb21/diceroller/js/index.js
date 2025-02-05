@@ -1,5 +1,13 @@
-// @ts-ignore
-import DiceBox from '/docs/00misc/mb21/diceroller/lib/@3d-dice/dice-box/dist/dice-box.es.min.js'
+
+const BASE_PATH = window.location.hostname.includes('github.io')
+  ? '/00misc/mb21/diceroller/'
+  : '/docs/00misc/mb21/diceroller/';
+
+// Import mit dynamischem Pfad
+const DiceBoxPath = `${BASE_PATH}lib/@3d-dice/dice-box/dist/dice-box.es.min.js`;
+const DiceBoxModule = await import(DiceBoxPath);
+const DiceBox = DiceBoxModule.default;
+
 import { THEMES, COLORS, DEFAULT_DICE_CONFIG, MANY_DICE_CONFIG, ASSET_PATH } from './config.js';
 import { DiceValidation } from './validation.js';
 

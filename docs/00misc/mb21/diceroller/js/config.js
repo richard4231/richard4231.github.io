@@ -61,6 +61,14 @@ export const INPUT_LIMITS = Object.freeze({
     }
 });
 
+// Basis-URL dynamisch ermitteln
+const getBasePath = () => {
+    // Prüfen ob wir auf GitHub Pages sind
+    const isGitHub = window.location.hostname.includes('github.io');
+    return isGitHub 
+      ? '/00misc/mb21/diceroller/'
+      : '/docs/00misc/mb21/diceroller/';
+  };
+
 // Pfad zu den Assets für die Würfelbox
-//export const ASSET_PATH = "/00misc/mb21/diceroller/lib/@3d-dice/dice-box/dist/assets/";
-export const ASSET_PATH = "/docs/00misc/mb21/diceroller/lib/@3d-dice/dice-box/dist/assets/";
+export const ASSET_PATH = `${getBasePath()}lib/@3d-dice/dice-box/dist/assets/`;
