@@ -415,6 +415,32 @@ function draw() {
 }
 
 /**
+ * Gibt zufällige frequentistisch basierte Packunsggrösse für 10g aus
+ */
+function getWeightedRandom() {
+  const distribution = [
+      { value: 6, probability: 0.015267176 },
+      { value: 7, probability: 0.328244275 },
+      { value: 8, probability: 0.503816794 },
+      { value: 9, probability: 0.095419847 },
+      { value: 10, probability: 0.045801527 },
+      { value: 11, probability: 0.011450382 }
+  ];
+  
+  const rand = random();
+  let sum = 0;
+  
+  for (const item of distribution) {
+      sum += item.probability;
+      if (rand < sum) {
+          return item.value;
+      }
+  }
+  
+  return distribution[distribution.length - 1].value;
+}
+
+/**
  * Verarbeitet Benutzerinteraktionen (Maus/Touch)
  * @param {number} x - X-Koordinate der Interaktion
  * @param {number} y - Y-Koordinate der Interaktion
@@ -552,9 +578,13 @@ function newPackage() {
   select('.save-button').style('display', 'none');
   
   const config = packageConfigs[selectedPackage];
+  if (selectedPackage === '10g') {
+    num = getWeightedRandom();
+  } else {
   let num = round(randomGaussian(config.average, config.stdDev));
   num = constrain(num, config.average - config.deviationleft, config.average + config.deviationright);
-  
+  }
+
   let positions = createPositions(num);
   
   for (let i = 0; i < num; i++) {
