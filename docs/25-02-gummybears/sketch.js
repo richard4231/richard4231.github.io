@@ -17,9 +17,9 @@ let resetBufferTimer = null;           // Timer für Puffer-Reset
 
 // Konfiguration der verschiedenen Packungsgrößen
 const packageConfigs = {
-  '8g': { average: 6, stdDev: 0.3, scale: 0.8, deviationleft: 1, deviationright: 2, margin: 0.18 },   // Kleinste Packung
-  '10g': { average: 8, stdDev: 0.6, scale: 0.85, deviationleft: 1, deviationright: 3, margin: 0.14 }, // Kleine Packung
-  '15g': { average: 12, stdDev: 0.7, scale: 0.95, deviationleft: 2, deviationright: 2, margin: 0.1 }  // Normale Packung
+  '8g': { average: 6, stdDev: 0.5, scale: 0.8, deviationleft: 1, deviationright: 2, margin: 0.18 },   // Kleinste Packung
+  '10g': { average: 8, stdDev: 0.6, scale: 0.85, deviationleft: 1, deviationright: 3, margin: 0.14 }, // Kleine Packung. Nicht benötigt, da anderer Ansatz
+  '15g': { average: 12, stdDev: 0.7, scale: 0.85, deviationleft: 2, deviationright: 2, margin: 0.1 }  // Normale Packung
 };
 let selectedPackage = '10g';  // Standardmäßig ausgewählte Packungsgröße
 
@@ -634,11 +634,13 @@ function newPackage() {
   select('.save-button').style('display', 'none');
   
   const config = packageConfigs[selectedPackage];
+  let num;
+
   if (selectedPackage === '10g') {
     num = getWeightedRandom();
   } else {
-  let num = round(randomGaussian(config.average, config.stdDev));
-  num = constrain(num, config.average - config.deviationleft, config.average + config.deviationright);
+    num = round(randomGaussian(config.average, config.stdDev));
+    num = constrain(num, config.average - config.deviationleft, config.average + config.deviationright);
   }
 
   let positions = createPositions(num);
