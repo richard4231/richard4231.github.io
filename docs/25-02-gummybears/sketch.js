@@ -491,6 +491,46 @@ function createPositions(num) {
   let margin = getPlayAreaMargin();
   let playArea = getPlayAreaWidth();
   let playAreah = getPlayAreaHeight();
+
+  // Berechne Mindestabstand basierend auf der Bärchengröße
+  const baseSize = GummyBear.getBaseSize(width);
+  const scale = packageConfigs[selectedPackage].scale;
+  const bearWidth = baseSize.width * scale;
+  const bearHeight = baseSize.height * scale;
+
+  // Mindestabstand für minimale Überlappung
+  const overlapFactor = 1;
+  const minDistance = ((bearWidth + bearHeight) / 2) * overlapFactor;
+
+  for (let i = 0; i < num; i++) {
+    let pos = {
+      x: random(margin, margin + playArea),
+      y: random(margin, margin + playAreah)
+    };
+
+    let attempts = 0;
+    while (attempts < 100 && positions.some(p => 
+      dist(p.x, p.y, pos.x, pos.y) < minDistance)) {
+      pos.x = random(margin, margin + playArea);
+      pos.y = random(margin, margin + playAreah);
+      attempts++;
+    }
+
+    positions.push(pos);
+  }
+  return positions;
+}
+
+/**
+ * Erstellt zufällige noisebasierte Positionen für die Gummibärchen (nicht aktiv)
+ * @param {number} num - Anzahl der zu erstellenden Positionen
+ * @returns {Array} Array von Positionen {x, y}
+ */
+function createNoisePositions(num) {
+  let positions = [];
+  let margin = getPlayAreaMargin();
+  let playArea = getPlayAreaWidth();
+  let playAreah = getPlayAreaHeight();
   
   // Berechne Mindestabstand basierend auf der Bärchengröße
   const baseSize = GummyBear.getBaseSize(width);
@@ -502,17 +542,33 @@ function createPositions(num) {
   const overlapFactor = 1;
   const minDistance = ((bearWidth + bearHeight) / 2) * overlapFactor;
   
+  // Noise-Skalen für unterschiedliche Verteilungsmuster
+  const noiseScale = 0.9;  // Kleinere Werte = sanftere Verteilung
+  const timeOffset = random(1000);  // Zufälliger Startpunkt für Variation
+  
   for (let i = 0; i < num; i++) {
+    // Verwende verschiedene Dimensionen des Noise-Space
+    let noiseX = noise((i * noiseScale) + timeOffset, 0) * playArea;
+    let noiseY = noise(0, (i * noiseScale) + timeOffset) * playAreah;
+    
     let pos = {
-      x: random(margin, margin + playArea),
-      y: random(margin, margin + playAreah)
+      x: margin + noiseX,
+      y: margin + noiseY
     };
     
     let attempts = 0;
     while (attempts < 100 && positions.some(p => 
       dist(p.x, p.y, pos.x, pos.y) < minDistance)) {
-      pos.x = random(margin, margin + playArea);
-      pos.y = random(margin, margin + playAreah);
+      // Falls Kollision, leicht verschieben mit Noise
+      let offsetAngle = noise(attempts * 0.1, i) * TWO_PI;
+      let offsetDist = noise(i, attempts * 0.1) * minDistance;
+      pos.x += cos(offsetAngle) * offsetDist;
+      pos.y += sin(offsetAngle) * offsetDist;
+      
+      // Stelle sicher, dass die Position im Spielbereich bleibt
+      pos.x = constrain(pos.x, margin, margin + playArea);
+      pos.y = constrain(pos.y, margin, margin + playAreah);
+      
       attempts++;
     }
     
