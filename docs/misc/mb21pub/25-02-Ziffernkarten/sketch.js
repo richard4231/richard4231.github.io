@@ -182,9 +182,15 @@ function redistributeCards() {
     let values = [...Array(10).keys()];
     shuffle(values, true);
     
+    // Karten zu ihren ursprünglichen Positionen zurücksetzen
     cards.forEach((card, index) => {
+        let row = Math.floor(index / 5);
+        let col = index % 5;
+        card.setPosition([row, col]);
         card.value = values[index];
         card.revealed = false;
+        // Farbe neu setzen basierend auf der ursprünglichen Position
+        card.color = card.getCardColor();
     });
 
     setTimeout(() => {
