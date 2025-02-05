@@ -2,7 +2,7 @@
 export const THEMES = Object.freeze([
     'default', // THEMES[0]
     'rock',
-    'smooth',
+    'smooth', // 2
     'rust',
     'rock',
     'default-extras', //5
@@ -22,20 +22,29 @@ export const COLORS = Object.freeze([
 // Standard-Würfelkonfiguration (siehe https://fantasticdice.games/docs/usage/config)
 export const DEFAULT_DICE_CONFIG = Object.freeze({
     offscreen: true,
-    scale: 100,
+    scale: 15,
     throwForce: 5,
-    gravity: 1,
+    gravity: 2,
     mass: 2,
     spinForce: 4,
     friction: 0.7,
     restitution: 0,
     angularDamping: 0.4,
     linearDamping: 0.4,
-    settleTimeout: 30000,
+    settleTimeout: 5000,
     startingHeight: 6,
     lightIntensity: 0.9,
     delay: 10,
     delay: 10
+});
+
+// Würfelkonfiguration für einige Würfel
+export const FEW_DICE_CONFIG = Object.freeze({
+    scale: 10,
+    gravity: 7,
+    mass: 3,
+    friction: 0.4,
+    restitution: 0.2
 });
 
 // Würfelkonfiguration für viele Würfel
@@ -45,6 +54,30 @@ export const MANY_DICE_CONFIG = Object.freeze({
     mass: 4,
     friction: 0.4,
     restitution: 0.2
+});
+
+// Würfelkonfiguration für 8er Würfel
+export const EIGHT_DICE_CONFIG = Object.freeze({
+    scale: 15,
+    gravity: 2,
+    mass: 2,
+    friction: 0.4,
+    restitution: 0.1
+});
+
+// Würfelkonfiguration für Spezialwurf
+export const SPECIAL_CONFIG = Object.freeze({
+    scale: 10,
+    gravity: 0,
+    mass: 1,
+    friction: 0,
+    restitution: 0.7,
+    throwForce: 7,
+    spinForce: 7,
+    startingHeight: 20,
+    angularDamping: 0.1,
+    linearDamping: 0.4,
+    settleTimeout: 30000,
 });
 
 // Standardwerte für Eingaben

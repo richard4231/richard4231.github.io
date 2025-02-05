@@ -3,7 +3,7 @@ const BASE_PATH = window.location.hostname.includes('github.io')
   ? '/00misc/mb21/diceroller/'
   : '/docs/00misc/mb21/diceroller/';
 
-import { THEMES, COLORS, DEFAULT_DICE_CONFIG, MANY_DICE_CONFIG, ASSET_PATH } from './config.js';
+import { THEMES, COLORS, DEFAULT_DICE_CONFIG, MANY_DICE_CONFIG, FEW_DICE_CONFIG, EIGHT_DICE_CONFIG, ASSET_PATH, SPECIAL_CONFIG } from './config.js';
 import { DiceValidation } from './validation.js';
 
 let loadedSections = 0;
@@ -132,6 +132,7 @@ const initApp = async () => {
       const themeMap = {
         'd4': THEMES[7],
         'd6': THEMES[6],
+        'd8': THEMES[2],
         'd100': getRandomFromList(['rust', 'rock', 'default', 'smooth']), //rock too dark
         'default': THEMES[0] 
         //'default': getRandomFromList(THEMES.slice(0, 4))
@@ -140,19 +141,27 @@ const initApp = async () => {
     }
   
     updateDiceConfig(diceCount, diceType) {
-      if (diceCount > 9 && diceType !== 'd100') {
-        return MANY_DICE_CONFIG;
-      }
+      let baseConfig;
       
+      if (diceCount > 9 && diceType !== 'd100') {
+          baseConfig = { ...MANY_DICE_CONFIG };
+      } else if (diceCount > 2 && diceType !== 'd100') {
+          baseConfig = { ...FEW_DICE_CONFIG };
+      } else if (diceType === 'd8') {
+        baseConfig = { ...EIGHT_DICE_CONFIG };
+      } else {
+          baseConfig = {
+              ...DEFAULT_DICE_CONFIG
+          };
+      }
+  
+      // Random Konfiguration hinzufügen
+      const randomConfig = getRandomDiceConfig();
       return {
-        scale: 10,
-        gravity: 4,
-        mass: 4,
-        friction: 0.5,
-        restitution: 0.1,
-        ...getRandomDiceConfig()
+          ...baseConfig,
+          ...randomConfig
       };
-    }
+  }
   
     // Würfelwurf-Logik
     async rollDice(diceType, diceCount) {
@@ -163,16 +172,7 @@ const initApp = async () => {
       // Spezialfall: Schwebende d10 Würfel bei diceCount = 0
       if (this.container.querySelector('.dice-number').value == 0 && diceType ==='d10') {
         this.box.updateConfig({
-          scale: 10,
-          gravity: 0,
-          mass: 1,
-          friction: 0,
-          restitution: 0.7,
-          throwForce: 7,
-          spinForce: 7,
-          startingHeight: 20,
-          angularDamping: 0.1,
-          linearDamping: 0.4,
+          ...SPECIAL_CONFIG,
         });
         this.box.roll(['3d10'], {
           theme: theme,
@@ -187,7 +187,7 @@ const initApp = async () => {
           themeColor: getRandomFromList(COLORS),
         });
       }
-  
+
       if (diceType === 'd100') {
         this.box.roll(['1d100'], { theme, themeColor });
         return;
