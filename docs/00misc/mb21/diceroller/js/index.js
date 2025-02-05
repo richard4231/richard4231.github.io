@@ -9,7 +9,6 @@ import { DiceValidation } from './validation.js';
 let loadedSections = 0;
 const totalSections = document.querySelectorAll('.dice-section').length;
 
-
 // Hilfsfunktionen
 const getRandomFromList = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -35,16 +34,17 @@ const initApp = async () => {
       
       // Dann die async Initialisierung
       this.init().then(() => {
-          loadedSections++;
-          if (loadedSections === totalSections) {
-              hideLoader();
-          }
+        loadedSections++;
+        if (loadedSections === totalSections) {
+          // Kurze Verzögerung für sanfteren Übergang
+          setTimeout(hideLoader, 200);
+        }
       }).catch(error => {
-          console.error('Error initializing dice section:', error);
-          loadedSections++;
-          if (loadedSections === totalSections) {
-              hideLoader();
-          }
+        console.error('Error initializing dice section:', error);
+        loadedSections++;
+        if (loadedSections === totalSections) {
+          hideLoader();
+        }
       });
     }
   
@@ -75,6 +75,11 @@ const initApp = async () => {
     async init() {
       try {
         this.box = await this.initDiceBox();
+
+        // Warten bis ein Test-Würfel geladen werden kann
+        await this.box.roll(['1d6']); // Lädt die Assets für einen d6
+        await this.box.clear();       // Räumt gleich wieder auf
+
         await this.setupEventListeners();
         DiceValidation.setupInputValidation(this.container);
       } catch (error) {
@@ -352,9 +357,9 @@ initApp().catch(error => {
 function hideLoader() {
   const loader = document.getElementById('loaderWrapper');
   if (loader) {
-      loader.classList.add('hidden');
-      setTimeout(() => {
-          loader.style.display = 'none';
-      }, 500);
+    loader.classList.add('hidden');
+    setTimeout(() => {
+      loader.style.display = 'none';
+    }, 500);
   }
 }
