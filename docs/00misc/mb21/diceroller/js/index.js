@@ -253,18 +253,28 @@ const initApp = async () => {
       }
   
       this.box.clear();
+      this.box.updateConfig({
+        theme: THEMES[5],
+        scale: 15,
+        gravity: 4,
+        mass: 2,
+        friction: 0.5,
+        restitution: 0.1,
+        throwForce: getRandomRange(4, 10),
+        spinForce: getRandomRange(4, 9),
+        startingHeight: getRandomRange(4, 11),
+        delay: 100,
+        lightIntensity: 0.9,
+      });
       for (let i = 0; i < count; i++) {
         const themeColor = getRandomFromList(COLORS);
         this.box.roll(['1d2'], {
-          theme: THEMES[5],
-          themeColor,
-          throwForce: getRandomRange(4, 10),
-          spinForce: getRandomRange(4, 9),
-          startingHeight: getRandomRange(4, 11),
-          delay: 100,
-          lightIntensity: 0.1,
+          themeColor: themeColor,
         });
       }
+      this.box.updateConfig({
+        ...DEFAULT_DICE_CONFIG,
+      });
     }
   
     showSpecialMessage(element, message) {

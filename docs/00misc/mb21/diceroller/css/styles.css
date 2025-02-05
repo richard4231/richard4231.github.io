@@ -54,6 +54,7 @@
     font-size: 13px;
     font-weight: normal;
     font-stretch: extra-condensed;
+    vertical-align: super;
   }
    
    /* Entfernt Spinner-Pfeile in Webkit-Browsern */
