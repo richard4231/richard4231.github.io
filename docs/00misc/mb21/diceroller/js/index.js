@@ -29,6 +29,8 @@ const initApp = async () => {
   class DiceSection {
     constructor(container) {
       this.container = container;
+      // erster Container
+      this.isFirstContainer = container.getAttribute('data-box-id') === '1';
       // Hilfe sofort initialisieren, nicht auf async/await warten
       this.setupHelpOverlay();
       
@@ -76,9 +78,22 @@ const initApp = async () => {
       try {
         this.box = await this.initDiceBox();
 
-        // Warten bis ein Test-Würfel geladen werden kann
-        await this.box.roll(['1d6']); // Lädt die Assets für einen d6
-        await this.box.clear();       // Räumt gleich wieder auf
+        if (this.isFirstContainer) {
+          const canvas = this.container.querySelector('canvas');
+          if (canvas) canvas.style.visibility = 'hidden';  // Canvas ausblenden
+          
+          // Warten bis ein Test-Würfel geladen werden kann
+          this.box.updateConfig({
+            settleTimeout: 100,  // Wurfdauer zeitlich einschränken
+          });
+          await this.box.roll(['1dpip']); // Lädt die Assets für einen d6
+          await this.box.clear();       // Räumt gleich wieder auf
+          this.box.updateConfig({ // config wieder auf default Werte
+            ...DEFAULT_DICE_CONFIG
+          });
+          
+          if (canvas) canvas.style.visibility = 'visible'; // Canvas wieder einblenden
+        }
 
         await this.setupEventListeners();
         DiceValidation.setupInputValidation(this.container);
@@ -92,7 +107,7 @@ const initApp = async () => {
       return new DiceBox({
         assetPath: ASSET_PATH,
         container: `#dice-box-${boxId}`,
-        theme: getRandomFromList(THEMES),
+        theme: THEMES[0], //getRandomFromList(THEMES),
         ...DEFAULT_DICE_CONFIG,
         preloadThemes: THEMES,
       }).init();
@@ -117,8 +132,9 @@ const initApp = async () => {
       const themeMap = {
         'd4': THEMES[7],
         'd6': THEMES[6],
-        'd100': getRandomFromList(['rust', 'rock', 'default', 'smooth']),
-        'default': getRandomFromList(THEMES.slice(0, 4))
+        'd100': getRandomFromList(['rust', 'rock', 'default', 'smooth']), //rock too dark
+        'default': THEMES[0] 
+        //'default': getRandomFromList(THEMES.slice(0, 4))
       };
       return themeMap[diceType] || themeMap.default;
     }

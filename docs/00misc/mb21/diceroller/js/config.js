@@ -1,6 +1,6 @@
 // Verfügbare Würfel-Themen
 export const THEMES = Object.freeze([
-    'default',
+    'default', // THEMES[0]
     'rock',
     'smooth',
     'rust',
@@ -22,7 +22,7 @@ export const COLORS = Object.freeze([
 // Standard-Würfelkonfiguration (siehe https://fantasticdice.games/docs/usage/config)
 export const DEFAULT_DICE_CONFIG = Object.freeze({
     offscreen: true,
-    scale: 10,
+    scale: 100,
     throwForce: 5,
     gravity: 1,
     mass: 2,
