@@ -1,7 +1,11 @@
 // @ts-ignore
-import DiceBox from '/00misc/mb21/diceroller/lib/@3d-dice/dice-box/dist/dice-box.es.min.js'
+import DiceBox from '/docs/00misc/mb21/diceroller/lib/@3d-dice/dice-box/dist/dice-box.es.min.js'
 import { THEMES, COLORS, DEFAULT_DICE_CONFIG, MANY_DICE_CONFIG, ASSET_PATH } from './config.js';
 import { DiceValidation } from './validation.js';
+
+let loadedSections = 0;
+const totalSections = document.querySelectorAll('.dice-section').length;
+
 
 // Hilfsfunktionen
 const getRandomFromList = (list) => list[Math.floor(Math.random() * list.length)];
@@ -17,9 +21,19 @@ const getRandomDiceConfig = () => ({
 class DiceSection {
   constructor(container) {
     this.container = container;
-    this.init();
-    this.setupHelpOverlay();
-  }
+    this.init().then(() => {
+        loadedSections++;
+        if (loadedSections === totalSections) {
+            hideLoader();
+        }
+    }).catch(error => {
+        console.error('Error initializing dice section:', error);
+        loadedSections++;
+        if (loadedSections === totalSections) {
+            hideLoader();
+        }
+    });
+}
 
   // Overlay für Hilfe-Funktionalität
   setupHelpOverlay() {
@@ -311,3 +325,13 @@ class DiceSection {
 document.querySelectorAll('.dice-section').forEach(section => {
   new DiceSection(section);
 });
+
+function hideLoader() {
+  const loader = document.getElementById('loaderWrapper');
+  if (loader) {
+      loader.classList.add('hidden');
+      setTimeout(() => {
+          loader.style.display = 'none';
+      }, 500);
+  }
+}
