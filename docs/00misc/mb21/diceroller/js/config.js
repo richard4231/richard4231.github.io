@@ -95,7 +95,7 @@ export const INPUT_LIMITS = Object.freeze({
 });
 
 // Basis-URL dynamisch ermitteln
-const XXgetBasePath = () => { //break it
+const getBasePath = () => {
     // Prüfen ob wir auf GitHub Pages sind
     const isGitHub = window.location.hostname.includes('github.io');
     return isGitHub 
