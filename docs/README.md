@@ -8,7 +8,8 @@
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 
-- [Ziffernkarten](https://richard4231.github.io/misch/mb21/Ziffernkarten)
+## Mathbuch
+- [Ziffernkarten](https://richard4231.github.io/docs/25-02-mb21pub/Ziffernkarten)
 
 ## Mathematische Spielereien
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol/)
