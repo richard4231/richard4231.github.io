@@ -2,7 +2,7 @@
 
 /docs/
 ## mathematische Simulationen
-- [Gummibärchen](https://richard4231.github.io/20-04-jellybears/)
+- [Gummibärchen](https://richard4231.github.io/Jellybears)
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-pascaltriangleoptimized/)
 - [Würfelsierpinski](https://richard4231.github.io/21-05-xplodingsierpinski/)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
