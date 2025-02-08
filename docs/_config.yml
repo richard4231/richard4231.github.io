@@ -3,7 +3,7 @@ title: richard4231's homepage
 description: under infinite construction...
 lsi: false
 safe: true
-source: [your repo's top level directory]
+source: /docs/
 incremental: false
 highlighter: rouge
 gist:
