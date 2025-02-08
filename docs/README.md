@@ -9,7 +9,7 @@
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 
 ## Mathbuch
-- [Ziffernkarten](https://richard4231.github.io/docs/25-02-mb21pub/25-02-Ziffernkarten/)
+- [Ziffernkarten](https://richard4231.github.io/25-02-mb21pub/25-02-Ziffernkarten/)
 - [Einfacher Würfel](https://richard4231.github.io/docs/25-02-mb21pub/)
 
 ## Mathematische Spielereien
