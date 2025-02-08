@@ -18,7 +18,7 @@
 - [Spikey](https://richard4231.github.io/22-09-Spikey-v02/)
 
 ## Radargraphen
-- [Handlungsfelder PH ABC](https://richard4231.github.io/20-radargraphBPA/)
+- [Handlungsfelder PH ABC](https://richard4231.github.io/20-07-radargraphBPA/)
 - [Aspekte guten Mathematikunterrichts](https://richard4231.github.io/20-12-radargraphRGMU/)
 - [Digitale Medien](https://richard4231.github.io/25-02-rgdigitalmedia/)
 
