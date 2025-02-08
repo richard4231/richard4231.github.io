@@ -10,7 +10,7 @@
 
 ## Mathbuch
 - [Ziffernkarten](https://richard4231.github.io/25-02-mb21pub/25-02-Ziffernkarten/)
-- [Einfacher Würfel](https://richard4231.github.io/docs/25-02-mb21pub/)
+- [Einfacher Würfel](https://richard4231.github.io/25-02-mb21pub/SimpleDice/)
 
 ## Mathematische Spielereien
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol/)
