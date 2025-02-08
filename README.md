@@ -1,8 +1,8 @@
 # richard4231.github.io
 
 ## mathematische Simulationen
-- [Gummibärchen](https://richard4231.github.io/Jellybears)
-- [Pascal meets Sierpinksi](https://richard4231.github.io/21-pascaltriangleoptimized/)
+- [Gummibärchen](https://richard4231.github.io/25-02-gummybears/)
+- [Pascal meets Sierpinksi](https://richard4231.github.io/21-04-pascaltriangleoptimized/)
 - [Würfelsierpinski](https://richard4231.github.io/21-05-xplodingsierpinski/)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
