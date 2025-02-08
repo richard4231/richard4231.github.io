@@ -1,3 +1,8 @@
+---
+layout: post
+title: Richard4231 Sammelsurium
+---
+
 # richard4231.github.io
 
 ## mathematische Simulationen
