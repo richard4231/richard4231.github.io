@@ -1,4 +1,4 @@
-theme: jekyll-theme-leapday
+remote_theme: pages-themes/leap-day@v0.2.0
 ---
 layout: post
 title: Richard4231 Sammelsurium
