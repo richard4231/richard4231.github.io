@@ -20,6 +20,7 @@
 ## Radargraphen
 - [Handlungsfelder PH ABC](https://richard4231.github.io/20-radargraphBPA/)
 - [Aspekte guten Mathematikunterrichts](https://richard4231.github.io/20-12-radargraphRGMU/)
+- [Digitale Medien](https://richard4231.github.io/25-02-rgdigitalmedia/)
 
 <br/> 
 <br/> 
