@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Dice Example</title>
+    <style>
+        #dice-box {
+            width: 500px;
+            height: 500px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="dice-box"></div>
+    <script type="module">
+    import DiceBox from "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/dice-box.es.min.js";
+        const diceBox = new DiceBox("#dice-box", {
+            assetPath: "assets/",
+            origin: "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/",
+        });
+
+        diceBox.init().then(() => {
+            diceBox.roll("2d6");
+        });
+    </script>
+</body>
+</html>
