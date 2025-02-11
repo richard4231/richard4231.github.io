@@ -118,7 +118,7 @@ function setup() {
     );
     colorMode(RGB,255,255,255,100);
 
-    var gui = createGui('Regler. Doppelklicken um zu minimieren.');
+    var gui = createGui('Regler. Doppelklick minimiert.');
     gui.setPosition(width - 220, 40);
     gui.addGlobals('slider1x','slider1y','slider1z','speed','power','orbControl', 'lightIntensity');
 }
