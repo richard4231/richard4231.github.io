@@ -14,7 +14,7 @@
 
 ## Mathbuch
 - [Ziffernkarten](https://richard4231.github.io/25-02-mb21pub/25-02-Ziffernkarten/)
-- [Einfacher Würfel](https://richard4231.github.io/25-02-mb21pub/SimpleDice/)
+- [Einfaches Würfelset](https://richard4231.github.io/25-02-mb21pub/SimpleDice/)
 - [Einfacher Doppelwürfel](https://richard4231.github.io/25-02-3ddicebox/)
 
 ## Mathematische Spielereien
