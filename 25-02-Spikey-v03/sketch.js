@@ -2,7 +2,7 @@ var vertices = [[]];
 var edges = [[]];
 var faces = [[]];
 let slider1, slider2, slider3;
-let colorPicker1, colorPicker2, colorPicker3;
+let colorPicker1, colorPicker2, colorPicker3, colorPicker4;
 let metallicSlider;
 let lightRotation;
 let orbControl;
@@ -29,7 +29,7 @@ function setup() {
   slider3.position(10, 90);
   slider3.style('width', '80px');
   
-  // Drei Farbwähler mit harmonischen Pastelltönen
+  // Vier Farbwähler mit harmonischen Farben
   colorPicker1 = createColorPicker('#0AC2FF');  // Hellblau
   colorPicker1.position(10, 120);
   
@@ -39,10 +39,13 @@ function setup() {
   colorPicker3 = createColorPicker('#FFF4BD');  // Helles Gelb
   colorPicker3.position(10, 180);
   
+  colorPicker4 = createColorPicker('#FFB5C2');  // Helles Rosa
+  colorPicker4.position(10, 210);
+  
   // Metallic-Effekt Slider
-  metallicSlider = createSlider(0, 1, 0.5, 0.01);
-  metallicSlider.position(10, 210);
-  metallicSlider.style('width', '80px');
+  //metallicSlider = createSlider(0, 1, 0.5, 0.01);
+  //metallicSlider.position(10, 240);
+  //metallicSlider.style('width', '80px');
   
   // Lichtrotation und Orbit Control
   lightRotation = 0;
@@ -50,7 +53,7 @@ function setup() {
 }
 
 function isMouseOverGui() {
-  if (mouseX < 100 && mouseY < 250) {
+  if (mouseX < 100 && mouseY < 270) {
     return true;
   }
   return false;
@@ -86,9 +89,7 @@ function draw() {
   pop();
 }
 
-// Hilfsfunktion zur Bestimmung benachbarter Zacken
 function getAdjacentSpikes(spikeIndex) {
-  // Mapping der benachbarten Zacken (basierend auf der Geometrie des Pentakisdodekaeders)
   const adjacencyMap = {
     0: [1, 2, 3, 4],
     1: [0, 4, 5, 6],
@@ -106,6 +107,44 @@ function getAdjacentSpikes(spikeIndex) {
   return adjacencyMap[spikeIndex] || [];
 }
 
+function isColorValid(spikeIndex, color, colors, colorCounts) {
+  // Prüfe, ob die Farbe bereits dreimal verwendet wurde
+  if (colorCounts[color] >= 3) return false;
+  
+  // Prüfe, ob ein Nachbar die gleiche Farbe hat
+  const adjacentSpikes = getAdjacentSpikes(spikeIndex);
+  return !adjacentSpikes.some(adj => colors[adj] === color);
+}
+
+function findValidColorAssignment() {
+  const colors = new Array(12).fill(-1);
+  const colorCounts = new Array(4).fill(0);
+  
+  function assignColors(spikeIndex) {
+    if (spikeIndex === 12) {
+      // Prüfe, ob jede Farbe genau dreimal verwendet wurde
+      return colorCounts.every(count => count === 3);
+    }
+    
+    // Versuche alle Farben (0-3) für diesen Zacken
+    for (let color = 0; color < 4; color++) {
+      if (isColorValid(spikeIndex, color, colors, colorCounts)) {
+        colors[spikeIndex] = color;
+        colorCounts[color]++;
+        
+        if (assignColors(spikeIndex + 1)) return true;
+        
+        colors[spikeIndex] = -1;
+        colorCounts[color]--;
+      }
+    }
+    return false;
+  }
+  
+  assignColors(0);
+  return colors;
+}
+
 function pentakisDodecahedron() {
   vertices = [[0,0,1.070466],[0.7136442,0,0.7978784],[-0.3568221,0.618034,0.7978784],[-0.3568221,-0.618034,0.7978784],[0.7978784,0.618034,0.3568221],[0.7978784,-0.618034,0.3568221],[-0.9341724,0.381966,0.3568221],[0.1362939,1,0.3568221],[0.1362939,-1,0.3568221],[-0.9341724,-0.381966,0.3568221],[0.9341724,0.381966,-0.3568221],[0.9341724,-0.381966,-0.3568221],[-0.7978784,0.618034,-0.3568221],[-0.1362939,1,-0.3568221],[-0.1362939,-1,-0.3568221],[-0.7978784,-0.618034,-0.3568221],[0.3568221,0.618034,-0.7978784],[0.3568221,-0.618034,-0.7978784],[-0.7136442,0,-0.7978784],[0,0,-1.070466],[0.25819888,0.4472136,0.6759734],[-0.5163978,0,0.6759734],[0.25819888,-0.4472136,0.6759734],[0.83554916,0,0.15957568],[-0.41777458,0.7236068,0.15957568],[-0.41777458,-0.7236068,0.15957568],[0.41777458,0.7236068,-0.15957568],[0.41777458,-0.7236068,-0.15957568],[-0.83554916,0,-0.15957568],[0.5163978,0,-0.6759734],[-0.25819888,0.4472136,-0.6759734],[-0.25819888,-0.4472136,-0.6759734]];
   edges = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,6],[2,7],[3,8],[3,9],[4,7],[4,10],[5,8],[5,11],[6,9],[6,12],[7,13],[8,14],[9,15],[10,11],[10,16],[11,17],[12,13],[12,18],[13,16],[14,15],[14,17],[15,18],[16,19],[17,19],[18,19]];
@@ -117,24 +156,12 @@ function pentakisDodecahedron() {
     var q = (windowHeight) * 0.3;
   }
 
-  const metallic = metallicSlider.value();
+  //const metallic = metallicSlider.value();
   specularMaterial(255);
-  shininess(50 + metallic * 150);
+  shininess(100);
 
-  // Vorberechnung der Farbzuweisung für jeden Zacken
-  let spikeColors = new Array(12).fill(-1);
-  for(let spike = 0; spike < 12; spike++) {
-    const adjacentSpikes = getAdjacentSpikes(spike);
-    const usedColors = new Set(adjacentSpikes.map(adj => spikeColors[adj]));
-    
-    // Finde die erste verfügbare Farbe
-    for(let color = 0; color < 3; color++) {
-      if(!usedColors.has(color)) {
-        spikeColors[spike] = color;
-        break;
-      }
-    }
-  }
+  // Optimierte Farbzuweisung mit genau 3 Vorkommen pro Farbe
+  const spikeColors = findValidColorAssignment();
 
   for (var i = 0; i < 60; i++) {
     const phase = i / 60;
@@ -151,6 +178,9 @@ function pentakisDodecahedron() {
         break;
       case 2:
         selectedColor = colorPicker3.color();
+        break;
+      case 3:
+        selectedColor = colorPicker4.color();
         break;
       default:
         selectedColor = colorPicker1.color();
