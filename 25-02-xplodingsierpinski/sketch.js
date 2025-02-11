@@ -105,6 +105,7 @@ function getMatrix(n) {
 
 function setup() {
     createCanvas(windowWidth-2*MARGIN, windowHeight-2*MARGIN, WEBGL);
+    pixelDensity(1);
     setAttributes('antialias', true);
     setAttributes('perPixelLighting', true);
     camera(
