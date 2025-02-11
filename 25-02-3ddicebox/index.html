@@ -4,25 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Dice Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
     <style>
-        #dice-box {
-            width: 500px;
-            height: 500px;
-            border: 1px solid #000;
+        body {
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
+        .title {
+            font-family: 'Roboto', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            margin: 10px 0;
+            text-align: center;
+            padding: 0 10px;
+        }
+        #dice-box {
+            width: min(500px, 95vw);
+            height: min(500px, calc(90vh - 40px)); /* Abzug der ungefähren Titelhöhe */
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            position: relative;
+            background-color: rgb(186, 184, 184);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: auto;
+        }
+        #dice-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 8px;
+        }
+
     </style>
 </head>
 <body>
+    <h1 class="title">Einfacher Würfel</h1>
     <div id="dice-box"></div>
     <script type="module">
-    import DiceBox from "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/dice-box.es.min.js";
-        const diceBox = new DiceBox("#dice-box", {
-            assetPath: "assets/",
-            origin: "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/",
-        });
+        import DiceBox from "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/dice-box.es.min.js";
+        
+        function updateDiceBoxDimensions() {
+            const box = document.getElementById('dice-box');
+                        
+            let diceBox = new DiceBox({
+                container: "#dice-box",
+                assetPath: "assets/",
+                origin: "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/",
+                scale: 6,
+                theme: "default",
+            });
 
-        diceBox.init().then(() => {
-            diceBox.roll("2d6");
+            return diceBox;
+        }
+
+        // Initialisierung
+        let diceBox = await updateDiceBoxDimensions();
+        await diceBox.init();
+        diceBox.roll("2d6");
+
+        // Event Listener für Fenstergrößenänderungen
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(async () => {
+                diceBox = await updateDiceBoxDimensions();
+                await diceBox.init();
+                diceBox.roll("2d6");
+            }, 250);
         });
     </script>
 </body>
