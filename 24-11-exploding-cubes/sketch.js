@@ -176,7 +176,16 @@ function figurate_cubes(n,hx,hy,hz) {
 
 }
 
-// dynamically adjust the canvas to the window
+function touchStarted() {
+  mouseClicked();
+  return false;
+}
+  
+  function touchMoved() {
+  mouseClicked();
+  return false;
+}
+
 function windowResized() {
   resizeCanvas(windowWidth-2*margin, windowHeight-2*margin);
 	camera(-440,-160,1100,-100,0,0,0,1,0);
