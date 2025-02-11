@@ -11,6 +11,7 @@
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 - [Spikey](https://richard4231.github.io/25-02-Spikey-v03/)
+- [Spikey Vierfarbenproblem](https://richard4231.github.io/25-02-Spikey-v03b/)
 - [bunter Spikey](https://richard4231.github.io/25-02-Spikey-v04colorful/)
 
 ## Mathbuch
