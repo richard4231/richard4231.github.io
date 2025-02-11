@@ -7,20 +7,20 @@ let metallicSlider;
 let lightRotation;
 let orbControl;
 
-// Mapping der Zacken zu den vier Hauptfarben
-const colorGroups = {
-  'goldenYellow': 0,
-  'purpleViolet': 0,
-  'emeraldGreen': 0,
-  'skyBlue': 1,
-  'crimsonRed': 1,
-  'turquoise': 1,
-  'coral': 2,
-  'royalBlue': 2,
-  'lime': 2,
-  'orange': 3,
-  'hotPink': 3,
-  'springGreen': 3
+// Definiere eindeutige Farben für jeden Zacken
+const spikeColors = {
+  crimsonRed: '#DC143C',      // Leuchtendes Rot
+  royalBlue: '#4169E1',       // Königsblau
+  emeraldGreen: '#50C878',    // Smaragdgrün
+  goldenYellow: '#FFD700',    // Goldgelb
+  purpleViolet: '#9370DB',    // Violett
+  turquoise: '#40E0D0',       // Türkis
+  coral: '#FF7F50',           // Koralle
+  lime: '#32CD32',            // Limette
+  hotPink: '#FF69B4',         // Pink
+  orange: '#FFA500',          // Orange
+  skyBlue: '#87CEEB',         // Himmelblau
+  springGreen: '#00FF7F'      // Frühlingsgrün
 };
 
 const spikeColorMapping = [
@@ -45,37 +45,20 @@ function setup() {
   camera(-600, 0, 1200, 0, 0, 0, 0, 1, 0);
   colorMode(RGB, 255, 255, 255, 100);
   
-  // Hauptform-Slider
   slider1 = createSlider(0.01, 4, 2.3, 0.01);
   slider1.position(10, 30);
   slider1.style('width', '80px');
   
-  // Transparenz-Slider
   slider2 = createSlider(0, 100, 100, 1);
   slider2.position(10, 60);
   slider2.style('width', '80px');
   
-  // Rotationsgeschwindigkeit-Slider
   slider3 = createSlider(0, 0.02, 0.01, 0.001);
   slider3.position(10, 90);
   slider3.style('width', '80px');
   
-  // Vier Farbwähler mit harmonischen Farben
-  colorPicker1 = createColorPicker('#0AC2FF');  // Hellblau
-  colorPicker1.position(10, 120);
-  
-  colorPicker2 = createColorPicker('#E6C7FF');  // Helles Violett
-  colorPicker2.position(10, 150);
-  
-  colorPicker3 = createColorPicker('#FFF4BD');  // Helles Gelb
-  colorPicker3.position(10, 180);
-  
-  colorPicker4 = createColorPicker('#FFB5C2');  // Helles Rosa
-  colorPicker4.position(10, 210);
-  
-  // Metallic-Effekt Slider
   metallicSlider = createSlider(0, 1, 0.5, 0.01);
-  metallicSlider.position(10, 240);
+  metallicSlider.position(10, 120);
   metallicSlider.style('width', '80px');
   
   lightRotation = 0;
@@ -83,7 +66,7 @@ function setup() {
 }
 
 function isMouseOverGui() {
-  if (mouseX < 100 && mouseY < 270) {
+  if (mouseX < 100 && mouseY < 150) {
     return true;
   }
   return false;
@@ -119,6 +102,15 @@ function draw() {
   pop();
 }
 
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
 function pentakisDodecahedron() {
   vertices = [[0,0,1.070466],[0.7136442,0,0.7978784],[-0.3568221,0.618034,0.7978784],[-0.3568221,-0.618034,0.7978784],[0.7978784,0.618034,0.3568221],[0.7978784,-0.618034,0.3568221],[-0.9341724,0.381966,0.3568221],[0.1362939,1,0.3568221],[0.1362939,-1,0.3568221],[-0.9341724,-0.381966,0.3568221],[0.9341724,0.381966,-0.3568221],[0.9341724,-0.381966,-0.3568221],[-0.7978784,0.618034,-0.3568221],[-0.1362939,1,-0.3568221],[-0.1362939,-1,-0.3568221],[-0.7978784,-0.618034,-0.3568221],[0.3568221,0.618034,-0.7978784],[0.3568221,-0.618034,-0.7978784],[-0.7136442,0,-0.7978784],[0,0,-1.070466],[0.25819888,0.4472136,0.6759734],[-0.5163978,0,0.6759734],[0.25819888,-0.4472136,0.6759734],[0.83554916,0,0.15957568],[-0.41777458,0.7236068,0.15957568],[-0.41777458,-0.7236068,0.15957568],[0.41777458,0.7236068,-0.15957568],[0.41777458,-0.7236068,-0.15957568],[-0.83554916,0,-0.15957568],[0.5163978,0,-0.6759734],[-0.25819888,0.4472136,-0.6759734],[-0.25819888,-0.4472136,-0.6759734]];
   edges = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,6],[2,7],[3,8],[3,9],[4,7],[4,10],[5,8],[5,11],[6,9],[6,12],[7,13],[8,14],[9,15],[10,11],[10,16],[11,17],[12,13],[12,18],[13,16],[14,15],[14,17],[15,18],[16,19],[17,19],[18,19]];
@@ -139,31 +131,14 @@ function pentakisDodecahedron() {
     const brightness = 0.7 + 0.3 * sin(phase * PI * 2);
     
     const spikeIndex = Math.floor(i / 5);
-    const spikeName = spikeColorMapping[spikeIndex];
-    const colorGroup = colorGroups[spikeName];
-    
-    let selectedColor;
-    switch(colorGroup) {
-      case 0:
-        selectedColor = colorPicker1.color();
-        break;
-      case 1:
-        selectedColor = colorPicker2.color();
-        break;
-      case 2:
-        selectedColor = colorPicker3.color();
-        break;
-      case 3:
-        selectedColor = colorPicker4.color();
-        break;
-      default:
-        selectedColor = colorPicker1.color();
-    }
+    const colorName = spikeColorMapping[spikeIndex];
+    const hexColor = spikeColors[colorName];
+    const rgbColor = hexToRgb(hexColor);
     
     fill(
-      red(selectedColor) * brightness,
-      green(selectedColor) * brightness,
-      blue(selectedColor) * brightness,
+      rgbColor.r * brightness,
+      rgbColor.g * brightness,
+      rgbColor.b * brightness,
       slider2.value()
     );
 
