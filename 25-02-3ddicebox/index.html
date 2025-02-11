@@ -13,72 +13,105 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             background-color: #faf3df;
             min-height: 100vh;
             box-sizing: border-box;
         }
-        .title {
-            font-family: 'Roboto', sans-serif;
-            font-size: clamp(1.5rem, 5vw, 2.5rem);
-            color: #2c3e50;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-            margin: 10px 0;
-            text-align: center;
-            padding: 0 10px;
+        
+        .button-container {
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 5px;
+            margin-top: 10px;
         }
+
+        button {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            padding: 5px 20px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            height: 40px;
+        }
+
+        button:hover {
+            background-color: #34495e;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .dice-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0; /* Wichtig für Flex-Container */
+        }
+
         #dice-box {
             width: min(500px, 95vw);
-            height: min(500px, calc(90vh - 40px)); /* Abzug der ungefähren Titelhöhe */
+            height: min(500px, calc(95vh - 50px)); /* 50px = Button-Container + Margins */
             border: 2px solid #2c3e50;
             border-radius: 10px;
             position: relative;
             background-color: rgb(186, 184, 184);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin: auto;
         }
+
         #dice-box canvas {
             width: 100% !important;
             height: 100% !important;
             border-radius: 8px;
         }
-
     </style>
 </head>
 <body>
-    <h1 class="title">Einfacher Würfel</h1>
-    <div id="dice-box"></div>
+    <div class="dice-container">
+        <div id="dice-box"></div>
+    </div>
+    <div class="button-container">
+        <button id="roll-button">Würfeln</button>
+    </div>
     <script type="module">
         import DiceBox from "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/dice-box.es.min.js";
         
-        function updateDiceBoxDimensions() {
-            const box = document.getElementById('dice-box');
-                        
-            let diceBox = new DiceBox({
+        let diceBox;
+
+        async function initDiceBox() {
+            diceBox = new DiceBox({
                 container: "#dice-box",
                 assetPath: "assets/",
                 origin: "https://unpkg.com/@3d-dice/dice-box@1.1.4/dist/",
                 scale: 6,
                 theme: "default",
             });
-
-            return diceBox;
+            
+            await diceBox.init();
+            diceBox.roll("2d6");
         }
 
         // Initialisierung
-        let diceBox = await updateDiceBoxDimensions();
-        await diceBox.init();
-        diceBox.roll("2d6");
+        await initDiceBox();
+
+        // Event Listener für den Button
+        document.getElementById('roll-button').addEventListener('click', () => {
+            diceBox.roll("2d6");
+        });
 
         // Event Listener für Fenstergrößenänderungen
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(async () => {
-                diceBox = await updateDiceBoxDimensions();
-                await diceBox.init();
-                diceBox.roll("2d6");
+                await initDiceBox();
             }, 250);
         });
     </script>
