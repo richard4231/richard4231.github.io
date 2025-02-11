@@ -7,7 +7,7 @@
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-04-pascaltriangleoptimized/)
 
 ## 3D
-- [Würfelsierpinski](https://richard4231.github.io/21-05-xplodingsierpinski/)
+- [Würfelsierpinski](https://richard4231.github.io/25-02-xplodingsierpinski/)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 - [Spikey](https://richard4231.github.io/22-09-Spikey-v02/)
