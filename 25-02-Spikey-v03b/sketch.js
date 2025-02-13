@@ -26,16 +26,19 @@ function setup() {
   colorMode(RGB, 255, 255, 255, 100);
   
   // Zackenlänge-Slider
+  createDiv('Zackenlänge').position(100, 30).style('color', 'white').style('font-family', 'Helvetica');
   slider1 = createSlider(0.01, 4, 2.3, 0.01);
   slider1.position(10, 30);
   slider1.style('width', '80px');
   
   // Transparenz-Slider
+  createDiv('Transparenz').position(100, 60).style('color', 'white').style('font-family', 'Helvetica');
   slider2 = createSlider(10, 100, 100, 1);
   slider2.position(10, 60);
   slider2.style('width', '80px');
   
   // Rotatiosngeschwindigkeit-Slider
+  createDiv('Drehgeschwindigkeit').position(100, 90).style('color', 'white').style('font-family', 'Helvetica');
   slider3 = createSlider(0, 0.05, 0.01, 0.01);
   slider3.position(10, 90);
   slider3.style('width', '80px');
