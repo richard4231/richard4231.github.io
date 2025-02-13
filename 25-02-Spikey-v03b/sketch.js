@@ -26,35 +26,41 @@ function setup() {
   colorMode(RGB, 255, 255, 255, 100);
   
   // Zackenlänge-Slider
-  createDiv('Zackenlänge').position(100, 30).style('color', 'white').style('font-family', 'Helvetica');
+  createDiv('Zackenlänge').position(100, 30).style('color', '#bbbbbb').style('font-family', 'Helvetica');
   slider1 = createSlider(0.01, 4, 2.3, 0.01);
   slider1.position(10, 30);
   slider1.style('width', '80px');
   
   // Transparenz-Slider
-  createDiv('Transparenz').position(100, 60).style('color', 'white').style('font-family', 'Helvetica');
+  createDiv('Transparenz').position(100, 60).style('color', '#bbbbbb').style('font-family', 'Helvetica');
   slider2 = createSlider(10, 100, 100, 1);
   slider2.position(10, 60);
   slider2.style('width', '80px');
   
   // Rotatiosngeschwindigkeit-Slider
-  createDiv('Drehgeschwindigkeit').position(100, 90).style('color', 'white').style('font-family', 'Helvetica');
+  createDiv('Drehgeschwindigkeit').position(100, 90).style('color', '#bbbbbb').style('font-family', 'Helvetica');
   slider3 = createSlider(0, 0.05, 0.01, 0.01);
   slider3.position(10, 90);
   slider3.style('width', '80px');
 
+  // Ambient Light Slider
+  createDiv('Umgebungslicht').position(100, 120).style('color', '#bbbbbb').style('font-family', 'Helvetica');
+  slider4 = createSlider(0, 255, 80, 1);
+  slider4.position(10, 120);
+  slider4.style('width', '80px');
+
   // Vier Farbwähler mit harmonischen Farben
   colorPicker1 = createColorPicker('#0AC2FF');  // Hellblau
-  colorPicker1.position(10, 120);
+  colorPicker1.position(10, 150);
   
   colorPicker2 = createColorPicker('#B558EE');  // Helles Violett
-  colorPicker2.position(10, 150);
+  colorPicker2.position(10, 180);
   
   colorPicker3 = createColorPicker('#EACB76');  // Helles Gelb
-  colorPicker3.position(10, 180);
+  colorPicker3.position(10, 210);
   
   colorPicker4 = createColorPicker('#EC657D');  // Helles Rosa
-  colorPicker4.position(10, 210);
+  colorPicker4.position(10, 240);
   
   lightRotation = 0;
   orbControl = 1;
@@ -77,14 +83,14 @@ function draw() {
     rotateY(frameCount * 0.01 * slider3.value());
   }
 
-  ambientLight(80);
+  ambientLight(slider4.value());
   pointLight(255, 255, 255, 
-    cos(lightRotation) * 300, 
-    sin(lightRotation) * 300, 
+    cos(lightRotation) * 400, 
+    sin(lightRotation) * 400, 
     200);
   pointLight(200, 200, 255, 
-    -cos(lightRotation) * 300, 
-    -sin(lightRotation) * 300, 
+    -cos(lightRotation) * 400, 
+    -sin(lightRotation) * 400, 
     200);
   
   lightRotation += 0.01;
