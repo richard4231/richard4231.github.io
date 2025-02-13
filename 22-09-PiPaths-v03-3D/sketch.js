@@ -64,7 +64,7 @@ function setup() {
 
 function draw() {
 
-  console.log(frameRate());
+  //console.log(frameRate());
 
   pointLight(256,256,256,-100,-100,100);
 
