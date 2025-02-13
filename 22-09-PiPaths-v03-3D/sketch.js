@@ -1,3 +1,6 @@
+// Visualisierung der Ziffern in Pi: Jede Zffer bestimmt einen Raumvektor, der den weiteren Verlauf der Linie festlegt.
+// Die Raumvektoren sind eine Annäherung an 10 möglichst äquidistante Punkte auf einer Kugel.
+
 function preload() {
   pistring;
 }
@@ -20,7 +23,27 @@ function setup() {
 	setAttributes('perPixelLighting', true);
   smooth();
 
-  slider1 = createSlider(1, 5, 2, 1); // ab 5 verlangsamt die meisten Computer zu non repsonsive anymore
+  // Erklärtext hinzufügen
+  let infoText = createDiv('Pi als Pfad: Jede Ziffer entspricht einer Richtung (0-9), die den nächsten Schritt der entstehenden Linie bestimmt.<br>' + 'Der Beginn der Linie ist immer in roter Farbe <br>' + '<br>' +
+                            'Steuerung:<br>' +
+                          '- Länge: Bestimmt die Größe der Struktur.<br>' + '  Pro Schritt wird die Kette um den Faktor 10 länger.<br>' +
+                          '- Liniendicke: Ändert die Stärke der Linien<br>' +
+                          '- Transparenz: Regelt die Durchsichtigkeit<br>' +
+                          '- Zoom: Vergrößert oder verkleinert die Ansicht<br>' +
+                          '- X/Y/Z Position: Verschiebt das Objekt im Raum<br>' +
+                          '- Drehgeschwindigkeit: Steuert die Rotation');
+
+  infoText.position(windowWidth - 350, 20);
+  infoText.style('color', '#bbbbbb');
+  infoText.style('font-family', 'Helvetica');
+  infoText.style('font-size', '12px');
+  infoText.style('background-color', 'rgba(0,0,0,0.5)');
+  infoText.style('padding', '10px');
+  infoText.style('border-radius', '5px');
+  infoText.style('width', '300px'); // Breite des Textfeldes begrenzen
+  infoText.style('overflow', 'auto'); // Scrollen ermöglichen, falls der Tex
+
+  slider1 = createSlider(1, 4, 2, 1); // ab 5 verlangsamt die meisten Computer zu non repsonsive anymore
   slider1.position(10, 30);
   slider1.style('width', '80px');
   createDiv('Länge (10^x)').position(100, 30).style('color', '#bbbbbb').style('font-family', 'Helvetica');
