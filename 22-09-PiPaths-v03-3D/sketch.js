@@ -24,7 +24,7 @@ function setup() {
   smooth();
 
   // Erklärtext hinzufügen
-  let infoText = createDiv('Pi als Pfad: Jede Ziffer entspricht einer Richtung (0-9), die den nächsten Schritt der entstehenden Linie bestimmt.<br>' + 'Der Beginn der Linie ist immer in roter Farbe <br>' + '<br>' +
+  let infoText = createDiv('Pi als Pfad: Jede Ziffer steht für eine Richtung (0-9), die den nächsten Schritt der entstehenden Linie festlegt.<br>' + 'Der Beginn der Linie ist immer in roter Farbe <br>' + '<br>' +
                             'Steuerung:<br>' +
                           '- Länge: Bestimmt die Größe der Struktur.<br>' + '  Pro Schritt wird die Kette um den Faktor 10 länger.<br>' +
                           '- Liniendicke: Ändert die Stärke der Linien<br>' +
