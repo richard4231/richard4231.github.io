@@ -1,15 +1,12 @@
-//Andreas Richard
-//richard4231.github.io
-
 function preload() {
-  pistring
+  pistring;
 }
 
 let slider1;
 let slider2;
 let slider3;
 let slider4;
-let sliderx; // X-axis rotation
+let sliderx;
 let slidery;
 let sliderz;
 let dirs = [[0,0,1],[-0.865,0,0.5],[0,-0.865,0.5],[0.865,0,0.5],[0,0.865,0.5],[-0.6125,0.6125,-0.5],[-0.6125,-0.6125,-0.5],[0.6125,-0.6125,-0.5],[0.6125,0.6125,-0.5],[0,0,-1]];
@@ -18,11 +15,12 @@ function setup() {
 
   colorMode(HSL);
   createCanvas(windowWidth, windowHeight,WEBGL);
+
   setAttributes('antialias', true);
 	setAttributes('perPixelLighting', true);
   smooth();
 
-  slider1 = createSlider(1, 5, 2, 1); // 6 verlangsamt die meisten Computer zu non repsonsive anymore
+  slider1 = createSlider(1, 5, 2, 1); // ab 5 verlangsamt die meisten Computer zu non repsonsive anymore
   slider1.position(10, 30);
   slider1.style('width', '80px');
   createDiv('Länge (10^x)').position(100, 30).style('color', '#bbbbbb').style('font-family', 'Helvetica');
@@ -65,8 +63,11 @@ function setup() {
 }
 
 function draw() {
-  
+
+  console.log(frameRate());
+
   pointLight(256,256,256,-100,-100,100);
+
   if (!isMouseOverGui()) {
       orbitControl(0.5,0.5,0.5);
       rotateZ(frameCount * slider5.value()*0.1);
@@ -77,6 +78,18 @@ function draw() {
       rotateX(frameCount * slider5.value()*0.1);
       rotateY(frameCount * slider5.value());
   }
+
+  if (slider1.value() > 5) { //no influence on frameRate...
+    pixelDensity(1);
+    setAttributes('antialias', false);
+    setAttributes('perPixelLighting', false);
+    noSmooth();
+  } else {
+    setAttributes('antialias', true);
+    setAttributes('perPixelLighting', true);
+    smooth();
+  }
+
   background(40);
   strokeWeight(10);
   //translate(windowWidth/2,windowHeight/2);
@@ -105,7 +118,7 @@ function draw() {
 }
 
 function isMouseOverGui() {
-  if (mouseX < 100 && mouseY < 310) {
+  if (mouseX < 200 && mouseY < 330) {
     return true;
   }
   return false;
