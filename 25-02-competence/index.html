@@ -12,8 +12,16 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
+    <!-- Additional React dependencies -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.js"></script>
+    
+    <!-- D3 (Recharts dependency) -->
+    <script src="https://unpkg.com/d3-scale@4.0.2/dist/d3-scale.min.js"></script>
+    <script src="https://unpkg.com/d3-shape@3.1.0/dist/d3-shape.min.js"></script>
+    <script src="https://unpkg.com/d3-array@3.2.0/dist/d3-array.min.js"></script>
+    
     <!-- Recharts -->
-    <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.10.3/dist/recharts.min.js"></script>
     
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -42,16 +50,16 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module" data-presets="react">
-        // Recharts Komponenten
+    <script type="text/babel">
         const {
             RadarChart,
             PolarGrid,
             PolarAngleAxis,
             PolarRadiusAxis,
             Radar,
-            ResponsiveContainer
-        } = Recharts;
+            ResponsiveContainer,
+            Legend
+        } = window.Recharts;
 
         // Card Komponenten
         const Card = ({ children }) => (
@@ -80,6 +88,8 @@
 
         // Hauptkomponente
         function KompetenzRadar() {
+            console.log("KompetenzRadar wird gerendert"); // Debug-Log
+
             // Konfigurationsvariablen
             const MIN_WERT = 0;
             const MAX_WERT = 2;
@@ -148,6 +158,8 @@
 
             // Berechnung der aggregierten Werte für das Spiderdiagramm
             const chartData = React.useMemo(() => {
+                console.log("Berechne chartData"); // Debug-Log
+                
                 // Initialisiere Objekt mit allen Bereichen und Ebenen
                 const initialWerte = BEREICHE.reduce((acc, bereich) => {
                     acc[bereich] = {
@@ -171,7 +183,7 @@
                 });
 
                 // Berechne Durchschnitte und formatiere für das Chart
-                return BEREICHE.map(bereich => {
+                const result = BEREICHE.map(bereich => {
                     const bereichWerte = initialWerte[bereich];
                     return {
                         bereich,
@@ -186,10 +198,14 @@
                             : 0
                     };
                 });
+                
+                console.log("Berechnete Daten:", result); // Debug-Log
+                return result;
             }, [antworten]);
 
             // Handler für Antwortauswahl
             const handleAntwort = (fragenId, wert) => {
+                console.log(`Neue Antwort: Frage ${fragenId}, Wert ${wert}`); // Debug-Log
                 setAntworten(prev => ({
                     ...prev,
                     [fragenId]: wert
@@ -234,39 +250,46 @@
                                 </div>
 
                                 {/* Spiderdiagramm */}
-                                <div className="h-96">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <RadarChart data={chartData}>
-                                            <PolarGrid />
-                                            <PolarAngleAxis dataKey="bereich" />
-                                            <PolarRadiusAxis angle={30} domain={[MIN_WERT, MAX_WERT]} />
-                                            
-                                            <Radar
-                                                name="Subjektive Einschätzung"
-                                                dataKey="subjektiv"
-                                                stroke="#2563eb"
-                                                fill="#2563eb"
-                                                fillOpacity={0.3}
-                                                type="monotone"
-                                            />
-                                            <Radar
-                                                name="Objektive Einschätzung"
-                                                dataKey="objektiv"
-                                                stroke="#16a34a"
-                                                fill="#16a34a"
-                                                fillOpacity={0.3}
-                                                type="monotone"
-                                            />
-                                            <Radar
-                                                name="Interesse"
-                                                dataKey="interesse"
-                                                stroke="#dc2626"
-                                                fill="#dc2626"
-                                                fillOpacity={0.3}
-                                                type="monotone"
-                                            />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
+                                <div className="h-96 bg-white p-4 rounded-lg">
+                                    {RadarChart ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <RadarChart data={chartData}>
+                                                <PolarGrid />
+                                                <PolarAngleAxis dataKey="bereich" />
+                                                <PolarRadiusAxis angle={30} domain={[MIN_WERT, MAX_WERT]} />
+                                                
+                                                <Radar
+                                                    name="Subjektive Einschätzung"
+                                                    dataKey="subjektiv"
+                                                    stroke="#2563eb"
+                                                    fill="#2563eb"
+                                                    fillOpacity={0.3}
+                                                    type="monotone"
+                                                />
+                                                <Radar
+                                                    name="Objektive Einschätzung"
+                                                    dataKey="objektiv"
+                                                    stroke="#16a34a"
+                                                    fill="#16a34a"
+                                                    fillOpacity={0.3}
+                                                    type="monotone"
+                                                />
+                                                <Radar
+                                                    name="Interesse"
+                                                    dataKey="interesse"
+                                                    stroke="#dc2626"
+                                                    fill="#dc2626"
+                                                    fillOpacity={0.3}
+                                                    type="monotone"
+                                                />
+                                                <Legend />
+                                            </RadarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-gray-500">
+                                            Diagramm wird geladen...
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -275,10 +298,38 @@
             );
         }
 
-        // React 18 Rendering
+        // React 18 Rendering mit Error Boundary
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true, error };
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="p-4 bg-red-100 text-red-700 rounded-lg">
+                            <h2>Ein Fehler ist aufgetreten:</h2>
+                            <pre>{this.state.error?.toString()}</pre>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        // Rendering mit Error Boundary
         const container = document.getElementById('root');
         const root = ReactDOM.createRoot(container);
-        root.render(<KompetenzRadar />);
+        root.render(
+            <ErrorBoundary>
+                <KompetenzRadar />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 </html>
