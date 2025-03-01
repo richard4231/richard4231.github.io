@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kompetenzradar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .question-card {
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        .question-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .meta-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .mc-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mc-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .mc-option:hover {
+            background-color: #f3f4f6;
+        }
+        .slider-container {
+            padding: 20px 10px;
+            position: relative;
+        }
+        .slider {
+            width: 100%;
+            height: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            border-radius: 5px;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2563eb;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #2563eb;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .slider-value {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        #radarCanvas {
+            max-width: 100%;
+            height: auto;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        #radarCanvas {
+            max-width: 100%;
+            height: auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kompetenzradar - Standortbestimmung</h1>
+        <div class="grid">
+            <div id="questionContainer">
+                <!-- Fragen werden hier dynamisch eingefügt -->
+            </div>
+            <div>
+                <canvas id="radarCanvas" width="1500" height="1500" style="width: 500px; height: 500px;"></canvas>                
+                <div class="legend">
+                    <div class="legend-item">
+                        <svg width="20" height="10" viewBox="0 0 20 10">
+                            <circle cx="10" cy="5" r="4" fill="rgba(37, 99, 235, 0.9)"/>
+                        </svg>
+                        <span>Subjektiv</span>
+                    </div>
+                    <div class="legend-item">
+                        <svg width="20" height="10" viewBox="0 0 20 10">
+                            <path d="M10,2 L14,8 L6,8 Z" fill="rgba(22, 163, 74, 0.9)"/>
+                        </svg>
+                        <span>Objektiv</span>
+                    </div>
+                    <div class="legend-item">
+                        <svg width="20" height="10" viewBox="0 0 20 10">
+                            <rect x="6" y="1" width="7" height="7" fill="rgba(220, 38, 38, 0.9)"/>
+                        </svg>
+                        <span>Interesse</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Konfiguration
+        const MIN_WERT = 1;
+        const MAX_WERT = 3;
+        
+        const BEREICHE = [
+            "Digitale Grundkompetenzen",
+            "Kommunikation & Kollaboration",
+            "Sicherheit",
+            "Problemlösung",
+            "Digitales Lehren & Lernen",
+            "Digital Leadership       ",
+            "Digital Administration",
+            "Andere Aspirationen"
+        ];
+
+        const FRAGEN = [
+    // Digitale Grundkompetenzen
+    {
+        id: 1,
+        text: "Wie gut beherrschen Sie die grundlegenden Funktionen Ihres Computers/Tablets?",
+        bereich: "Digitale Grundkompetenzen",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Grundlegend", wert: 1 },
+            { text: "Fortgeschritten", wert: 2 },
+            { text: "Experte", wert: 3 }
+        ]
+    },
+    {
+        id: 2,
+        text: "Welche dieser Dateitypen ist KEIN Bildformat?",
+        bereich: "Digitale Grundkompetenzen",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "JPG", wert: 1 },
+            { text: "PNG", wert: 1 },
+            { text: "DOC", wert: 3 }, // korrekte Antwort
+            { text: "GIF", wert: 1 }
+        ]
+    },
+    {
+        id: 3,
+        text: "Wie stark interessieren Sie sich für neue digitale Werkzeuge und Technologien?",
+        bereich: "Digitale Grundkompetenzen",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Gering", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Hoch", wert: 3 }
+        ]
+    },
+
+    // Kommunikation & Kollaboration
+    {
+        id: 4,
+        text: "Wie sicher fühlen Sie sich im Umgang mit Online-Kommunikationstools?",
+        bereich: "Kommunikation & Kollaboration",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Unsicher", wert: 1 },
+            { text: "Sicher", wert: 2 },
+            { text: "Sehr sicher", wert: 3 }
+        ]
+    },
+    {
+        id: 5,
+        text: "Welches Tool eignet sich am besten für synchrone Online-Zusammenarbeit?",
+        bereich: "Kommunikation & Kollaboration",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "E-Mail", wert: 1 },
+            { text: "Microsoft Teams", wert: 3 }, // korrekte Antwort
+            { text: "Dropbox", wert: 1 },
+            { text: "WordPress", wert: 1 }
+        ]
+    },
+    {
+        id: 6,
+        text: "Wie gerne probieren Sie neue Kollaborationstools aus?",
+        bereich: "Kommunikation & Kollaboration",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Ungern", wert: 1 },
+            { text: "Gelegentlich", wert: 2 },
+            { text: "Sehr gern", wert: 3 }
+        ]
+    },
+
+    // Sicherheit
+    {
+        id: 7,
+        text: "Wie sicher fühlen Sie sich im Umgang mit IT-Sicherheitsmaßnahmen?",
+        bereich: "Sicherheit",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Unsicher", wert: 1 },
+            { text: "Sicher", wert: 2 },
+            { text: "Sehr sicher", wert: 3 }
+        ]
+    },
+    {
+        id: 8,
+        text: "Welche dieser Maßnahmen erhöht die Passwort-Sicherheit NICHT?",
+        bereich: "Sicherheit",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Sonderzeichen verwenden", wert: 1 },
+            { text: "Länge über 12 Zeichen", wert: 1 },
+            { text: "Monatlich ändern", wert: 1 },
+            { text: "Im Browser speichern", wert: 3 } // korrekte Antwort
+        ]
+    },
+    {
+        id: 9,
+        text: "Wie sehr interessieren Sie sich für IT-Sicherheitsthemen?",
+        bereich: "Sicherheit",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
+        ]
+    },
+
+    // Problemlösung
+    {
+        id: 10,
+        text: "Wie gut können Sie technische Probleme selbstständig lösen?",
+        bereich: "Problemlösung",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Kaum", wert: 1 },
+            { text: "Meist", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 11,
+        text: "Was ist beim Auftreten eines technischen Problems der erste sinnvolle Schritt?",
+        bereich: "Problemlösung",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Sofort Support kontaktieren", wert: 1 },
+            { text: "Problem genau beschreiben", wert: 3 }, // korrekte Antwort
+            { text: "Computer neu starten", wert: 1 },
+            { text: "Software neu installieren", wert: 1 }
+        ]
+    },
+    {
+        id: 12,
+        text: "Wie gerne beschäftigen Sie sich mit der Lösung technischer Probleme?",
+        bereich: "Problemlösung",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Ungern", wert: 1 },
+            { text: "Neutral", wert: 2 },
+            { text: "Sehr gern", wert: 3 }
+        ]
+    },
+
+    // Digitales Lehren & Lernen
+    {
+        id: 13,
+        text: "Wie gut können Sie digitale Werkzeuge im Lehrkontext einsetzen?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Grundlegend", wert: 1 },
+            { text: "Gut", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 14,
+        text: "Welches Tool eignet sich NICHT für formatives Assessment?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Mentimeter", wert: 1 },
+            { text: "PowerPoint", wert: 3 }, // korrekte Antwort
+            { text: "Kahoot", wert: 1 },
+            { text: "Socrative", wert: 1 }
+        ]
+    },
+    {
+        id: 15,
+        text: "Wie sehr interessieren Sie sich für digitale Lehrmethoden?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
+        ]
+    },
+
+    // Digital Leadership
+    {
+        id: 16,
+        text: "Wie gut können Sie digitale Transformationsprozesse gestalten?",
+        bereich: "Digital Leadership",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Anfänger", wert: 1 },
+            { text: "Fortgeschritten", wert: 2 },
+            { text: "Experte", wert: 3 }
+        ]
+    },
+    {
+        id: 17,
+        text: "Was ist KEINE Kernaufgabe von Digital Leadership?",
+        bereich: "Digital Leadership",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Digitale Strategie entwickeln", wert: 1 },
+            { text: "Teams digital führen", wert: 1 },
+            { text: "Hardware warten", wert: 3 }, // korrekte Antwort
+            { text: "Change Management", wert: 1 }
+        ]
+    },
+    {
+        id: 18,
+        text: "Wie sehr interessieren Sie sich für digitale Führungsthemen?",
+        bereich: "Digital Leadership",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
+        ]
+    },
+
+    // Digital Administration
+    {
+        id: 19,
+        text: "Wie gut beherrschen Sie digitale Verwaltungswerkzeuge?",
+        bereich: "Digital Administration",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Grundlegend", wert: 1 },
+            { text: "Gut", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 20,
+        text: "Welches Dateiformat eignet sich am besten für die langfristige Archivierung von Dokumenten?",
+        bereich: "Digital Administration",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "DOC", wert: 1 },
+            { text: "PDF/A", wert: 3 }, // korrekte Antwort
+            { text: "JPEG", wert: 1 },
+            { text: "TXT", wert: 1 }
+        ]
+    },
+    {
+        id: 21,
+        text: "Wie sehr interessieren Sie sich für digitale Verwaltungsprozesse?",
+        bereich: "Digital Administration",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Stark", wert: 3 }
+        ]
+    }
+];
+
+        // Globaler State für Antworten
+        let antworten = {};
+
+        // Fragen rendern
+        function renderFragen() {
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = FRAGEN.map(frage => {
+                if (frage.typ === 'slider') {
+                    return `
+                        <div class="question-card">
+                            <div class="question-title">${frage.text}</div>
+                            <div class="meta-info">
+                                Bereich: ${frage.bereich} • Ebene: ${frage.ebene}
+                            </div>
+                            <div class="slider-container">
+                                <input 
+                                    type="range" 
+                                    min="${MIN_WERT}" 
+                                    max="${MAX_WERT}" 
+                                    step="1"
+                                    value="${antworten[frage.id] || MIN_WERT}"
+                                    onchange="handleAntwort(${frage.id}, parseInt(this.value))"
+                                    oninput="this.nextElementSibling.nextElementSibling.textContent = this.value"
+                                    class="slider"
+                                >
+                                <div class="slider-labels">
+                                    ${frage.antworten.map(antwort => `
+                                        <span>${antwort.text}</span>
+                                    `).join('')}
+                                </div>
+                                <div class="slider-value">${antworten[frage.id] || MIN_WERT}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="question-card">
+                            <div class="question-title">${frage.text}</div>
+                            <div class="meta-info">
+                                Bereich: ${frage.bereich} • Ebene: ${frage.ebene}
+                            </div>
+                            <div class="mc-group">
+                                ${frage.antworten.map((antwort, idx) => `
+                                    <label class="mc-option">
+                                        <input 
+                                            type="radio" 
+                                            name="frage-${frage.id}" 
+                                            value="${antwort.wert}"
+                                            ${antworten[frage.id] === antwort.wert ? 'checked' : ''}
+                                            onchange="handleAntwort(${frage.id}, ${antwort.wert})"
+                                        >
+                                        ${antwort.text}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function setupCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            // Setze die Canvas-Auflösung auf das 3-fache
+            canvas.width = rect.width * dpr * 3;
+            canvas.height = rect.height * dpr * 3;
+            
+            const ctx = canvas.getContext('2d');
+            // Skaliere den Kontext entsprechend
+            ctx.scale(dpr * 3, dpr * 3);
+            
+            // Setze die Display-Größe via CSS
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            
+            return ctx;
+        }
+
+        // Antwort Handler
+        function handleAntwort(fragenId, wert) {
+            antworten[fragenId] = wert;
+            updateRadar();
+        }
+
+        // Radar-Chart zeichnen
+        function drawRadar() {
+            const canvas = document.getElementById('radarCanvas');
+            const ctx = setupCanvas(canvas);
+
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 3;
+
+            // Canvas löschen
+            ctx.clearRect(0, 0, width, height);
+
+            const anzahlBereiche = BEREICHE.length;
+            const winkel = (2 * Math.PI) / anzahlBereiche;
+
+            // Hilfsfunktion zum Zeichnen der verschiedenen Marker
+            function drawMarker(x, y, type, color) {
+                ctx.fillStyle = color;
+                ctx.strokeStyle = color;
+                
+                switch(type) {
+                    case 'circle':
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                        ctx.fill();
+                        break;
+                    case 'triangle':
+                        ctx.beginPath();
+                        ctx.moveTo(x, y - 4);
+                        ctx.lineTo(x + 4, y + 4);
+                        ctx.lineTo(x - 4, y + 4);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                    case 'square':
+                        ctx.fillRect(x - 3, y - 3, 6, 6);
+                        break;
+                }
+            }
+
+            // Konzentrische Kreise für die drei Radien
+            for (let r = 1; r <= 3; r++) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                
+                // Zeichne das Polygon für jeden Radius
+                for (let i = 0; i <= anzahlBereiche; i++) {
+                    const currentAngle = i * winkel - Math.PI / 2;
+                    const currentRadius = radius * ((r - 1) / 2); // Anpassung für 1-3 Skala
+                    const x = centerX + currentRadius * Math.cos(currentAngle);
+                    const y = centerY + currentRadius * Math.sin(currentAngle);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            // Achsenlinien vom Zentrum zu den äußeren Punkten
+            ctx.beginPath();
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < anzahlBereiche; i++) {
+                const angle = i * winkel - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Beschriftungen
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            BEREICHE.forEach((bereich, i) => {
+                const x = centerX + (radius + 20) * Math.cos(i * winkel - Math.PI / 2);
+                const y = centerY + (radius + 20) * Math.sin(i * winkel - Math.PI / 2);
+                ctx.fillText(bereich, x, y);
+            });
+
+            // Daten aggregieren und normalisieren
+            const aggregierteWerte = BEREICHE.reduce((acc, bereich) => {
+                acc[bereich] = {
+                    subjektiv: [],
+                    objektiv: [],
+                    interesse: []
+                };
+                return acc;
+            }, {});
+
+            Object.entries(antworten).forEach(([fragenId, wert]) => {
+                const frage = FRAGEN.find(f => f.id === parseInt(fragenId));
+                if (frage) {
+                    aggregierteWerte[frage.bereich][frage.ebene].push(wert);
+                }
+            });
+
+            const chartData = BEREICHE.map(bereich => ({
+                bereich,
+                subjektiv: Math.max(1, durchschnitt(aggregierteWerte[bereich].subjektiv)),
+                objektiv: Math.max(1, durchschnitt(aggregierteWerte[bereich].objektiv)),
+                interesse: Math.max(1, durchschnitt(aggregierteWerte[bereich].interesse))
+            }));
+
+            // Definition der Ebenen mit ihren Eigenschaften
+            const ebenen = [
+                { name: 'subjektiv', farbe: ['rgba(37, 99, 235, 0.1)', 'rgba(37, 99, 235, 0.9)'], marker: 'circle' },
+                { name: 'objektiv', farbe: ['rgba(22, 163, 74, 0.1)', 'rgba(22, 163, 74, 0.9)'], marker: 'triangle' },
+                { name: 'interesse', farbe: ['rgba(220, 38, 38, 0.1)', 'rgba(220, 38, 38, 0.9)'], marker: 'square' }
+            ];
+
+            // Zeichne die Datenpunkte und Verbindungslinien
+            ebenen.forEach((ebene) => {
+                const punkte = chartData.map((data, i) => {
+                    const normalisierterWert = (data[ebene.name] - 1) / 2;
+                    return {
+                        x: centerX + (radius * normalisierterWert) * Math.cos(i * winkel - Math.PI / 2),
+                        y: centerY + (radius * normalisierterWert) * Math.sin(i * winkel - Math.PI / 2)
+                    };
+                });
+
+                // Zeichne die Verbindungslinien
+                ctx.beginPath();
+                ctx.fillStyle = ebene.farbe[0];
+                ctx.strokeStyle = ebene.farbe[1];
+                ctx.lineWidth = 2;
+
+                punkte.forEach((punkt, i) => {
+                    if (i === 0) {
+                        ctx.moveTo(punkt.x, punkt.y);
+                    } else {
+                        ctx.lineTo(punkt.x, punkt.y);
+                    }
+                });
+                ctx.lineTo(punkte[0].x, punkte[0].y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Zeichne die Marker an den Datenpunkten
+                punkte.forEach(punkt => {
+                    drawMarker(punkt.x, punkt.y, ebene.marker, ebene.farbe[1]);
+                });
+            });
+        }
+
+        // Hilfsfunktion: Durchschnitt berechnen
+        function durchschnitt(werte) {
+            if (werte.length === 0) return MIN_WERT;
+            return werte.reduce((a, b) => a + b, 0) / werte.length;
+        }
+
+        // Update Funktion
+        function updateRadar() {
+            drawRadar();
+        }
+
+        // Initialisierung
+        renderFragen();
+        drawRadar();
+
+        // Responsive Canvas
+        window.addEventListener('resize', () => {
+        const canvas = document.getElementById('radarCanvas');
+        const container = canvas.parentElement;
+        const size = Math.min(container.clientWidth, 500);
+        canvas.style.width = `${size}px`;
+        canvas.style.height = `${size}px`;
+        drawRadar();
+    });
+    </script>
+</body>
+</html>
