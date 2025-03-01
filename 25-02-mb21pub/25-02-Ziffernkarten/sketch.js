@@ -14,10 +14,11 @@ const SNAP_DISTANCE = 30;
 let CARD_WIDTH = 60;
 let CARD_HEIGHT = 80;
 let PADDING = 70;
-let GROUP_GAP = 30;
+
 let START_X; // Wird dynamisch berechnet
 const START_Y1 = 20;
 const START_Y2 = 170;
+const GROUP_GAP_C = 80;
 
 // Help-Sequenz
 let keyBuffer = '';
@@ -152,7 +153,7 @@ function updateDimensions() {
     CARD_WIDTH = 60 * scale;
     CARD_HEIGHT = 80 * scale;
     PADDING = 70 * scale;
-    GROUP_GAP = 30 * scale;
+    GROUP_GAP = GROUP_GAP_C * scale;
     START_X = calculateStartX();
 }
 
@@ -220,6 +221,8 @@ function draw() {
 function drawSlots() {
     for (let row = 0; row < 2; row++) {
         let y = row === 0 ? START_Y1 : START_Y2;
+        
+        // Zeichne alle Slots
         for (let col = 0; col < 5; col++) {
             let x = START_X + (col * PADDING);
             if (col >= 2) x += GROUP_GAP;
@@ -228,6 +231,16 @@ function drawSlots() {
             noStroke();
             ellipse(x + CARD_WIDTH/2, y + CARD_HEIGHT/2, 10, 10);
         }
+        
+        // Zeichne "% von" zwischen den Gruppen
+        let percentX = START_X + (PADDING * 2) + (GROUP_GAP / 2.5);
+        textSize(16 * min(1, windowWidth / 800)); // Skaliere Textgröße
+        textAlign(CENTER, CENTER);
+        fill(0);
+        noStroke();
+        textStyle(BOLD); // Text fett machen
+        text("% von", percentX, y + CARD_HEIGHT/2);
+        textStyle(NORMAL); // Zurück zum normalen Textstil
     }
 }
 
