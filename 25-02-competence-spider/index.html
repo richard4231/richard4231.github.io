@@ -180,38 +180,37 @@
             "S: Schulentwicklung",
         ];
 
-// Die Nummerierung folgt dem Muster: erste Ziffer = Bereich, zweite Ziffer = laufende Nummer
-
-const FRAGEN = [
-    // LP: Wissen Nummerierung: 1x
+        const FRAGEN = [
+    // Digitale Grundkompetenzen
     {
-        id: 11,
-        text: "Wie gut kennen Sie sich mit den SDG aus?",
-        bereich: "LP: Wissen",
+        id: 1,
+        text: "Wie gut beherrschen Sie die grundlegenden Funktionen Ihres Computers/Tablets?",
+        bereich: "Digitale Grundkompetenzen",
         ebene: "subjektiv",
         typ: "slider",
         antworten: [
-            { text: "Wenig oder grundlegend", wert: 1 },
+            { text: "Grundlegend", wert: 1 },
             { text: "Fortgeschritten", wert: 2 },
-            { text: "Hohe Expertise", wert: 3 }
+            { text: "Experte", wert: 3 }
         ]
     },
     {
-        id: 12,
-        text: "Zu welcher Umsetzungsstrategie von Nachhaltigkeit passt die folgende Definition: «Weniger produzieren und konsumieren: Energie- und Materialverbrauch begrenzen. Beispiel: Vom Besitzen zum Teilen»",
-        bereich: "LP: Wissen",
+        id: 2,
+        text: "Welche dieser Dateitypen ist KEIN Bildformat?",
+        bereich: "Digitale Grundkompetenzen",
         ebene: "objektiv",
         typ: "mc",
         antworten: [
-            { text: "Suffizienz", wert: 3 }, // korrekte Antwort
-            { text: "Konsistenz", wert: 1 },
-            { text: "Effizienz", wert: 1 }, 
+            { text: "JPG", wert: 1 },
+            { text: "PNG", wert: 1 },
+            { text: "DOC", wert: 3 }, // korrekte Antwort
+            { text: "GIF", wert: 1 }
         ]
     },
     {
-        id: 13,
-        text: "Wie stark interessieren Sie sich für die SDG?",
-        bereich: "LP: Wissen",
+        id: 3,
+        text: "Wie stark interessieren Sie sich für neue digitale Werkzeuge und Technologien?",
+        bereich: "Digitale Grundkompetenzen",
         ebene: "interesse",
         typ: "slider",
         antworten: [
@@ -220,502 +219,238 @@ const FRAGEN = [
             { text: "Hoch", wert: 3 }
         ]
     },
+
+    // Kommunikation & Kollaboration
     {
-        id: 14,
-        text: "Um mein Unterricht zielorientierter gestalten zu können, möchte ich noch mehr über die Leitidee von Nachhaltiger Entwicklung und die Ziele einer BNE erfahren.",
-        bereich: "LP: Wissen",
+        id: 4,
+        text: "Wie sicher fühlen Sie sich im Umgang mit Online-Kommunikationstools?",
+        bereich: "Kommunikation & Kollaboration",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Unsicher", wert: 1 },
+            { text: "Sicher", wert: 2 },
+            { text: "Sehr sicher", wert: 3 }
+        ]
+    },
+    {
+        id: 5,
+        text: "Welches Tool eignet sich am besten für synchrone Online-Zusammenarbeit?",
+        bereich: "Kommunikation & Kollaboration",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "E-Mail", wert: 1 },
+            { text: "Microsoft Teams", wert: 3 }, // korrekte Antwort
+            { text: "Dropbox", wert: 1 },
+            { text: "WordPress", wert: 1 }
+        ]
+    },
+    {
+        id: 6,
+        text: "Wie gerne probieren Sie neue Kollaborationstools aus?",
+        bereich: "Kommunikation & Kollaboration",
         ebene: "interesse",
         typ: "slider",
         antworten: [
-            { text: "trifft eher nicht zu", wert: 1 },
-            { text: "trifft eher zu", wert: 2 },
-            { text: "trifft zu", wert: 3 }
+            { text: "Ungern", wert: 1 },
+            { text: "Gelegentlich", wert: 2 },
+            { text: "Sehr gern", wert: 3 }
+        ]
+    },
+
+    // Sicherheit
+    {
+        id: 7,
+        text: "Wie sicher fühlen Sie sich im Umgang mit IT-Sicherheitsmaßnahmen?",
+        bereich: "Sicherheit",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Unsicher", wert: 1 },
+            { text: "Sicher", wert: 2 },
+            { text: "Sehr sicher", wert: 3 }
+        ]
+    },
+    {
+        id: 8,
+        text: "Welche dieser Maßnahmen erhöht die Passwort-Sicherheit NICHT?",
+        bereich: "Sicherheit",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Sonderzeichen verwenden", wert: 1 },
+            { text: "Länge über 12 Zeichen", wert: 1 },
+            { text: "Monatlich ändern", wert: 1 },
+            { text: "Im Browser speichern", wert: 3 } // korrekte Antwort
+        ]
+    },
+    {
+        id: 9,
+        text: "Wie sehr interessieren Sie sich für IT-Sicherheitsthemen?",
+        bereich: "Sicherheit",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
+        ]
+    },
+
+    // Problemlösung
+    {
+        id: 10,
+        text: "Wie gut können Sie technische Probleme selbstständig lösen?",
+        bereich: "Problemlösung",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Kaum", wert: 1 },
+            { text: "Meist", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 11,
+        text: "Was ist beim Auftreten eines technischen Problems der erste sinnvolle Schritt?",
+        bereich: "Problemlösung",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Sofort Support kontaktieren", wert: 1 },
+            { text: "Problem genau beschreiben", wert: 3 }, // korrekte Antwort
+            { text: "Computer neu starten", wert: 1 },
+            { text: "Software neu installieren", wert: 1 }
+        ]
+    },
+    {
+        id: 12,
+        text: "Wie gerne beschäftigen Sie sich mit der Lösung technischer Probleme?",
+        bereich: "Problemlösung",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Ungern", wert: 1 },
+            { text: "Neutral", wert: 2 },
+            { text: "Sehr gern", wert: 3 }
+        ]
+    },
+
+    // Digitales Lehren & Lernen
+    {
+        id: 13,
+        text: "Wie gut können Sie digitale Werkzeuge im Lehrkontext einsetzen?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Grundlegend", wert: 1 },
+            { text: "Gut", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 14,
+        text: "Welches Tool eignet sich NICHT für formatives Assessment?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "Mentimeter", wert: 1 },
+            { text: "PowerPoint", wert: 3 }, // korrekte Antwort
+            { text: "Kahoot", wert: 1 },
+            { text: "Socrative", wert: 1 }
         ]
     },
     {
         id: 15,
-        text: "Wie schätzen Sie Ihre Kompetenzen im Bereich der BNE im Unterricht ein?",
-        bereich: "LP: Wissen",
+        text: "Wie sehr interessieren Sie sich für digitale Lehrmethoden?",
+        bereich: "Digitales Lehren & Lernen",
+        ebene: "interesse",
+        typ: "slider",
+        antworten: [
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
+        ]
+    },
+
+    // Digital Leadership
+    {
+        id: 16,
+        text: "Wie gut können Sie digitale Transformationsprozesse gestalten?",
+        bereich: "Digital Leadership",
         ebene: "subjektiv",
         typ: "slider",
         antworten: [
-            { text: "wenig Kenntnisse", wert: 1 },
-            { text: "mittlere Kompetenzen", wert: 2 },
-            { text: "hohe Kompetenzen", wert: 3 }
-        ]
-    },
-    {
-        id: 16,
-        text: "Der Lehrplan 21 bezieht sich auf das «Drei-Dimensionen-Modell der Nachhaltigen Entwicklung». Welche ist keine der drei Dimensionen?",
-        bereich: "LP: Wissen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Gesellschaft", wert: 1 },
-            { text: "Umwelt", wert: 1 },
-            { text: "Soziales", wert: 3 }, // korrekte Antwort
-            { text: "Wirtschaft", wert: 1 }
+            { text: "Anfänger", wert: 1 },
+            { text: "Fortgeschritten", wert: 2 },
+            { text: "Experte", wert: 3 }
         ]
     },
     {
         id: 17,
-        text: "Zu welcher Umsetzungsstrategie von Nachhaltigkeit passt folgendes Beispiel: «Eine Glühbirne wird mit LED ersetzt.»",
-        bereich: "LP: Wissen",
+        text: "Was ist KEINE Kernaufgabe von Digital Leadership?",
+        bereich: "Digital Leadership",
         ebene: "objektiv",
         typ: "mc",
         antworten: [
-            { text: "Suffizienz", wert: 1 },
-            { text: "Konsistenz", wert: 1 },
-            { text: "Effizienz", wert: 3 }, // korrekte Antwort
+            { text: "Digitale Strategie entwickeln", wert: 1 },
+            { text: "Teams digital führen", wert: 1 },
+            { text: "Hardware warten", wert: 3 }, // korrekte Antwort
+            { text: "Change Management", wert: 1 }
         ]
     },
     {
         id: 18,
-        text: "Ist die Förderung einer Nachhaltigen Entwicklung in der Schweizerischen Bundesverfassung als Auftrag staatlichen Handelns festgeschrieben?",
-        bereich: "LP: Wissen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Ja", wert: 3 }, // korrekte Antwort
-            { text: "Nein", wert: 1 }
-        ]
-    },
-    // LP: Bewusstsein id 2x
-    {
-        id: 21,
-        text: "Ich fühle mich sicher, wie ich im BNE-Unterricht meinen Standpunkt und meine Meinung vertreten darf und kann.",
-        bereich: "LP: Bewusstsein",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "trifft nicht zu", wert: 1 },
-            { text: "trifft eher zu", wert: 2 },
-            { text: "trifft zu", wert: 3 }
-        ]
-    },
-    {
-        id: 22,
-        text: "Ich möchte mehr über den Beutelsbacher Konsens erfahren und mich mit der Umsetzung von BNE im Unterricht auseinandersetzen",
-        bereich: "LP: Bewusstsein",
+        text: "Wie sehr interessieren Sie sich für digitale Führungsthemen?",
+        bereich: "Digital Leadership",
         ebene: "interesse",
         typ: "slider",
         antworten: [
-            { text: "trifft eher nicht zu", wert: 1 },
-            { text: "trifft eher zu", wert: 2 },
-            { text: "trifft sehr zu", wert: 3 }
-        ]
-    },
-    {
-        id: 23,
-        text: "Der Beutelsbacher Konsens besagt, dass sich Lehrpersonen im Unterricht nicht zu politisch heiklen Themen äussern sollten.",
-        bereich: "LP: Bewusstsein",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "richtig", wert: 1 },
-            { text: "falsch", wert: 3 }, // korrekte Antwort
-            { text: "teilweise richtig", wert: 1 },
-        ]
-    },
-    {
-        id: 25,
-        text: "Ich fühle mich noch nicht sicher, wie ich im BNE-Unterricht meinen Standpunkt und meine Meinung vertreten kann. Ich möchte deshalb noch mehr darüber erfahren, was im BNE-Unterricht erwünscht, und was verboten ist.",
-        bereich: "LP: Bewusstsein",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "trifft nicht zu", wert: 1 },
-            { text: "trifft teilweise zu", wert: 2 },
-            { text: "trifft zu", wert: 3 }
+            { text: "Wenig", wert: 1 },
+            { text: "Mittel", wert: 2 },
+            { text: "Sehr", wert: 3 }
         ]
     },
 
-    // LP: Handeln id 3x
+    // Digital Administration
     {
-        id: 31,
-        text: "Wie stark beschäftigt Sie die Frage, wie Ihr Handeln als Lehrperson das Lernen der Schüler*innen in Bezug auf BNE beeinflusst?",
-        bereich: "LP: Handeln",
+        id: 19,
+        text: "Wie gut beherrschen Sie digitale Verwaltungswerkzeuge?",
+        bereich: "Digital Administration",
         ebene: "subjektiv",
+        typ: "slider",
+        antworten: [
+            { text: "Grundlegend", wert: 1 },
+            { text: "Gut", wert: 2 },
+            { text: "Sehr gut", wert: 3 }
+        ]
+    },
+    {
+        id: 20,
+        text: "Welches Dateiformat eignet sich am besten für die langfristige Archivierung von Dokumenten?",
+        bereich: "Digital Administration",
+        ebene: "objektiv",
+        typ: "mc",
+        antworten: [
+            { text: "DOC", wert: 1 },
+            { text: "PDF/A", wert: 3 }, // korrekte Antwort
+            { text: "JPEG", wert: 1 },
+            { text: "TXT", wert: 1 }
+        ]
+    },
+    {
+        id: 21,
+        text: "Wie sehr interessieren Sie sich für digitale Verwaltungsprozesse?",
+        bereich: "Digital Administration",
+        ebene: "interesse",
         typ: "slider",
         antworten: [
             { text: "Wenig", wert: 1 },
             { text: "Mittel", wert: 2 },
             { text: "Stark", wert: 3 }
-        ]
-    },
-    {
-        id: 32,
-        text: "Im BNE-Unterricht gibt es verschiedene normative Rahmen. Um welchen Ansatz handelt es sich bei: Vermittlung von Expertenwissen, Förderung nachhaltigen Verhaltens und Lernen für eine nachhaltige Entwicklung?",
-        bereich: "LP: Handeln",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Instrumenteller Ansatz", wert: 3 }, // korrekte Antwort
-            { text: "Emanzipatorischer Ansatz", wert: 1 },
-            { text: "Transformativer Ansatz", wert: 1 }
-        ]
-    },
-    {
-        id: 33,
-        text: "Im BNE-Unterricht gibt es verschiedene normative Rahmen. Um welchen Ansatz handelt es sich bei: Widersprüche (dialektisch) überwinden, nicht-Vorhersehbarkeit, Emotionen, Lernen durch nachhaltige Entwicklung?",
-        bereich: "LP: Handeln",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Instrumenteller Ansatz", wert: 1 },
-            { text: "Emanzipatorischer Ansatz", wert: 1 },
-            { text: "Transformativer Ansatz", wert: 3 } // korrekte Antwort
-        ]
-    },
-    {
-        id: 34,
-        text: "Im BNE-Unterricht gibt es verschiedene normative Rahmen. Um welchen Ansatz handelt es sich bei: Befähigung zu Kritik und Reflexion, Unsicherheiten, Widersprüche; Lernen als nachhaltige Entwicklung?",
-        bereich: "LP: Handeln",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Instrumenteller Ansatz", wert: 1 },
-            { text: "Emanzipatorischer Ansatz", wert: 3 }, // korrekte Antwort
-            { text: "Transformativer Ansatz", wert: 1 }
-        ]
-    },
-    {
-        id: 35,
-        text: "Welche Gefahr besteht primär bei einem instrumentellen Ansatz im BNE-Unterricht?",
-        bereich: "LP: Handeln",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Gefahr der Indoktrination", wert: 3 }, // korrekte Antwort
-            { text: "Gefahr des Zeitmangels", wert: 1 }
-        ]
-    },
-    {
-        id: 36,
-        text: "Welche Gefahr besteht primär bei einem emanzipatorischen Ansatz im BNE-Unterricht?",
-        bereich: "LP: Handeln",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Gefahr der Indoktrination", wert: 1 },
-            { text: "Gefahr des Zeitmangels", wert: 3 } // korrekte Antwort
-        ]
-    },
-    {
-        id: 37,
-        text: "Um mein eigenes Rollen- und Funktionsverständnis in Zusammenhang mit nachhaltiger Entwicklung und BNE als Lehrperson zu definieren, möchte ich mich mit entsprechenden Konzepten auseinandersetzen.",
-        bereich: "LP: Handeln",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "stimme eher nicht zu", wert: 1 },
-            { text: "stimme teilweise zu", wert: 2 },
-            { text: "stimme zu", wert: 3 }
-        ]
-    },
-
-    // U: Prinzipien id 4x
-    {
-        id: 41,
-        text: "Ich besitze bereits ein breites Repertoire an Prinzipien, die ich im BNE-Unterricht umsetzen kann.",
-        bereich: "U: Prinzipien",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "trifft nicht zu", wert: 1 },
-            { text: "trifft teilweise zu", wert: 2 },
-            { text: "trifft zu", wert: 3 }
-        ]
-    },
-    {
-        id: 42,
-        text: "Aktualitätsbezug ist als eines von drei didaktischen BNE-Prinzipen im Lehrplan 21 verankert. Ist die Aussage korrekt?",
-        bereich: "U: Prinzipien",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Ja", wert: 1 },
-            { text: "Nein", wert: 3 } // korrekte Antwort
-        ]
-    },
-    {
-        id: 43,
-        text: "«Im Unterricht werden eigene und kollektive Denkweisen und Werte aufgespürt und miteinander verglichen.» Um welches Prinzip handelt es sich?",
-        bereich: "U: Prinzipien",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Wertereflexion und Handlungsorientierung", wert: 3 }, // korrekte Antwort
-            { text: "Chancengerechtigkeit", wert: 1 },
-            { text: "Partizipation und Empowerment", wert: 1 }
-        ]
-    },
-    {
-        id: 44,
-        text: "«Nachhaltige Entwicklung ist ein optimistischer Ansatz, der sich an einer positiven Zukunft orientiert.» Um welches Prinzip handelt es sich?",
-        bereich: "U: Prinzipien",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Visionsorientierung", wert: 3 }, // korrekte Antwort
-            { text: "Vernetztes Denken", wert: 1 },
-            { text: "Partizipation und Empowerment", wert: 1 }
-        ]
-    },
-    {
-        id: 45,
-        text: "Um die BNE-Prinzipien noch besser verstehen zu können, möchte ich mich noch vertiefter mit diesen befassen.",
-        bereich: "U: Prinzipien",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "stimme eher nicht zu", wert: 1 },
-            { text: "stimme teilweise zu", wert: 2 },
-            { text: "stimme zu", wert: 3 }
-        ]
-    },
-
-    // U: Kompetenzen id 5x
-    {
-        id: 51,
-        text: "Wie gut können Sie BNE-Kompetenzen in Ihrem Unterricht fördern?",
-        bereich: "U: Kompetenzen",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "Grundlegend", wert: 1 },
-            { text: "Gut", wert: 2 },
-            { text: "Sehr gut", wert: 3 }
-        ]
-    },
-    {
-        id: 52,
-        text: "Die von éducation21 formulierten Kompetenzen können den DeSeCo-Schlüsselkompetenzen zugeordnet werden. Zu welcher Kategorie gehören Wissen, Systeme, Antizipation und Kreativität?",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Interaktive Verwendung von Medien und Tools", wert: 3 }, // korrekte Antwort
-            { text: "Interagieren in heterogenen Gruppen", wert: 1 },
-            { text: "Eigenständiges Handeln", wert: 1 }
-        ]
-    },
-    {
-        id: 53,
-        text: "Die von éducation21 formulierten Kompetenzen können den DeSeCo-Schlüsselkompetenzen zugeordnet werden. Zu welcher Kategorie gehören Perspektive, Kooperation und Partizipation?",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Interaktive Verwendung von Medien und Tools", wert: 1 },
-            { text: "Interagieren in heterogenen Gruppen", wert: 3 }, // korrekte Antwort
-            { text: "Eigenständiges Handeln", wert: 1 }
-        ]
-    },
-    {
-        id: 54,
-        text: "Die von éducation21 formulierten Kompetenzen können den DeSeCo-Schlüsselkompetenzen zugeordnet werden. Zu welcher Kategorie gehören Verantwortung, Werte und Handeln?",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Interaktive Verwendung von Medien und Tools", wert: 1 },
-            { text: "Interagieren in heterogenen Gruppen", wert: 1 },
-            { text: "Eigenständiges Handeln", wert: 3 } // korrekte Antwort
-        ]
-    },
-    {
-        id: 55,
-        text: "Im Lehrplan 21 sind spezifische BNE-Kompetenzen ausformuliert.",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Ja", wert: 1 },
-            { text: "Nein, nur über fächerübergreifende Querverweise", wert: 3 }, // korrekte Antwort
-            { text: "Nein, überhaupt nicht", wert: 1 }
-        ]
-    },
-    {
-        id: 56,
-        text: "Um welche Kompetenz handelt es sich: «Sich als Teil der Welt erfahren (Sich selbst, die soziale und natürliche Umwelt ganzheitlich und im globalen Kontext wahrnehmen)»?",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Verantwortung", wert: 3 }, // korrekte Antwort
-            { text: "Partizipation", wert: 1 },
-            { text: "Kooperation", wert: 1 }
-        ]
-    },
-    {
-        id: 57,
-        text: "Um welche Kompetenz handelt es sich: «Vorausschauend denken und handeln (Zukunftsvisionen entwickeln, sie in Bezug zur Realität und zu aktuellen Entwicklungsrichtungen setzen)»?",
-        bereich: "U: Kompetenzen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Systeme", wert: 1 },
-            { text: "Antizipation", wert: 3 }, // korrekte Antwort
-            { text: "Kreativität", wert: 1 }
-        ]
-    },
-    {
-        id: 58,
-        text: "Um meinen Unterricht kompetenzorientiert gestalten zu können, möchte ich mich noch vertiefter mit den BNE-Kompetenzen auseinandersetzen.",
-        bereich: "U: Kompetenzen",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "stimme eher nicht zu", wert: 1 },
-            { text: "stimme teilweise zu", wert: 2 },
-            { text: "stimme zu", wert: 3 }
-        ]
-    },
-
-    // U: Themen id 6x
-    {
-        id: 61,
-        text: "Wie gut kennen Sie die fächerübergreifenden Themen zu nachhaltiger Entwicklung im Lehrplan 21?",
-        bereich: "U: Themen",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "Wenig", wert: 1 },
-            { text: "Gut", wert: 2 },
-            { text: "Sehr gut", wert: 3 }
-        ]
-    },
-    {
-        id: 62,
-        text: "Im Lehrplan 21 ist das Thema \"Geschlechter und Gleichstellung\" kein fächerübergreifendes Thema im Kontext Bildung für nachhaltige Entwicklung.",
-        bereich: "U: Themen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Richtig", wert: 1 },
-            { text: "Falsch", wert: 3 } // korrekte Antwort
-        ]
-    },
-    {
-        id: 63,
-        text: "Im Lehrplan 21 werden sieben fächerübergreifende Themen unter der Leitidee Nachhaltiger Entwicklung aufgeführt.",
-        bereich: "U: Themen",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Richtig", wert: 3 }, // korrekte Antwort
-            { text: "Falsch", wert: 1 }
-        ]
-    },
-    {
-        id: 64,
-        text: "Wie interessiert sind Sie daran, sich mit fächerübergreifenden Themen zur nachhaltigen Entwicklung auseinanderzusetzen?",
-        bereich: "U: Themen",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "wenig interessiert", wert: 1 },
-            { text: "interessiert", wert: 2 },
-            { text: "sehr interessiert", wert: 3 }
-        ]
-    },
-
-    // U: Methoden id 7x
-    {
-        id: 71,
-        text: "Wie gut beherrschen Sie unterschiedliche Methoden zur Förderung von BNE im Unterricht?",
-        bereich: "U: Methoden",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "Grundlegend", wert: 1 },
-            { text: "Gut", wert: 2 },
-            { text: "Sehr gut", wert: 3 }
-        ]
-    },
-    {
-        id: 72,
-        text: "Für die Förderung von kreativen Lösungsansätzen bei Nachhaltigkeitsproblemen eignet sich im Kontext von BNE die Methode Design Thinking.",
-        bereich: "U: Methoden",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Ja", wert: 3 }, // korrekte Antwort
-            { text: "Nein", wert: 1 }
-        ]
-    },
-    {
-        id: 73,
-        text: "Schüler*innen setzen sich mit einem moralischen Dilemma auseinander und beschreiben ihre Gefühle. Welcher Unterrichtszugang trifft am besten zu?",
-        bereich: "U: Methoden",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Transformatives Lernen", wert: 3 }, // korrekte Antwort
-            { text: "Entdeckendes Lernen", wert: 1 },
-            { text: "Situatives Lernen", wert: 1 }
-        ]
-    },
-    {
-        id: 74,
-        text: "Wie interessiert sind Sie daran, diese Unterrichtsmethoden für BNE in Ihrem Unterricht umzusetzen?",
-        bereich: "U: Methoden",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "wenig interessiert", wert: 1 },
-            { text: "interessiert", wert: 2 },
-            { text: "sehr interessiert", wert: 3 }
-        ]
-    },
-
-    // S: Schulentwicklung id 8x
-    {
-        id: 81,
-        text: "Welche der untenstehenden Massnahmen ist für den Whole Institution Approach **nicht** von zentraler Bedeutung?",
-        bereich: "S: Schulentwicklung",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Fächerübergreifende Projekte", wert: 1 },
-            { text: "Politische Einstellung von Lehrpersonen", wert: 3 }, // korrekte Antwort
-            { text: "Partizipative Schulkultur", wert: 1 },
-        ]
-    },
-    {
-        id: 82,
-        text: "Das wichtigste Anliegen des Whole Institution Approaches ist es, dass alle Lehrpersonen BNE in ihrem Unterricht umsetzen.",
-        bereich: "S: Schulentwicklung",
-        ebene: "objektiv",
-        typ: "mc",
-        antworten: [
-            { text: "Ja", wert: 3 }, // korrekte Antwort
-            { text: "Nein", wert: 1 }
-        ]
-    },
-    {
-        id: 83,
-        text: "Wie gut verstehen Sie das Konzept des Whole Institution Approach für die Umsetzung von BNE?",
-        bereich: "S: Schulentwicklung",
-        ebene: "subjektiv",
-        typ: "slider",
-        antworten: [
-            { text: "Grundlegend", wert: 1 },
-            { text: "Gut", wert: 2 },
-            { text: "Sehr gut", wert: 3 }
-        ]
-    },
-    {
-        id: 84,
-        text: "Wie interessiert sind Sie an der Umsetzung von BNE im schulischen Kontext als angehende Lehrperson?",
-        bereich: "S: Schulentwicklung",
-        ebene: "interesse",
-        typ: "slider",
-        antworten: [
-            { text: "wenig interessiert", wert: 1 },
-            { text: "interessiert", wert: 2 },
-            { text: "sehr interessiert", wert: 3 }
         ]
     }
 ];
@@ -984,7 +719,7 @@ const FRAGEN = [
         canvas.style.width = `${size}px`;
         canvas.style.height = `${size}px`;
         drawRadar();
-        });
+    });
     </script>
 </body>
 </html>
