@@ -24,11 +24,22 @@
             grid-template-columns: 1fr;
             gap: 20px;
         }
-        @media (min-width: 768px) {
+        @media (min-width: 1500px) { /* Bei grossen Bildschirmen mehr Platz für Radar Chart */
             .results-grid {
                 grid-template-columns: 1fr 2fr; /* Give more space to the radar chart */
             }
         }
+        .results-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+         }
+
+        @media (max-width: 600px) {
+            .results-columns {
+                grid-template-columns: 1fr;
+    }
+}
         .question-card {
             border: 1px solid #e5e7eb;
             padding: 15px;
@@ -1061,37 +1072,52 @@
         }
 
         // Ergebniszusammenfassung anzeigen
-        function renderResultsSummary() {
-            const resultContainer = document.getElementById('resultsSummary');
+
+function renderResultsSummary() {
+    const resultContainer = document.getElementById('resultsSummary');
+    
+    // Ergebnisse für jeden Bereich erstellen
+    const bereichErgebnisse = BEREICHE.map(bereich => {
+        const bereichFragen = FRAGEN.filter(frage => frage.bereich === bereich);
+        const ebenen = ['subjektiv', 'objektiv', 'interesse'];
+        
+        const ebenenWerte = ebenen.map(ebene => {
+            const ebenenFragen = bereichFragen.filter(frage => frage.ebene === ebene);
+            const beantworteteFragen = ebenenFragen.filter(frage => antworten[frage.id] !== undefined);
             
-            const bereichErgebnisse = BEREICHE.map(bereich => {
-                const bereichFragen = FRAGEN.filter(frage => frage.bereich === bereich);
-                const ebenen = ['subjektiv', 'objektiv', 'interesse'];
-                
-                const ebenenWerte = ebenen.map(ebene => {
-                    const ebenenFragen = bereichFragen.filter(frage => frage.ebene === ebene);
-                    const beantworteteFragen = ebenenFragen.filter(frage => antworten[frage.id] !== undefined);
-                    
-                    if (beantworteteFragen.length === 0) return 0;
-                    
-                    const summe = beantworteteFragen.reduce((sum, frage) => sum + antworten[frage.id], 0);
-                    return (summe / beantworteteFragen.length).toFixed(1);
-                });
-                
-                return `
-                    <div style="margin-bottom: 10px;">
-                        <strong>${bereich}</strong>
-                        <ul style="margin-top: 5px;">
-                            <li>Subjektiv: ${ebenenWerte[0]}</li>
-                            <li>Objektiv: ${ebenenWerte[1]}</li>
-                            <li>Interesse: ${ebenenWerte[2]}</li>
-                        </ul>
-                    </div>
-                `;
-            }).join('');
+            if (beantworteteFragen.length === 0) return 0;
             
-            resultContainer.innerHTML = bereichErgebnisse || '<p>Keine Daten vorhanden.</p>';
-        }
+            const summe = beantworteteFragen.reduce((sum, frage) => sum + antworten[frage.id], 0);
+            return (summe / beantworteteFragen.length).toFixed(1);
+        });
+        
+        return `
+            <div style="margin-bottom: 10px;">
+                <strong>${bereich}</strong>
+                <ul style="margin-top: 5px;">
+                    <li>Subjektiv: ${ebenenWerte[0]}</li>
+                    <li>Objektiv: ${ebenenWerte[1]}</li>
+                    <li>Interesse: ${ebenenWerte[2]}</li>
+                </ul>
+            </div>
+        `;
+    });
+    
+    // Bereiche in zwei Spalten aufteilen
+    const mitte = Math.ceil(bereichErgebnisse.length / 2);
+    const ergebnisseLinks = bereichErgebnisse.slice(0, mitte).join('');
+    const ergebnisseRechts = bereichErgebnisse.slice(mitte).join('');
+    
+    // HTML für zwei Spalten erzeugen
+    const html = `
+        <div class="results-columns">
+            <div class="results-column">${ergebnisseLinks}</div>
+            <div class="results-column">${ergebnisseRechts}</div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = bereichErgebnisse.length > 0 ? html : '<p>Keine Daten vorhanden.</p>';
+}
 
         // Verbesserte Canvas-Initialisierung für den Radar-Chart
         function setupCanvas(canvas) {
@@ -1352,7 +1378,7 @@
             
             // Navigation-Buttons aktualisieren
             document.getElementById('prevButton').disabled = currentPage === 0;
-            document.getElementById('nextButton').textContent = currentPage === pages.length ? 'Abschließen' : 'Weiter';
+            document.getElementById('nextButton').textContent = currentPage === pages.length ? 'Abschliessen' : 'Weiter';
             
             // Fortschrittsanzeige aktualisieren
             updateProgressIndicator();
@@ -1369,7 +1395,10 @@
             if (currentPage < pages.length) {
                 goToPage(currentPage + 1);
             } else {
-                // Formular abschließen - hier könnten Daten gespeichert/gesendet werden
+                // Formular abschliessen - hier könnten Daten gespeichert/gesendet werden
+
+                window.print();
+                window.open('mailto:test@example.com?subject=subject&body=body');
                 alert('Standortbestimmung abgeschlossen!');
             }
         });
