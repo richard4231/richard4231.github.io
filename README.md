@@ -30,6 +30,7 @@
 - [Handlungsfelder PH ABC](https://richard4231.github.io/20-07-radargraphBPA/)
 - [Aspekte guten Mathematikunterrichts](https://richard4231.github.io/20-12-radargraphRGMU/)
 - [Digitale Medien](https://richard4231.github.io/25-02-rgdigitalmedia/)
+- [Standortbestimmung BNE](https://richard4231.github.io/25-02-esdcompetence/)
 
 <br/> 
 <br/> 
