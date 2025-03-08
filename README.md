@@ -34,6 +34,5 @@
 
 <br/> 
 <br/> 
-more to follow...
-8.2.25
+
 
