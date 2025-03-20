@@ -3,25 +3,24 @@
 let bg = 80;
 
 // Arrays und Objekte für Spielzustand
-let img = [];                // Speichert die Bilder der Gummibärchen
+let img = [];                // Speichert die Bilder der Schokolinsen
 let buttons = {};           // Speichert Referenzen zu UI-Buttons
-let beans = [];             // Liste aller Gummibärchen im Spiel
-let histogram = [];         // Speichert die Anzahl der Gummibärchen pro Farbe
+let beans = [];             // Liste aller Schokolinsen im Spiel
+let histogram = [];         // Speichert die Anzahl der Schokolinsen pro Farbe
 let activeDot;             // UI-Element für aktive Auswahl
 
 // Tastatureingabe-Verarbeitung
 let keyBuffer = '';                    // Puffer für Tastatureingaben
-const targetSequence = 'histo';        // Zielsequenz für Schnellauswahl
+const targetSequence = 'h';        // Zielsequenz für Schnellauswahl
 const bufferTimeout = 2000;            // Zeitlimit für Tastatureingabe (2 Sekunden)
 let resetBufferTimer = null;           // Timer für Puffer-Reset
 
 // Konfiguration der verschiedenen Packungsgrößen
 const packageConfigs = {
-  '8g': { average: 6, stdDev: 0.5, scale: 0.8, deviationleft: 1, deviationright: 2, margin: 0.18 },   // Kleinste Packung
-  '10g': { average: 8, stdDev: 0.6, scale: 0.85, deviationleft: 1, deviationright: 3, margin: 0.14 }, // Kleine Packung. Nicht benötigt, da anderer Ansatz
-  '15g': { average: 20, stdDev: 0.7, scale: 0.5, deviationleft: 2, deviationright: 2, margin: 0.1 }  // Normale Packung
+  '15g': { average: 40, stdDev: 0.6, scale: 0.6, deviationleft: 3, deviationright: 3, margin: 0.1 }, // Kleine Packung. Nicht benötigt, da anderer Ansatz
+  '38g': { average: 100, stdDev: 0.7, scale: 0.4, deviationleft: 4, deviationright: 4, margin: 0.1 }  // Normale Packung
 };
-let selectedPackage = '10g';  // Standardmäßig ausgewählte Packungsgröße
+let selectedPackage = '15g';  // Standardmäßig ausgewählte Packungsgröße
 
 // ========== HILFS-FUNKTIONEN FÜR LAYOUT-BERECHNUNGEN ==========
 /**
@@ -74,10 +73,10 @@ function calculateCanvasSize() {
   return { width: canvasWidth, height: canvasHeight };
 }
 
-// ========== GUMMIBÄRCHEN-KLASSE ==========
+// ========== Schokolinsen-KLASSE ==========
 class Chocolatebean {
   /**
-   * Berechnet die Basis-Größe eines Gummibärchens
+   * Berechnet die Basis-Größe eines Schokolinsens
    * @param {number} canvasWidth - Breite des Canvas
    * @returns {Object} Objekt mit width und height Eigenschaften
    */
@@ -91,7 +90,7 @@ class Chocolatebean {
    * Erstellt ein neue Schokolinse
    * @param {number} x - X-Position
    * @param {number} y - Y-Position
-   * @param {number} type - Typ/Farbe des Gummibärchens
+   * @param {number} type - Typ/Farbe des Schokolinsens
    * @param {number} rotation - Rotation in Grad
    * @param {number} scale - Skalierungsfaktor
    */
@@ -110,21 +109,22 @@ class Chocolatebean {
   }
 
   /**
-   * Zeichnet das Gummibärchen
+   * Zeichnet die Schokolinse
    */
   display() {
+    let grayscale = 0.35; // Graustufe für inaktive Schokolinsen als alpha Wert [0,1]
     push();
     translate(this.x, this.y);
     rotate(this.rotation);
     if (!this.active) {
-      drawingContext.globalAlpha = 0.6;
+      drawingContext.globalAlpha = grayscale;
     }
     image(img[this.type], -this.width/2, -this.height/2, this.width, this.height);
     pop();
   }
 
   /**
-   * Prüft, ob ein Punkt innerhalb des Gummibärchens liegt
+   * Prüft, ob ein Punkt innerhalb der SChokolinse liegt
    * @param {number} px - X-Koordinate des Punktes
    * @param {number} py - Y-Koordinate des Punktes
    * @returns {boolean} true wenn der Punkt innerhalb liegt
@@ -417,7 +417,7 @@ function draw() {
 }
 
 /**
- * Gibt zufällige frequentistisch basierte Packunsggrösse für 10g aus
+ * Gibt zufällige frequentistisch basierte Packunsggrösse für 10g aus. Allenfalls auf Schokolinsen anpassen.
  */
 function getWeightedRandom() {
   const distribution = [
@@ -452,7 +452,6 @@ function handleInteraction(x, y) {
   for (let bean of beans) {
     if (bean.contains(x, y) && bean.active) {
       bean.active = false;
-      bean.grayscale = 50;
       histogram[bean.type]++;
   
       // Prüfen ob alle Linsen deaktiviert sind
@@ -484,7 +483,7 @@ function touchStarted() {
 }
 
 /**
- * Erstellt zufällige Positionen für die Gummibärchen
+ * Erstellt zufällige Positionen für die Schokolinsen
  * @param {number} num - Anzahl der zu erstellenden Positionen
  * @returns {Array} Array von Positionen {x, y}
  */
@@ -524,62 +523,6 @@ function createPositions(num) {
 }
 
 /**
- * Erstellt zufällige noisebasierte Positionen für die Gummibärchen (nicht aktiv)
- * @param {number} num - Anzahl der zu erstellenden Positionen
- * @returns {Array} Array von Positionen {x, y}
- */
-function createNoisePositions(num) {
-  let positions = [];
-  let margin = getPlayAreaMargin();
-  let playArea = getPlayAreaWidth();
-  let playAreah = getPlayAreaHeight();
-  
-  // Berechne Mindestabstand basierend auf der Bärchengröße
-  const baseSize = Chocolatebean.getBaseSize(width);
-  const scale = packageConfigs[selectedPackage].scale;
-  const beanWidth = baseSize.width * scale;
-  const beanHeight = baseSize.height * scale;
-  
-  // Mindestabstand für minimale Überlappung
-  const overlapFactor = 1;
-  const minDistance = ((beanWidth + beanHeight) / 2) * overlapFactor;
-  
-  // Noise-Skalen für unterschiedliche Verteilungsmuster
-  const noiseScale = 0.9;  // Kleinere Werte = sanftere Verteilung
-  const timeOffset = random(1000);  // Zufälliger Startpunkt für Variation
-  
-  for (let i = 0; i < num; i++) {
-    // Verwende verschiedene Dimensionen des Noise-Space
-    let noiseX = noise((i * noiseScale) + timeOffset, 0) * playArea;
-    let noiseY = noise(0, (i * noiseScale) + timeOffset) * playAreah;
-    
-    let pos = {
-      x: margin + noiseX,
-      y: margin + noiseY
-    };
-    
-    let attempts = 0;
-    while (attempts < 100 && positions.some(p => 
-      dist(p.x, p.y, pos.x, pos.y) < minDistance)) {
-      // Falls Kollision, leicht verschieben mit Noise
-      let offsetAngle = noise(attempts * 0.1, i) * TWO_PI;
-      let offsetDist = noise(i, attempts * 0.1) * minDistance;
-      pos.x += cos(offsetAngle) * offsetDist;
-      pos.y += sin(offsetAngle) * offsetDist;
-      
-      // Stelle sicher, dass die Position im Spielbereich bleibt
-      pos.x = constrain(pos.x, margin, margin + playArea);
-      pos.y = constrain(pos.y, margin, margin + playAreah);
-      
-      attempts++;
-    }
-    
-    positions.push(pos);
-  }
-  return positions;
-}
-
-/**
  * Zeichnet das Histogramm der Schokolinsen-Verteilung
  */
 function drawHistogram() {
@@ -591,11 +534,16 @@ function drawHistogram() {
   
   // Zentrieren: Startposition berechnen
   const startX = (width - histogramWidth) / 2;
-  
+  if (selectedPackage === '38g') {
+    histoScaling = 0.038;
+  } else {
+    histoScaling = 0.05;
+  }
+
   for (let i = 0; i < 8; i++) {
     let x = startX + (i + 0.5) * columnWidth;
     let colorIndex = colorOrder[i];
-    let h = histogram[colorIndex] * (height * 0.05);
+    let h = histogram[colorIndex] * (height * histoScaling);
     
     push();
     noStroke();
@@ -663,7 +611,7 @@ function newPackage() {
 }
 
 /**
- * Deaktiviert alle aktiven Gummibärchen
+ * Deaktiviert alle aktiven Schokolinsen 
  */
 function deactivateAllbeans() {
   for (let bean of beans) {
