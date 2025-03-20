@@ -2,6 +2,7 @@
 
 ## Simulationen
 - [Gummibärchen](https://richard4231.github.io/25-02-gummybears/)
+– [Schokolinsen](https://richard4231.github.io/25-03-chocolatebeans/)
 
 ## Muster erkunden
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-04-pascaltriangleoptimized/)
