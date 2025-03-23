@@ -17,7 +17,7 @@ let resetBufferTimer = null;           // Timer für Puffer-Reset
 
 // Konfiguration der verschiedenen Packungsgrößen
 const packageConfigs = {
-  '15g': { average: 40, stdDev: 0.6, scale: 0.6, deviationleft: 3, deviationright: 3, margin: 0.1 }, // Kleine Packung. Nicht benötigt, da anderer Ansatz
+  '15g': { average: 40, stdDev: 0.5, scale: 0.5, deviationleft: 3, deviationright: 3, margin: 0.1 }, // Kleine Packung. Nicht benötigt, da anderer Ansatz
   '38g': { average: 100, stdDev: 0.7, scale: 0.4, deviationleft: 4, deviationright: 4, margin: 0.1 }  // Normale Packung
 };
 let selectedPackage = '15g';  // Standardmäßig ausgewählte Packungsgröße
