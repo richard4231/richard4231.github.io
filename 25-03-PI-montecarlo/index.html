@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kreisflächen-Berechnung mit p5.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    let unit = 10;         // Pixel pro Einheit (Karo)
+    let r = 15;            // Radius in "echten" Einheiten
+    let cols, rows;        // Anzahl der Rasterspalten und -zeilen
+    let midX, midY;        // Mittelpunkt (in Pixeln)
+    let currentRow = 0;
+    let currentCol = 0;
+    let filledCount = 0;
+    let speed = 1;         // Anzahl Rasterkaros pro Frame
+    let leftBound, rightBound, topBound, bottomBound;
+    let backgroundLayer;
+
+    function setup() {
+      createCanvas(600, 600);
+      cols = width / unit;
+      rows = height / unit;
+      midX = (cols / 2) * unit;
+      midY = (rows / 2) * unit;
+      frameRate(60);
+      
+      leftBound = max(0, floor(cols / 2 - r - 1));
+      rightBound = min(cols, floor(cols / 2 + r + 1));
+      topBound = max(0, floor(rows / 2 - r - 1));
+      bottomBound = min(rows, floor(rows / 2 + r + 1));
+      
+      currentRow = topBound;
+      currentCol = leftBound;
+      
+      backgroundLayer = createGraphics(width, height);
+      backgroundLayer.background(255);
+      drawGrid(backgroundLayer);
+      drawCircle(backgroundLayer);
+      drawRadiusSquare(backgroundLayer);
+    }
+
+    function draw() {
+      image(backgroundLayer, 0, 0);
+      
+      for (let i = 0; i < speed; i++) {
+        if (currentRow >= bottomBound) {
+          noLoop();
+          break;
+        }
+        
+        let cx = currentCol * unit;
+        let cy = currentRow * unit;
+        
+        if (isMoreThanHalfInCircle(cx, cy)) {
+          backgroundLayer.noStroke();
+          backgroundLayer.fill(100, 150, 255, 100);
+          backgroundLayer.rect(cx, cy, unit, unit);
+          filledCount++;
+        }
+        
+        currentCol++;
+        if (currentCol >= rightBound) {
+          currentCol = leftBound;
+          currentRow++;
+        }
+      }
+      
+      drawCount();
+    }
+
+    function drawGrid(pg) {
+      pg.stroke(200);
+      for (let x = 0; x <= width; x += unit) {
+        pg.line(x, 0, x, height);
+      }
+      for (let y = 0; y <= height; y += unit) {
+        pg.line(0, y, width, y);
+      }
+    }
+
+    function drawCircle(pg) {
+      pg.noFill();
+      pg.stroke(0, 0, 255);
+      pg.strokeWeight(2);
+      pg.ellipse(midX, midY, 2 * r * unit, 2 * r * unit);
+      pg.strokeWeight(1);
+    }
+
+    function drawRadiusSquare(pg) {
+      pg.stroke(255, 0, 0);
+      pg.strokeWeight(2);
+      pg.noFill();
+      pg.rect(midX, midY, r * unit, r * unit);
+      pg.strokeWeight(1);
+    }
+
+    function isMoreThanHalfInCircle(x, y) {
+      let inside = 0;
+      let total = 100; // 10x10 Samplepunkte
+      
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          let px = x + i * unit / 10.0 + unit / 20.0;
+          let py = y + j * unit / 10.0 + unit / 20.0;
+          let dx = px - midX;
+          let dy = py - midY;
+          
+          if (dx * dx + dy * dy <= (r * unit) * (r * unit)) {
+            inside++;
+          }
+        }
+      }
+      
+      return inside > total / 2;
+    }
+
+    function drawCount() {
+      fill(0);
+      textSize(16);
+      textAlign(RIGHT, TOP);
+      text("Anzahl Karos im Kreis: " + filledCount, width - 10, 10);
+      text("Anzahl Karos im Radiusquadrat: " + (r * r), width - 10, 30);
+      
+      // Berechne das Verhältnis und π-Annäherung
+      if (filledCount > 0) {
+        let ratio = filledCount / (r * r);
+        let piApprox = ratio * 4; // Für Quadranten müsste das *4 sein
+        text("Approximation von π: " + piApprox.toFixed(4), width - 10, 50);
+      }
+    }
+  </script>
+</body>
+</html>
