@@ -255,150 +255,6 @@ function setup() {
   getPlayAreaMargin();
   getColumnWidth();
   
-  // CSS-Styles erstellen
-  let style = createElement('style');
-  style.html(`
-    #button-holder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: -20px;
-    }
-    
-    .outer-button-container {
-      width: 465px;
-      padding: 15px;
-      border: 1px rgb(35, 128, 220);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      background-color: white;
-    }
-
-    .size-button-container {
-      display: flex;
-      gap: 10px;
-      margin-top: 0px;
-      justify-content: center;
-      width: 100%;
-      position: relative;
-      padding: 10px;
-    }
-    
-    .button-container {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .active-dot {
-      position: absolute;
-      width: 11px;
-      height: 11px;
-      background-color: red;
-      border-radius: 50%;
-      bottom: -8px;
-      transition: left 0.3s ease;
-      display: none;
-    }
-    
-    .fancy-button {
-      background: linear-gradient(45deg,rgb(15, 89, 169),rgb(76, 123, 173));
-      border: 2px rgb(56, 49, 253);
-      color: #fff;
-      padding: 12px 24px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 18px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.3s;
-      font-weight: bold;
-      text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      min-width: 120px;
-    }
-    
-    .fancy-button:hover:not([disabled]) {
-      background: linear-gradient(45deg,rgb(19, 107, 195),rgb(95, 129, 242));
-      transform: scale(1.05);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-    
-    .fancy-button.title {
-      cursor: default;
-      font-size: 20px;
-      padding: 15px 30px;
-      width: 470px;
-      height: 80px;
-    }
-    
-    .fancy-button.title:hover {
-      transform: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .fancy-button.size {
-      padding: 12px 24px;
-      font-size: 18px;
-    }
-
-    .save-button {
-      position: absolute;
-      top: 220px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.9);
-      border: 2px solidrgb(58, 95, 208);
-      border-radius: 4px;
-      padding: 8px 8px;
-      cursor: pointer;
-      font-size: 14px;
-      display: none;
-    }
-
-    .save-button:hover {
-      background:linear-gradient(45deg,rgb(15, 89, 169),rgb(76, 123, 173));
-      color: white;
-    }
-
-    @media (max-width: 500px) {
-      .fancy-button {
-        padding: 6px 12px;
-        font-size: 14px;
-        min-width: 80px;
-      }
-      
-      .fancy-button.title {
-        font-size: 16px;
-        padding: 10px 15px;
-        width: 95vw;
-      }
-      
-      .outer-button-container {
-        width: 99%;
-        padding: 15px;
-        gap: 5px;
-        border: none;
-      }
-
-      .save-button {
-        position: absolute;
-        top: 220px;
-        height: 25px;
-        padding: 4px 4px;
-        cursor: pointer;
-        font-size: 10px;
-      }
-
-      .active-dot {
-        bottom: -14px;
-      }
-    }
-  `);
-  
   resetHistogram();
 }
 
@@ -568,6 +424,21 @@ function drawHistogram() {
     }
     pop();
   }
+  // Berechne die Gesamtanzahl der Schokolinsen
+  let total = 0;
+  for (let i = 1; i < histogram.length; i++) {
+    total += histogram[i];
+  }
+  
+  // Zeige die Gesamtanzahl an
+  if (total > 0) {
+    push();
+    fill(0, 0, 0);
+    textAlign(CENTER);
+    textSize(width * 0.028);
+    text("Total: " + total, width / 2, height - 10);
+    pop();
+  }
 }
 
 /**
@@ -664,5 +535,3 @@ function windowResized() {
   const canvasSize = calculateCanvasSize();
   resizeCanvas(canvasSize.width, canvasSize.height);
 }
-
-//

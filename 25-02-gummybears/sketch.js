@@ -178,7 +178,7 @@ function createButtons() {
   outerContainer.parent(buttonHolder);
   
   // Titel-Button
-  let titleButton = createButton('Neue Gummibärchenpackung');
+  let titleButton = createButton('Gummibärchenpackung wählen');
   titleButton.parent(outerContainer);
   titleButton.class('fancy-button title');
   titleButton.attribute('disabled', '');
@@ -330,7 +330,7 @@ function setup() {
       font-size: 20px;
       padding: 15px 30px;
       width: 470px;
-      height: 80px;
+      height: 60px;
     }
     
     .fancy-button.title:hover {
