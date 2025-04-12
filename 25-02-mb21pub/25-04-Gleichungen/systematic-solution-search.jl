@@ -1,5 +1,6 @@
 using Combinatorics
 using LinearAlgebra
+using Dates
 
 # Funktion zum Lösen einer linearen Gleichung mit LinearAlgebra
 function solve_linear(a, b, c, d, e, f, g, h)
@@ -185,11 +186,60 @@ function find_all_equations()
     return equations, count_by_category
 end
 
+# Funktion zum Speichern aller Ergebnisse in einer Datei
+function save_all_equations_to_file(equations, count_by_category)
+    # Erstelle einen Dateinamen mit aktuellem Zeitstempel
+    timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
+    filename = "gleichungen_$(timestamp).txt"
+    
+    open(filename, "w") do file
+        # Allgemeine Informationen
+        total_count = sum(values(count_by_category))
+        write(file, "Gleichungen der Form: ax + b + cx + d = ex + f + gx + h\n")
+        write(file, "Gesamtzahl der gefundenen Gleichungen: $total_count\n\n")
+        
+        # Für jede Kategorie Ergebnisse schreiben
+        for category in ["allgemeingültig", "keine Lösung", "natürliche Zahl", 
+                         "negative ganze Zahl", "negative nicht-ganzzahlige Zahl", 
+                         "positive nicht-ganzzahlige Zahl"]
+            
+            category_count = count_by_category[category]
+            write(file, "Kategorie: $category\n")
+            write(file, "Anzahl der Gleichungen: $category_count\n\n")
+            
+            # Sortiere die Gleichungen, wenn möglich nach dem x-Wert
+            eqs = equations[category]
+            if category in ["natürliche Zahl", "negative ganze Zahl", 
+                            "negative nicht-ganzzahlige Zahl", "positive nicht-ganzzahlige Zahl"]
+                sort!(eqs, by=extract_x_value)
+            end
+            
+            # Alle Gleichungen dieser Kategorie in die Datei schreiben
+            for eq in eqs
+                write(file, "  $eq\n")
+            end
+            write(file, "\n" * "-"^80 * "\n\n")
+        end
+    end
+    
+    println("Alle Ergebnisse wurden in die Datei '$filename' geschrieben.")
+    return filename
+end
+
 # Hauptprogramm
+println("Suche nach Gleichungen...")
 equations, count_by_category = find_all_equations()
 total_count = sum(values(count_by_category))
 
 println("Gesamtzahl der Gleichungen: $total_count")
+
+# Speichere alle Ergebnisse in einer Datei
+filename = save_all_equations_to_file(equations, count_by_category)
+
+# Ausgabe der Anzahl pro Kategorie auf der Konsole
+for (category, count) in count_by_category
+    println("$category: $count Gleichungen")
+end
 
 # Sortieren der Gleichungen nach x-Wert (wo möglich)
 for category in ["natürliche Zahl", "negative ganze Zahl", "negative nicht-ganzzahlige Zahl", "positive nicht-ganzzahlige Zahl"]
@@ -198,33 +248,35 @@ for category in ["natürliche Zahl", "negative ganze Zahl", "negative nicht-ganz
     end
 end
 
-# Ausgabe der Ergebnisse
+# Ausgabe von Beispielgleichungen auf der Konsole
+println("\nBeispiele für jede Kategorie:")
 for (category, eqs) in equations
     category_count = count_by_category[category]
     println("Kategorie: $category")
-    println("Anzahl der Gleichungen: $category_count")
     
-    # Zeige maximal 50 Gleichungen pro Kategorie, aber versuche möglichst unterschiedliche x-Werte zu nehmen
+    # Zeige maximal 10 Gleichungen pro Kategorie in der Konsolenausgabe
     if category in ["natürliche Zahl", "negative ganze Zahl", "negative nicht-ganzzahlige Zahl", "positive nicht-ganzzahlige Zahl"]
-        if length(eqs) <= 50
+        if length(eqs) <= 10
             for eq in eqs
                 println("  $eq")
             end
         else
-            # Teile die sortierten Gleichungen in ca. 50 gleichmäßige Abschnitte auf
-            step = max(1, length(eqs) ÷ 50)
+            # Teile die sortierten Gleichungen in ca. 10 gleichmäßige Abschnitte auf
+            step = max(1, length(eqs) ÷ 10)
             selected_indices = 1:step:length(eqs)
-            selected_indices = selected_indices[1:min(50, length(selected_indices))]
+            selected_indices = selected_indices[1:min(10, length(selected_indices))]
             
             for idx in selected_indices
                 println("  $(eqs[idx])")
             end
         end
     else
-        # Für allgemeingültig und keine Lösung: einfach die ersten 50 ausgeben
-        for i in 1:min(500000, length(eqs))
+        # Für allgemeingültig und keine Lösung: einfach die ersten 10 ausgeben
+        for i in 1:min(10, length(eqs))
             println("  $(eqs[i])")
         end
     end
     println()
 end
+
+println("Alle Ergebnisse wurden in die Datei '$filename' geschrieben.")
