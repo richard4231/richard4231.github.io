@@ -2,6 +2,8 @@ using Combinatorics
 using LinearAlgebra
 using Dates
 
+cd("/Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMBP/richard4231.github.io/25-02-mb21pub/25-04-Gleichungen/Output")
+
 # Funktion zur Überprüfung der Lösungsart für die quadratische Gleichung
 function check_quadratic_solution(a, b, c, d, e, f, g, h)
     # Ausmultiplizieren: (ax + b) · (cx + d) = (ex + f) · (gx + h)
