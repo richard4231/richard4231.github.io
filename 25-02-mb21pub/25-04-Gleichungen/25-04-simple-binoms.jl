@@ -44,8 +44,9 @@ function count_combinations(requirements_filter)
     # Wenn wir zusätzliche Anforderungen haben, reduzieren wir
     if requirements_filter
         # Grobe Schätzung basierend auf den Anforderungen
-        # Hier nehmen wir an, dass etwa 1/5 der Kombinationen den Anforderungen entsprechen
-        return div(total_combinations, 5)
+        # Mit der Bedingung a < d wird die Anzahl etwa halbiert
+        # und mit weiteren Filtern für a_min und d_min weiter reduziert
+        return div(total_combinations, 10)
     else
         return total_combinations
     end
@@ -177,8 +178,8 @@ function find_bracket_equations(use_filter=false, a_min=0, d_min=0)
     filter_description = ""
     
     if use_filter
-        filter_name = "a_d_min"
-        filter_description = " mit a ≥ $a_min und d ≥ $d_min"
+        filter_name = "a_d_min_a_less_d"
+        filter_description = " mit a ≥ $a_min, d ≥ $d_min und a < d"
     end
     
     # Kategorisierung der Gleichungen
@@ -211,7 +212,7 @@ function find_bracket_equations(use_filter=false, a_min=0, d_min=0)
             a, b, c, d, e, f = perm
             
             # Wir können zusätzliche Filter anwenden, wenn gewünscht
-            if use_filter && (a < a_min || d < d_min)
+            if use_filter && (a < a_min || d < d_min || a >= d)
                 continue
             end
             
@@ -266,7 +267,7 @@ function find_bracket_equations(use_filter=false, a_min=0, d_min=0)
 end
 
 function main()
-    find_bracket_equations(true, 0, 9)
+    find_bracket_equations(true, 1, 2)
 end
 
 main()
