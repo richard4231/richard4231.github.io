@@ -220,8 +220,8 @@ function find_bracket_equations(use_filter=false, a_min=0, d_min=0)
             # x(ab - de) = df - ac
             
             # Koeffizienten der umgeformten Gleichung
-            numer = df - ac
-            denom = ab - de
+            numer = d*f - a*c
+            denom = a*b - d*e
             
             if denom == 0
                 if numer == 0
@@ -247,21 +247,26 @@ function find_bracket_equations(use_filter=false, a_min=0, d_min=0)
                     else
                         result = "positive nicht-ganzzahlige Zahl"
                     end
-                                    solution = ", x = $x"
-                                end
-                                
-                                # Speichere die Gleichung in der entsprechenden Kategorie
-                                equation = "$a($b x + $c) = $d($e x + $f)$solution"
-                                push!(equations[result], equation)
-                                count_by_category[result] += 1
-                            end
-                        end
-                    end
-                    
-                    # Speichere die Ergebnisse in einer Datei und erstelle ein Histogramm
-                    filename = save_equations_to_file(equations, count_by_category, filter_name, filter_description)
-                    create_integer_histogram(equations)
-                    
-                    return equations, count_by_category
+                    solution = ", x = $x"
                 end
+                
+                # Speichere die Gleichung in der entsprechenden Kategorie
+                equation = "$a($b x + $c) = $d($e x + $f)$solution"
+                push!(equations[result], equation)
+                count_by_category[result] += 1
+            end
+        end
+    end
+    
+    # Speichere die Ergebnisse in einer Datei und erstelle ein Histogramm
+    filename = save_equations_to_file(equations, count_by_category, filter_name, filter_description)
+    create_integer_histogram(equations)
+    
+    return equations, count_by_category
+end
 
+function main()
+    find_bracket_equations(true, 0, 9)
+end
+
+main()
