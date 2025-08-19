@@ -1,0 +1,138 @@
+body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: #f5f5f5;
+        overflow-x: hidden;
+      }
+      
+      /* Slider Styling aus der Vorlage */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        cursor: pointer;
+        outline: none;
+        border-radius: 15px;
+        height: 6px;
+        background: #ddd;
+      }
+      
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 15px;
+        width: 15px;
+        background-color: #d94e1f;
+        border-radius: 50%;
+        border: none;
+        transition: .2s ease-in-out;
+      }
+      
+      input[type="range"]::-moz-range-thumb {
+        height: 15px;
+        width: 15px;
+        background-color: #d94e1f;
+        border-radius: 50%;
+        border: none;
+        transition: .2s ease-in-out;
+      }
+      
+      input[type="range"]::-webkit-slider-thumb:hover {
+        box-shadow: 0 0 0 7px rgba(217,78,31, .3)
+      }
+      
+      input[type="range"]:active::-webkit-slider-thumb {
+        box-shadow: 0 0 0 9px rgba(217,78,31, .3)
+      }
+      
+      input[type="range"]::-moz-range-thumb:hover {
+        box-shadow: 0 0 0 7px rgba(217,78,31, .3)
+      }
+      
+      input[type="range"]:active::-moz-range-thumb {
+        box-shadow: 0 0 0 9px rgba(217,78,31, .3)
+      }
+      
+      /* Button Styling für Modus-Auswahl */
+      .mode-button {
+        background-color: #e0e0e0;
+        color: #333;
+        border: 2px solid transparent;
+        padding: 8px 16px;
+        margin: 5px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        display: block;
+        width: 90%;
+      }
+      
+      .mode-button:hover {
+        background-color: #d0d0d0;
+      }
+      
+      .mode-button.active {
+        background-color: #0087bf;
+        color: white;
+        border-color: #0087bf;
+      }
+      
+      /* Control Buttons */
+      .control-button {
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+      
+      .control-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+      
+      /* Info Box Styling */
+      .info-box {
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        line-height: 1.6;
+      }
+      
+      /* Container Styling */
+      .ui-container {
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      .slider-container {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+        width: 100%;
+      }
+      
+      .slider-label {
+        min-width: 70px;
+        color: #646464;
+        font-size: 14px;
+      }
+      
+      .slider-value {
+        min-width: 30px;
+        text-align: center;
+        font-weight: bold;
+        color: #d94e1f;
+        margin-left: 8px;
+        font-size: 14px;
+      }
+      
+      input[type="range"] {
+        flex-grow: 1;
+        margin: 0 5px;
+      }
