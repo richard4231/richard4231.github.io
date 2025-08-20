@@ -6,7 +6,7 @@ let screen = 800;
 let cols, rows;                 // Anzahl Spalten und Zeilen im Raster
 let midX, midY;                 // Mittelpunkt des Kreises (in Pixeln)
 
-let halbeZaehlen = true;        // true: grüne Karos zählen halb, false: nur ab 50% zählt ganz
+let halbeZaehlen = false;        // true: grüne Karos zählen halb, false: nur ab 50% zählt ganz
 
 let currentRow = 0;
 let currentCol = 0;
@@ -133,7 +133,7 @@ function startAnimation() {
   if (!isRunning) {
     resetAnimation();
     isRunning = true;
-    startButton.html('Animation läuft...');
+    startButton.html('Auszählung läuft...');
     startButton.style('background', '#EEAC88');
     startButton.style('cursor', 'default');
     startButton.attribute('disabled', '');
