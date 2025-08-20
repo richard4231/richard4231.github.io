@@ -5,6 +5,7 @@ let maxRadius = 300;                // Radius in "echten" Einheiten
 let screen = 800;
 let cols, rows;                 // Anzahl Spalten und Zeilen im Raster
 let midX, midY;                 // Mittelpunkt des Kreises (in Pixeln)
+let offset = 0;              // Offset für den Kreis-Mittelpunkt
 
 let halbeZaehlen = false;        // true: grüne Karos zählen halb, false: nur ab 50% zählt ganz
 
@@ -22,45 +23,44 @@ let radiusInput;
 let halbeCheckbox;
 let startButton;
 let controlPanel;
+let radiusPanel;
 let isRunning = false;          // Animation läuft
+//let color1 = [138, 199, 228, 100]; // hellblau
+//let color2 = [190, 208, 219, 100]; // 50%
+let color1 = [0, 135, 191, 100]; // 
+let color2 = [138, 199, 228, 100];
+
+let color3 = 'rgba(224, 224, 224, 0.9)'; // Kontrollpanel Hintergrund
+
+let font_polo;
 
 /**
  * setup(): Initialisiert das Programm.
  * Keine Eingabeparameter.
  * Kein Rückgabewert.
  */
-function setup() {
+async function setup() {
+  font_polo = await loadFont('./assets/PoloCEF-Regular.otf');
+  
+  // Font für CSS verfügbar machen
+  let fontFace = new FontFace('PoloCEF', 'url(./assets/PoloCEF-Regular.otf)');
+  await fontFace.load();
+  document.fonts.add(fontFace);
+
   createCanvas(screen, screen);
   
-  // Kontrollpanel erstellen
+  // Kontrollpanel links oben für Checkbox und Button
   controlPanel = createDiv();
   controlPanel.style('position', 'absolute');
-  controlPanel.style('top', '10px');
-  controlPanel.style('left', '10px');
-  controlPanel.style('background', 'rgba(255, 255, 255, 0.9)');
+  controlPanel.style('top', '680px');
+  controlPanel.style('left', '20px');
+  controlPanel.style('background', 'rgba(219, 219, 219, 0.9)');
   controlPanel.style('padding', '15px');
   controlPanel.style('border-radius', '8px');
   controlPanel.style('box-shadow', '0 2px 10px rgba(0,0,0,0.1)');
-  controlPanel.style('font-family', 'Arial, sans-serif');
-  controlPanel.style('font-size', '14px');
+  controlPanel.style('font-family', 'PoloCEF, Arial, sans-serif');
+  controlPanel.style('font-size', '16px');
   controlPanel.style('z-index', '1000');
-  
-  // Label für Radius
-  let radiusLabel = createP(`Radius r (1 – ${maxRadius}):`);
-  radiusLabel.parent(controlPanel);
-  radiusLabel.style('margin', '0 0 5px 0');
-  radiusLabel.style('font-weight', 'bold');
-  
-  // Radius-Eingabefeld
-  radiusInput = createInput(str(r));
-  radiusInput.parent(controlPanel);
-  radiusInput.size(80);
-  radiusInput.style('margin-bottom', '10px');
-  radiusInput.style('padding', '5px');
-  radiusInput.style('border', '1px solid #ccc');
-  radiusInput.style('border-radius', '4px');
-  radiusInput.input(validateRadius);
-  radiusInput.changed(updateVisualization);
   
   // Checkbox für halbe Häuschen
   halbeCheckbox = createCheckbox('halbe Häuschen zählen', halbeZaehlen);
@@ -78,8 +78,45 @@ function setup() {
   startButton.style('border', 'none');
   startButton.style('border-radius', '4px');
   startButton.style('cursor', 'pointer');
-  startButton.style('font-size', '14px');
+  startButton.style('font-family', 'PoloCEF, Arial, sans-serif');
+  startButton.style('font-size', '16px');
   startButton.mousePressed(startAnimation);
+  
+  // Radius-Panel 
+  radiusPanel = createDiv();
+  radiusPanel.style('position', 'absolute');
+  radiusPanel.style('top', '10px');
+  radiusPanel.style('left', '20px');
+  radiusPanel.style('background', color3);
+  radiusPanel.style('padding', '12px 10px');
+  radiusPanel.style('border-radius', '8px');
+  radiusPanel.style('box-shadow', '0 2px 10px rgba(0,0,0,0.1)');
+  radiusPanel.style('font-family', 'PoloCEF, Arial, sans-serif');
+  radiusPanel.style('font-size', '16px');
+  radiusPanel.style('z-index', '1000');
+  radiusPanel.style('min-width', '200px');
+  radiusPanel.style('text-align', 'center');
+  
+  // Label für Radius
+  let radiusLabel = createP(`Radius r (1 – ${maxRadius}):`);
+  radiusLabel.parent(radiusPanel);
+  radiusLabel.style('margin', '0 0 3px 0');
+  radiusLabel.style('font-weight', 'bold');
+  radiusLabel.style('text-align', 'center');
+  
+  // Radius-Eingabefeld
+  radiusInput = createInput(str(r));
+  radiusInput.parent(radiusPanel);
+  radiusInput.size(120);
+  radiusInput.style('margin', '0 auto 3px auto');
+  radiusInput.style('padding', '6px');
+  radiusInput.style('border', '1px solid #ccc');
+  radiusInput.style('border-radius', '4px');
+  radiusInput.style('display', 'block');
+  radiusInput.style('text-align', 'center');
+  radiusInput.style('font-size', '16px');
+  radiusInput.input(validateRadius);
+  radiusInput.changed(updateVisualization);
   
   // Hover-Effekt für Button
   startButton.mouseOver(() => {
@@ -88,6 +125,8 @@ function setup() {
   startButton.mouseOut(() => {
     if (!isRunning) startButton.style('background', '#AEBE38');
   });
+
+  textFont(font_polo);
   
   // Initial setup
   initializeVisualization();
@@ -116,6 +155,7 @@ function updateVisualization() {
     initializeVisualization();
     resetAnimation();
   }
+  radiusInput.elt.blur(); // Fokus vom Eingabefeld entfernen
 }
 
 /**
@@ -203,9 +243,11 @@ function draw() {
     for (let i = 0; i < speed; i++) {
       if (currentRow >= bottomBound) { // Wenn alle relevanten Zeilen bearbeitet sind: Stopp
         isRunning = false;
-        startButton.html('Auszählung beendet');
-        startButton.style('background', '#8AC7E4');
-        startButton.style('cursor', 'default');
+        startButton.html('Auszählung starten'); // Button zurücksetzen
+        startButton.style('background', '#AEBE38');
+        startButton.style('cursor', 'pointer');
+        startButton.removeAttribute('disabled');
+        
         noLoop();
         break;
       }
@@ -218,10 +260,10 @@ function draw() {
         if (fraction > 0.25) { // Nur wenn mindestens 25 % im Kreis liegen
           backgroundLayer.noStroke();
           if (fraction > 0.75) { // Mehr als 75 % → ganz im Kreis
-            backgroundLayer.fill(138, 199, 228, 100); // hellblau
+            backgroundLayer.fill(color1); // hellblau
             filledCount += 1.0;
           } else { // Zwischen 25 % und 75 % → halb im Kreis
-            backgroundLayer.fill(197, 206, 112, 100);     // grün
+            backgroundLayer.fill(color2);     // 50%
             filledCount += 0.5;
           }
           backgroundLayer.rect(cx, cy, unit, unit);
@@ -229,7 +271,7 @@ function draw() {
       } else {
         if (fraction >= 0.5) { // Alternative: Nur ab 50 % → hellblau, ganz zählen
           backgroundLayer.noStroke();
-          backgroundLayer.fill(138, 199, 228, 100);
+          backgroundLayer.fill(color1);
           backgroundLayer.rect(cx, cy, unit, unit);
           filledCount += 1.0;
         }
@@ -253,6 +295,12 @@ function draw() {
  */
 function drawGrid(pg) {
   pg.stroke(225);
+  if (r > 100) {
+  pg.strokeWeight(0.5);
+  }
+  else if (r > 180) {
+  pg.strokeWeight(0.2);
+  }
   for (let x = 0; x <= width; x += unit) {
     pg.line(x, 0, x, height);
   }
@@ -269,7 +317,15 @@ function drawGrid(pg) {
 function drawCircle(pg) {
   pg.noFill();
   pg.stroke(97, 167, 211);
+
   pg.strokeWeight(3);
+  if (r > 100) {
+  pg.strokeWeight(1.5);
+  }
+  else if (r > 180) {
+  pg.strokeWeight(0.5);
+  }
+  
   pg.ellipse(midX, midY, 2 * r * unit, 2 * r * unit);
   pg.strokeWeight(1);
 }
@@ -281,7 +337,15 @@ function drawCircle(pg) {
  */
 function drawRadiusSquare(pg) {
   pg.stroke(217, 67, 104);
+  
   pg.strokeWeight(3);
+  if (r > 100) {
+  pg.strokeWeight(1.5);
+  }
+  else if (r > 180) {
+  pg.strokeWeight(0.5);
+  }
+
   pg.noFill();
   pg.rect(midX, midY, r * unit, r * unit);
   pg.strokeWeight(1);
