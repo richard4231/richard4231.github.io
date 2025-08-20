@@ -1,6 +1,7 @@
 // Globale Einstellungen und Variablen
 let unit = 10;                   // Pixel pro Einheit (Karo)
-let r = 10;                       // Radius in "echten" Einheiten
+let r = 10;       
+let maxRadius = 300;                // Radius in "echten" Einheiten
 let screen = 800;
 let cols, rows;                 // Anzahl Spalten und Zeilen im Raster
 let midX, midY;                 // Mittelpunkt des Kreises (in Pixeln)
@@ -45,7 +46,7 @@ function setup() {
   controlPanel.style('z-index', '1000');
   
   // Label für Radius
-  let radiusLabel = createP('Radius r (1-200):');
+  let radiusLabel = createP(`Radius r (1 – ${maxRadius}):`);
   radiusLabel.parent(controlPanel);
   radiusLabel.style('margin', '0 0 5px 0');
   radiusLabel.style('font-weight', 'bold');
@@ -71,7 +72,7 @@ function setup() {
   // Start-Button
   startButton = createButton('Auszählung starten');
   startButton.parent(controlPanel);
-  startButton.style('background', '#4CAF50');
+  startButton.style('background', '#AEBE38');
   startButton.style('color', 'white');
   startButton.style('padding', '8px 16px');
   startButton.style('border', 'none');
@@ -82,10 +83,10 @@ function setup() {
   
   // Hover-Effekt für Button
   startButton.mouseOver(() => {
-    if (!isRunning) startButton.style('background', '#45a049');
+    if (!isRunning) startButton.style('background', '#AEBE38');
   });
   startButton.mouseOut(() => {
-    if (!isRunning) startButton.style('background', '#4CAF50');
+    if (!isRunning) startButton.style('background', '#AEBE38');
   });
   
   // Initial setup
@@ -100,8 +101,8 @@ function validateRadius() {
   let value = int(radiusInput.value());
   if (value < 1) {
     radiusInput.value('1');
-  } else if (value > 200) {
-    radiusInput.value('200');
+  } else if (value > maxRadius) {
+    radiusInput.value(maxRadius);
   }
 }
 
@@ -110,7 +111,7 @@ function validateRadius() {
  */
 function updateVisualization() {
   let newR = int(radiusInput.value());
-  if (newR >= 1 && newR <= 200 && newR !== r) {
+  if (newR >= 1 && newR <= maxRadius && newR !== r) {
     r = newR;
     initializeVisualization();
     resetAnimation();
@@ -133,7 +134,7 @@ function startAnimation() {
     resetAnimation();
     isRunning = true;
     startButton.html('Animation läuft...');
-    startButton.style('background', '#ff9800');
+    startButton.style('background', '#EEAC88');
     startButton.style('cursor', 'default');
     startButton.attribute('disabled', '');
     loop();
@@ -149,7 +150,7 @@ function resetAnimation() {
   currentCol = leftBound;
   filledCount = 0;
   startButton.html('Auszählung starten');
-  startButton.style('background', '#4CAF50');
+  startButton.style('background', '#AEBE38');
   startButton.style('cursor', 'pointer');
   startButton.removeAttribute('disabled');
   noLoop();
@@ -168,7 +169,7 @@ function resetAnimation() {
  * Initialisiert die Visualisierung mit den aktuellen Parametern
  */
 function initializeVisualization() {
-  unit = min(50, floor(screen / (2.5*r))); // Bestimme die Karo-Größe, sodass der Kreis gut ins Bild passt
+  unit = min(50, (screen / (2.5*r))); // Bestimme die Karo-Größe, sodass der Kreis gut ins Bild passt
   cols = width / unit;
   rows = height / unit;
   midX = floor(cols / 2) * unit;
@@ -203,7 +204,7 @@ function draw() {
       if (currentRow >= bottomBound) { // Wenn alle relevanten Zeilen bearbeitet sind: Stopp
         isRunning = false;
         startButton.html('Auszählung beendet');
-        startButton.style('background', '#2196F3');
+        startButton.style('background', '#8AC7E4');
         startButton.style('cursor', 'default');
         noLoop();
         break;
@@ -217,10 +218,10 @@ function draw() {
         if (fraction > 0.25) { // Nur wenn mindestens 25 % im Kreis liegen
           backgroundLayer.noStroke();
           if (fraction > 0.75) { // Mehr als 75 % → ganz im Kreis
-            backgroundLayer.fill(100, 150, 255, 100); // hellblau
+            backgroundLayer.fill(138, 199, 228, 100); // hellblau
             filledCount += 1.0;
           } else { // Zwischen 25 % und 75 % → halb im Kreis
-            backgroundLayer.fill(0, 200, 0, 100);     // grün
+            backgroundLayer.fill(197, 206, 112, 100);     // grün
             filledCount += 0.5;
           }
           backgroundLayer.rect(cx, cy, unit, unit);
@@ -228,7 +229,7 @@ function draw() {
       } else {
         if (fraction >= 0.5) { // Alternative: Nur ab 50 % → hellblau, ganz zählen
           backgroundLayer.noStroke();
-          backgroundLayer.fill(100, 150, 255, 100);
+          backgroundLayer.fill(138, 199, 228, 100);
           backgroundLayer.rect(cx, cy, unit, unit);
           filledCount += 1.0;
         }
@@ -267,8 +268,8 @@ function drawGrid(pg) {
  */
 function drawCircle(pg) {
   pg.noFill();
-  pg.stroke(0, 0, 255);
-  pg.strokeWeight(2);
+  pg.stroke(97, 167, 211);
+  pg.strokeWeight(3);
   pg.ellipse(midX, midY, 2 * r * unit, 2 * r * unit);
   pg.strokeWeight(1);
 }
@@ -279,8 +280,8 @@ function drawCircle(pg) {
  * Kein Rückgabewert.
  */
 function drawRadiusSquare(pg) {
-  pg.stroke(255, 0, 0);
-  pg.strokeWeight(2);
+  pg.stroke(217, 67, 104);
+  pg.strokeWeight(3);
   pg.noFill();
   pg.rect(midX, midY, r * unit, r * unit);
   pg.strokeWeight(1);
