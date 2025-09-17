@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontostand Kartenspiel</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .balance-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .cards-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .card-area {
+            text-align: center;
+        }
+
+        .card {
+            width: 120px;
+            height: 180px;
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2d3436;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid #f39c12;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-color: #0984e3;
+            color: white;
+        }
+
+        .operation-card {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            border-color: #e84393;
+            color: white;
+        }
+
+        .money-section {
+            text-align: center;
+        }
+
+        .money-notes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .money-note {
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #00a085;
+        }
+
+        .debt-note {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            border-color: #d63031;
+        }
+
+        .draw-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .current-cards {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            align-items: center;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #636e72, #2d3436);
+            color: white;
+            cursor: pointer;
+        }
+
+        .card-back:hover {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 30px 0 20px 0;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Kontostand Kartenspiel</h1>
+        
+        <div class="balance-section">
+            <h2>Aktueller Kontostand</h2>
+            <div class="current-cards">
+                <div class="card balance-card" id="currentBalanceCard">Karte ziehen</div>
+            </div>
+            <div>
+                <button class="button" onclick="setRandomBalance()">🎲 Startkarte ziehen</button>
+            </div>
+        </div>
+
+        <div class="cards-section">
+            <div class="card-area" style="grid-column: 1 / -1;">
+                <h2>Kontostand Karte ziehen</h2>
+                <div class="current-cards">
+                    <div class="card card-back" onclick="drawBalanceCard()">
+                        <div>Karte<br>ziehen</div>
+                    </div>
+                    <div id="drawnBalanceCard"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="money-section">
+            <h2>💰 Verfügbare Geld- und Schuldscheine</h2>
+            <div class="money-notes">
+                <div class="money-note">10</div>
+                <div class="money-note">50</div>
+                <div class="money-note">100</div>
+                <div class="money-note">200</div>
+                <div class="money-note debt-note">-50</div>
+                <div class="money-note debt-note">-100</div>
+                <div class="money-note debt-note">-200</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <h2>🎮 Spielregeln</h2>
+            <p><strong>Ziel:</strong> Erreiche den Zielkontostand möglichst genau mit deinen Geld- und Schuldscheinen!</p>
+            <p><strong>Ablauf:</strong></p>
+            <p>1. Ziehe eine Startkarte für deinen Kontostand</p>
+            <p>2. Ziehe eine weitere Karte (dein Ziel)</p>
+            <p>3. Berechne die Differenz und versuche sie mit den verfügbaren Scheinen zu erreichen!</p>
+            <p>4. Die gezogene Karte wird automatisch dein neuer Kontostand für die nächste Runde</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ANPASSBARE LISTE ====================
+        
+        // Kontostandkarten (für Start und alle weiteren Karten)
+        const balanceCards = [-50, 0, 110, 150, 200, 450, 500, -200, -250, -160, 180, 230, 600, 950];
+        
+        // ============================================================
+        
+        let currentBalance = 0;
+        let drawnBalance = null;
+
+        function setRandomBalance() {
+            const randomIndex = Math.floor(Math.random() * balanceCards.length);
+            currentBalance = balanceCards[randomIndex];
+            document.getElementById('currentBalanceCard').textContent = currentBalance;
+            resetCards();
+        }
+
+        function drawBalanceCard() {
+            // Wenn bereits eine Karte gezogen wurde, wird sie zum neuen Kontostand
+            if (drawnBalance !== null) {
+                currentBalance = drawnBalance;
+                document.getElementById('currentBalanceCard').textContent = currentBalance;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * balanceCards.length);
+            drawnBalance = balanceCards[randomIndex];
+            
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card balance-card';
+            cardElement.textContent = drawnBalance;
+            
+            const container = document.getElementById('drawnBalanceCard');
+            container.innerHTML = '';
+            container.appendChild(cardElement);
+
+            calculateDifference();
+        }
+
+        function calculateDifference() {
+            if (drawnBalance !== null && currentBalance !== null) {
+                const difference = drawnBalance - currentBalance;
+                showGameStatus(difference);
+            }
+        }
+
+        function showGameStatus(difference) {
+            // Entferne vorherige Statusanzeige
+            const existingStatus = document.querySelector('.game-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'game-status';
+            statusDiv.style.cssText = `
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 15px;
+                padding: 20px;
+                margin: 20px 0;
+                text-align: center;
+                font-size: 1.2em;
+            `;
+            
+            statusDiv.innerHTML = `
+                <h3>🎯 Deine Aufgabe</h3>
+                <p><strong>Von ${currentBalance} zu ${drawnBalance}</strong></p>
+                <p>Differenz: <strong>${difference > 0 ? '+' : ''}${difference}</strong></p>
+                <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
+                    Verwende die Geld- und Schuldscheine, um möglichst nah an die Differenz zu kommen!
+                </p>
+            `;
+
+            document.querySelector('.cards-section').appendChild(statusDiv);
+        }
+
+        function resetCards() {
+            document.getElementById('drawnBalanceCard').innerHTML = '';
+            drawnBalance = null;
+            
+            const existingStatus = document.querySelector('.game-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+        }
+
+        // Initialer Zustand - warte auf erste Karte
+        currentBalance = null;
+    </script>
+</body>
+</html>
