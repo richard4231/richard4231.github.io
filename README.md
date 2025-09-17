@@ -21,6 +21,7 @@
 - [Ziffernkarten](https://richard4231.github.io/25-02-mb21pub/25-02-Ziffernkarten/)
 - [Einfaches Würfelset](https://richard4231.github.io/25-02-mb21pub/SimpleDice/)
 - [Einfacher Doppelwürfel](https://richard4231.github.io/25-02-3ddicebox/)
+- [Kontospiel v2](https://richard4231.github.io/25-09-Kontospiel/)
 
 ## Mathematische Spielereien
 - [Sonnenblume](https://richard4231.github.io/22-09-v1tournesol/)
