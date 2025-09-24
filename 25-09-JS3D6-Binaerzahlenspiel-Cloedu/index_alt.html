@@ -15,7 +15,7 @@
         <!-- Spielmodus und Einstellungen -->
         <div class="flex justify-center gap-4 mb-6 flex-wrap">
             <button id="toggleMode" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors">
-                Modus: Kooperativ
+                Modus: Zum Ausprobieren
             </button>
             
             <button id="toggle7Bits" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded transition-colors">
@@ -30,7 +30,7 @@
         <!-- Spielstatus -->
         <div class="text-center mb-8">
             <div class="text-xl mb-2">
-                Zielzahl: <span id="targetNumber" class="font-bold text-yellow-400">0</span>
+                Zielzahl: <span id="targetNumber" class="font-bold text-yellow-400">–</span>
             </div>
             <div class="text-lg mb-2">
                 Aktuelle Summe: <span id="currentSum" class="font-bold text-green-400">0</span>
@@ -59,8 +59,8 @@
             <ul class="text-sm text-gray-300 space-y-1">
                 <li>• Klicke auf einen Punkt, um ihn UND seine beiden Nachbarn umzuschalten</li>
                 <li>• Ziel: Erreiche die vorgegebene Zielzahl durch geschicktes Klicken</li>
-                <li>• <strong>Kooperativ:</strong> Spiele in deinem eigenen Tempo</li>
-                <li>• <strong>Kompetitiv:</strong> Schaffe es innerhalb von 60 Sekunden!</li>
+                <li>• <strong>Zum Ausprobieren:</strong> Spiele in deinem eigenen Tempo</li>
+                <li>• <strong>Gegen die Zeit:</strong> Schaffe es innerhalb von 60 Sekunden!</li>
             </ul>
         </div>
 
@@ -76,7 +76,7 @@
                 this.targetNumber = 0;
                 this.moves = 0;
                 this.gameWon = false;
-                this.gameMode = 'cooperative';
+                this.gameMode = 'relaxed';
                 this.timeLeft = 60;
                 this.gameRunning = false;
                 this.use7Bits = false;
@@ -86,7 +86,7 @@
                 this.powers = [64, 32, 16, 8, 4, 2, 1];
                 
                 this.initializeEventListeners();
-                this.startNewGame();
+                this.updateDisplay(); // Nur Display updaten, nicht automatisch starten
             }
             
             initializeEventListeners() {
@@ -109,15 +109,15 @@
             }
             
             updateDisplay() {
-                // Target number
-                document.getElementById('targetNumber').textContent = this.targetNumber;
+                // Target number - zeige "–" wenn kein Spiel läuft, sonst die Zahl
+                document.getElementById('targetNumber').textContent = this.targetNumber > 0 ? this.targetNumber : '–';
                 
                 // Current sum
                 document.getElementById('currentSum').textContent = this.getCurrentSum();
                 
                 // Game stats
                 let statsText = `Züge: ${this.moves}`;
-                if (this.gameMode === 'competitive') {
+                if (this.gameMode === 'timed') {
                     const timeColor = this.timeLeft < 20 ? 'text-red-400' : 'text-white';
                     statsText += ` | Zeit: <span class="${timeColor}">${this.timeLeft}s</span> | Punkte: ${this.score}`;
                 }
@@ -139,11 +139,12 @@
                 const bitsHtml = this.activeBits.map((bit, index) => {
                     const bgClass = bit ? 'bg-yellow-400 border-yellow-300 shadow-lg shadow-yellow-400/50' : 'bg-gray-700 border-gray-600 hover:border-gray-500';
                     const innerClass = bit ? 'bg-yellow-600' : 'bg-gray-800';
-                    const disabled = this.gameWon || (this.gameMode === 'competitive' && !this.gameRunning);
+                    const disabled = this.gameWon || (this.gameMode === 'timed' && !this.gameRunning);
                     
                     return `<button 
                         onclick="game.flipBit(${index})" 
-                        class="w-12 h-12 mx-2 rounded-full border-2 transition-all duration-200 hover:scale-110 ${bgClass} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+                        class="w-12 h-12 mx-2 rounded-full border-2 hover:scale-110 ${bgClass} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+                        style="transition: transform 0.2s ease;"
                         ${disabled ? 'disabled' : ''}
                     >
                         <div class="w-6 h-6 rounded-full mx-auto ${innerClass}"></div>
@@ -157,7 +158,7 @@
                 
                 // Mode button text
                 document.getElementById('toggleMode').textContent = 
-                    `Modus: ${this.gameMode === 'cooperative' ? 'Kooperativ' : 'Kompetitiv'}`;
+                    `Modus: ${this.gameMode === 'relaxed' ? 'Zum Ausprobieren' : 'Gegen die Zeit'}`;
                 
                 // 7-bit button text
                 document.getElementById('toggle7Bits').textContent = 
@@ -179,7 +180,7 @@
             }
             
             flipBit(index) {
-                if (this.gameWon || (this.gameMode === 'competitive' && !this.gameRunning)) return;
+                if (this.gameWon || (this.gameMode === 'timed' && !this.gameRunning)) return;
                 
                 const realIndex = this.use7Bits ? index : index + 1;
                 
@@ -192,18 +193,18 @@
                 
                 this.moves++;
                 
-                // Prüfe ob gewonnen
-                if (this.getCurrentSum() === this.targetNumber) {
+                // Prüfe ob gewonnen (nur wenn Zielzahl > 0)
+                if (this.getCurrentSum() === this.targetNumber && this.targetNumber > 0) {
                     this.gameWon = true;
                     this.gameRunning = false;
                     if (this.timer) clearInterval(this.timer);
                     
-                    if (this.gameMode === 'competitive') {
+                    if (this.gameMode === 'timed') {
                         const bonus = Math.max(1, Math.floor(this.timeLeft / 10));
                         this.score += bonus;
-                        this.showMessage('Gewonnen! 🎉', `Du hast es in ${this.moves} Zügen geschafft! (+${bonus} Punkte)`, 'green');
+                        this.showMessage('Geschafft! 🎉', `Du hast es in ${this.moves} Zügen geschafft! (+${bonus} Punkte)`, 'green');
                     } else {
-                        this.showMessage('Gewonnen! 🎉', `Du hast es in ${this.moves} Zügen geschafft!`, 'green');
+                        this.showMessage('Geschafft! 🎉', `Du hast es in ${this.moves} Zügen geschafft!`, 'green');
                     }
                 }
                 
@@ -217,13 +218,13 @@
                 this.moves = 0;
                 this.gameWon = false;
                 this.timeLeft = 60;
-                this.gameRunning = this.gameMode === 'competitive';
+                this.gameRunning = this.gameMode === 'timed';
                 
                 if (this.timer) clearInterval(this.timer);
                 this.hideMessage();
                 this.hideStartButton();
                 
-                if (this.gameMode === 'competitive' && this.gameRunning) {
+                if (this.gameMode === 'timed' && this.gameRunning) {
                     this.startTimer();
                 }
                 
@@ -231,8 +232,27 @@
             }
             
             toggleMode() {
-                this.gameMode = this.gameMode === 'cooperative' ? 'competitive' : 'cooperative';
+                this.gameMode = this.gameMode === 'relaxed' ? 'timed' : 'relaxed';
                 this.score = 0;
+                
+                // Wenn zu "Zum Ausprobieren" gewechselt wird, alles zurücksetzen
+                if (this.gameMode === 'relaxed') {
+                    // Timer stoppen
+                    if (this.timer) clearInterval(this.timer);
+                    
+                    // Alles zurücksetzen
+                    this.targetNumber = 0;
+                    this.bits = Array(7).fill(false);
+                    this.moves = 0;
+                    this.gameWon = false;
+                    this.timeLeft = 60;
+                    this.gameRunning = false;
+                    
+                    // UI bereinigen
+                    this.hideMessage();
+                    this.hideStartButton();
+                }
+                
                 this.updateDisplay();
             }
             
@@ -257,7 +277,7 @@
                     </div>
                 `;
                 
-                if (color === 'red' && this.gameMode === 'competitive') {
+                if (color === 'red' && this.gameMode === 'timed') {
                     this.showStartButton();
                 }
             }
@@ -268,8 +288,8 @@
             
             showStartButton() {
                 document.getElementById('startButton').innerHTML = `
-                    <button onclick="game.startCompetitiveGame()" class="px-6 py-3 bg-red-600 hover:bg-red-700 rounded text-xl font-bold transition-colors">
-                        Spiel starten!
+                    <button onclick="game.retryTimedGame()" class="px-6 py-3 bg-red-600 hover:bg-red-700 rounded text-xl font-bold transition-colors">
+                        Nochmals versuchen!
                     </button>
                 `;
                 document.getElementById('startButton').classList.remove('hidden');
@@ -279,10 +299,18 @@
                 document.getElementById('startButton').classList.add('hidden');
             }
             
-            startCompetitiveGame() {
+            retryTimedGame() {
+                // Setze das Spiel zurück, aber behalte die Zielzahl
+                this.bits = Array(7).fill(false);
+                this.moves = 0;
+                this.gameWon = false;
+                this.timeLeft = 60;
                 this.gameRunning = true;
-                this.hideStartButton();
+                
+                if (this.timer) clearInterval(this.timer);
                 this.hideMessage();
+                this.hideStartButton();
+                
                 this.startTimer();
                 this.updateDisplay();
             }
