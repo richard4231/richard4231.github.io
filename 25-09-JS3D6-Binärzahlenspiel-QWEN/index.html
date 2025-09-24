@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Binärschalter-Spiel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .controls {
+      margin: 20px;
+    }
+
+    .bits {
+      display: inline-flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .bit {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .off { background-color: #ccc; }
+    .on { background-color: #4CAF50; }
+
+    .powers {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+
+    .power-label {
+      width: 40px;
+      font-size: 12px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Binärschalter-Spiel</h1>
+
+<div class="controls">
+  <button onclick="startCooperative()">Kooperativ spielen</button>
+  <button onclick="startCompetitive()">Wettbewerb (2 Spieler)</button>
+  <label>
+    <input type="checkbox" id="use8thBit" /> 8. Bit (bis 127)
+  </label>
+</div>
+
+<div class="powers" id="powers"></div>
+<div class="bits" id="bits"></div>
+
+<p>Aktuelle Zahl: <span id="currentValue">0</span></p>
+<p>Zielzahl: <span id="targetValue">?</span></p>
+<p id="status">Klicke auf die Bits, um die Zahl zu erreichen!</p>
+
+<script>
+  let bits = [];
+  let target = 0;
+  let mode = null; // 'cooperative' oder 'competitive'
+  let currentPlayer = 1;
+
+  function initGame() {
+    const use8th = document.getElementById("use8thBit").checked;
+    const numBits = use8th ? 8 : 7;
+    bits = new Array(numBits).fill(false);
+
+    renderBits();
+    generateTarget();
+  }
+
+  function renderBits() {
+    const powersDiv = document.getElementById("powers");
+    const bitsDiv = document.getElementById("bits");
+
+    powersDiv.innerHTML = "";
+    bitsDiv.innerHTML = "";
+
+    for (let i = bits.length - 1; i >= 0; i--) {
+      const power = 2 ** i;
+      const powerLabel = document.createElement("div");
+      powerLabel.className = "power-label";
+      powerLabel.textContent = power;
+      powersDiv.appendChild(powerLabel);
+
+      const bit = document.createElement("div");
+      bit.className = `bit ${bits[i] ? "on" : "off"}`;
+      bit.onclick = () => toggleBit(i);
+      bitsDiv.appendChild(bit);
+    }
+  }
+
+  function toggleBit(i) {
+    if (mode === null) return;
+
+    // Schalte i, i-1, i+1 um
+    for (let j = Math.max(0, i - 1); j <= Math.min(bits.length - 1, i + 1); j++) {
+      bits[j] = !bits[j];
+    }
+
+    renderBits();
+    updateValue();
+
+    if (mode === "competitive") {
+      switchPlayer();
+    }
+  }
+
+  function updateValue() {
+    let val = 0;
+    for (let i = 0; i < bits.length; i++) {
+      if (bits[i]) val += 2 ** i;
+    }
+    document.getElementById("currentValue").textContent = val;
+    if (val === target) {
+      if (mode === "cooperative") {
+        document.getElementById("status").textContent = "🎉 Geschafft!";
+      } else {
+        document.getElementById("status").textContent = `Spieler ${currentPlayer} hat gewonnen!`;
+        mode = null;
+      }
+    }
+  }
+
+  function generateTarget() {
+    const max = document.getElementById("use8thBit").checked ? 255 : 63;
+    target = Math.floor(Math.random() * (max + 1)) + 1;
+    document.getElementById("targetValue").textContent = target;
+  }
+
+  function startCooperative() {
+    mode = "cooperative";
+    currentPlayer = null;
+    initGame();
+    document.getElementById("status").textContent = "Kooperatives Spiel gestartet!";
+  }
+
+  function startCompetitive() {
+    mode = "competitive";
+    currentPlayer = 1;
+    initGame();
+    document.getElementById("status").textContent = "Spieler 1 ist am Zug!";
+  }
+
+  function switchPlayer() {
+    if (mode !== "competitive") return;
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    document.getElementById("status").textContent = `Spieler ${currentPlayer} ist am Zug!`;
+  }
+</script>
+
+</body>
+</html>
