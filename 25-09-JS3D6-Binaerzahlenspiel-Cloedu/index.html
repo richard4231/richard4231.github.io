@@ -4,91 +4,386 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binärzahlen Flip-Spiel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom colors from the attached file */
-        .bg-primary { background-color: rgb(0, 135, 191); }
-        .bg-primary-hover { background-color: rgb(97, 167, 211); }
-        .bg-secondary { background-color: rgb(138, 199, 228); }
-        .bg-accent { background-color: rgb(217, 67, 104); }
-        .bg-panel { background-color: rgba(224, 224, 224, 0.9); }
-        .text-primary { color: rgb(0, 135, 191); }
-        .text-secondary { color: rgb(138, 199, 228); }
-        .text-accent { color: rgb(217, 67, 104); }
+        @font-face {
+            font-family: 'PoloCEF';
+            src: url('./assets/PoloCEF-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
         
-        /* Active highlighting */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PoloCEF', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #374151;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: rgb(0, 135, 191);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            font-family: inherit;
+            min-width: 140px; /* Feste Breite */
+        }
+        
+        .btn-primary {
+            background-color: rgb(138, 199, 228);
+        }
+        
+        .btn-primary:hover {
+            background-color: rgb(0, 135, 191);
+        }
+        
+        .btn-accent {
+            background-color: rgb(217, 67, 104);
+        }
+        
+        .btn-accent:hover {
+            opacity: 0.8;
+        }
+        
+        .btn-time-active {
+            background-color: rgb(217, 67, 104) !important;
+            box-shadow: 0 0 15px rgba(217, 67, 104, 0.4);
+        }
+        
+        .game-status {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .target-number {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .current-sum {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .game-stats {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+        
+        .powers-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+        }
+        
+        .power-label, .power-value {
+            width: 3rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .power-label {
+            font-size: 1.125rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+            line-height: 1.5;
+        }
+        
+        .exponent {
+            font-size: 0.75em;
+            vertical-align: super;
+            font-family: 'PoloCEF', Arial, sans-serif;
+        }
+        
+        .power-value {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: rgb(0, 135, 191);
+        }
+        
         .power-active {
-            text-shadow: 0 0 8px rgba(0, 135, 191, 0.4);
+            color: rgb(217, 67, 104) !important;
+            text-shadow: 0 0 8px rgba(217, 67, 104, 0.4);
             transform: scale(1.05);
         }
         
-        .value-active {
-            text-shadow: 0 0 8px rgba(138, 199, 228, 0.4);
-            transform: scale(1.05);
+        .bits-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 0.75rem;
+        }
+        
+        .bit-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            border: 2px solid;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bit-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+        
+        .bit-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .bit-inactive {
+            background-color: rgb(138, 199, 228);
+            border-color: rgb(138, 199, 228);
+        }
+        
+        .bit-inactive:hover:not(:disabled) {
+            border-color: rgb(0, 135, 191);
+        }
+        
+        .bit-active {
+            background-color: rgb(217, 67, 104);
+            border-color: rgb(217, 67, 104);
+            box-shadow: 0 0 12px rgba(217, 67, 104, 0.3);
+        }
+        
+        .bit-inner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+        }
+        
+        .bit-inner-inactive {
+            background-color: rgb(97, 167, 211);
+        }
+        
+        .bit-inner-active {
+            background-color: rgb(180, 50, 85);
+        }
+        
+        .binary-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .binary-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        
+        .binary-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .rules {
+            background-color: rgba(224, 224, 224, 0.9);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .rules h3 {
+            font-size: 1rem;
+            font-weight: bold;
+            color: rgb(0, 135, 191);
+            margin-bottom: 0.5rem;
+        }
+        
+        .rules ul {
+            list-style: none;
+            font-size: 0.875rem;
+        }
+        
+        .rules li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-container {
+            text-align: center;
+        }
+        
+        .message {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .message-success {
+            background-color: rgb(0, 135, 191);
+            color: white;
+        }
+        
+        .message-error {
+            background-color: rgb(217, 67, 104);
+            color: white;
+        }
+        
+        .message h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message p {
+            font-size: 1rem;
+        }
+        
+        .start-button-container {
+            text-align: center;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .text-accent {
+            color: rgb(217, 67, 104);
+        }
+        
+        .text-primary {
+            color: rgb(0, 135, 191);
+        }
+        
+        .text-red {
+            color: #dc2626;
+        }
+        
+        .font-bold {
+            font-weight: bold;
+        }
+        
+        @media (max-width: 640px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+            
+            .bits-container {
+                gap: 0.5rem;
+            }
+            
+            .bit-btn {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+            
+            .bit-inner {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+            
+            .power-label, .power-value {
+                width: 2.5rem;
+            }
         }
     </style>
 </head>
-<body style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);" class="text-gray-800 min-h-screen">
-    <div class="max-w-4xl mx-auto p-6">
-        <h1 class="text-3xl font-bold text-center mb-8 text-primary">
-            Binärzahlen Flip-Spiel
-        </h1>
+<body>
+    <div class="container">
+        <h1 class="title">Binärzahlen Flip-Spiel</h1>
         
         <!-- Spielmodus und Einstellungen -->
-        <div class="flex justify-center gap-4 mb-6 flex-wrap">
-            <button id="toggleMode" class="px-4 py-2 bg-primary hover:bg-primary-hover rounded transition-colors text-white">
-                Modus: Zum Ausprobieren
+        <div class="controls">
+            <button id="timeMode" class="btn btn-primary">
+                Gegen die Zeit
             </button>
             
-            <button id="toggle7Bits" class="px-4 py-2 bg-secondary hover:bg-primary rounded transition-colors text-white">
+            <button id="toggle7Bits" class="btn btn-primary">
                 6-Bit (0-63)
             </button>
             
-            <button id="newGame" class="px-4 py-2 bg-accent hover:opacity-80 rounded transition-colors text-white">
+            <button id="newGame" class="btn btn-accent">
                 Neues Spiel
             </button>
         </div>
 
         <!-- Spielstatus -->
-        <div class="text-center mb-8">
-            <div class="text-xl mb-2">
-                Zielzahl: <span id="targetNumber" class="font-bold text-accent">–</span>
+        <div class="game-status">
+            <div class="target-number">
+                Zielzahl: <span id="targetNumber" class="text-accent font-bold">–</span>
             </div>
-            <div class="text-lg mb-2">
-                Aktuelle Summe: <span id="currentSum" class="font-bold text-primary">0</span>
+            <div class="current-sum">
+                Aktuelle Summe: <span id="currentSum" class="text-primary font-bold">0</span>
             </div>
-            <div class="text-sm text-gray-400" id="gameStats">
+            <div class="game-stats" id="gameStats">
                 Züge: 0
             </div>
         </div>
 
         <!-- Zweierpotenzen -->
-        <div id="powersLabels" class="flex justify-center mb-4"></div>
-        <div id="powersValues" class="flex justify-center mb-4"></div>
+        <div id="powersLabels" class="powers-container"></div>
+        <div id="powersValues" class="powers-container"></div>
 
         <!-- Die Punkte/Bits -->
-        <div id="bitsContainer" class="flex justify-center mb-8"></div>
+        <div id="bitsContainer" class="bits-container"></div>
 
         <!-- Binärdarstellung -->
-        <div class="text-center mb-8">
-            <div class="text-sm text-gray-400 mb-1">Binär:</div>
-            <div id="binaryDisplay" class="font-mono text-xl">0000000</div>
+        <div class="binary-display">
+            <div class="binary-label">Binär:</div>
+            <div id="binaryDisplay" class="binary-value">0000000</div>
         </div>
 
         <!-- Spielregeln -->
-        <div class="bg-panel p-4 rounded mb-6 text-gray-800">
-            <h3 class="font-bold mb-2 text-primary">Spielregeln:</h3>
-            <ul class="text-sm space-y-1">
+        <div class="rules">
+            <h3>Spielregeln:</h3>
+            <ul>
                 <li>• Klicke auf einen Punkt, um ihn UND seine beiden Nachbarn umzuschalten</li>
                 <li>• Ziel: Erreiche die vorgegebene Zielzahl durch geschicktes Klicken</li>
-                <li>• <strong>Zum Ausprobieren:</strong> Spiele in deinem eigenen Tempo</li>
+                <li>• <strong>Standard:</strong> Spiele entspannt in deinem eigenen Tempo</li>
                 <li>• <strong>Gegen die Zeit:</strong> Schaffe es innerhalb von 60 Sekunden!</li>
             </ul>
         </div>
 
         <!-- Messages -->
-        <div id="messageContainer" class="text-center"></div>
-        <div id="startButton" class="text-center hidden"></div>
+        <div id="messageContainer" class="message-container"></div>
+        <div id="startButton" class="start-button-container hidden"></div>
     </div>
 
     <script>
@@ -98,7 +393,7 @@
                 this.targetNumber = 0;
                 this.moves = 0;
                 this.gameWon = false;
-                this.gameMode = 'relaxed';
+                this.gameMode = 'relaxed';  // Standard: Zum Ausprobieren
                 this.timeLeft = 60;
                 this.gameRunning = false;
                 this.use7Bits = false;
@@ -108,11 +403,11 @@
                 this.powers = [64, 32, 16, 8, 4, 2, 1];
                 
                 this.initializeEventListeners();
-                this.updateDisplay(); // Nur Display updaten, nicht automatisch starten
+                this.updateDisplay(); // Initial display update
             }
             
             initializeEventListeners() {
-                document.getElementById('toggleMode').addEventListener('click', () => this.toggleMode());
+                document.getElementById('timeMode').addEventListener('click', () => this.toggleTimeMode());
                 document.getElementById('toggle7Bits').addEventListener('click', () => this.toggle7Bits());
                 document.getElementById('newGame').addEventListener('click', () => this.startNewGame());
             }
@@ -147,36 +442,34 @@
                 
                 this.updateTimerDisplay();
                 
-                // Powers labels mit hochgestellten Zahlen
+                // Powers labels - Potenzen auch rot wenn aktiviert
                 const labelsHtml = this.activePowers.map((_, index) => {
                     const exponent = this.use7Bits ? 6-index : 5-index;
                     const superscript = this.getSuperscript(exponent);
                     const isActive = this.activeBits[index] ? 'power-active' : '';
-                    return `<div class="w-16 text-center text-sm text-gray-400 transition-all duration-200 ${isActive}">2${superscript}</div>`;
+                    return `<div class="power-label ${isActive}">2${superscript}</div>`;
                 }).join('');
                 document.getElementById('powersLabels').innerHTML = labelsHtml;
                 
-                // Powers values mit größerer Schrift
+                // Powers values - dunkles Blau deaktiviert, Rot aktiviert
                 const valuesHtml = this.activePowers.map((power, index) => {
-                    const isActive = this.activeBits[index] ? 'value-active text-primary' : 'text-secondary';
-                    return `<div class="w-16 text-center text-xl font-bold transition-all duration-200 ${isActive}">${power}</div>`;
+                    const isActive = this.activeBits[index] ? 'power-active' : '';
+                    return `<div class="power-value ${isActive}">${power}</div>`;
                 }).join('');
                 document.getElementById('powersValues').innerHTML = valuesHtml;
                 
-                // Bits mit neuem Farbschema
+                // Bits - hellblau deaktiviert, rot aktiviert
                 const bitsHtml = this.activeBits.map((bit, index) => {
-                    const bgClass = bit ? 'border-2 border-primary shadow-lg shadow-primary/30' : 'border-2 border-gray-600 hover:border-gray-500';
-                    const innerClass = bit ? 'bg-primary' : 'bg-gray-800';
-                    const outerBg = bit ? 'bg-secondary' : 'bg-gray-700';
+                    const btnClass = bit ? 'bit-active' : 'bit-inactive';
+                    const innerClass = bit ? 'bit-inner-active' : 'bit-inner-inactive';
                     const disabled = this.gameWon || (this.gameMode === 'timed' && !this.gameRunning);
                     
                     return `<button 
                         onclick="game.flipBit(${index})" 
-                        class="w-12 h-12 mx-2 rounded-full hover:scale-110 ${outerBg} ${bgClass} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
-                        style="transition: transform 0.2s ease;"
+                        class="bit-btn ${btnClass}"
                         ${disabled ? 'disabled' : ''}
                     >
-                        <div class="w-6 h-6 rounded-full mx-auto ${innerClass}"></div>
+                        <div class="bit-inner ${innerClass}"></div>
                     </button>`;
                 }).join('');
                 document.getElementById('bitsContainer').innerHTML = bitsHtml;
@@ -185,9 +478,15 @@
                 document.getElementById('binaryDisplay').textContent = 
                     this.activeBits.map(bit => bit ? '1' : '0').join('');
                 
-                // Mode button text
-                document.getElementById('toggleMode').textContent = 
-                    `Modus: ${this.gameMode === 'relaxed' ? 'Zum Ausprobieren' : 'Gegen die Zeit'}`;
+                // Time mode button appearance
+                const timeModeBtn = document.getElementById('timeMode');
+                if (this.gameMode === 'timed') {
+                    timeModeBtn.className = 'btn btn-time-active';
+                    timeModeBtn.innerHTML = 'Zeit läuft!';
+                } else {
+                    timeModeBtn.className = 'btn btn-primary';
+                    timeModeBtn.innerHTML = 'Gegen die Zeit';
+                }
                 
                 // 7-bit button text
                 document.getElementById('toggle7Bits').textContent = 
@@ -195,11 +494,11 @@
             }
             
             updateTimerDisplay() {
-                // Nur Game stats aktualisieren
+                // Nur Game stats aktualisieren - größere Schrift
                 let statsText = `Züge: ${this.moves}`;
                 if (this.gameMode === 'timed') {
-                    const timeColor = this.timeLeft < 20 ? 'text-red-400' : 'text-white';
-                    statsText += ` | Zeit: <span class="${timeColor}">${this.timeLeft}s</span> | Punkte: ${this.score}`;
+                    const timeColor = this.timeLeft < 20 ? 'text-red font-bold' : 'font-bold';
+                    statsText += ` | Zeit: <span class="${timeColor}">${this.timeLeft}s</span> | Punkte: <span class="text-primary font-bold">${this.score}</span>`;
                 }
                 document.getElementById('gameStats').innerHTML = statsText;
             }
@@ -270,12 +569,15 @@
                 this.updateDisplay();
             }
             
-            toggleMode() {
-                this.gameMode = this.gameMode === 'relaxed' ? 'timed' : 'relaxed';
-                this.score = 0;
-                
-                // Wenn zu "Zum Ausprobieren" gewechselt wird, alles zurücksetzen
+            toggleTimeMode() {
                 if (this.gameMode === 'relaxed') {
+                    // Aktiviere Zeitmodus und starte automatisch ein neues Spiel
+                    this.gameMode = 'timed';
+                    this.startNewGame(); // Startet ein neues Spiel mit Zielzahl
+                } else {
+                    // Deaktiviere Zeitmodus - zurück zu Ausprobieren
+                    this.gameMode = 'relaxed';
+                    
                     // Timer stoppen
                     if (this.timer) clearInterval(this.timer);
                     
@@ -286,6 +588,7 @@
                     this.gameWon = false;
                     this.timeLeft = 60;
                     this.gameRunning = false;
+                    this.score = 0;
                     
                     // UI bereinigen
                     this.hideMessage();
@@ -304,17 +607,12 @@
             }
             
             showMessage(title, text, color) {
-                const colorMap = {
-                    green: { bg: 'bg-primary', titleText: 'text-white', bodyText: 'text-gray-100' },
-                    red: { bg: 'bg-accent', titleText: 'text-white', bodyText: 'text-gray-100' }
-                };
-                
-                const colors = colorMap[color];
+                const messageClass = color === 'green' ? 'message-success' : 'message-error';
                 
                 document.getElementById('messageContainer').innerHTML = `
-                    <div class="${colors.bg} p-4 rounded mb-4">
-                        <h2 class="text-2xl font-bold ${colors.titleText}">${title}</h2>
-                        <p class="${colors.bodyText}">${text}</p>
+                    <div class="message ${messageClass}">
+                        <h2>${title}</h2>
+                        <p>${text}</p>
                     </div>
                 `;
                 
@@ -329,7 +627,7 @@
             
             showStartButton() {
                 document.getElementById('startButton').innerHTML = `
-                    <button onclick="game.retryTimedGame()" class="px-6 py-3 bg-accent hover:opacity-80 rounded text-xl font-bold transition-colors text-white">
+                    <button onclick="game.retryTimedGame()" class="btn btn-accent">
                         Nochmals versuchen!
                     </button>
                 `;
