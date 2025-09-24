@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binärzahlen Flip-Spiel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom colors from the attached file */
+        .bg-primary { background-color: rgb(0, 135, 191); }
+        .bg-primary-hover { background-color: rgb(97, 167, 211); }
+        .bg-secondary { background-color: rgb(138, 199, 228); }
+        .bg-accent { background-color: rgb(217, 67, 104); }
+        .bg-panel { background-color: rgba(224, 224, 224, 0.9); }
+        .text-primary { color: rgb(0, 135, 191); }
+        .text-secondary { color: rgb(138, 199, 228); }
+        .text-accent { color: rgb(217, 67, 104); }
+        
+        /* Active highlighting */
+        .power-active {
+            text-shadow: 0 0 8px rgba(0, 135, 191, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .value-active {
+            text-shadow: 0 0 8px rgba(138, 199, 228, 0.4);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);" class="text-gray-800 min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center mb-8 text-primary">
+            Binärzahlen Flip-Spiel
+        </h1>
+        
+        <!-- Spielmodus und Einstellungen -->
+        <div class="flex justify-center gap-4 mb-6 flex-wrap">
+            <button id="toggleMode" class="px-4 py-2 bg-primary hover:bg-primary-hover rounded transition-colors text-white">
+                Modus: Zum Ausprobieren
+            </button>
+            
+            <button id="toggle7Bits" class="px-4 py-2 bg-secondary hover:bg-primary rounded transition-colors text-white">
+                6-Bit (0-63)
+            </button>
+            
+            <button id="newGame" class="px-4 py-2 bg-accent hover:opacity-80 rounded transition-colors text-white">
+                Neues Spiel
+            </button>
+        </div>
+
+        <!-- Spielstatus -->
+        <div class="text-center mb-8">
+            <div class="text-xl mb-2">
+                Zielzahl: <span id="targetNumber" class="font-bold text-accent">–</span>
+            </div>
+            <div class="text-lg mb-2">
+                Aktuelle Summe: <span id="currentSum" class="font-bold text-primary">0</span>
+            </div>
+            <div class="text-sm text-gray-400" id="gameStats">
+                Züge: 0
+            </div>
+        </div>
+
+        <!-- Zweierpotenzen -->
+        <div id="powersLabels" class="flex justify-center mb-4"></div>
+        <div id="powersValues" class="flex justify-center mb-4"></div>
+
+        <!-- Die Punkte/Bits -->
+        <div id="bitsContainer" class="flex justify-center mb-8"></div>
+
+        <!-- Binärdarstellung -->
+        <div class="text-center mb-8">
+            <div class="text-sm text-gray-400 mb-1">Binär:</div>
+            <div id="binaryDisplay" class="font-mono text-xl">0000000</div>
+        </div>
+
+        <!-- Spielregeln -->
+        <div class="bg-panel p-4 rounded mb-6 text-gray-800">
+            <h3 class="font-bold mb-2 text-primary">Spielregeln:</h3>
+            <ul class="text-sm space-y-1">
+                <li>• Klicke auf einen Punkt, um ihn UND seine beiden Nachbarn umzuschalten</li>
+                <li>• Ziel: Erreiche die vorgegebene Zielzahl durch geschicktes Klicken</li>
+                <li>• <strong>Zum Ausprobieren:</strong> Spiele in deinem eigenen Tempo</li>
+                <li>• <strong>Gegen die Zeit:</strong> Schaffe es innerhalb von 60 Sekunden!</li>
+            </ul>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer" class="text-center"></div>
+        <div id="startButton" class="text-center hidden"></div>
+    </div>
+
+    <script>
+        class BinaryFlipGame {
+            constructor() {
+                this.bits = Array(7).fill(false);
+                this.targetNumber = 0;
+                this.moves = 0;
+                this.gameWon = false;
+                this.gameMode = 'relaxed';
+                this.timeLeft = 60;
+                this.gameRunning = false;
+                this.use7Bits = false;
+                this.score = 0;
+                this.timer = null;
+                
+                this.powers = [64, 32, 16, 8, 4, 2, 1];
+                
+                this.initializeEventListeners();
+                this.updateDisplay(); // Nur Display updaten, nicht automatisch starten
+            }
+            
+            initializeEventListeners() {
+                document.getElementById('toggleMode').addEventListener('click', () => this.toggleMode());
+                document.getElementById('toggle7Bits').addEventListener('click', () => this.toggle7Bits());
+                document.getElementById('newGame').addEventListener('click', () => this.startNewGame());
+            }
+            
+            get activeBits() {
+                return this.use7Bits ? this.bits : this.bits.slice(1);
+            }
+            
+            get activePowers() {
+                return this.use7Bits ? this.powers : this.powers.slice(1);
+            }
+            
+            getSuperscript(num) {
+                const superscripts = {
+                    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', 
+                    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+                };
+                return num.toString().split('').map(digit => superscripts[digit]).join('');
+            }
+            
+            getCurrentSum() {
+                return this.activeBits.reduce((sum, bit, index) => 
+                    sum + (bit ? this.activePowers[index] : 0), 0);
+            }
+            
+            updateDisplay() {
+                // Target number - zeige "–" wenn kein Spiel läuft, sonst die Zahl
+                document.getElementById('targetNumber').textContent = this.targetNumber > 0 ? this.targetNumber : '–';
+                
+                // Current sum
+                document.getElementById('currentSum').textContent = this.getCurrentSum();
+                
+                this.updateTimerDisplay();
+                
+                // Powers labels mit hochgestellten Zahlen
+                const labelsHtml = this.activePowers.map((_, index) => {
+                    const exponent = this.use7Bits ? 6-index : 5-index;
+                    const superscript = this.getSuperscript(exponent);
+                    const isActive = this.activeBits[index] ? 'power-active' : '';
+                    return `<div class="w-16 text-center text-sm text-gray-400 transition-all duration-200 ${isActive}">2${superscript}</div>`;
+                }).join('');
+                document.getElementById('powersLabels').innerHTML = labelsHtml;
+                
+                // Powers values mit größerer Schrift
+                const valuesHtml = this.activePowers.map((power, index) => {
+                    const isActive = this.activeBits[index] ? 'value-active text-primary' : 'text-secondary';
+                    return `<div class="w-16 text-center text-xl font-bold transition-all duration-200 ${isActive}">${power}</div>`;
+                }).join('');
+                document.getElementById('powersValues').innerHTML = valuesHtml;
+                
+                // Bits mit neuem Farbschema
+                const bitsHtml = this.activeBits.map((bit, index) => {
+                    const bgClass = bit ? 'border-2 border-primary shadow-lg shadow-primary/30' : 'border-2 border-gray-600 hover:border-gray-500';
+                    const innerClass = bit ? 'bg-primary' : 'bg-gray-800';
+                    const outerBg = bit ? 'bg-secondary' : 'bg-gray-700';
+                    const disabled = this.gameWon || (this.gameMode === 'timed' && !this.gameRunning);
+                    
+                    return `<button 
+                        onclick="game.flipBit(${index})" 
+                        class="w-12 h-12 mx-2 rounded-full hover:scale-110 ${outerBg} ${bgClass} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+                        style="transition: transform 0.2s ease;"
+                        ${disabled ? 'disabled' : ''}
+                    >
+                        <div class="w-6 h-6 rounded-full mx-auto ${innerClass}"></div>
+                    </button>`;
+                }).join('');
+                document.getElementById('bitsContainer').innerHTML = bitsHtml;
+                
+                // Binary display
+                document.getElementById('binaryDisplay').textContent = 
+                    this.activeBits.map(bit => bit ? '1' : '0').join('');
+                
+                // Mode button text
+                document.getElementById('toggleMode').textContent = 
+                    `Modus: ${this.gameMode === 'relaxed' ? 'Zum Ausprobieren' : 'Gegen die Zeit'}`;
+                
+                // 7-bit button text
+                document.getElementById('toggle7Bits').textContent = 
+                    this.use7Bits ? '7-Bit (0-127)' : '6-Bit (0-63)';
+            }
+            
+            updateTimerDisplay() {
+                // Nur Game stats aktualisieren
+                let statsText = `Züge: ${this.moves}`;
+                if (this.gameMode === 'timed') {
+                    const timeColor = this.timeLeft < 20 ? 'text-red-400' : 'text-white';
+                    statsText += ` | Zeit: <span class="${timeColor}">${this.timeLeft}s</span> | Punkte: ${this.score}`;
+                }
+                document.getElementById('gameStats').innerHTML = statsText;
+            }
+            
+            startTimer() {
+                if (this.timer) clearInterval(this.timer);
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimerDisplay(); // Nur Timer-relevante Teile aktualisieren
+                    if (this.timeLeft <= 0) {
+                        this.gameRunning = false;
+                        clearInterval(this.timer);
+                        this.showMessage('Zeit abgelaufen! ⏰', 'Versuche es nochmal!', 'red');
+                        this.updateDisplay(); // Vollständiges Update nur bei Spielende
+                    }
+                }, 1000);
+            }
+            
+            flipBit(index) {
+                if (this.gameWon || (this.gameMode === 'timed' && !this.gameRunning)) return;
+                
+                const realIndex = this.use7Bits ? index : index + 1;
+                
+                // Schalte den geklickten Punkt um
+                this.bits[realIndex] = !this.bits[realIndex];
+                
+                // Schalte die Nachbarn um
+                if (realIndex > 0) this.bits[realIndex - 1] = !this.bits[realIndex - 1];
+                if (realIndex < 6) this.bits[realIndex + 1] = !this.bits[realIndex + 1];
+                
+                this.moves++;
+                
+                // Prüfe ob gewonnen (nur wenn Zielzahl > 0)
+                if (this.getCurrentSum() === this.targetNumber && this.targetNumber > 0) {
+                    this.gameWon = true;
+                    this.gameRunning = false;
+                    if (this.timer) clearInterval(this.timer);
+                    
+                    if (this.gameMode === 'timed') {
+                        const bonus = Math.max(1, Math.floor(this.timeLeft / 10));
+                        this.score += bonus;
+                        this.showMessage('Geschafft! 🎉', `Du hast es in ${this.moves} Zügen geschafft! (+${bonus} Punkte)`, 'green');
+                    } else {
+                        this.showMessage('Geschafft! 🎉', `Du hast es in ${this.moves} Zügen geschafft!`, 'green');
+                    }
+                }
+                
+                this.updateDisplay();
+            }
+            
+            startNewGame() {
+                const maxNumber = this.use7Bits ? 127 : 63;
+                this.targetNumber = Math.floor(Math.random() * maxNumber) + 1;
+                this.bits = Array(7).fill(false);
+                this.moves = 0;
+                this.gameWon = false;
+                this.timeLeft = 60;
+                this.gameRunning = this.gameMode === 'timed';
+                
+                if (this.timer) clearInterval(this.timer);
+                this.hideMessage();
+                this.hideStartButton();
+                
+                if (this.gameMode === 'timed' && this.gameRunning) {
+                    this.startTimer();
+                }
+                
+                this.updateDisplay();
+            }
+            
+            toggleMode() {
+                this.gameMode = this.gameMode === 'relaxed' ? 'timed' : 'relaxed';
+                this.score = 0;
+                
+                // Wenn zu "Zum Ausprobieren" gewechselt wird, alles zurücksetzen
+                if (this.gameMode === 'relaxed') {
+                    // Timer stoppen
+                    if (this.timer) clearInterval(this.timer);
+                    
+                    // Alles zurücksetzen
+                    this.targetNumber = 0;
+                    this.bits = Array(7).fill(false);
+                    this.moves = 0;
+                    this.gameWon = false;
+                    this.timeLeft = 60;
+                    this.gameRunning = false;
+                    
+                    // UI bereinigen
+                    this.hideMessage();
+                    this.hideStartButton();
+                }
+                
+                this.updateDisplay();
+            }
+            
+            toggle7Bits() {
+                this.use7Bits = !this.use7Bits;
+                if (!this.use7Bits && this.targetNumber > 63) {
+                    this.startNewGame();
+                }
+                this.updateDisplay();
+            }
+            
+            showMessage(title, text, color) {
+                const colorMap = {
+                    green: { bg: 'bg-primary', titleText: 'text-white', bodyText: 'text-gray-100' },
+                    red: { bg: 'bg-accent', titleText: 'text-white', bodyText: 'text-gray-100' }
+                };
+                
+                const colors = colorMap[color];
+                
+                document.getElementById('messageContainer').innerHTML = `
+                    <div class="${colors.bg} p-4 rounded mb-4">
+                        <h2 class="text-2xl font-bold ${colors.titleText}">${title}</h2>
+                        <p class="${colors.bodyText}">${text}</p>
+                    </div>
+                `;
+                
+                if (color === 'red' && this.gameMode === 'timed') {
+                    this.showStartButton();
+                }
+            }
+            
+            hideMessage() {
+                document.getElementById('messageContainer').innerHTML = '';
+            }
+            
+            showStartButton() {
+                document.getElementById('startButton').innerHTML = `
+                    <button onclick="game.retryTimedGame()" class="px-6 py-3 bg-accent hover:opacity-80 rounded text-xl font-bold transition-colors text-white">
+                        Nochmals versuchen!
+                    </button>
+                `;
+                document.getElementById('startButton').classList.remove('hidden');
+            }
+            
+            hideStartButton() {
+                document.getElementById('startButton').classList.add('hidden');
+            }
+            
+            retryTimedGame() {
+                // Setze das Spiel zurück, aber behalte die Zielzahl
+                this.bits = Array(7).fill(false);
+                this.moves = 0;
+                this.gameWon = false;
+                this.timeLeft = 60;
+                this.gameRunning = true;
+                
+                if (this.timer) clearInterval(this.timer);
+                this.hideMessage();
+                this.hideStartButton();
+                
+                this.startTimer();
+                this.updateDisplay();
+            }
+        }
+        
+        // Initialisiere das Spiel
+        const game = new BinaryFlipGame();
+    </script>
+</body>
+</html>
