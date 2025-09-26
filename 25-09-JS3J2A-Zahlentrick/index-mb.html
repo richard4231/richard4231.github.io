@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Der mystische Zahlentrick</title>
+    <style>
+        @font-face {
+            font-family: 'PoloCEF';
+            src: url('./assets/PoloCEF-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PoloCEF', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #374151;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: rgb(0, 135, 191);
+        }
+        
+        .btn-accent {
+            background-color: rgb(217, 67, 104);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            margin: 15px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(217, 67, 104, 0.3);
+            font-family: inherit;
+        }
+        
+        .btn-accent:hover {
+            opacity: 0.8;
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(217, 67, 104, 0.5);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            border: 2px solid rgba(138, 199, 228, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .instructions h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: rgb(0, 135, 191);
+            text-align: center;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: step-counter;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 1.25rem;
+            padding: 1rem 1.25rem 1rem 4rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            position: relative;
+            transition: transform 0.3s ease;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .step-list li:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.6);
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, rgb(217, 67, 104), rgb(180, 50, 85));
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 8px rgba(217, 67, 104, 0.3);
+        }
+        
+        .table-container {
+            margin: 2rem 0;
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+        
+        table {
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        td {
+            width: 35px;
+            height: 45px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid rgba(138, 199, 228, 0.5);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        td:hover {
+            background-color: rgba(138, 199, 228, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .number {
+            font-size: 12px;
+            color: #6b7280;
+            display: block;
+        }
+        
+        .symbol {
+            font-size: 20px;
+            display: block;
+        }
+        
+        .prediction {
+            margin: 2rem 0;
+            padding: 2rem;
+            background: rgba(217, 67, 104, 0.1);
+            border-radius: 12px;
+            border: 2px solid rgb(217, 67, 104);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .prediction.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .prediction h3 {
+            color: rgb(217, 67, 104);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .prediction-symbol {
+            font-size: 3rem;
+            margin: 1rem;
+            animation: mysticalGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes mysticalGlow {
+            0% { transform: scale(1); text-shadow: 0 0 10px rgba(217, 67, 104, 0.5); }
+            100% { transform: scale(1.1); text-shadow: 0 0 20px rgba(217, 67, 104, 0.8); }
+        }
+        
+        .step-final {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 4rem;
+            text-align: center;
+        }
+        
+        .step-final::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, rgb(217, 67, 104), rgb(180, 50, 85));
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 8px rgba(217, 67, 104, 0.3);
+        }
+        
+        .reveal-section {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .reveal-text {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: rgb(0, 135, 191);
+            font-weight: 500;
+        }
+        
+        .countdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(217, 67, 104, 0.9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .countdown.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 640px) {
+            td {
+                width: 30px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .symbol {
+                font-size: 16px;
+            }
+            
+            .number {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">🔮 Der mystische Zahlentrick 🔮</h1>
+        
+        <div id="instructions" class="instructions">
+            <h3>So funktioniert die Magie:</h3>
+            <ol class="step-list">
+                <li>Denk dir eine <strong>zweistellige Zahl</strong> zwischen 10 und 99<br>
+                    <em style="color: rgb(217, 67, 104); font-weight: 500;">Zum Beispiel: 47, 82 oder 35</em></li>
+                <li>Berechne die <strong>Quersumme</strong> deiner Zahl<br>
+                    <em style="color: rgb(217, 67, 104); font-weight: 500;">Bei 47 wäre das: 4 + 7 = 11</em></li>
+                <li>Ziehe die Quersumme von deiner <strong>ursprünglichen Zahl</strong> ab<br>
+                    <em style="color: rgb(217, 67, 104); font-weight: 500;">Bei 47 wäre das: 47 - 11 = 36</em></li>
+                <li>Suche dein <strong>Ergebnis in der Tabelle</strong> und präge dir das Symbol ein<br>
+                    <em style="color: rgb(217, 67, 104); font-weight: 500;">Konzentriere dich ganz fest auf das Symbol!</em></li>
+            </ol>
+            
+            <div class="table-container">
+                <table id="symbol-table"></table>
+            </div>
+            
+            <div class="step-final">
+                <div class="reveal-section">
+                    <div class="reveal-text">Wenn du bereit bist, klicke hier für die Gedankenübertragung:</div>
+                    <button class="btn-accent" id="reveal-btn" onclick="revealPrediction()">🔮 Gedanken lesen</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="prediction" class="prediction">
+            <div class="countdown" id="countdown"></div>
+            <h3>Du denkst an dieses Symbol:</h3>
+            <div class="prediction-symbol" id="predicted-symbol"></div>
+        </div>
+    </div>
+
+    <script>
+        // Smiley Symbole für den mystischen Trick
+        const symbols = ['😀', '😃', '😄', '😁', '😊', '🙂', '😉', '😎', '🥳', '😇', '🤓', '🧐', '😴', '😋', '🤔', '🤗', '🤭', '🤪', '😜', '🤯'];
+        
+        let magicSymbol = '';
+        let countdownTimer = null;
+        
+        function generateTable() {
+            const table = document.getElementById('symbol-table');
+            table.innerHTML = '';
+            
+            // Wähle zufälliges Magic-Symbol für Vielfache von 9
+            magicSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            // Erstelle 5x20 Tabelle (0-99)
+            for (let row = 0; row < 5; row++) {
+                const tr = document.createElement('tr');
+                
+                for (let col = 0; col < 20; col++) {
+                    const td = document.createElement('td');
+                    const number = row * 20 + col;
+                    
+                    // Nummer anzeigen
+                    const numberSpan = document.createElement('span');
+                    numberSpan.className = 'number';
+                    numberSpan.textContent = number;
+                    
+                    // Symbol anzeigen
+                    const symbolSpan = document.createElement('span');
+                    symbolSpan.className = 'symbol';
+                    
+                    // Vielfache von 9 bekommen das Magic-Symbol
+                    if (number % 9 === 0 && number > 0) {
+                        symbolSpan.textContent = magicSymbol;
+                        td.dataset.multiple = 'true';
+                    } else {
+                        // Zufälliges anderes Symbol
+                        let randomSymbol;
+                        do {
+                            randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+                        } while (randomSymbol === magicSymbol);
+                        symbolSpan.textContent = randomSymbol;
+                        td.dataset.multiple = 'false';
+                    }
+                    
+                    td.appendChild(numberSpan);
+                    td.appendChild(symbolSpan);
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+        }
+        
+        function revealPrediction() {
+            const predictionDiv = document.getElementById('prediction');
+            const predictedSymbol = document.getElementById('predicted-symbol');
+            const countdownDiv = document.getElementById('countdown');
+            
+            predictedSymbol.textContent = magicSymbol;
+            predictionDiv.classList.add('show');
+            
+            // Scroll zu Vorhersage
+            predictionDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Starte 10-Sekunden Countdown
+            let timeLeft = 10;
+            countdownDiv.textContent = `Neue Mischung in ${timeLeft}s`;
+            countdownDiv.classList.add('show');
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                countdownDiv.textContent = `Neue Mischung in ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    
+                    // Fade out prediction
+                    predictionDiv.classList.remove('show');
+                    countdownDiv.classList.remove('show');
+                    
+                    // Nach Animation neue Tabelle generieren
+                    setTimeout(() => {
+                        generateTable();
+                    }, 500);
+                }
+            }, 1000);
+        }
+        
+        // Initial setup
+        generateTable();
+    </script>
+</body>
+</html>

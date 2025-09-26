@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Der mystische Zahlentrick</title>
+    <style>
+        @font-face {
+            font-family: 'PoloCEF';
+            src: url('./assets/PoloCEF-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        body {
+            font-family: 'PoloCEF', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298, #4a148c);
+            color: white;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+        
+        .mode-toggle {
+            margin: 20px 0;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+        
+        button.active {
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: step-counter;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding: 15px 20px 15px 70px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        
+        .step-list li:hover {
+            transform: translateX(5px);
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .mystical .step-list li::before {
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        
+        .table-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        table {
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        td {
+            width: 35px;
+            height: 45px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        td:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .number {
+            font-size: 12px;
+            color: #ccc;
+            display: block;
+        }
+        
+        .symbol {
+            font-size: 20px;
+            display: block;
+        }
+        
+        .prediction {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+        }
+        
+        .prediction-symbol {
+            font-size: 48px;
+            margin: 10px;
+        }
+        
+        .mystical {
+            background: linear-gradient(135deg, #1e3c72, #2a5298, #4a148c);
+        }
+        
+        .rational {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+        
+        .explanation {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .highlight-multiples {
+            background-color: rgba(255, 215, 0, 0.3) !important;
+        }
+        
+        .reveal-button {
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            border: none;
+            color: #1e3c72;
+            padding: 15px 30px;
+            margin: 15px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .reveal-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+        
+        .step-final {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 70px;
+        }
+        
+        .step-final::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .mystical .step-final::before {
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="mystical">
+    <div class="container">
+        <h1 id="title">🔮 Der mystische Zahlentrick 🔮</h1>
+        
+        <div class="mode-toggle">
+            <button id="mystical-btn" class="active" onclick="setMode('mystical')">Mystische Version</button>
+            <button id="rational-btn" onclick="setMode('rational')">Rationale Erklärung</button>
+        </div>
+        
+        <div id="instructions" class="instructions">
+            <h3 id="instructions-title">So funktioniert die Magie:</h3>
+            <ol class="step-list">
+                <li id="step1">Denk dir eine <strong>zweistellige Zahl</strong> zwischen 10 und 99<br>
+                    <em id="example1" style="color: #ffd700;">Zum Beispiel: 47, 82 oder 35</em></li>
+                <li id="step2">Berechne die <strong>Quersumme</strong> deiner Zahl<br>
+                    <em id="example2" style="color: #ffd700;">Bei 47 wäre das: 4 + 7 = 11</em></li>
+                <li id="step3">Ziehe die Quersumme von deiner <strong>ursprünglichen Zahl</strong> ab<br>
+                    <em id="example3" style="color: #ffd700;">Bei 47 wäre das: 47 - 11 = 36</em></li>
+                <li id="step4">Suche dein <strong>Ergebnis in der Tabelle</strong> und präge dir das Symbol ein<br>
+                    <em id="example4" style="color: #ffd700;">Konzentriere dich ganz fest auf das Symbol!</em></li>
+            </ol>
+            
+            <div class="table-container">
+                <table id="symbol-table"></table>
+            </div>
+            
+            <div class="step-final">
+                <span id="final-text">Wenn du bereit bist, klicke hier für die Gedankenübertragung:</span><br>
+                <button class="reveal-button" id="reveal-btn" onclick="revealPrediction()">🔮 Gedanken lesen</button>
+            </div>
+        </div>
+        
+        <div id="prediction" class="prediction" style="display:none;">
+            <h3>Du denkst an dieses Symbol:</h3>
+            <div class="prediction-symbol" id="predicted-symbol"></div>
+        </div>
+        
+        <div id="explanation" class="explanation" style="display:none;">
+            <h3>Wie funktioniert der Trick?</h3>
+            <p>Der Trick basiert auf einer mathematischen Gesetzmäßigkeit:</p>
+            <ul>
+                <li>Eine zweistellige Zahl kann als 10a + b dargestellt werden (a und b sind die Ziffern)</li>
+                <li>Die Quersumme ist a + b</li>
+                <li>Die Differenz ist: (10a + b) - (a + b) = 9a</li>
+                <li>Das Ergebnis ist also immer ein Vielfaches von 9!</li>
+            </ul>
+            <p>In der Tabelle haben alle Vielfachen von 9 dasselbe Symbol. Klicke auf "Vielfache markieren" um es zu sehen:</p>
+            <button onclick="highlightMultiples()">Vielfache von 9 markieren</button>
+        </div>
+    </div>
+
+    <script>
+        // Verschiedene Symbol-Sets
+        const symbols = {
+            mystical: ['🔮', '⭐', '🌙', '💎', '🦄', '🌟', '✨', '🎭', '🎪', '🎨', '🎯', '🎲', '🍀', '🌈', '🦋', '🌺', '🍄', '🐲', '👑', '🔥'],
+            rational: ['😀', '😃', '😄', '😁', '😊', '🙂', '😉', '😎', '🥳', '😇', '🤓', '🧐', '😴', '😋', '🤔', '🤗', '🤭', '🤪', '😜', '🤯']
+        };
+        
+        let currentMode = 'mystical';
+        let magicSymbol = '';
+        
+        function generateTable() {
+            const table = document.getElementById('symbol-table');
+            table.innerHTML = '';
+            
+            // Wähle zufälliges Magic-Symbol für Vielfache von 9
+            magicSymbol = symbols[currentMode][Math.floor(Math.random() * symbols[currentMode].length)];
+            
+            // Erstelle 5x20 Tabelle (0-99)
+            for (let row = 0; row < 5; row++) {
+                const tr = document.createElement('tr');
+                
+                for (let col = 0; col < 20; col++) {
+                    const td = document.createElement('td');
+                    const number = row * 20 + col;
+                    
+                    // Nummer anzeigen
+                    const numberSpan = document.createElement('span');
+                    numberSpan.className = 'number';
+                    numberSpan.textContent = number;
+                    
+                    // Symbol anzeigen
+                    const symbolSpan = document.createElement('span');
+                    symbolSpan.className = 'symbol';
+                    
+                    // Vielfache von 9 bekommen das Magic-Symbol
+                    if (number % 9 === 0 && number > 0) {
+                        symbolSpan.textContent = magicSymbol;
+                        td.dataset.multiple = 'true';
+                    } else {
+                        // Zufälliges anderes Symbol
+                        let randomSymbol;
+                        do {
+                            randomSymbol = symbols[currentMode][Math.floor(Math.random() * symbols[currentMode].length)];
+                        } while (randomSymbol === magicSymbol);
+                        symbolSpan.textContent = randomSymbol;
+                        td.dataset.multiple = 'false';
+                    }
+                    
+                    td.appendChild(numberSpan);
+                    td.appendChild(symbolSpan);
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+        }
+        
+        function setMode(mode) {
+            currentMode = mode;
+            const body = document.body;
+            
+            // Button-Status aktualisieren
+            document.querySelectorAll('.mode-toggle button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + '-btn').classList.add('active');
+            
+            if (mode === 'mystical') {
+                body.className = 'mystical';
+                document.getElementById('title').innerHTML = '🔮 Der mystische Zahlentrick 🔮';
+                document.getElementById('instructions-title').textContent = 'So funktioniert die Magie:';
+                
+                // Mystische Texte
+                document.getElementById('step1').innerHTML = 'Denk dir eine <strong>zweistellige Zahl</strong> zwischen 10 und 99<br><em style="color: #ffd700;">Zum Beispiel: 47, 82 oder 35</em>';
+                document.getElementById('step2').innerHTML = 'Berechne die <strong>Quersumme</strong> deiner Zahl<br><em style="color: #ffd700;">Bei 47 wäre das: 4 + 7 = 11</em>';
+                document.getElementById('step3').innerHTML = 'Ziehe die Quersumme von deiner <strong>ursprünglichen Zahl</strong> ab<br><em style="color: #ffd700;">Bei 47 wäre das: 47 - 11 = 36</em>';
+                document.getElementById('step4').innerHTML = 'Suche dein <strong>Ergebnis in der Tabelle</strong> und präge dir das Symbol ein<br><em style="color: #ffd700;">Konzentriere dich ganz fest auf das Symbol!</em>';
+                document.getElementById('final-text').textContent = 'Wenn du bereit bist, klicke hier für die Gedankenübertragung:';
+                document.getElementById('reveal-btn').innerHTML = '🔮 Gedanken lesen';
+                
+                document.getElementById('explanation').style.display = 'none';
+            } else {
+                body.className = 'rational';
+                document.getElementById('title').innerHTML = '🧠 Mathematischer Zahlentrick 🧠';
+                document.getElementById('instructions-title').textContent = 'So funktioniert der Trick:';
+                
+                // Rationale Texte
+                document.getElementById('step1').innerHTML = 'Wähle eine <strong>zweistellige Zahl</strong> zwischen 10 und 99<br><em style="color: #87ceeb;">Beispiel: 73, 29 oder 56</em>';
+                document.getElementById('step2').innerHTML = 'Berechne die <strong>Quersumme</strong> (addiere beide Ziffern)<br><em style="color: #87ceeb;">Bei 73: 7 + 3 = 10</em>';
+                document.getElementById('step3').innerHTML = 'Subtrahiere die Quersumme von der <strong>ursprünglichen Zahl</strong><br><em style="color: #87ceeb;">Bei 73: 73 - 10 = 63</em>';
+                document.getElementById('step4').innerHTML = 'Finde dein <strong>Ergebnis in der Tabelle</strong> und merke dir das Symbol<br><em style="color: #87ceeb;">Das Ergebnis ist immer durch 9 teilbar!</em>';
+                document.getElementById('final-text').textContent = 'Bereit für die "Vorhersage"?';
+                document.getElementById('reveal-btn').innerHTML = '🤖 Symbol vorhersagen';
+                
+                document.getElementById('explanation').style.display = 'block';
+            }
+            
+            generateTable();
+            document.getElementById('prediction').style.display = 'none';
+        }
+        
+        function revealPrediction() {
+            const predictionDiv = document.getElementById('prediction');
+            const predictedSymbol = document.getElementById('predicted-symbol');
+            
+            predictedSymbol.textContent = magicSymbol;
+            predictionDiv.style.display = 'block';
+            
+            // Scroll zu Vorhersage
+            predictionDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function highlightMultiples() {
+            const cells = document.querySelectorAll('td[data-multiple="true"]');
+            cells.forEach(cell => {
+                cell.classList.add('highlight-multiples');
+            });
+            
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    cell.classList.remove('highlight-multiples');
+                });
+            }, 3000);
+        }
+        
+        // Initial setup
+        generateTable();
+    </script>
+</body>
+</html>
