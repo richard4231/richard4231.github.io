@@ -1,3 +1,7 @@
+// Noch verbessern:
+// Die Skala bei der y Achse so anpassen, dass sie stimmen. Wert 10 sollte gleich hoch sein wie der 10. Punkt bei den gestapelten Punkten, und der Wert 4 sollte gleich hoch sein wie die vierte Packung Mandarinen für AnzahlPackungen < 51.
+// Die Normalverteilungskurve sollte auch bei Faktor 100 angezeigt werden. (oder auf fix wechseln).
+
 // Globale Einstellungen und Variablen
 let canvasWidth = 800;
 let canvasHeight = 600;
