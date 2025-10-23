@@ -1,11 +1,12 @@
 // Globale Einstellungen und Variablen
 let canvasWidth = 800;
 let canvasHeight = 600;
-let margin = 60;  // Rand für Achsenbeschriftung
+let margin = 70;  // Rand für Achsenbeschriftung (vergrößert für Y-Achse)
 
 // Statistische Parameter (im Code anpassbar)
 let mittelwert = 1010;  // in Gramm
 let standardabweichung = 5;  // in Gramm (wird über Schieberegler gesteuert)
+let maxAnzahl = 5000;  // Maximale Anzahl Packungen
 
 // Histogramm-Parameter
 let binSize = 2;  // Intervallgröße in Gramm (im Code anpassbar: 0.5 bis 10g)
@@ -39,6 +40,9 @@ let showStats = false;
 let median = 0;
 let berechneteMittelwert = 0;
 let fixedCurveHeight = false;  // Toggle für fixe Kurvenhöhe
+let showStdDev = false;  // Toggle für Standardabweichungs-Linien
+let multiplikator = 1;  // Faktor für "sehr viele Packungen"
+let multiplikatorAktiv = false;
 
 // Hover-Tracking
 let hoveredBin = null;
@@ -128,7 +132,7 @@ async function setup() {
   anzahlLabel.style('margin', '0 0 5px 0');
   anzahlLabel.style('font-weight', 'bold');
   
-  anzahlSlider = createSlider(1, 5000, 1, 1);
+  anzahlSlider = createSlider(1, maxAnzahl, 1, 1);
   anzahlSlider.parent(controlPanel);
   anzahlSlider.style('width', '100%');
   anzahlSlider.style('margin-bottom', '15px');
@@ -165,6 +169,16 @@ async function setup() {
   showStatsCheckbox.style('display', 'block');
   showStatsCheckbox.changed(updateStats);
   
+  // Checkbox für Standardabweichung
+  let showStdDevCheckbox = createCheckbox('Standardabweichung anzeigen', showStdDev);
+  showStdDevCheckbox.parent(controlPanel);
+  showStdDevCheckbox.style('margin-bottom', '15px');
+  showStdDevCheckbox.style('display', 'block');
+  showStdDevCheckbox.changed(() => {
+    showStdDev = showStdDevCheckbox.checked();
+    drawVisualization();
+  });
+  
   // Checkbox für fixe Kurvenhöhe
   let fixedCurveCheckbox = createCheckbox('Fixe Kurvenhöhe', fixedCurveHeight);
   fixedCurveCheckbox.parent(controlPanel);
@@ -172,6 +186,18 @@ async function setup() {
   fixedCurveCheckbox.style('display', 'block');
   fixedCurveCheckbox.changed(() => {
     fixedCurveHeight = fixedCurveCheckbox.checked();
+    drawVisualization();
+  });
+  
+  // Checkbox für viele Packungen (Multiplikator)
+  let multiplikatorCheckbox = createCheckbox('Sehr viele Packungen (×100)', multiplikatorAktiv);
+  multiplikatorCheckbox.parent(controlPanel);
+  multiplikatorCheckbox.style('margin-bottom', '15px');
+  multiplikatorCheckbox.style('display', 'block');
+  multiplikatorCheckbox.changed(() => {
+    multiplikatorAktiv = multiplikatorCheckbox.checked();
+    multiplikator = multiplikatorAktiv ? 100 : 1;
+    generatePackungen();
     drawVisualization();
   });
   
@@ -254,7 +280,9 @@ function updateStats() {
  */
 function generatePackungen() {
   packungen = [];
-  for (let i = 0; i < anzahlPackungen; i++) {
+  let effektiveAnzahl = anzahlPackungen * multiplikator;
+  
+  for (let i = 0; i < effektiveAnzahl; i++) {
     let gewicht = gaussianRandom(mittelwert, standardabweichung);
     packungen.push(gewicht);
   }
@@ -281,9 +309,11 @@ function generatePackungen() {
 function updateLegende() {
   let legendeElement = document.getElementById('legendeText');
   if (legendeElement) {
-    if (anzahlPackungen <= wechsel_punkt) {
+    let effektiveAnzahl = anzahlPackungen * multiplikator;
+    
+    if (effektiveAnzahl <= wechsel_punkt) {
       legendeElement.innerHTML = '🔷 = 1 Packung<br>(mit Gewicht in g)';
-    } else if (anzahlPackungen < wechsel_balken) {
+    } else if (effektiveAnzahl < wechsel_balken) {
       legendeElement.innerHTML = '🟠 = 1 Packung';
     } else {
       legendeElement.innerHTML = 'Säule = Anzahl Packungen<br>Breite = Intervallgröße';
@@ -338,6 +368,17 @@ function drawVisualization() {
  */
 function drawCoordinateSystem(pg) {
   pg.push();
+  
+  // Titel
+  if (font_polo) {
+    pg.textFont(font_polo);
+  }
+  pg.fill(0);
+  pg.noStroke();
+  pg.textSize(20);
+  pg.textAlign(CENTER, TOP);
+  pg.text("3R6 Standardabweichung erkunden", canvasWidth / 2, 10);
+  
   pg.stroke(100);
   pg.strokeWeight(2);
   
@@ -466,6 +507,54 @@ function drawNormalCurve(pg) {
     pg.text('Mittelwert: ' + nf(berechneteMittelwert, 1, 1) + 'g', xMittelwert, margin - 20);
   }
   
+  // Standardabweichungs-Linien zeichnen (wenn aktiviert)
+  if (showStdDev) {
+    let xMittel = map(mittelwert, minMasse, maxMasse, margin, canvasWidth - margin);
+    
+    // 1. Standardabweichung (±σ) - gut sichtbar
+    pg.stroke(100, 100, 200, 180);
+    pg.strokeWeight(2);
+    pg.drawingContext.setLineDash([8, 4]);
+    let x1Sigma_plus = map(mittelwert + standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    let x1Sigma_minus = map(mittelwert - standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    pg.line(x1Sigma_plus, canvasHeight - margin, x1Sigma_plus, margin);
+    pg.line(x1Sigma_minus, canvasHeight - margin, x1Sigma_minus, margin);
+    
+    // 2. Standardabweichung (±2σ) - dezenter
+    pg.stroke(100, 100, 200, 120);
+    pg.strokeWeight(1.5);
+    pg.drawingContext.setLineDash([6, 6]);
+    let x2Sigma_plus = map(mittelwert + 2 * standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    let x2Sigma_minus = map(mittelwert - 2 * standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    pg.line(x2Sigma_plus, canvasHeight - margin, x2Sigma_plus, margin);
+    pg.line(x2Sigma_minus, canvasHeight - margin, x2Sigma_minus, margin);
+    
+    // 3. Standardabweichung (±3σ) - noch dezenter
+    pg.stroke(100, 100, 200, 80);
+    pg.strokeWeight(1);
+    pg.drawingContext.setLineDash([4, 8]);
+    let x3Sigma_plus = map(mittelwert + 3 * standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    let x3Sigma_minus = map(mittelwert - 3 * standardabweichung, minMasse, maxMasse, margin, canvasWidth - margin);
+    pg.line(x3Sigma_plus, canvasHeight - margin, x3Sigma_plus, margin);
+    pg.line(x3Sigma_minus, canvasHeight - margin, x3Sigma_minus, margin);
+    
+    pg.drawingContext.setLineDash([]);
+    
+    // Beschriftungen für Standardabweichungen
+    pg.noStroke();
+    pg.textSize(10);
+    pg.textAlign(CENTER, BOTTOM);
+    pg.fill(100, 100, 200, 180);
+    pg.text('±σ', x1Sigma_plus, margin - 35);
+    pg.text('±σ', x1Sigma_minus, margin - 35);
+    pg.fill(100, 100, 200, 120);
+    pg.text('±2σ', x2Sigma_plus, margin - 48);
+    pg.text('±2σ', x2Sigma_minus, margin - 48);
+    pg.fill(100, 100, 200, 80);
+    pg.text('±3σ', x3Sigma_plus, margin - 60);
+    pg.text('±3σ', x3Sigma_minus, margin - 60);
+  }
+  
   pg.pop();
 }
 
@@ -473,9 +562,11 @@ function drawNormalCurve(pg) {
  * Zeichnet das Histogramm je nach Anzahl der Packungen
  */
 function drawHistogram(pg, histogram) {
-  if (anzahlPackungen <= 10) {
+  let effektiveAnzahl = anzahlPackungen * multiplikator;
+  
+  if (effektiveAnzahl <= wechsel_punkt) {
     drawPackungenMode(pg, histogram);
-  } else if (anzahlPackungen < 1000) {
+  } else if (effektiveAnzahl < wechsel_balken) {
     drawPunkteMode(pg, histogram);
   } else {
     drawLinienMode(pg, histogram);
@@ -593,8 +684,8 @@ function draw() {
     image(backgroundLayer, 0, 0);
   }
   
-  // Hover-Anzeige
-  if (hoveredBin !== null && hoveredCount > 0) {
+  // Hover-Anzeige (auch für 0)
+  if (hoveredBin !== null) {
     push();
     fill(0, 150);
     noStroke();
@@ -654,9 +745,57 @@ function mouseMoved() {
   }
   
   // Wenn ein Bin gefunden wurde und es nah genug ist
-  if (closestKey !== null && minDist < intervallGroesse * 1.5) {
-    hoveredBin = closestKey;
-    hoveredCount = currentHistogram[closestKey];
+  if (closestKey !== null && minDist < intervallGroesse * 0.6) {
+    let binMasse = parseFloat(closestKey);
+    let binCount = currentHistogram[closestKey];
+    let binX = map(binMasse, minMasse, maxMasse, margin, canvasWidth - margin);
+    
+    // Berechne die Breite des Bins in Pixeln
+    let effektiveAnzahl = anzahlPackungen * multiplikator;
+    let binWidth;
+    
+    if (effektiveAnzahl <= wechsel_punkt) {
+      binWidth = 40; // Packungen-Breite
+    } else if (effektiveAnzahl < wechsel_balken) {
+      binWidth = 10; // Punkt-Bereich (etwas großzügiger)
+    } else {
+      binWidth = (canvasWidth - 2 * margin) / (maxMasse - minMasse) * intervallGroesse;
+    }
+    
+    // Prüfe, ob Maus horizontal innerhalb des Bins ist
+    if (abs(mouseX - binX) <= binWidth / 2) {
+      // Prüfe, ob Maus vertikal innerhalb der Säule/Stapel ist
+      let barHeight;
+      if (binCount > 0) {
+        if (effektiveAnzahl <= wechsel_punkt) {
+          // Packungen-Modus
+          let packungHoehe = Math.max(10, Math.min(30, (canvasHeight - 2 * margin) / (maxHoehe + 2)));
+          barHeight = binCount * packungHoehe;
+        } else if (effektiveAnzahl < wechsel_balken) {
+          // Punkt-Modus
+          let basePunktGroesse = 10;
+          let punktGroesse = Math.max(3, Math.min(basePunktGroesse, (canvasHeight - 2 * margin) / (maxHoehe * 1.5)));
+          let punktAbstand = punktGroesse + 1;
+          barHeight = binCount * punktAbstand;
+        } else {
+          // Säulen-Modus
+          let verfuegbareHoehe = canvasHeight - 2 * margin;
+          barHeight = map(binCount, 0, maxHoehe, 0, verfuegbareHoehe);
+        }
+        
+        let topY = canvasHeight - margin - barHeight;
+        
+        // Maus muss zwischen topY und canvasHeight - margin sein
+        if (mouseY >= topY && mouseY <= canvasHeight - margin) {
+          hoveredBin = closestKey;
+          hoveredCount = binCount;
+        }
+      } else {
+        // Auch 0 anzeigen, wenn horizontal im Bin
+        hoveredBin = closestKey;
+        hoveredCount = 0;
+      }
+    }
   }
   
   return false; // Verhindert Standard-Verhalten
