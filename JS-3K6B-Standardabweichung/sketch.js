@@ -1,18 +1,14 @@
-// Noch verbessern:
-// Die Skala bei der y Achse so anpassen, dass sie stimmen. Wert 10 sollte gleich hoch sein wie der 10. Punkt bei den gestapelten Punkten, und der Wert 4 sollte gleich hoch sein wie die vierte Packung Mandarinen für AnzahlPackungen < 51.
-// Die Normalverteilungskurve sollte auch bei Faktor 100 angezeigt werden. (oder auf fix wechseln).
-
 // Globale Einstellungen und Variablen
 let canvasWidth = 800;
 let canvasHeight = 600;
-let margin = 70;  // Rand für Achsenbeschriftung (vergrößert für Y-Achse)
+let margin = 70;  // Rand für Achsenbeschriftung (vergrössert für Y-Achse)
 
 // Statistische Parameter (im Code anpassbar)
 let mittelwert = 1010;  // in Gramm
 let standardabweichung = 5;  // in Gramm (wird über Schieberegler gesteuert)
 
 // Histogramm-Parameter
-let binSize = 2;  // Intervallgröße in Gramm (im Code anpassbar: 0.5 bis 10g)
+let binSize = 2;  // Intervallgrösse in Gramm (im Code anpassbar: 0.5 bis 10g)
 let intervallGroesse = binSize; // wird über Schieberegler gesteuert
 
 // Parameter Übergänge
@@ -106,7 +102,7 @@ function gaussianRandom(mean, stdDev) {
 }
 
 /**
- * Berechnet eine sinnvolle Schrittgröße für die Y-Achse
+ * Berechnet eine sinnvolle Schrittgrösse für die Y-Achse
  */
 function getNiceStep(maxValue) {
   if (maxValue <= 0) return 1;
@@ -187,8 +183,8 @@ async function setup() {
   stdabwSlider.style('margin-bottom', '15px');
   stdabwSlider.input(updateStdAbw);
   
-  // Intervallgröße Slider
-  let intervallLabel = createP('Intervallgröße: <span id="intervallValue">2</span> g');
+  // Intervallgrösse Slider
+  let intervallLabel = createP('Intervallgrösse: <span id="intervallValue">2</span> g');
   intervallLabel.parent(controlPanel);
   intervallLabel.style('margin', '0 0 5px 0');
   intervallLabel.style('font-weight', 'bold');
@@ -213,16 +209,6 @@ async function setup() {
   showStdDevCheckbox.style('display', 'block');
   showStdDevCheckbox.changed(() => {
     showStdDev = showStdDevCheckbox.checked();
-    drawVisualization();
-  });
-  
-  // Checkbox für fixe Kurvenhöhe
-  let fixedCurveCheckbox = createCheckbox('Fixe Kurvenhöhe', fixedCurveHeight);
-  fixedCurveCheckbox.parent(controlPanel);
-  fixedCurveCheckbox.style('margin-bottom', '15px');
-  fixedCurveCheckbox.style('display', 'block');
-  fixedCurveCheckbox.changed(() => {
-    fixedCurveHeight = fixedCurveCheckbox.checked();
     drawVisualization();
   });
   
@@ -251,6 +237,16 @@ async function setup() {
     drawVisualization();
   });
   
+  // Checkbox für fixe Kurvenhöhe
+  let fixedCurveCheckbox = createCheckbox('Fixe Kurvenhöhe', fixedCurveHeight);
+  fixedCurveCheckbox.parent(controlPanel);
+  fixedCurveCheckbox.style('margin-bottom', '15px');
+  fixedCurveCheckbox.style('display', 'block');
+  fixedCurveCheckbox.changed(() => {
+    fixedCurveHeight = fixedCurveCheckbox.checked();
+    drawVisualization();
+  });
+  
   // Legende
   let legendeDiv = createDiv();
   legendeDiv.parent(controlPanel);
@@ -266,7 +262,7 @@ async function setup() {
   legendeText.style('color', '#666');
   
   // Info-Text
-  infoText = createP(`Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgröße: ${intervallGroesse} g`);
+  infoText = createP(`Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgrösse: ${intervallGroesse} g`);
   infoText.parent(controlPanel);
   infoText.id('infoText');
   infoText.style('margin', '10px 0 0 0');
@@ -306,13 +302,13 @@ function updateStdAbw() {
 }
 
 /**
- * Aktualisiert die Intervallgröße
+ * Aktualisiert die Intervallgrösse
  */
 function updateIntervall() {
   intervallGroesse = intervallSlider.value();
   binSize = intervallGroesse; // Für Kompatibilität
   document.getElementById('intervallValue').textContent = nf(intervallGroesse, 1, 1);
-  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgröße: ${nf(intervallGroesse, 1, 1)} g`;
+  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgrösse: ${nf(intervallGroesse, 1, 1)} g`;
   // Nur Visualisierung neu zeichnen, nicht die Zufallsverteilung neu generieren
   drawVisualization();
 }
@@ -374,7 +370,7 @@ function updateLegende() {
     } else if (effektiveAnzahl < wechsel_balken) {
       legendeElement.innerHTML = '🟠 = 1 Packung';
     } else {
-      legendeElement.innerHTML = 'Säule = Anzahl Packungen<br>Breite = Intervallgröße';
+      legendeElement.innerHTML = 'Säule = Anzahl Packungen<br>Breite = Intervallgrösse';
     }
   }
 }
@@ -482,8 +478,36 @@ function drawCoordinateSystem(pg) {
     stepY = getNiceStep(maxHoehe);
   }
   
+  // Ermittle den aktuellen Darstellungsmodus
+  let effektiveAnzahl = anzahlPackungen * multiplikator;
+  
   for (let anzahl = 0; anzahl <= maxHoehe; anzahl += stepY) {
-    let y = map(anzahl, 0, maxHoehe, canvasHeight - margin, margin);
+    let y;
+    
+    if (effektiveAnzahl <= wechsel_punkt) {
+      // Packungen-Modus: Beschriftung zeigt auf die Mitte der n-ten Packung
+      if (anzahl === 0) {
+        y = canvasHeight - margin;
+      } else {
+        // Berechne packungHoehe wie in drawPackungenMode
+        let verfuegbareHoehe = canvasHeight - 2 * margin;
+        let basePackungHoehe = 30;
+        let packungHoehe = Math.max(10, Math.min(basePackungHoehe, verfuegbareHoehe / (maxHoehe + 2)));
+        // Die n-te Packung (n=anzahl, n startet bei 1) hat Index i=n-1, Mitte bei:
+        y = canvasHeight - margin - (anzahl - 0.5) * packungHoehe;
+      }
+    } else if (effektiveAnzahl < wechsel_balken) {
+      // Punkt-Modus: Beschriftung zeigt auf die Mitte des n-ten Punktes
+      if (anzahl === 0) {
+        y = canvasHeight - margin;
+      } else {
+        y = map(anzahl - 0.5, 0, maxHoehe, canvasHeight - margin, margin);
+      }
+    } else {
+      // Säulen-Modus: normale kontinuierliche Skalierung
+      y = map(anzahl, 0, maxHoehe, canvasHeight - margin, margin);
+    }
+    
     pg.text(Math.round(anzahl), margin - 10, y);
     pg.stroke(200);
     pg.strokeWeight(1);
@@ -622,15 +646,15 @@ function drawBoxplot(pg) {
   
   pg.push();
   
-  // Sortierte Daten für Ausreißer
+  // Sortierte Daten für Ausreisser
   let sortiert = [...packungen].sort((a, b) => a - b);
   
-  // Whiskers (min/max ohne Ausreißer)
+  // Whiskers (min/max ohne Ausreisser)
   let iqr = quartile3 - quartile1;
   let lowerWhisker = quartile1 - 1.5 * iqr;
   let upperWhisker = quartile3 + 1.5 * iqr;
   
-  // Finde tatsächliche Whisker-Werte (kleinster/größter Wert innerhalb der Grenzen)
+  // Finde tatsächliche Whisker-Werte (kleinster/grösster Wert innerhalb der Grenzen)
   let minWhisker = sortiert.find(x => x >= lowerWhisker) || sortiert[0];
   let maxWhisker = sortiert.reverse().find(x => x <= upperWhisker) || sortiert[sortiert.length - 1];
   sortiert.reverse(); // Zurück zur aufsteigenden Sortierung
@@ -710,11 +734,11 @@ function drawHistogram(pg, histogram) {
 function drawPackungenMode(pg, histogram) {
   pg.push();
   
-  let packungBreite = 40;  // Größere Breite
+  let packungBreite = 40;  // Grössere Breite
   let verfuegbareHoehe = canvasHeight - 2 * margin;
   
-  // Adaptive Höhe: Bei wenigen Packungen groß, bei vielen kleiner
-  let basePackungHoehe = 30;  // Größere Basishöhe
+  // Adaptive Höhe: Bei wenigen Packungen gross, bei vielen kleiner
+  let basePackungHoehe = 30;  // Grössere Basishöhe
   let packungHoehe = Math.max(10, Math.min(basePackungHoehe, verfuegbareHoehe / (maxHoehe + 2)));
   
   for (let key in histogram) {
@@ -733,7 +757,7 @@ function drawPackungenMode(pg, histogram) {
       }
     }
     
-    // Stapel von unten nach oben
+    // Stapel von unten nach oben (wie im Original)
     for (let i = 0; i < anzahl && i < binPackungen.length; i++) {
       let yPos = canvasHeight - margin - (i + 1) * packungHoehe;
       
@@ -762,8 +786,8 @@ function drawPunkteMode(pg, histogram) {
   
   let verfuegbareHoehe = canvasHeight - 2 * margin;
   
-  // Adaptive Punktgröße: Bei wenigen Packungen groß, bei vielen kleiner
-  let basePunktGroesse = 10;  // Größere Basispunktgröße
+  // Adaptive Punktgrösse: Bei wenigen Packungen gross, bei vielen kleiner
+  let basePunktGroesse = 10;  // Grössere Basispunktgrösse
   // Reduzierter Faktor von 1.5 auf 1.2 für glatterer Übergang zu Säulen
   let punktGroesse = Math.max(3, Math.min(basePunktGroesse, verfuegbareHoehe / (maxHoehe * 1.2)));
   
@@ -794,8 +818,8 @@ function drawLinienMode(pg, histogram) {
   
   let verfuegbareHoehe = canvasHeight - 2 * margin;
   
-  // Berechne Säulenbreite basierend auf der tatsächlichen Intervallgröße
-  // Die Breite in Pixeln entspricht der Intervallgröße auf der Masse-Skala
+  // Berechne Säulenbreite basierend auf der tatsächlichen Intervallgrösse
+  // Die Breite in Pixeln entspricht der Intervallgrösse auf der Masse-Skala
   let saulenBreite = (canvasWidth - 2 * margin) / (maxMasse - minMasse) * intervallGroesse;
   
   for (let key in histogram) {
@@ -831,16 +855,30 @@ function draw() {
     textAlign(LEFT, TOP);
     textSize(14);
     
-    // Tooltip-Hintergrund
-    let tooltipText = `Anzahl: ${hoveredCount}`;
-    let textW = textWidth(tooltipText) + 10;
-    let textH = 25;
+    // Berechne Intervallgrenzen
+    let binMasse = parseFloat(hoveredBin);
+    let untereGrenze = binMasse - intervallGroesse / 2;
+    let obereGrenze = binMasse + intervallGroesse / 2;
+    
+    // Tooltip-Text mit Intervall
+    let tooltipText = `Anzahl: ${hoveredCount}\n${nf(untereGrenze, 1, 1)}g ≤ Gewicht < ${nf(obereGrenze, 1, 1)}g`;
+    
+    // Berechne Textbreite und -höhe für mehrzeiligen Text
+    let lines = tooltipText.split('\n');
+    let maxWidth = 0;
+    for (let line of lines) {
+      maxWidth = max(maxWidth, textWidth(line));
+    }
+    let textW = maxWidth + 10;
+    let textH = lines.length * 18 + 8; // 18px pro Zeile + Padding
+    
     let tooltipX = mouseX + 15;
     let tooltipY = mouseY - 30;
     
     // Verhindere, dass Tooltip aus dem Canvas läuft
     if (tooltipX + textW > canvasWidth) tooltipX = mouseX - textW - 15;
     if (tooltipY < 0) tooltipY = mouseY + 15;
+    if (tooltipY + textH > canvasHeight) tooltipY = canvasHeight - textH;
     
     fill(255, 240);
     stroke(100);
@@ -849,7 +887,10 @@ function draw() {
     
     fill(0);
     noStroke();
-    text(tooltipText, tooltipX + 5, tooltipY + 5);
+    // Zeichne jede Zeile separat
+    for (let i = 0; i < lines.length; i++) {
+      text(lines[i], tooltipX + 5, tooltipY + 5 + i * 18);
+    }
     pop();
   }
 }
@@ -896,7 +937,7 @@ function mouseMoved() {
     if (effektiveAnzahl <= wechsel_punkt) {
       binWidth = 40; // Packungen-Breite
     } else if (effektiveAnzahl < wechsel_balken) {
-      binWidth = 10; // Punkt-Bereich (etwas großzügiger)
+      binWidth = 10; // Punkt-Bereich (etwas grosszügiger)
     } else {
       binWidth = (canvasWidth - 2 * margin) / (maxMasse - minMasse) * intervallGroesse;
     }
@@ -907,12 +948,13 @@ function mouseMoved() {
       let barHeight;
       if (binCount > 0) {
         if (effektiveAnzahl <= wechsel_punkt) {
-          // Packungen-Modus
-          let packungHoehe = Math.max(10, Math.min(30, (canvasHeight - 2 * margin) / (maxHoehe + 2)));
+          // Packungen-Modus - berechne Höhe wie in drawPackungenMode
+          let verfuegbareHoehe = canvasHeight - 2 * margin;
+          let basePackungHoehe = 30;
+          let packungHoehe = Math.max(10, Math.min(basePackungHoehe, verfuegbareHoehe / (maxHoehe + 2)));
           barHeight = binCount * packungHoehe;
         } else if (effektiveAnzahl < wechsel_balken) {
           // Punkt-Modus - mit map() Skalierung
-          let verfuegbareHoehe = canvasHeight - 2 * margin;
           // Berechne die Position des obersten Punktes
           let topY = map(binCount - 0.5, 0, maxHoehe, canvasHeight - margin, margin);
           barHeight = canvasHeight - margin - topY;
