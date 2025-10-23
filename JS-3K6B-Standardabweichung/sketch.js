@@ -20,6 +20,30 @@ let anzahlPackungen = 1;
 let packungen = [];  // Array mit Gewichten
 let maxAnzahl = 5000;  // Maximale Anzahl Packungen (im Code änderbar)
 
+// Slider-Skalierung: 1-100 (erstes Drittel), 101-1000 (zweites Drittel), 1001-5000 (drittes Drittel)
+function sliderToPackungen(sliderValue) {
+  if (sliderValue <= 33.33) {
+    // Erstes Drittel: 1-100
+    return Math.round(1 + (sliderValue / 33.33) * 99);
+  } else if (sliderValue <= 66.67) {
+    // Zweites Drittel: 101-1000
+    return Math.round(101 + ((sliderValue - 33.33) / 33.34) * 899);
+  } else {
+    // Drittes Drittel: 1001-5000
+    return Math.round(1001 + ((sliderValue - 66.67) / 33.33) * 3999);
+  }
+}
+
+function packungenToSlider(anzahl) {
+  if (anzahl <= 100) {
+    return (anzahl - 1) / 99 * 33.33;
+  } else if (anzahl <= 1000) {
+    return 33.33 + ((anzahl - 101) / 899) * 33.34;
+  } else {
+    return 66.67 + ((anzahl - 1001) / 3999) * 33.33;
+  }
+}
+
 // Visualisierung
 let minMasse = 990;
 let maxMasse = 1030;
@@ -39,7 +63,7 @@ let infoText;
 let showStats = false;
 let median = 0;
 let berechneteMittelwert = 0;
-let fixedCurveHeight = false;  // Toggle für fixe Kurvenhöhe
+let fixedCurveHeight = true;  // Toggle für fixe Kurvenhöhe
 let showStdDev = false;  // Toggle für Standardabweichungs-Linien
 let multiplikator = 1;  // Faktor für "sehr viele Packungen"
 let multiplikatorAktiv = false;
@@ -47,6 +71,14 @@ let multiplikatorAktiv = false;
 // Hover-Tracking
 let hoveredBin = null;
 let hoveredCount = 0;
+
+// Boxplot
+let showBoxplot = false;
+let boxplotY = 0; // Y-Position des Boxplots (relativ zum Canvas)
+let draggingBoxplot = false;
+let boxplotHeight = 30; // Höhe des Boxplot-Bereichs
+let quartile1 = 0;
+let quartile3 = 0;
 
 // Farben (wie im Original)
 let color1 = [238, 172, 136, 200]; // Orange für Packungen
@@ -127,13 +159,13 @@ async function setup() {
   controlPanel.style('z-index', '1000');
   controlPanel.style('min-width', '280px');
   
-  // Anzahl Packungen Slider
+  // Anzahl Packungen Slider (nicht-linear skaliert)
   let anzahlLabel = createP('Anzahl Packungen: <span id="anzahlValue">1</span>');
   anzahlLabel.parent(controlPanel);
   anzahlLabel.style('margin', '0 0 5px 0');
   anzahlLabel.style('font-weight', 'bold');
   
-  anzahlSlider = createSlider(1, maxAnzahl, 1, 1);
+  anzahlSlider = createSlider(0, 100, 0, 0.1);
   anzahlSlider.parent(controlPanel);
   anzahlSlider.style('width', '100%');
   anzahlSlider.style('margin-bottom', '15px');
@@ -190,6 +222,19 @@ async function setup() {
     drawVisualization();
   });
   
+  // Checkbox für Boxplot
+  let boxplotCheckbox = createCheckbox('Boxplot anzeigen', showBoxplot);
+  boxplotCheckbox.parent(controlPanel);
+  boxplotCheckbox.style('margin-bottom', '15px');
+  boxplotCheckbox.style('display', 'block');
+  boxplotCheckbox.changed(() => {
+    showBoxplot = boxplotCheckbox.checked();
+    drawVisualization();
+  });
+  
+  // Initialisiere Boxplot-Position (in der Mitte des Diagramms)
+  boxplotY = canvasHeight / 2;
+  
   // Checkbox für viele Packungen (Multiplikator)
   let multiplikatorCheckbox = createCheckbox('Sehr viele Packungen (×100)', multiplikatorAktiv);
   multiplikatorCheckbox.parent(controlPanel);
@@ -240,7 +285,7 @@ async function setup() {
  * Aktualisiert die Anzahl der Packungen
  */
 function updateAnzahl() {
-  anzahlPackungen = int(anzahlSlider.value());
+  anzahlPackungen = sliderToPackungen(anzahlSlider.value());
   document.getElementById('anzahlValue').textContent = anzahlPackungen;
   generatePackungen();
   drawVisualization();
@@ -288,17 +333,25 @@ function generatePackungen() {
     packungen.push(gewicht);
   }
   
+  // Sortiere für Median und Quartile
+  let sortiert = [...packungen].sort((a, b) => a - b);
+  
   // Mittelwert berechnen
   let summe = packungen.reduce((a, b) => a + b, 0);
   berechneteMittelwert = summe / packungen.length;
   
   // Median berechnen
-  let sortiert = [...packungen].sort((a, b) => a - b);
   if (sortiert.length % 2 === 0) {
     median = (sortiert[sortiert.length / 2 - 1] + sortiert[sortiert.length / 2]) / 2;
   } else {
     median = sortiert[Math.floor(sortiert.length / 2)];
   }
+  
+  // Quartile berechnen
+  let q1Index = Math.floor(sortiert.length / 4);
+  let q3Index = Math.floor(sortiert.length * 3 / 4);
+  quartile1 = sortiert[q1Index];
+  quartile3 = sortiert[q3Index];
   
   // Legende aktualisieren
   updateLegende();
@@ -364,6 +417,9 @@ function drawVisualization() {
   
   // Histogramm/Packungen zeichnen
   drawHistogram(backgroundLayer, currentHistogram);
+  
+  // Boxplot zeichnen (falls aktiviert)
+  drawBoxplot(backgroundLayer);
 }
 
 /**
@@ -413,11 +469,18 @@ function drawCoordinateSystem(pg) {
   // Y-Achse Beschriftung (Anzahl)
   pg.noStroke();
   pg.textAlign(RIGHT, CENTER);
-  let stepY = getNiceStep(maxHoehe);
+  
+  // Spezialbehandlung für kleine Anzahlen (<=50): Stelle sicher, dass Schritte ganzzahlig sind
+  let stepY;
+  if (maxHoehe <= 50) {
+    stepY = Math.max(1, Math.floor(getNiceStep(maxHoehe)));
+  } else {
+    stepY = getNiceStep(maxHoehe);
+  }
   
   for (let anzahl = 0; anzahl <= maxHoehe; anzahl += stepY) {
     let y = map(anzahl, 0, maxHoehe, canvasHeight - margin, margin);
-    pg.text(anzahl, margin - 10, y);
+    pg.text(Math.round(anzahl), margin - 10, y);
     pg.stroke(200);
     pg.strokeWeight(1);
     pg.line(margin, y, margin + 5, y);
@@ -543,6 +606,81 @@ function drawNormalCurve(pg) {
     
     pg.drawingContext.setLineDash([]);
   }
+  
+  pg.pop();
+}
+
+/**
+ * Zeichnet einen horizontalen Boxplot
+ */
+function drawBoxplot(pg) {
+  if (!showBoxplot || packungen.length === 0) return;
+  
+  pg.push();
+  
+  // Sortierte Daten für Ausreißer
+  let sortiert = [...packungen].sort((a, b) => a - b);
+  
+  // Whiskers (min/max ohne Ausreißer)
+  let iqr = quartile3 - quartile1;
+  let lowerWhisker = quartile1 - 1.5 * iqr;
+  let upperWhisker = quartile3 + 1.5 * iqr;
+  
+  // Finde tatsächliche Whisker-Werte (kleinster/größter Wert innerhalb der Grenzen)
+  let minWhisker = sortiert.find(x => x >= lowerWhisker) || sortiert[0];
+  let maxWhisker = sortiert.reverse().find(x => x <= upperWhisker) || sortiert[sortiert.length - 1];
+  sortiert.reverse(); // Zurück zur aufsteigenden Sortierung
+  
+  // X-Positionen berechnen
+  let xQ1 = map(quartile1, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xMedian = map(median, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xQ3 = map(quartile3, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xMin = map(minWhisker, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xMax = map(maxWhisker, minMasse, maxMasse, margin, canvasWidth - margin);
+  
+  // Y-Position (verschiebbar)
+  let y = boxplotY;
+  let boxHeight = boxplotHeight;
+  
+  // Hintergrund für bessere Sichtbarkeit
+  pg.fill(255, 255, 255, 200);
+  pg.stroke(100);
+  pg.strokeWeight(1);
+  pg.rect(margin, y - boxHeight/2, canvasWidth - 2*margin, boxHeight, 5);
+  
+  // Whiskers (Linien)
+  pg.stroke(80);
+  pg.strokeWeight(2);
+  pg.line(xMin, y, xQ1, y);
+  pg.line(xQ3, y, xMax, y);
+  
+  // Whisker-Enden
+  pg.line(xMin, y - boxHeight/4, xMin, y + boxHeight/4);
+  pg.line(xMax, y - boxHeight/4, xMax, y + boxHeight/4);
+  
+  // Box (Q1 bis Q3)
+  pg.fill(97, 167, 211, 150);
+  pg.stroke(50);
+  pg.strokeWeight(2);
+  pg.rect(xQ1, y - boxHeight/2, xQ3 - xQ1, boxHeight, 3);
+  
+  // Median-Linie
+  pg.stroke(217, 67, 104, 255);
+  pg.strokeWeight(3);
+  pg.line(xMedian, y - boxHeight/2, xMedian, y + boxHeight/2);
+  
+  // Mittelwert als Punkt
+  let xMittel = map(berechneteMittelwert, minMasse, maxMasse, margin, canvasWidth - margin);
+  pg.fill(174, 190, 56, 255);
+  pg.noStroke();
+  pg.circle(xMittel, y, 8);
+  
+  // Beschriftung "Boxplot" links
+  pg.fill(80);
+  pg.noStroke();
+  pg.textAlign(RIGHT, CENTER);
+  pg.textSize(12);
+  pg.text('Boxplot', margin - 10, y);
   
   pg.pop();
 }
@@ -796,4 +934,35 @@ function mouseMoved() {
   }
   
   return false; // Verhindert Standard-Verhalten
+}
+
+/**
+ * mousePressed(): Startet das Verschieben des Boxplots
+ */
+function mousePressed() {
+  if (!showBoxplot) return;
+  
+  // Prüfe, ob auf den Boxplot geklickt wurde
+  if (mouseX >= margin && mouseX <= canvasWidth - margin &&
+      mouseY >= boxplotY - boxplotHeight/2 && mouseY <= boxplotY + boxplotHeight/2) {
+    draggingBoxplot = true;
+  }
+}
+
+/**
+ * mouseDragged(): Verschiebt den Boxplot
+ */
+function mouseDragged() {
+  if (draggingBoxplot) {
+    // Beschränke Y-Position auf den Diagrammbereich
+    boxplotY = constrain(mouseY, margin + boxplotHeight/2, canvasHeight - margin - boxplotHeight/2);
+    drawVisualization();
+  }
+}
+
+/**
+ * mouseReleased(): Beendet das Verschieben des Boxplots
+ */
+function mouseReleased() {
+  draggingBoxplot = false;
 }
