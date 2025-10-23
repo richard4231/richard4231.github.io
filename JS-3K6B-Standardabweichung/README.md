@@ -7,6 +7,7 @@ Dieses Applet simuliert die Gewichtsverteilung von 1kg Mandarinenpackungen und v
 
 ### Schieberegler
 - **Anzahl Packungen** (1-5000): Steuert, wie viele Packungen simuliert werden
+  - Maximaler Wert kann im Code über `maxAnzahl` angepasst werden
   - Ändert die Zufallsverteilung neu
 - **Standardabweichung** (1-30g): Steuert die Streuung der Gewichte
   - Generiert neue Zufallsverteilung
@@ -15,10 +16,10 @@ Dieses Applet simuliert die Gewichtsverteilung von 1kg Mandarinenpackungen und v
 
 ### Checkboxen
 - **Median & Mittelwert anzeigen**: Blendet vertikale Linien für Median (pink gestrichelt) und Mittelwert (grün gepunktet) ein
-- **Standardabweichung anzeigen**: Zeigt die 1., 2. und 3. Standardabweichung als vertikale Linien
-  - ±σ (1. Standardabweichung): Deutlich sichtbar, blaue gestrichelte Linien
-  - ±2σ (2. Standardabweichung): Dezenter, hellere gestrichelte Linien
-  - ±3σ (3. Standardabweichung): Sehr dezent, noch hellere gestrichelte Linien
+- **Standardabweichung anzeigen**: Zeigt die 1., 2. und 3. Standardabweichung als vertikale Linien (ohne Beschriftung)
+  - ±σ (1. Standardabweichung): Deutlich sichtbar, blaue gestrichelte Linien (68% der Daten)
+  - ±2σ (2. Standardabweichung): Dezenter, hellere gestrichelte Linien (95% der Daten)
+  - ±3σ (3. Standardabweichung): Sehr dezent, noch hellere gestrichelte Linien (99.7% der Daten)
 - **Fixe Kurvenhöhe**: 
   - Aktiviert: Normalverteilungskurve nutzt immer die volle Diagrammhöhe (gut für kleine Stichproben)
   - Deaktiviert: Kurve wächst mit Anzahl der Packungen (realistische Darstellung)
@@ -30,6 +31,7 @@ Das Applet passt die Darstellung automatisch an die Anzahl der Packungen an:
 1. **1-50 Packungen**: Große blaue Rechtecke mit exaktem Gewicht
    - Stapeln von unten nach oben
    - Adaptive Größe: Bei mehr Packungen werden sie kleiner
+   - Jede Packung zeigt ihr tatsächliches Gewicht (korrekt zugeordnet zum Histogramm-Bin)
    - Legende: 🔷 = 1 Packung (mit Gewicht in g)
 
 2. **51-999 Packungen**: Orange Punkte gestapelt (Histogramm)
@@ -70,6 +72,7 @@ let standardabweichung = 5;      // Standardabweichung (auch per Slider)
 let binSize = 2;                 // Start-Intervallgröße (auch per Slider: 0.5-10g)
 let minMasse = 990;              // Minimale Masse auf X-Achse
 let maxMasse = 1030;             // Maximale Masse auf X-Achse
+let maxAnzahl = 5000;            // Maximale Anzahl Packungen im Slider
 let wechsel_punkt = 50;          // Ab dieser Anzahl: Punktmodus
 let wechsel_balken = 1000;       // Ab dieser Anzahl: Balkenmodus
 let multiplikator = 100;         // Faktor für "Sehr viele Packungen" Checkbox (änderbar im Code)
@@ -79,10 +82,16 @@ let multiplikator = 100;         // Faktor für "Sehr viele Packungen" Checkbox 
 
 - **Zufallsverteilung**: Wird nur bei Änderung der Anzahl Packungen, Standardabweichung oder beim Neuladen neu generiert. Änderungen der Intervallgröße behalten die gleichen Zufallsdaten!
 - **Multiplikator-Modus**: Wenn aktiviert, wird die Packungsanzahl mit dem Faktor multipliziert (Standard: 100×), ideal für große Stichproben
-- **Histogramm-Binning**: Die Intervalle sind um ganze Werte zentriert. Bei einer Intervallgröße von 1g und Mittelwert 1010g geht das Intervall von 1009.5g bis 1010.5g
+- **Histogramm-Binning**: Die Intervalle sind immer um den theoretischen Mittelwert zentriert
+  - Bei Intervallgröße 0.5g und Mittelwert 1010g: mittleres Intervall von 1009.75g bis 1010.25g
+  - Bei Intervallgröße 1g und Mittelwert 1010g: mittleres Intervall von 1009.5g bis 1010.5g
+  - Bei Intervallgröße 2g und Mittelwert 1010g: mittleres Intervall von 1009g bis 1011g
+  - Alle anderen Bins sind symmetrisch um dieses zentrale Bin angeordnet
 - **Y-Achsen-Skalierung**: Die Schrittgröße wird automatisch in sinnvollen Werten gewählt (5, 10, 25, 50, 100, 200, 250, 500, etc.)
 - **Balkenbreite**: Die Breite der Säulen entspricht exakt der eingestellten Intervallgröße auf der Masse-Skala
 - **Adaptive Darstellung**: Packungen und Punkte werden bei höheren Anzahlen automatisch kleiner und dichter gepackt
+- **Korrekte Beschriftung**: Im Packungsmodus (1-50) wird jede Packung mit ihrem tatsächlichen Gewicht beschriftet, das dem jeweiligen Histogramm-Bin entspricht
+- **Glatter Übergang**: Der Wechsel zwischen Punktmodus und Säulenmodus (bei 1000 Packungen) erfolgt nahtlos dank konsistenter Skalierung
 - **Präzise Hover-Erkennung**: Der Tooltip erscheint nur, wenn die Maus tatsächlich innerhalb der Säule oder gestapelten Elemente ist
 - **Standardabweichungs-Visualisierung**: Zeigt ±1σ, ±2σ und ±3σ mit unterschiedlicher Sichtbarkeit (68%, 95%, 99.7% der Daten)
 

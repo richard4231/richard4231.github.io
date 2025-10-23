@@ -6,7 +6,6 @@ let margin = 70;  // Rand für Achsenbeschriftung (vergrößert für Y-Achse)
 // Statistische Parameter (im Code anpassbar)
 let mittelwert = 1010;  // in Gramm
 let standardabweichung = 5;  // in Gramm (wird über Schieberegler gesteuert)
-let maxAnzahl = 5000;  // Maximale Anzahl Packungen
 
 // Histogramm-Parameter
 let binSize = 2;  // Intervallgröße in Gramm (im Code anpassbar: 0.5 bis 10g)
@@ -19,6 +18,7 @@ let wechsel_balken = 1000; // Ab dieser Anzahl: Balkenmodus
 // Simulation
 let anzahlPackungen = 1;
 let packungen = [];  // Array mit Gewichten
+let maxAnzahl = 5000;  // Maximale Anzahl Packungen (im Code änderbar)
 
 // Visualisierung
 let minMasse = 990;
@@ -49,7 +49,8 @@ let hoveredBin = null;
 let hoveredCount = 0;
 
 // Farben (wie im Original)
-let color1 = [0, 135, 191, 200]; // Blau für Packungen
+let color1 = [238, 172, 136, 200]; // Orange für Packungen
+// let color1 = [0, 135, 191, 200]; // Blau für Packungen
 let color2 = [238, 172, 136, 200]; // Orange für Punkte
 let color3 = 'rgba(224, 224, 224, 0.9)'; // Kontrollpanel Hintergrund
 let curveColor = [97, 167, 211, 150]; // Kurvenfarbe
@@ -216,7 +217,7 @@ async function setup() {
   legendeText.style('color', '#666');
   
   // Info-Text
-  infoText = createP(`Mittelwert: ${mittelwert} g<br>Intervallgröße: ${intervallGroesse} g`);
+  infoText = createP(`Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgröße: ${intervallGroesse} g`);
   infoText.parent(controlPanel);
   infoText.id('infoText');
   infoText.style('margin', '10px 0 0 0');
@@ -262,7 +263,7 @@ function updateIntervall() {
   intervallGroesse = intervallSlider.value();
   binSize = intervallGroesse; // Für Kompatibilität
   document.getElementById('intervallValue').textContent = nf(intervallGroesse, 1, 1);
-  document.getElementById('infoText').innerHTML = `Mittelwert: ${mittelwert} g<br>Intervallgröße: ${nf(intervallGroesse, 1, 1)} g`;
+  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgröße: ${nf(intervallGroesse, 1, 1)} g`;
   // Nur Visualisierung neu zeichnen, nicht die Zufallsverteilung neu generieren
   drawVisualization();
 }
@@ -312,7 +313,7 @@ function updateLegende() {
     let effektiveAnzahl = anzahlPackungen * multiplikator;
     
     if (effektiveAnzahl <= wechsel_punkt) {
-      legendeElement.innerHTML = '🔷 = 1 Packung<br>(mit Gewicht in g)';
+      legendeElement.innerHTML = '🟧 = 1 Packung<br>(mit Gewicht in g)';
     } else if (effektiveAnzahl < wechsel_balken) {
       legendeElement.innerHTML = '🟠 = 1 Packung';
     } else {
@@ -328,10 +329,12 @@ function createHistogram() {
   let histogram = {};
   
   for (let gewicht of packungen) {
-    // Runde auf das nächste Intervall - Bins sind um ganze Werte zentriert
-    // z.B. bei intervallGroesse = 1 und Mittelwert 1010:
+    // Bins um den theoretischen Mittelwert zentrieren
+    // z.B. bei intervallGroesse = 1 und mittelwert = 1010:
     // Bin bei 1010 geht von 1009.5 bis 1010.5
-    let key = Math.round(gewicht / intervallGroesse) * intervallGroesse;
+    let offset = gewicht - mittelwert;
+    let roundedOffset = Math.round(offset / intervallGroesse) * intervallGroesse;
+    let key = mittelwert + roundedOffset;
     
     if (!histogram[key]) {
       histogram[key] = 0;
@@ -539,20 +542,6 @@ function drawNormalCurve(pg) {
     pg.line(x3Sigma_minus, canvasHeight - margin, x3Sigma_minus, margin);
     
     pg.drawingContext.setLineDash([]);
-    
-    // Beschriftungen für Standardabweichungen
-    pg.noStroke();
-    pg.textSize(10);
-    pg.textAlign(CENTER, BOTTOM);
-    pg.fill(100, 100, 200, 180);
-    pg.text('±σ', x1Sigma_plus, margin - 35);
-    pg.text('±σ', x1Sigma_minus, margin - 35);
-    pg.fill(100, 100, 200, 120);
-    pg.text('±2σ', x2Sigma_plus, margin - 48);
-    pg.text('±2σ', x2Sigma_minus, margin - 48);
-    pg.fill(100, 100, 200, 80);
-    pg.text('±3σ', x3Sigma_plus, margin - 60);
-    pg.text('±3σ', x3Sigma_minus, margin - 60);
   }
   
   pg.pop();
@@ -586,14 +575,24 @@ function drawPackungenMode(pg, histogram) {
   let basePackungHoehe = 30;  // Größere Basishöhe
   let packungHoehe = Math.max(10, Math.min(basePackungHoehe, verfuegbareHoehe / (maxHoehe + 2)));
   
-  let packungIndex = 0;
   for (let key in histogram) {
     let masse = parseFloat(key);
     let anzahl = histogram[key];
     let x = map(masse, minMasse, maxMasse, margin, canvasWidth - margin);
     
+    // Finde alle Packungen, die in dieses Bin gehören
+    let binPackungen = [];
+    for (let gewicht of packungen) {
+      let offset = gewicht - mittelwert;
+      let roundedOffset = Math.round(offset / intervallGroesse) * intervallGroesse;
+      let binKey = mittelwert + roundedOffset;
+      if (Math.abs(binKey - masse) < 0.001) {  // Floating-Point-Vergleich
+        binPackungen.push(gewicht);
+      }
+    }
+    
     // Stapel von unten nach oben
-    for (let i = 0; i < anzahl; i++) {
+    for (let i = 0; i < anzahl && i < binPackungen.length; i++) {
       let yPos = canvasHeight - margin - (i + 1) * packungHoehe;
       
       pg.fill(color1);
@@ -601,15 +600,12 @@ function drawPackungenMode(pg, histogram) {
       pg.strokeWeight(1);
       pg.rect(x - packungBreite / 2, yPos, packungBreite, packungHoehe, 2);
       
-      // Gewicht auf Packung schreiben - verwende das tatsächliche Gewicht
-      if (packungIndex < packungen.length) {
-        pg.fill(255);
-        pg.noStroke();
-        pg.textAlign(CENTER, CENTER);
-        pg.textSize(10);
-        pg.text(nf(packungen[packungIndex], 1, 1) + "g", x, yPos + packungHoehe / 2);
-        packungIndex++;
-      }
+      // Gewicht auf Packung schreiben - verwende das tatsächliche Gewicht aus dem Bin
+      pg.fill(50);
+      pg.noStroke();
+      pg.textAlign(CENTER, CENTER);
+      pg.textSize(10);
+      pg.text(nf(binPackungen[i], 1, 1) + "g", x, yPos + packungHoehe / 2);
     }
   }
   
@@ -626,17 +622,18 @@ function drawPunkteMode(pg, histogram) {
   
   // Adaptive Punktgröße: Bei wenigen Packungen groß, bei vielen kleiner
   let basePunktGroesse = 10;  // Größere Basispunktgröße
-  let punktGroesse = Math.max(3, Math.min(basePunktGroesse, verfuegbareHoehe / (maxHoehe * 1.5)));
-  let punktAbstand = punktGroesse + 1;
+  // Reduzierter Faktor von 1.5 auf 1.2 für glatterer Übergang zu Säulen
+  let punktGroesse = Math.max(3, Math.min(basePunktGroesse, verfuegbareHoehe / (maxHoehe * 1.2)));
   
   for (let key in histogram) {
     let masse = parseFloat(key);
     let anzahl = histogram[key];
     let x = map(masse, minMasse, maxMasse, margin, canvasWidth - margin);
     
-    // Punkte stapeln von unten nach oben
+    // Punkte stapeln von unten nach oben - mit map() für konsistente Skalierung
     for (let i = 0; i < anzahl; i++) {
-      let yPos = canvasHeight - margin - (i + 0.5) * punktAbstand;
+      // Verwende die gleiche Skalierung wie bei Säulen für glatten Übergang
+      let yPos = map(i + 0.5, 0, maxHoehe, canvasHeight - margin, margin);
       
       pg.fill(color2);
       pg.noStroke();
@@ -772,11 +769,11 @@ function mouseMoved() {
           let packungHoehe = Math.max(10, Math.min(30, (canvasHeight - 2 * margin) / (maxHoehe + 2)));
           barHeight = binCount * packungHoehe;
         } else if (effektiveAnzahl < wechsel_balken) {
-          // Punkt-Modus
-          let basePunktGroesse = 10;
-          let punktGroesse = Math.max(3, Math.min(basePunktGroesse, (canvasHeight - 2 * margin) / (maxHoehe * 1.5)));
-          let punktAbstand = punktGroesse + 1;
-          barHeight = binCount * punktAbstand;
+          // Punkt-Modus - mit map() Skalierung
+          let verfuegbareHoehe = canvasHeight - 2 * margin;
+          // Berechne die Position des obersten Punktes
+          let topY = map(binCount - 0.5, 0, maxHoehe, canvasHeight - margin, margin);
+          barHeight = canvasHeight - margin - topY;
         } else {
           // Säulen-Modus
           let verfuegbareHoehe = canvasHeight - 2 * margin;
