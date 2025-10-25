@@ -13,7 +13,7 @@ let intervallGroesse = binSize; // wird über Schieberegler gesteuert
 
 // Parameter Übergänge
 let wechsel_punkt = 50;   // Ab dieser Anzahl: Punktmodus
-let wechsel_balken = 1000; // Ab dieser Anzahl: Balkenmodus
+let wechsel_balken = 50; // Ab dieser Anzahl: Balkenmodus
 
 // Simulation
 let anzahlPackungen = 1;
@@ -22,25 +22,15 @@ let maxAnzahl = 5000;  // Maximale Anzahl Packungen (im Code änderbar)
 
 // Slider-Skalierung: 1-100 (erstes Drittel), 101-1000 (zweites Drittel), 1001-5000 (drittes Drittel)
 function sliderToPackungen(sliderValue) {
-  if (sliderValue <= 33.33) {
+  if (sliderValue <= 100) {
     // Erstes Drittel: 1-100
-    return Math.round(1 + (sliderValue / 33.33) * 99);
-  } else if (sliderValue <= 66.67) {
-    // Zweites Drittel: 101-1000
-    return Math.round(101 + ((sliderValue - 33.33) / 33.34) * 899);
+    return sliderValue;
+  } else if (sliderValue <= 200) {
+    // Zweites Drittel: 101-600
+    return (5 * sliderValue - 400);
   } else {
-    // Drittes Drittel: 1001-5000
-    return Math.round(1001 + ((sliderValue - 66.67) / 33.33) * 3999);
-  }
-}
-
-function packungenToSlider(anzahl) {
-  if (anzahl <= 100) {
-    return (anzahl - 1) / 99 * 33.33;
-  } else if (anzahl <= 1000) {
-    return 33.33 + ((anzahl - 101) / 899) * 33.34;
-  } else {
-    return 66.67 + ((anzahl - 1001) / 3999) * 33.33;
+    // Drittes Drittel: 600-5000
+    return (50 * sliderValue - 9400);
   }
 }
 
@@ -165,7 +155,7 @@ async function setup() {
   anzahlLabel.style('margin', '0 0 5px 0');
   anzahlLabel.style('font-weight', 'bold');
   
-  anzahlSlider = createSlider(0, 100, 0, 0.1);
+  anzahlSlider = createSlider(0, 288, 0, 1);
   anzahlSlider.parent(controlPanel);
   anzahlSlider.style('width', '100%');
   anzahlSlider.style('margin-bottom', '15px');
@@ -861,8 +851,8 @@ function draw() {
     let obereGrenze = binMasse + intervallGroesse / 2;
     
     // Tooltip-Text mit Intervall
-    let tooltipText = `Anzahl: ${hoveredCount}\n${nf(untereGrenze, 1, 1)}g ≤ Gewicht < ${nf(obereGrenze, 1, 1)}g`;
-    
+    let tooltipText = `Anzahl: ${hoveredCount}\n${smartFormat(untereGrenze)}g ≤ Gewicht < ${smartFormat(obereGrenze)}g`;
+
     // Berechne Textbreite und -höhe für mehrzeiligen Text
     let lines = tooltipText.split('\n');
     let maxWidth = 0;
@@ -893,6 +883,13 @@ function draw() {
     }
     pop();
   }
+}
+
+// Zeigt beim Tooltip nur so viele Nachkommastellen wie nötig (max. 2)
+function smartFormat(num) {
+  return num % 1 === 0 ? nf(num, 1, 0) : 
+         (num * 10) % 1 === 0 ? nf(num, 1, 1) : 
+         nf(num, 1, 2);
 }
 
 /**
