@@ -315,6 +315,7 @@ function updateStats() {
  * Generiert die Packungen mit Normalverteilung
  */
 function generatePackungen() {
+  // Die Gewichte sind Fliesskommazahlen (z.B. 1009.3427...), werden aber bei der Darstellung auf den Packungen auf 1 Dezimalstelle gerundet angezeigt. Die Packung 1010.49 wird also als 1010.5g angezeigt, aber dem Intervall von 1009.5 ≤ bis < 1010.5g zugeteilt.
   packungen = [];
   let effektiveAnzahl = anzahlPackungen * multiplikator;
   
@@ -484,14 +485,14 @@ function drawCoordinateSystem(pg) {
         let basePackungHoehe = 30;
         let packungHoehe = Math.max(10, Math.min(basePackungHoehe, verfuegbareHoehe / (maxHoehe + 2)));
         // Die n-te Packung (n=anzahl, n startet bei 1) hat Index i=n-1, Mitte bei:
-        y = canvasHeight - margin - (anzahl - 0.5) * packungHoehe;
+        // y = canvasHeight - margin - (anzahl - 0.5) * packungHoehe;
+        y = canvasHeight - margin - (anzahl) * packungHoehe;
       }
     } else if (effektiveAnzahl < wechsel_balken) {
-      // Punkt-Modus: Beschriftung zeigt auf die Mitte des n-ten Punktes
       if (anzahl === 0) {
         y = canvasHeight - margin;
       } else {
-        y = map(anzahl - 0.5, 0, maxHoehe, canvasHeight - margin, margin);
+        y = map(anzahl, 0, maxHoehe, canvasHeight - margin, margin);
       }
     } else {
       // Säulen-Modus: normale kontinuierliche Skalierung
