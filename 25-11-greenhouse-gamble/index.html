@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klimawandel-Glücksrad</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom right, #0f172a, #1e293b);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            max-width: 42rem;
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .toggle-label {
+            font-weight: 600;
+        }
+        .toggle-label.active-red { color: #dc2626; }
+        .toggle-label.active-blue { color: #2563eb; }
+        .toggle-label.inactive { color: #94a3b8; }
+        .toggle-button {
+            position: relative;
+            width: 4rem;
+            height: 2rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-button.red { background-color: #dc2626; }
+        .toggle-button.blue { background-color: #2563eb; }
+        .toggle-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 0.25rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: white;
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .toggle-slider.left { transform: translateX(0.25rem); }
+        .toggle-slider.right { transform: translateX(2.25rem); }
+        .wheel-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -0.75rem);
+            z-index: 10;
+        }
+        .pointer-triangle {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 35px solid rgba(220, 38, 38, 0.8);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .spin-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .spin-button.active {
+            background: linear-gradient(to right, #9333ea, #db2777);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        .spin-button.active:hover {
+            background: linear-gradient(to right, #7e22ce, #be185d);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+        .spin-button.disabled {
+            background-color: #cbd5e1;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+        .result-container {
+            height: 8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-box {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        .result-label {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+        .result-value {
+            font-size: 1.875rem;
+            font-weight: bold;
+        }
+        .placeholder-text {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.125rem;
+        }
+        .info-text {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: #475569;
+            text-align: center;
+        }
+    </style>
+    
+    <!-- React und ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone für JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        // Lucide Play Icon als SVG
+        const PlayIcon = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+        );
+
+        const Gluecksrad = () => {
+            const [scenario, setScenario] = useState('ohne');
+            const [rotation, setRotation] = useState(0);
+            const [isSpinning, setIsSpinning] = useState(false);
+            const [result, setResult] = useState(null);
+            const wheelRef = useRef(null);
+
+            // Sektoren für "Ohne Policy" (linke Scheibe) - mit korrekten Winkeln
+            const sectorsOhne = [
+                { label: '2.5-3°C', angle: 4, color: '#00CED1', startAngle: 0 },
+                { label: '3-4°C', angle: 48.3, color: '#32CD32', startAngle: 4 },
+                { label: '4-5°C', angle: 114.6, color: '#FFD700', startAngle: 52.3 },
+                { label: '5-6°C', angle: 118.7, color: '#FFA500', startAngle: 166.9 },
+                { label: '6-7°C', angle: 54.5, color: '#FF4500', startAngle: 285.6 },
+                { label: '>7°C', angle: 20, color: '#8B0000', startAngle: 340.1 }
+            ];
+
+            // Sektoren für "Mit Policy" (rechte Scheibe) - mit korrekten Winkeln
+            const sectorsMit = [
+                { label: '1-2°C', angle: 77.3, color: '#0047AB', startAngle: 0 },
+                { label: '2-2.5°C', angle: 148.8, color: '#1E90FF', startAngle: 77.3 },
+                { label: '2.5-3°C', angle: 95.6, color: '#00CED1', startAngle: 226.1 },
+                { label: '3-4°C', angle: 38.4, color: '#32CD32', startAngle: 321.7 }
+            ];
+
+            const currentSectors = scenario === 'ohne' ? sectorsOhne : sectorsMit;
+
+            const spinWheel = () => {
+                if (isSpinning) return;
+                
+                setIsSpinning(true);
+                setResult(null);
+                
+                const spins = 5 + Math.random() * 3;
+                const randomAngle = Math.random() * 360;
+                const totalRotation = spins * 360 + randomAngle;
+                
+                setRotation(rotation + totalRotation);
+                
+                setTimeout(() => {
+                    const finalAngle = (rotation + totalRotation) % 360;
+                    const normalizedAngle = (360 - finalAngle) % 360;
+                    
+                    let cumulativeAngle = 0;
+                    for (const sector of currentSectors) {
+                        cumulativeAngle += sector.angle;
+                        if (normalizedAngle < cumulativeAngle) {
+                            setResult(sector);
+                            break;
+                        }
+                    }
+                    
+                    setIsSpinning(false);
+                }, 4000);
+            };
+
+            const createSectorPath = (cx, cy, radius, startAngle, endAngle) => {
+                const start = (startAngle - 90) * (Math.PI / 180);
+                const end = (endAngle - 90) * (Math.PI / 180);
+                
+                const x1 = cx + radius * Math.cos(start);
+                const y1 = cy + radius * Math.sin(start);
+                const x2 = cx + radius * Math.cos(end);
+                const y2 = cy + radius * Math.sin(end);
+                
+                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                
+                return `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+            };
+
+            const getLabelPosition = (cx, cy, radius, startAngle, angle) => {
+                const midAngle = (startAngle + angle / 2 - 90) * (Math.PI / 180);
+                const labelRadius = radius * 0.7;
+                return {
+                    x: cx + labelRadius * Math.cos(midAngle),
+                    y: cy + labelRadius * Math.sin(midAngle)
+                };
+            };
+
+            return (
+                <div className="container">
+                    <h1>Klimawandel-Glücksrad</h1>
+                    
+                    {/* Szenario-Umschalter */}
+                    <div className="toggle-container">
+                        <span className={`toggle-label ${scenario === 'ohne' ? 'active-red' : 'inactive'}`}>
+                            Ohne Policy
+                        </span>
+                        <button
+                            onClick={() => {
+                                if (!isSpinning) {
+                                    setScenario(scenario === 'ohne' ? 'mit' : 'ohne');
+                                    setResult(null);
+                                }
+                            }}
+                            className={`toggle-button ${scenario === 'mit' ? 'blue' : 'red'} ${isSpinning ? 'disabled' : ''}`}
+                            disabled={isSpinning}
+                        >
+                            <div className={`toggle-slider ${scenario === 'mit' ? 'right' : 'left'}`} />
+                        </button>
+                        <span className={`toggle-label ${scenario === 'mit' ? 'active-blue' : 'inactive'}`}>
+                            Mit Policy
+                        </span>
+                    </div>
+
+                    {/* Glücksrad */}
+                    <div className="wheel-container">
+                        {/* Zeiger oben - klassischer roter Pfeil */}
+                        <div className="pointer">
+                            <div className="pointer-triangle" />
+                        </div>
+                        
+                        <svg
+                            ref={wheelRef}
+                            width="400"
+                            height="400"
+                            viewBox="0 0 400 400"
+                            style={{
+                                transform: `rotate(${rotation}deg)`,
+                                transition: isSpinning ? 'transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none'
+                            }}
+                        >
+                            <g>
+                                {currentSectors.map((sector, index) => {
+                                    const { x, y } = getLabelPosition(200, 200, 180, sector.startAngle, sector.angle);
+                                    const endAngle = sector.startAngle + sector.angle;
+                                    
+                                    return (
+                                        <g key={index}>
+                                            <path
+                                                d={createSectorPath(200, 200, 180, sector.startAngle, endAngle)}
+                                                fill={sector.color}
+                                                stroke="white"
+                                                strokeWidth="3"
+                                            />
+                                            <text
+                                                x={x}
+                                                y={y}
+                                                textAnchor="middle"
+                                                dominantBaseline="middle"
+                                                fill="white"
+                                                fontSize="18"
+                                                fontWeight="bold"
+                                                style={{pointerEvents: 'none'}}
+                                            >
+                                                {sector.label}
+                                            </text>
+                                        </g>
+                                    );
+                                })}
+                                
+                                {/* Mittelpunkt */}
+                                <circle cx="200" cy="200" r="30" fill="white" stroke="#333" strokeWidth="3" />
+                                <circle cx="200" cy="200" r="15" fill="#333" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    {/* Drehen Button */}
+                    <div className="button-container">
+                        <button
+                            onClick={spinWheel}
+                            disabled={isSpinning}
+                            className={`spin-button ${isSpinning ? 'disabled' : 'active'}`}
+                        >
+                            <PlayIcon />
+                            {isSpinning ? 'Dreht...' : 'Rad drehen!'}
+                        </button>
+                    </div>
+
+                    {/* Ergebnis - feste Höhe */}
+                    <div className="result-container">
+                        {result ? (
+                            <div className="result-box" style={{ backgroundColor: result.color + '20' }}>
+                                <p className="result-label">Ergebnis:</p>
+                                <p className="result-value" style={{ color: result.color }}>
+                                    {result.label}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="placeholder-text">
+                                Drehe das Rad für ein Ergebnis
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="info-text">
+                        <p>Temperaturanstieg bis 2100 basierend auf verschiedenen Klimaszenarien</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Gluecksrad />);
+    </script>
+</body>
+</html>
