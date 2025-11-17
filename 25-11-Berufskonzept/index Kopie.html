@@ -823,7 +823,7 @@
                 
                 if (isDragging) {
                     const deltaX = -e.offsetX + previousMousePosition.x;
-                    const deltaY = -e.offsetY + previousMousePosition.y;
+                    const deltaY = +e.offsetY - previousMousePosition.y;
                     
                     targetRotation.y += deltaX * 0.01;
                     targetRotation.x += deltaY * 0.01;
