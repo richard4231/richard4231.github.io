@@ -1,107 +1,200 @@
 #!/usr/bin/env python3
 """
-Generiert eine Beispiel-Excel-Datei mit BNE-Begriffen
-basierend auf der Projektstruktur (Leitideen mit Spezifitätsstufen)
+Generiert Excel-Datei mit BNE-Begriffen aus Set 2
+Alle 4 Stufen, mit ß → ss Konvertierung (CH/DE)
+Quelle: Schlagworte_deHaan_x_Leitideen_x_SDG_.docx
 """
 
 import pandas as pd
 
-def erstelle_beispiel_excel():
-    """Erstellt eine Excel-Datei mit der Begriffsstruktur aus dem Projekt."""
+
+def konvertiere_ss(text):
+    """Konvertiert ß zu ss (Schweizer Rechtschreibung)."""
+    return text.replace('ß', 'ss').replace('Ü', 'ü')  # Auch Groß-ü normalisieren
+
+
+def erstelle_begriffe_set2():
+    """
+    Erstellt Excel-Datei mit Set 2 Begriffen (alle 4 Stufen).
+    Quelle: Schlagworte_deHaan_x_Leitideen_x_SDG_.docx, Set 2
+    """
     
-    # Begriffe nach Leitideen und Stufen organisiert
-    # Basierend auf den Dokumenten im Projekt
+    # Set 2 - Alle 4 Stufen
+    begriffe_daten = []
     
-    begriffe_daten = [
-        # Politik, Demokratie und Menschenrechte
+    # Politik, Demokratie und Menschenrechte
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Politik, Demokratie und Menschenrechte',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Recht, Staat, Stimme, Regeln, Macht, Gruppe, Ordnung, Freiheit, Verwaltung, Gesellschaft, System, Wert, Entscheidung'
+        },
         {
             'Leitidee': 'Politik, Demokratie und Menschenrechte',
             'Stufe': 'Stufe 2',
-            'Begriffe': 'Wahl, Verteilung, Beteiligung, Gerechtigkeit, Gleichheit, Rechte, Zugang, Macht, Vertretung, Mitsprache'
+            'Begriffe': 'Wahl, Verteilung, Beteiligung, Rechte, Mitsprache, Bürger, Gesetz, Volk, Pflicht, Zusammenleben, Entscheidung, Regierung, Politik'
         },
         {
             'Leitidee': 'Politik, Demokratie und Menschenrechte',
             'Stufe': 'Stufe 3',
-            'Begriffe': 'Wahlsystem, Stimmenverteilung, Repräsentation, Machtverteilung, Diskriminierungsschutz, Menschenrechtsverletzung, Partizipation, Gewaltenteilung, Rechtsstaatlichkeit'
+            'Begriffe': 'Gerechtigkeit, Mitsprache, Gleichheit, Zugang, Beteiligung, Grundrechte, Schutz, Teilhabe, Minderheit, Mehrheit, Demokratie, Frieden, Entscheidungsprozess'
         },
-        
-        # Natürliche Umwelt und Ressourcen
+        {
+            'Leitidee': 'Politik, Demokratie und Menschenrechte',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Wahlsystem, Stimmenverteilung, Repräsentation, Machtverteilung, Diskriminierungsschutz, Menschenrechtsverletzung, Partizipationsverfahren, Gewaltenteilung, Rechtsstaatlichkeit, Bildungszugang, Verfassungsrecht, Mindeststandards'
+        }
+    ])
+    
+    # Natürliche Umwelt und Ressourcen
+    begriffe_daten.extend([
         {
             'Leitidee': 'Natürliche Umwelt und Ressourcen',
             'Stufe': 'Stufe 1',
-            'Begriffe': 'Natur, Erde, Leben, Stoff, Tier, Pflanze, Wetter'
+            'Begriffe': 'Natur, Erde, Leben, Stoff, Tier, Pflanze, Wetter, Boden, Berg, Wasser, Wald, Wiese, Luft, Rohstoff'
         },
         {
             'Leitidee': 'Natürliche Umwelt und Ressourcen',
             'Stufe': 'Stufe 2',
-            'Begriffe': 'Umwelt, Klima, Energie, Wasser, Wald, Arten, Natur, Ressourcen, Verbrauch, Emissionen, Schutz, Recycling, Fläche, Rohstoffe'
+            'Begriffe': 'Umwelt, Energie, Wasser, Klima, Wald, Arten, Natur, Ressourcen, Landschaft, Lebensraum, Boden, Material, Sonne, Stein'
         },
         {
             'Leitidee': 'Natürliche Umwelt und Ressourcen',
             'Stufe': 'Stufe 3',
-            'Begriffe': 'Biodiversität, Ökosystem, ökologischer Fußabdruck, Regenerationsrate, Nachhaltigkeit, Klimawandel, erneuerbare Energien, CO2, Treibhausgas'
-        },
-        
-        # Geschlechter und Gleichstellung
-        {
-            'Leitidee': 'Geschlechter und Gleichstellung',
-            'Stufe': 'Stufe 2',
-            'Begriffe': 'Gehalt, Lohn, Frauen, Männer, Mädchen, Jungen, Arbeitszeit, Verteilung, Berufe, Anteil, Unterschied, Familie, Ausbildung, Quote'
+            'Begriffe': 'Verbrauch, Schutz, Emissionen, Ressourcen, Nachhaltigkeit, Artenvielfalt, Kreislauf, Erneuerbarkeit, Recycling, Umweltbelastung, Naturschutz, Ökologie, Flächennutzung'
         },
         {
-            'Leitidee': 'Geschlechter und Gleichstellung',
-            'Stufe': 'Stufe 3',
-            'Begriffe': 'Lohngleichheit, Gender Pay Gap, Frauenquote, Elternzeit, Care-Arbeit, Geschlechterstereotypen, Chancengleichheit'
-        },
-        
-        # Gesundheit
-        {
-            'Leitidee': 'Gesundheit',
-            'Stufe': 'Stufe 2',
-            'Begriffe': 'Ernährung, Bewegung, Versorgung, Belastung, Wohlbefinden, Prävention, Qualität, Zugang, Ausgaben, Lebensdauer, Lebenserwartung'
-        },
-        {
-            'Leitidee': 'Gesundheit',
-            'Stufe': 'Stufe 3',
-            'Begriffe': 'Gesundheitssystem, Krankenversicherung, Prävention, psychische Gesundheit, Ernährungssicherheit, Gesundheitsversorgung'
-        },
-        
-        # Globale Entwicklung und Frieden
-        {
-            'Leitidee': 'Globale Entwicklung und Frieden',
-            'Stufe': 'Stufe 2',
-            'Begriffe': 'Entwicklung, Verteilung, Armut, Wohlstand, Frieden, Migration, Bildung, Bevölkerung, Stadt, Land, Chancen, Zusammenarbeit, Globaler Süden'
-        },
-        {
-            'Leitidee': 'Globale Entwicklung und Frieden',
-            'Stufe': 'Stufe 3',
-            'Begriffe': 'Entwicklungshilfe, Entwicklungsländer, Entwicklungszusammenarbeit, Konfliktprävention, Friedenssicherung, Flucht, Integration, Nord-Süd-Gefälle'
-        },
-        
-        # Kulturelle Identitäten und interkulturelle Verständigung
-        {
-            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
-            'Stufe': 'Stufe 2',
-            'Begriffe': 'Sprache, Kultur, Vielfalt, Integration, Minderheit, Austausch, Gemeinschaft, Tradition, Kommunikation, Zusammenleben'
-        },
-        {
-            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
-            'Stufe': 'Stufe 3',
-            'Begriffe': 'kulturelle Vielfalt, Multikulturalität, interkultureller Dialog, Diskriminierung, Inklusion, kulturelle Identität'
-        },
-        
-        # Wirtschaft und Konsum
-        {
-            'Leitidee': 'Wirtschaft und Konsum',
-            'Stufe': 'Stufe 2',
-            'Begriffe': 'Produktion, Konsum, Transport, Handel, Kosten, Preis, Effizienz, Lebensmittel, Regional, Verschwendung, Nutzen, Verbrauch, Kette, Schulden'
-        },
-        {
-            'Leitidee': 'Wirtschaft und Konsum',
-            'Stufe': 'Stufe 3',
-            'Begriffe': 'nachhaltiger Konsum, Konsumverhalten, Produktionsbedingungen, Lieferkette, fairer Handel, Kreislaufwirtschaft, Lebensmittelverschwendung, ökologischer Fußabdruck'
+            'Leitidee': 'Natürliche Umwelt und Ressourcen',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Biodiversität, Ökosystem, ökologischer Fussabdruck, Regenerationsrate, Klimawandel, CO2-Emission, Energieverbrauch, Wasserverbrauch, Flächenverbrauch, Naturschutzgebiet, Waldanteil, Bodenerosion, Umweltindikator, Schadstoffbelastung'
         }
-    ]
+    ])
+    
+    # Geschlechter und Gleichstellung
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Geschlechter und Gleichstellung',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Mann, Frau, gleich, Rolle, Mensch, Person, Gruppe, Kind, Erwachsene, Arbeit, Familie, Partner, Eltern'
+        },
+        {
+            'Leitidee': 'Geschlechter und Gleichstellung',
+            'Stufe': 'Stufe 2',
+            'Begriffe': 'Arbeit, Anteil, Lohn, Beruf, Ausbildung, Familie, Recht, Bildung, Teilhabe, Entscheidung, Zugang, Anerkennung, Zusammenleben'
+        },
+        {
+            'Leitidee': 'Geschlechter und Gleichstellung',
+            'Stufe': 'Stufe 3',
+            'Begriffe': 'Verteilung, Unterschied, Gehalt, Quote, Aufgaben, Berufswahl, Bildungschancen, Teilzeit, Vollzeit, Rollenverständnis, Chancengleichheit, Mitbestimmung, Diskriminierung'
+        },
+        {
+            'Leitidee': 'Geschlechter und Gleichstellung',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Lohnungleichheit, Führungspositionen, Care-Arbeit, Geschlechterquote, Elternzeit, Berufseinstieg, Aufstiegschancen, Rollenstereotype, Vereinbarkeit, Betreuungsangebote, Karriereunterbrechung, Diskriminierungsschutz, paritätische Besetzung'
+        }
+    ])
+    
+    # Gesundheit
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Gesundheit',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Körper, Essen, Leben, Luft, Rein, Krankheit, Arzt, Medizin, Sport, Pflege, Alter, Ruhe, Nahrung, Bewegung'
+        },
+        {
+            'Leitidee': 'Gesundheit',
+            'Stufe': 'Stufe 2',
+            'Begriffe': 'Ernährung, Bewegung, Wohlbefinden, Qualität, Versorgung, Medikament, Krankheit, Hygiene, Beratung, Vorsorge, Therapie, Behandlung, Stress'
+        },
+        {
+            'Leitidee': 'Gesundheit',
+            'Stufe': 'Stufe 3',
+            'Begriffe': 'Versorgung, Belastung, Zugang, Prävention, Umweltfaktoren, Vorsorgeuntersuchung, Gesundheitssystem, Lebensstil, Risikofaktoren, Früherkennung, Gesundheitsförderung, Ernährungsbildung, Gesundheitskompetenz'
+        },
+        {
+            'Leitidee': 'Gesundheit',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Lebenserwartung, Krankheitsrate, Gesundheitsausgaben, Mortalitätsrate, Präventionsprogramme, Gesundheitsmonitoring, Ernährungssicherheit, Kalorienverbrauch, Bewegungsmangel, Impfrate, Medikamentenversorgung, Trinkwasserqualität, Luftverschmutzung, medizinische Grundversorgung'
+        }
+    ])
+    
+    # Globale Entwicklung und Frieden
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Globale Entwicklung und Frieden',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Welt, Land, Hilfe, Armut, Gruppe, Krieg, Frieden, Staat, Region, Nation, Gemeinschaft, Unterstützung, Handel, Zusammenarbeit'
+        },
+        {
+            'Leitidee': 'Globale Entwicklung und Frieden',
+            'Stufe': 'Stufe 2',
+            'Begriffe': 'Entwicklung, Zusammenarbeit, Chancen, Verteilung, Frieden, Migration, Welthandel, International, Wirtschaft, Hilfsorganisation, Politik, Kommunikation, Diplomatie, Handel'
+        },
+        {
+            'Leitidee': 'Globale Entwicklung und Frieden',
+            'Stufe': 'Stufe 3',
+            'Begriffe': 'Wohlstand, Bildung, Migration, Bevölkerung, Wirtschaftswachstum, Entwicklungshilfe, Diplomatie, Krisenregion, Flüchtlinge, Konflikte, Kooperation, Handelsbeziehungen, Friedenssicherung, globale Partnerschaft'
+        },
+        {
+            'Leitidee': 'Globale Entwicklung und Frieden',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Nord-Süd-Gefälle, Entwicklungsindex, Friedenssicherung, Alphabetisierungsrate, Entwicklungszusammenarbeit, Armutsbekämpfung, Bevölkerungswachstum, Migrationsbewegungen, Konfliktlösung, Wohlstandsverteilung, Ressourcenkonflikte, humanitäre Hilfe, Nachhaltigkeitsziele, Ungleichheitsindikator'
+        }
+    ])
+    
+    # Kulturelle Identitäten und interkulturelle Verständigung
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Sprache, Gruppe, Art, Brauch, Fest, Glauben, Musik, Kunst, Essen, Kleidung, Familie, Wohnen, Tradition, Religion'
+        },
+        {
+            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
+            'Stufe': 'Stufe 2',
+            'Begriffe': 'Kultur, Vielfalt, Tradition, Austausch, Religion, Gemeinschaft, Werte, Begegnung, Dialog, Heimat, Geschichte, Selbstverständnis, Zugehörigkeit, Feiertag'
+        },
+        {
+            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
+            'Stufe': 'Stufe 3',
+            'Begriffe': 'Integration, Minderheit, Zusammenleben, Kommunikation, Verständigung, Religionsgemeinschaft, Herkunftskultur, Mehrsprachigkeit, Unterschiede, Gemeinsamkeiten, Kulturerbe, Toleranz, Kulturaustausch, Erinnerungskultur'
+        },
+        {
+            'Leitidee': 'Kulturelle Identitäten und interkulturelle Verständigung',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Sprachenvielfalt, kulturelle Diversität, Identitätsbildung, interkulturelle Kommunikation, Migrationsgeschichte, kollektives Gedächtnis, kulturelle Aneignung, Traditionsbewusstsein, kulturelle Missverständnisse, Integrationsprogramme, Minderheitenrechte, kulturhistorisches Erbe, Kulturtransfer, Sozialisation'
+        }
+    ])
+    
+    # Wirtschaft und Konsum
+    begriffe_daten.extend([
+        {
+            'Leitidee': 'Wirtschaft und Konsum',
+            'Stufe': 'Stufe 1',
+            'Begriffe': 'Geld, Ware, Tausch, Kauf, Markt, Handel, Preis, Verkauf, Arbeit, Geschäft, Leistung, Produkt, Lohn, Werbung'
+        },
+        {
+            'Leitidee': 'Wirtschaft und Konsum',
+            'Stufe': 'Stufe 2',
+            'Begriffe': 'Handel, Preis, Kosten, Verbrauch, Verkauf, Regional, Angebot, Nachfrage, Qualität, Marke, Einkauf, Produktion, Hersteller, Kunde'
+        },
+        {
+            'Leitidee': 'Wirtschaft und Konsum',
+            'Stufe': 'Stufe 3',
+            'Begriffe': 'Produktion, Konsum, Transport, Effizienz, Lieferkette, Verpackung, Verschwendung, Rohstoffe, Langlebigkeit, Wertschöpfung, Umweltfolgen, Vermarktung, Handelsströme, Produktionsbedingungen, Schulden'
+        },
+        {
+            'Leitidee': 'Wirtschaft und Konsum',
+            'Stufe': 'Stufe 4',
+            'Begriffe': 'Kreislaufwirtschaft, Lieferketten, Ressourceneffizienz, faire Handelsbeziehungen, Produktlebenszyklus, Verbraucherschutz, ökologischer Rucksack, Lebensmittelverschwendung, nachhaltiges Wirtschaftswachstum, soziale Produktionsbedingungen, Konsummuster, Regionalvermarktung, Transportwege, Wertschöpfungsketten'
+        }
+    ])
+    
+    # Konvertiere alle ß zu ss (CH/DE)
+    for row in begriffe_daten:
+        row['Leitidee'] = konvertiere_ss(row['Leitidee'])
+        row['Stufe'] = konvertiere_ss(row['Stufe'])
+        row['Begriffe'] = konvertiere_ss(row['Begriffe'])
     
     # DataFrame erstellen
     df = pd.DataFrame(begriffe_daten)
@@ -110,84 +203,32 @@ def erstelle_beispiel_excel():
     output_datei = 'begriffe_hierarchie.xlsx'
     df.to_excel(output_datei, index=False, engine='openpyxl')
     
-    print(f"✓ Beispiel-Excel-Datei erstellt: {output_datei}")
-    print(f"  {len(df)} Zeilen mit Begriffen")
-    print("\nStruktur:")
-    print(df.head(3))
+    print(f"✓ Excel-Datei erstellt: {output_datei}")
+    print(f"  {len(df)} Zeilen mit Begriffen (Set 2, alle 4 Stufen)")
+    print(f"  ß → ss konvertiert (CH/DE)")
     
     # Statistik
-    print(f"\n📊 Statistik:")
+    print(f"\n📊 Statistik nach Leitidee:")
     for leitidee in df['Leitidee'].unique():
         anzahl_stufen = len(df[df['Leitidee'] == leitidee])
         print(f"  {leitidee}: {anzahl_stufen} Stufen")
     
-    return output_datei
-
-
-def erstelle_beispiel_excel_einzelbegriffe():
-    """
-    Alternative: Erstellt Excel-Datei mit einem Begriff pro Spalte.
-    Dieser Ansatz ist übersichtlicher für manuelle Bearbeitung.
-    """
-    
-    begriffe_daten = []
-    
-    # Beispiel mit einzelnen Begriffen pro Spalte
-    begriffe_sets = {
-        'Politik, Demokratie und Menschenrechte - Stufe 2': 
-            ['Wahl', 'Verteilung', 'Beteiligung', 'Gerechtigkeit', 'Gleichheit', 'Rechte', 'Zugang', 'Macht', 'Vertretung', 'Mitsprache'],
-        'Natürliche Umwelt und Ressourcen - Stufe 2': 
-            ['Umwelt', 'Klima', 'Energie', 'Wasser', 'Wald', 'Arten', 'Natur', 'Ressourcen', 'Verbrauch', 'Emissionen', 'Schutz', 'Recycling', 'Fläche', 'Rohstoffe'],
-        'Gesundheit - Stufe 2': 
-            ['Ernährung', 'Bewegung', 'Versorgung', 'Belastung', 'Wohlbefinden', 'Prävention', 'Qualität', 'Zugang', 'Ausgaben', 'Lebensdauer', 'Lebenserwartung'],
-    }
-    
-    # Maximale Anzahl an Begriffen finden
-    max_begriffe = max(len(begriffe) for begriffe in begriffe_sets.values())
-    
-    # DataFrame aufbauen
-    for kategorie, begriffe in begriffe_sets.items():
-        leitidee, stufe = kategorie.rsplit(' - ', 1)
-        row = {'Leitidee': leitidee, 'Stufe': stufe}
-        
-        # Begriffe einzeln in Spalten
-        for i, begriff in enumerate(begriffe, 1):
-            row[f'Begriff_{i}'] = begriff
-        
-        # Fehlende Spalten mit None auffüllen
-        for i in range(len(begriffe) + 1, max_begriffe + 1):
-            row[f'Begriff_{i}'] = None
-        
-        begriffe_daten.append(row)
-    
-    df = pd.DataFrame(begriffe_daten)
-    
-    output_datei = 'begriffe_hierarchie_einzeln.xlsx'
-    df.to_excel(output_datei, index=False, engine='openpyxl')
-    
-    print(f"\n✓ Alternative Excel-Datei erstellt: {output_datei}")
-    print("  (Mit einzelnen Begriffen pro Spalte)")
+    print(f"\n📋 Stufen-Verteilung:")
+    stufen_count = df['Stufe'].value_counts().sort_index()
+    for stufe, anzahl in stufen_count.items():
+        print(f"  {stufe}: {anzahl} Leitideen")
     
     return output_datei
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Beispiel-Excel-Datei Generator für BNE-Begriffsanalyse")
-    print("=" * 60)
+    print("=" * 70)
+    print("Excel-Generator: BNE Set 2 (alle 4 Stufen)")
+    print("=" * 70)
     print()
     
-    # Standard-Version: Komma-separiert
-    datei1 = erstelle_beispiel_excel()
+    erstelle_begriffe_set2()
     
-    # Alternative Version: Einzelne Spalten
-    print()
-    datei2 = erstelle_beispiel_excel_einzelbegriffe()
-    
-    print("\n" + "=" * 60)
-    print("✓ Fertig! Zwei Varianten wurden erstellt:")
-    print(f"  1. {datei1} (komma-separiert, kompakt)")
-    print(f"  2. {datei2} (einzelne Spalten, übersichtlich)")
-    print("\nDu kannst beide öffnen und die Version verwenden,")
-    print("die dir besser gefällt. Beide funktionieren mit dem Analyse-Skript.")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("✓ Fertig! Excel-Datei kann nun verwendet werden.")
+    print("=" * 70)

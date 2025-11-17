@@ -1,43 +1,1055 @@
 ﻿PDF,Seite,Leitidee,Stufe,Begriff,Exakt,Flexion,Kompositum,Wortteil,Anzahl_Gesamt,Score_Gewichtet
+Mathematik 1 Schulbuch SB.pdf,3,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,3,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,3,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,3,Gesundheit,Stufe 1,Körper,4,0,0,0,4,4.0
+Mathematik 1 Schulbuch SB.pdf,3,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,3,Globale Entwicklung und Frieden,Stufe 1,Welt,2,0,0,0,2,2.0
 Mathematik 1 Schulbuch SB.pdf,3,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Vielfalt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,3,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,3,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,3,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,3,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,3,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,4,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,4,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,4,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,4,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Begegnung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,4,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Kunst,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,4,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,4,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
 Mathematik 1 Schulbuch SB.pdf,4,Natürliche Umwelt und Ressourcen,Stufe 1,Natur,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,4,Natürliche Umwelt und Ressourcen,Stufe 2,Natur,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,5,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,1,0,3,2.1
+Mathematik 1 Schulbuch SB.pdf,5,Geschlechter und Gleichstellung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,5,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,5,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,1,0,3,2.1
+Mathematik 1 Schulbuch SB.pdf,5,Globale Entwicklung und Frieden,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,5,Globale Entwicklung und Frieden,Stufe 1,Hilfe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,5,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,5,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,5,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,5,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,5,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,6,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,6,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,6,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,6,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,6,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,6,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,6,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,6,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,6,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,6,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,7,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,7,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,7,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,7,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,7,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,7,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,7,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,7,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,8,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,8,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,8,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,8,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Begegnung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,8,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Kunst,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,8,Natürliche Umwelt und Ressourcen,Stufe 1,Natur,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,8,Natürliche Umwelt und Ressourcen,Stufe 2,Natur,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,22,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Sprache,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,25,Wirtschaft und Konsum,Stufe 2,Kosten,3,0,0,0,3,3.0
-Mathematik 1 Schulbuch SB.pdf,26,Wirtschaft und Konsum,Stufe 2,Kosten,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 2,Unterschied,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,34,Geschlechter und Gleichstellung,Stufe 2,Unterschied,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Bevölkerung,2,0,0,0,2,2.0
-Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Entwicklung,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Stadt,3,0,0,0,3,3.0
+Mathematik 1 Schulbuch SB.pdf,9,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,9,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,9,Globale Entwicklung und Frieden,Stufe 1,Hilfe,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,9,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,9,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,9,Wirtschaft und Konsum,Stufe 2,Hersteller,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,10,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,10,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,10,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,10,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,10,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,10,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,10,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,11,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,11,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,11,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,12,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,3,2,7,3.3
+Mathematik 1 Schulbuch SB.pdf,12,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,12,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,12,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,12,Gesundheit,Stufe 1,Rein,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,12,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,3,2,7,3.3
+Mathematik 1 Schulbuch SB.pdf,12,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,12,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,12,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,12,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,13,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,13,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,13,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,13,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,8,1,9,4.1
+Mathematik 1 Schulbuch SB.pdf,13,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,13,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,8,1,9,4.1
+Mathematik 1 Schulbuch SB.pdf,13,Globale Entwicklung und Frieden,Stufe 1,Hilfe,3,0,0,0,3,3.0
+Mathematik 1 Schulbuch SB.pdf,13,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,13,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,13,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,13,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,13,Wirtschaft und Konsum,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,14,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,14,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,14,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,2,3,6,2.05
+Mathematik 1 Schulbuch SB.pdf,14,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,14,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,2,3,6,2.05
+Mathematik 1 Schulbuch SB.pdf,14,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,14,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,14,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,3,1,4,1.6
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,15,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,15,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,15,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,3,1,4,1.6
+Mathematik 1 Schulbuch SB.pdf,15,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,15,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,15,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,15,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,15,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,15,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,15,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,15,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,15,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,5,1,6,2.7
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 1,Person,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,16,Geschlechter und Gleichstellung,Stufe 1,Rolle,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,16,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,16,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,5,1,6,2.7
+Mathematik 1 Schulbuch SB.pdf,16,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,16,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,16,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,16,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,17,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,17,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,17,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,3,5,1,9,4.85
+Mathematik 1 Schulbuch SB.pdf,17,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,3,5,1,9,4.85
+Mathematik 1 Schulbuch SB.pdf,17,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,17,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,18,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,2,0,3,1.75
+Mathematik 1 Schulbuch SB.pdf,18,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,18,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,2,0,3,1.75
+Mathematik 1 Schulbuch SB.pdf,18,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,18,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,19,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,19,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,19,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,19,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,19,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,19,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,19,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,19,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,19,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,19,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,19,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,19,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,19,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,19,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,20,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,2,0,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,20,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,20,Geschlechter und Gleichstellung,Stufe 1,gleich,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,20,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,20,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,20,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,20,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,20,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,20,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,20,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,21,Geschlechter und Gleichstellung,Stufe 1,Kind,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Geschlechter und Gleichstellung,Stufe 1,Mensch,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,21,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,21,Gesundheit,Stufe 3,Belastung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,21,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Gesundheit,Stufe 1,Rein,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,21,Globale Entwicklung und Frieden,Stufe 1,Hilfe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,5,5,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Wohnen,0,0,2,0,2,1.2
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,2,1,3,1.1
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 1,Boden,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 2,Boden,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 1,Natur,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 2,Natur,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,21,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,21,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,21,"Politik, Demokratie und Menschenrechte",Stufe 1,System,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,1,0,0,2,1.75
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,22,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,22,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,2,0,1,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,22,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Sprache,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,22,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,22,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,22,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,22,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,22,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,22,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,22,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,22,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,23,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,4,0,0,4,3.0
+Mathematik 1 Schulbuch SB.pdf,23,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,23,Geschlechter und Gleichstellung,Stufe 3,Quote,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,23,Geschlechter und Gleichstellung,Stufe 2,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,23,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,23,Gesundheit,Stufe 1,Alter,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,23,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,4,0,0,4,3.0
+Mathematik 1 Schulbuch SB.pdf,23,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,23,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,23,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,4,4,0.4
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,23,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,23,Wirtschaft und Konsum,Stufe 1,Produkt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,23,Wirtschaft und Konsum,Stufe 2,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,23,Wirtschaft und Konsum,Stufe 3,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,24,Geschlechter und Gleichstellung,Stufe 1,Mann,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,24,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,24,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,24,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,24,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,24,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,25,Geschlechter und Gleichstellung,Stufe 2,Anteil,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,25,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,25,Geschlechter und Gleichstellung,Stufe 2,Recht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,25,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,25,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,25,"Politik, Demokratie und Menschenrechte",Stufe 1,Gesellschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,25,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,25,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,25,Wirtschaft und Konsum,Stufe 2,Angebot,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,25,Wirtschaft und Konsum,Stufe 2,Kosten,1,0,4,0,5,3.0
+Mathematik 1 Schulbuch SB.pdf,26,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,26,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,26,Wirtschaft und Konsum,Stufe 2,Kosten,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,27,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,27,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,27,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,27,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,27,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,27,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,27,Wirtschaft und Konsum,Stufe 1,Tausch,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 1,Gruppe,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Geschlechter und Gleichstellung,Stufe 3,Unterschied,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,28,Globale Entwicklung und Frieden,Stufe 1,Gruppe,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,28,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,28,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,28,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,"Politik, Demokratie und Menschenrechte",Stufe 1,Ordnung,0,0,2,0,2,1.2
+Mathematik 1 Schulbuch SB.pdf,28,Wirtschaft und Konsum,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,28,Wirtschaft und Konsum,Stufe 1,Produkt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,28,Wirtschaft und Konsum,Stufe 2,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,28,Wirtschaft und Konsum,Stufe 3,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,29,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,29,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,29,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,29,"Politik, Demokratie und Menschenrechte",Stufe 1,Ordnung,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,30,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,30,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,30,Geschlechter und Gleichstellung,Stufe 1,Gruppe,2,1,0,0,3,2.75
+Mathematik 1 Schulbuch SB.pdf,30,Geschlechter und Gleichstellung,Stufe 1,gleich,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,30,Globale Entwicklung und Frieden,Stufe 1,Gruppe,2,1,0,0,3,2.75
+Mathematik 1 Schulbuch SB.pdf,30,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,2,1,0,0,3,2.75
+Mathematik 1 Schulbuch SB.pdf,30,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,30,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,2,1,0,0,3,2.75
+Mathematik 1 Schulbuch SB.pdf,30,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,30,"Politik, Demokratie und Menschenrechte",Stufe 1,System,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,30,Wirtschaft und Konsum,Stufe 1,Arbeit,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,30,Wirtschaft und Konsum,Stufe 1,Ware,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,31,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,31,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,31,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,31,Geschlechter und Gleichstellung,Stufe 1,Rolle,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,31,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,31,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,31,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,31,Wirtschaft und Konsum,Stufe 1,Produkt,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,31,Wirtschaft und Konsum,Stufe 2,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,31,Wirtschaft und Konsum,Stufe 3,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,32,Geschlechter und Gleichstellung,Stufe 1,Arbeit,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,32,Geschlechter und Gleichstellung,Stufe 2,Arbeit,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,32,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,32,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,32,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,32,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,32,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,32,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,32,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,32,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,32,Wirtschaft und Konsum,Stufe 1,Arbeit,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,33,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,33,Geschlechter und Gleichstellung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,33,Geschlechter und Gleichstellung,Stufe 2,Recht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,33,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,33,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,33,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,33,Globale Entwicklung und Frieden,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,33,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Gemeinsamkeiten,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,33,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,33,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,33,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,33,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,3,0,3,1.8
+Mathematik 1 Schulbuch SB.pdf,33,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,33,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,33,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,34,Geschlechter und Gleichstellung,Stufe 2,Beruf,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,34,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,34,Geschlechter und Gleichstellung,Stufe 3,Unterschied,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,34,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,34,Gesundheit,Stufe 1,Sport,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 3,Bevölkerung,2,0,6,0,8,5.0
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 4,Bevölkerungswachstum,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Entwicklung,1,1,3,0,5,3.25
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 1,Land,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 1,Welt,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,34,Globale Entwicklung und Frieden,Stufe 2,Wirtschaft,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,34,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Brauch,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
 Mathematik 1 Schulbuch SB.pdf,34,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Kultur,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 2,Berufe,3,0,0,0,3,3.0
-Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 2,Mädchen,2,0,0,0,2,2.0
-Mathematik 1 Schulbuch SB.pdf,36,Natürliche Umwelt und Ressourcen,Stufe 1,Leben,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,36,Wirtschaft und Konsum,Stufe 2,Lebensmittel,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 2,Anteil,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,34,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,34,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,34,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,34,Natürliche Umwelt und Ressourcen,Stufe 3,Verbrauch,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,34,Wirtschaft und Konsum,Stufe 1,Handel,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,Wirtschaft und Konsum,Stufe 2,Handel,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,34,Wirtschaft und Konsum,Stufe 2,Verbrauch,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 2,Beruf,0,3,1,0,4,2.75
+Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 1,Partner,1,0,3,0,4,2.5
+Mathematik 1 Schulbuch SB.pdf,35,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,2,4,6,1.4
+Mathematik 1 Schulbuch SB.pdf,35,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,35,Natürliche Umwelt und Ressourcen,Stufe 1,Boden,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,35,Natürliche Umwelt und Ressourcen,Stufe 2,Boden,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,35,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,35,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,2,0,2,0,4,3.0
+Mathematik 1 Schulbuch SB.pdf,35,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,2,0,2,0,4,3.0
+Mathematik 1 Schulbuch SB.pdf,35,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,35,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,35,Wirtschaft und Konsum,Stufe 2,Kunde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,36,Geschlechter und Gleichstellung,Stufe 2,Anteil,1,1,0,0,2,1.75
+Mathematik 1 Schulbuch SB.pdf,36,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,36,Geschlechter und Gleichstellung,Stufe 1,Mensch,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,36,Geschlechter und Gleichstellung,Stufe 1,Rolle,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,36,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Gesundheit,Stufe 1,Körper,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,36,Gesundheit,Stufe 1,Leben,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,36,Globale Entwicklung und Frieden,Stufe 3,Bevölkerung,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,36,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,36,Globale Entwicklung und Frieden,Stufe 2,International,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,36,Globale Entwicklung und Frieden,Stufe 1,Nation,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Globale Entwicklung und Frieden,Stufe 1,Welt,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,36,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,36,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,36,Natürliche Umwelt und Ressourcen,Stufe 1,Leben,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,36,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,36,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,37,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,1,1,3,1.35
+Mathematik 1 Schulbuch SB.pdf,37,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,37,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Gesundheit,Stufe 2,Medikament,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,37,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,1,1,3,1.35
+Mathematik 1 Schulbuch SB.pdf,37,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,37,Natürliche Umwelt und Ressourcen,Stufe 1,Stoff,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,37,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,37,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,2,0,3,0,5,3.5
+Mathematik 1 Schulbuch SB.pdf,37,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,2,0,3,0,5,3.5
+Mathematik 1 Schulbuch SB.pdf,37,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,37,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,37,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,38,Geschlechter und Gleichstellung,Stufe 2,Anteil,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,38,Geschlechter und Gleichstellung,Stufe 1,Mensch,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,38,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,38,Gesundheit,Stufe 1,Körper,1,0,3,0,4,2.5
+Mathematik 1 Schulbuch SB.pdf,38,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,38,Globale Entwicklung und Frieden,Stufe 1,Welt,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,38,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,38,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,38,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,38,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,38,Wirtschaft und Konsum,Stufe 1,Kauf,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,38,Wirtschaft und Konsum,Stufe 2,Kunde,0,0,3,1,4,1.6
+Mathematik 1 Schulbuch SB.pdf,38,Wirtschaft und Konsum,Stufe 1,Ware,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 2,Anteil,1,0,0,2,3,1.2
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 2,Entscheidung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 1,Mensch,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,39,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,39,Gesundheit,Stufe 1,Essen,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,39,Gesundheit,Stufe 1,Körper,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,39,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,39,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,39,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,39,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,39,"Politik, Demokratie und Menschenrechte",Stufe 1,Entscheidung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,39,"Politik, Demokratie und Menschenrechte",Stufe 2,Entscheidung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,39,"Politik, Demokratie und Menschenrechte",Stufe 1,Macht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,39,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,40,Geschlechter und Gleichstellung,Stufe 1,Rolle,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,40,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Globale Entwicklung und Frieden,Stufe 1,Handel,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,40,Globale Entwicklung und Frieden,Stufe 2,Handel,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,40,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Globale Entwicklung und Frieden,Stufe 2,Wirtschaft,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,40,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Wohnen,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 1,Boden,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 2,Boden,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 1,Wald,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,40,Natürliche Umwelt und Ressourcen,Stufe 2,Wald,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,40,"Politik, Demokratie und Menschenrechte",Stufe 1,Freiheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,40,Wirtschaft und Konsum,Stufe 1,Handel,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,40,Wirtschaft und Konsum,Stufe 2,Handel,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,41,Natürliche Umwelt und Ressourcen,Stufe 2,Fläche,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,40,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,41,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,2,3,0.95
+Mathematik 1 Schulbuch SB.pdf,41,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,41,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Wohnen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,41,Natürliche Umwelt und Ressourcen,Stufe 1,Berg,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,41,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,2,0,2,1.2
+Mathematik 1 Schulbuch SB.pdf,41,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,41,Natürliche Umwelt und Ressourcen,Stufe 1,Wiese,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,41,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,2,0,3,1.95
+Mathematik 1 Schulbuch SB.pdf,42,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,42,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,42,Gesundheit,Stufe 1,Medizin,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,42,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,42,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,42,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,42,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,42,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,42,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,42,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,42,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,42,Wirtschaft und Konsum,Stufe 2,Hersteller,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,43,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,43,Geschlechter und Gleichstellung,Stufe 1,Person,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,43,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
 Mathematik 1 Schulbuch SB.pdf,43,Globale Entwicklung und Frieden,Stufe 2,Entwicklung,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,48,Gesundheit,Stufe 2,Bewegung,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,52,"Politik, Demokratie und Menschenrechte",Stufe 2,Macht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,43,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Brauch,0,0,1,4,5,0.9
+Mathematik 1 Schulbuch SB.pdf,43,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Wohnen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,43,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,43,Natürliche Umwelt und Ressourcen,Stufe 3,Verbrauch,1,0,1,3,5,1.8
+Mathematik 1 Schulbuch SB.pdf,43,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,4,0,1,1,6,4.6
+Mathematik 1 Schulbuch SB.pdf,43,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,4,0,1,1,6,4.6
+Mathematik 1 Schulbuch SB.pdf,43,Natürliche Umwelt und Ressourcen,Stufe 4,Wasserverbrauch,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,43,Wirtschaft und Konsum,Stufe 2,Verbrauch,1,0,1,3,5,1.8
+Mathematik 1 Schulbuch SB.pdf,44,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,Geschlechter und Gleichstellung,Stufe 1,Rolle,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,44,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,44,Gesundheit,Stufe 1,Körper,4,0,3,0,7,5.5
+Mathematik 1 Schulbuch SB.pdf,44,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,44,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,Wirtschaft und Konsum,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,44,Wirtschaft und Konsum,Stufe 2,Hersteller,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,44,Wirtschaft und Konsum,Stufe 3,Verpackung,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,44,Wirtschaft und Konsum,Stufe 1,Ware,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,45,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,45,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,45,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,45,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,45,Gesundheit,Stufe 1,Körper,2,0,1,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,45,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,45,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,45,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Gemeinsamkeiten,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,45,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,45,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,45,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,45,Wirtschaft und Konsum,Stufe 2,Hersteller,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,46,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,46,Gesundheit,Stufe 1,Körper,3,0,1,0,4,3.5
+Mathematik 1 Schulbuch SB.pdf,46,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,46,Wirtschaft und Konsum,Stufe 3,Verpackung,1,2,0,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,48,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,48,Gesundheit,Stufe 1,Bewegung,1,3,2,0,6,4.25
+Mathematik 1 Schulbuch SB.pdf,48,Gesundheit,Stufe 2,Bewegung,1,3,2,0,6,4.25
+Mathematik 1 Schulbuch SB.pdf,48,Gesundheit,Stufe 1,Körper,2,0,5,2,9,4.7
+Mathematik 1 Schulbuch SB.pdf,48,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,48,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,48,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,48,"Politik, Demokratie und Menschenrechte",Stufe 3,Mehrheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,49,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,49,Geschlechter und Gleichstellung,Stufe 1,gleich,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,49,Gesundheit,Stufe 1,Bewegung,0,1,1,1,3,1.35
+Mathematik 1 Schulbuch SB.pdf,49,Gesundheit,Stufe 2,Bewegung,0,1,1,1,3,1.35
+Mathematik 1 Schulbuch SB.pdf,49,Gesundheit,Stufe 1,Körper,1,0,3,1,5,2.6
+Mathematik 1 Schulbuch SB.pdf,49,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,49,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,49,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,49,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,49,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,49,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,50,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,50,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,50,Geschlechter und Gleichstellung,Stufe 2,Recht,0,3,1,0,4,2.75
+Mathematik 1 Schulbuch SB.pdf,50,Gesundheit,Stufe 1,Körper,2,0,2,2,6,3.2
+Mathematik 1 Schulbuch SB.pdf,50,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,50,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,3,1,0,4,2.75
+Mathematik 1 Schulbuch SB.pdf,50,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,3,1,0,4,2.75
+Mathematik 1 Schulbuch SB.pdf,50,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,50,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,51,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,51,Gesundheit,Stufe 1,Körper,3,0,1,0,4,3.5
+Mathematik 1 Schulbuch SB.pdf,51,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,51,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,51,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,51,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,51,Wirtschaft und Konsum,Stufe 1,Tausch,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,52,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,52,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,52,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,52,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,52,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,52,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,52,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,52,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,52,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,52,"Politik, Demokratie und Menschenrechte",Stufe 1,Macht,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,52,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,0,0,2,1,3,1.1
+Mathematik 1 Schulbuch SB.pdf,52,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,53,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,53,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,53,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,53,Globale Entwicklung und Frieden,Stufe 2,Chancen,0,3,1,0,4,2.85
+Mathematik 1 Schulbuch SB.pdf,53,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,53,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,53,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,53,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,53,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,2,0,2,1.1
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 4,Vereinbarkeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,54,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,54,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,54,Globale Entwicklung und Frieden,Stufe 2,Chancen,0,0,3,0,3,1.6
+Mathematik 1 Schulbuch SB.pdf,54,Globale Entwicklung und Frieden,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,54,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,54,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,54,"Politik, Demokratie und Menschenrechte",Stufe 1,Macht,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,54,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,55,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,55,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,55,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,55,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,55,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,55,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,55,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,55,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,55,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Zugehörigkeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,55,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,55,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,1,2,0.7
+Mathematik 1 Schulbuch SB.pdf,55,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,55,Wirtschaft und Konsum,Stufe 2,Kunde,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,56,Geschlechter und Gleichstellung,Stufe 1,Mann,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,56,Gesundheit,Stufe 1,Bewegung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,56,Gesundheit,Stufe 2,Bewegung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,56,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,56,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,56,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,56,"Politik, Demokratie und Menschenrechte",Stufe 1,Ordnung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,57,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,57,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,57,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,57,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,57,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,58,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,58,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,58,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,58,Geschlechter und Gleichstellung,Stufe 1,Partner,1,0,2,1,4,2.1
+Mathematik 1 Schulbuch SB.pdf,58,Gesundheit,Stufe 1,Bewegung,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,58,Gesundheit,Stufe 2,Bewegung,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,58,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,4,4,0.4
+Mathematik 1 Schulbuch SB.pdf,58,Natürliche Umwelt und Ressourcen,Stufe 2,Material,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,58,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,59,Gesundheit,Stufe 1,Bewegung,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,59,Gesundheit,Stufe 2,Bewegung,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,59,Globale Entwicklung und Frieden,Stufe 2,Entwicklung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,59,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,59,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,59,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,64,Wirtschaft und Konsum,Stufe 2,Schulden,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,66,Geschlechter und Gleichstellung,Stufe 2,Unterschied,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,59,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,59,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,60,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,60,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,60,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,60,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,60,Geschlechter und Gleichstellung,Stufe 1,Partner,1,0,2,1,4,2.1
+Mathematik 1 Schulbuch SB.pdf,60,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,60,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,60,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,6,6,0.6
+Mathematik 1 Schulbuch SB.pdf,60,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Brauch,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,60,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Wohnen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,60,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,4,4,0.4
+Mathematik 1 Schulbuch SB.pdf,60,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,60,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,60,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,60,"Politik, Demokratie und Menschenrechte",Stufe 1,System,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,60,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,61,Geschlechter und Gleichstellung,Stufe 1,Partner,1,0,1,2,4,1.7
+Mathematik 1 Schulbuch SB.pdf,61,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,4,4,0.4
+Mathematik 1 Schulbuch SB.pdf,61,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,61,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,61,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,62,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,62,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,62,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,3,0,0,4,3.25
+Mathematik 1 Schulbuch SB.pdf,62,Geschlechter und Gleichstellung,Stufe 1,Rolle,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,62,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,62,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,62,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,62,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,62,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,62,"Politik, Demokratie und Menschenrechte",Stufe 1,System,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,62,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,63,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,63,Gesundheit,Stufe 1,Alter,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,63,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,63,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,63,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,63,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,63,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,63,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,64,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,64,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,64,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,64,Geschlechter und Gleichstellung,Stufe 1,Partner,1,0,3,2,6,2.7
+Mathematik 1 Schulbuch SB.pdf,64,Gesundheit,Stufe 1,Bewegung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,64,Gesundheit,Stufe 2,Bewegung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,64,Globale Entwicklung und Frieden,Stufe 1,Welt,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,64,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,6,6,0.6
+Mathematik 1 Schulbuch SB.pdf,64,Natürliche Umwelt und Ressourcen,Stufe 2,Material,1,0,1,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,64,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,64,Wirtschaft und Konsum,Stufe 3,Schulden,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,65,Gesundheit,Stufe 1,Bewegung,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,65,Gesundheit,Stufe 2,Bewegung,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,65,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,65,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,65,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,65,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,65,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,66,Geschlechter und Gleichstellung,Stufe 3,Unterschied,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,66,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,66,Gesundheit,Stufe 1,Luft,1,0,3,1,5,2.6
+Mathematik 1 Schulbuch SB.pdf,66,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,66,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,1,0,0,1,0.75
 Mathematik 1 Schulbuch SB.pdf,66,Natürliche Umwelt und Ressourcen,Stufe 2,Energie,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,71,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,72,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Vielfalt,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,75,Natürliche Umwelt und Ressourcen,Stufe 2,Fläche,2,0,0,0,2,2.0
-Mathematik 1 Schulbuch SB.pdf,76,Natürliche Umwelt und Ressourcen,Stufe 2,Fläche,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,66,Natürliche Umwelt und Ressourcen,Stufe 1,Luft,1,0,3,1,5,2.6
+Mathematik 1 Schulbuch SB.pdf,66,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,66,"Politik, Demokratie und Menschenrechte",Stufe 1,Freiheit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,66,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,66,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,67,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,67,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,67,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,1,0,3,2.0
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,6,0,6,3.0
+Mathematik 1 Schulbuch SB.pdf,68,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,68,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,1,0,3,2.0
+Mathematik 1 Schulbuch SB.pdf,68,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,68,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,68,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,6,0,6,3.0
+Mathematik 1 Schulbuch SB.pdf,68,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,6,0,6,3.0
+Mathematik 1 Schulbuch SB.pdf,68,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,68,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,3,2,1,6,3.35
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,69,Geschlechter und Gleichstellung,Stufe 1,gleich,1,0,0,1,2,1.1
+Mathematik 1 Schulbuch SB.pdf,69,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,3,2,1,6,3.35
+Mathematik 1 Schulbuch SB.pdf,69,Globale Entwicklung und Frieden,Stufe 1,Hilfe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,Natürliche Umwelt und Ressourcen,Stufe 1,Boden,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,69,Natürliche Umwelt und Ressourcen,Stufe 2,Boden,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,69,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,69,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,69,"Politik, Demokratie und Menschenrechte",Stufe 1,Ordnung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,69,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,69,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,69,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,70,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,70,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,70,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,70,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,70,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,70,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,70,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,70,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,71,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,0,2,4,1.7
+Mathematik 1 Schulbuch SB.pdf,71,Geschlechter und Gleichstellung,Stufe 2,Recht,0,1,5,0,6,3.25
+Mathematik 1 Schulbuch SB.pdf,71,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,71,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,71,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,71,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,0,2,4,1.7
+Mathematik 1 Schulbuch SB.pdf,71,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,71,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,71,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,1,5,0,6,3.25
+Mathematik 1 Schulbuch SB.pdf,71,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,1,0,5,0,6,3.5
+Mathematik 1 Schulbuch SB.pdf,72,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,72,Geschlechter und Gleichstellung,Stufe 1,Mann,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,72,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,72,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,72,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,72,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,1,0,0,1,2,1.1
+Mathematik 1 Schulbuch SB.pdf,72,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,72,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Vielfalt,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,72,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,72,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,72,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,5,5,0.5
+Mathematik 1 Schulbuch SB.pdf,72,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,72,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,73,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,73,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,73,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,73,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,73,Geschlechter und Gleichstellung,Stufe 1,gleich,3,0,1,1,5,3.6
+Mathematik 1 Schulbuch SB.pdf,73,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,73,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,73,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,3,1,1,5,2.95
+Mathematik 1 Schulbuch SB.pdf,73,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,73,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,73,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 1,Mann,0,3,0,0,3,2.25
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,5,1,6,2.6
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 1,Rolle,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,74,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,2,3,0.95
+Mathematik 1 Schulbuch SB.pdf,74,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,74,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,74,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,74,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,2,0,3,1.95
+Mathematik 1 Schulbuch SB.pdf,74,"Politik, Demokratie und Menschenrechte",Stufe 1,Ordnung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,74,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,5,1,6,2.6
+Mathematik 1 Schulbuch SB.pdf,74,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,5,1,6,2.6
+Mathematik 1 Schulbuch SB.pdf,74,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,74,Wirtschaft und Konsum,Stufe 2,Marke,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,75,Geschlechter und Gleichstellung,Stufe 1,Mann,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,75,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,75,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,75,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,2,0,2,1.2
+Mathematik 1 Schulbuch SB.pdf,75,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,75,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,76,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,Geschlechter und Gleichstellung,Stufe 2,Lohn,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,76,Geschlechter und Gleichstellung,Stufe 1,gleich,1,0,0,3,4,1.3
+Mathematik 1 Schulbuch SB.pdf,76,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Brauch,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,3,4,1.05
+Mathematik 1 Schulbuch SB.pdf,76,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,76,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,76,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,76,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,Wirtschaft und Konsum,Stufe 1,Kauf,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,76,Wirtschaft und Konsum,Stufe 1,Lohn,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,77,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,77,Geschlechter und Gleichstellung,Stufe 1,Mann,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,77,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,77,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,77,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,77,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,77,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,4,1,0,5,3.6
+Mathematik 1 Schulbuch SB.pdf,78,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,78,Gesundheit,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,4,1,0,5,3.6
+Mathematik 1 Schulbuch SB.pdf,78,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,78,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,78,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,78,"Politik, Demokratie und Menschenrechte",Stufe 1,Regeln,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,78,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,78,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,78,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.6
+Mathematik 1 Schulbuch SB.pdf,79,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,79,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,79,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,1,1,4,2.2
+Mathematik 1 Schulbuch SB.pdf,79,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,79,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,1,1,4,2.2
+Mathematik 1 Schulbuch SB.pdf,79,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,79,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,79,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,80,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,1,1,4,2.1
+Mathematik 1 Schulbuch SB.pdf,80,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,80,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,80,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,1,1,4,2.1
+Mathematik 1 Schulbuch SB.pdf,80,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Geschichte,1,1,0,1,3,1.85
+Mathematik 1 Schulbuch SB.pdf,80,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,80,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,80,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,80,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,80,Wirtschaft und Konsum,Stufe 2,Angebot,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,80,Wirtschaft und Konsum,Stufe 2,Kosten,0,0,4,0,4,2.0
+Mathematik 1 Schulbuch SB.pdf,80,Wirtschaft und Konsum,Stufe 1,Tausch,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,81,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,81,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,81,Geschlechter und Gleichstellung,Stufe 1,gleich,0,1,0,1,2,0.85
+Mathematik 1 Schulbuch SB.pdf,81,Gesundheit,Stufe 1,Essen,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,81,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,81,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,81,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,81,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,81,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Geschichte,3,0,0,0,3,3.0
+Mathematik 1 Schulbuch SB.pdf,81,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,81,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,81,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,81,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,81,Wirtschaft und Konsum,Stufe 1,Geld,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,81,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,81,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,82,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,82,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,82,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,82,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,2,0,1,3,1.6
+Mathematik 1 Schulbuch SB.pdf,82,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,82,Gesundheit,Stufe 1,Rein,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,82,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,2,0,1,3,1.6
+Mathematik 1 Schulbuch SB.pdf,82,Globale Entwicklung und Frieden,Stufe 1,Hilfe,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,82,"Politik, Demokratie und Menschenrechte",Stufe 2,Gesetz,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,82,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,82,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,5,0,5,2.5
+Mathematik 1 Schulbuch SB.pdf,82,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,82,Wirtschaft und Konsum,Stufe 1,Produkt,1,0,0,1,2,1.1
+Mathematik 1 Schulbuch SB.pdf,82,Wirtschaft und Konsum,Stufe 2,Produktion,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,82,Wirtschaft und Konsum,Stufe 3,Produktion,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,83,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,1,0,2,1.35
+Mathematik 1 Schulbuch SB.pdf,83,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,5,0,0,5,3.75
+Mathematik 1 Schulbuch SB.pdf,83,Geschlechter und Gleichstellung,Stufe 2,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,83,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,4,0,4,2.3
+Mathematik 1 Schulbuch SB.pdf,83,Gesundheit,Stufe 1,Rein,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,83,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,5,0,0,5,3.75
+Mathematik 1 Schulbuch SB.pdf,83,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,83,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Zugehörigkeit,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,83,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,7,7,0.7
+Mathematik 1 Schulbuch SB.pdf,83,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,4,0,4,2.4
+Mathematik 1 Schulbuch SB.pdf,83,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,83,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,83,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,83,Wirtschaft und Konsum,Stufe 1,Produkt,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,83,Wirtschaft und Konsum,Stufe 2,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,83,Wirtschaft und Konsum,Stufe 3,Produktion,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,2,0,4,2.5
+Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 1,Familie,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 2,Familie,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,84,Wirtschaft und Konsum,Stufe 2,Kosten,5,0,0,0,5,5.0
+Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 1,Gruppe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 1,Person,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,84,Geschlechter und Gleichstellung,Stufe 1,gleich,0,8,5,0,13,8.5
+Mathematik 1 Schulbuch SB.pdf,84,Gesundheit,Stufe 1,Essen,2,0,3,0,5,3.5
+Mathematik 1 Schulbuch SB.pdf,84,Globale Entwicklung und Frieden,Stufe 1,Gruppe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,84,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,2,0,3,0,5,3.5
+Mathematik 1 Schulbuch SB.pdf,84,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Familie,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,84,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Geschichte,2,0,1,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,84,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,84,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,84,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,84,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,8,5,0,13,8.5
+Mathematik 1 Schulbuch SB.pdf,84,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,84,Wirtschaft und Konsum,Stufe 2,Kosten,5,0,2,0,7,6.0
+Mathematik 1 Schulbuch SB.pdf,84,Wirtschaft und Konsum,Stufe 1,Preis,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,84,Wirtschaft und Konsum,Stufe 2,Preis,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,1,3,0,4,2.35
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 1,Kind,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,85,Geschlechter und Gleichstellung,Stufe 1,gleich,2,6,0,0,8,6.5
+Mathematik 1 Schulbuch SB.pdf,85,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,85,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,1,0,2,1.25
+Mathematik 1 Schulbuch SB.pdf,85,Globale Entwicklung und Frieden,Stufe 1,Hilfe,2,0,0,0,2,2.0
+Mathematik 1 Schulbuch SB.pdf,85,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,85,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,85,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Sprache,2,0,1,0,3,2.5
+Mathematik 1 Schulbuch SB.pdf,85,Natürliche Umwelt und Ressourcen,Stufe 2,Klima,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,85,Natürliche Umwelt und Ressourcen,Stufe 3,Schutz,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,85,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,85,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,8,0,0,8,6.0
+Mathematik 1 Schulbuch SB.pdf,85,"Politik, Demokratie und Menschenrechte",Stufe 3,Schutz,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 1,Arbeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 1,Geld,1,0,2,0,3,2.0
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 1,Kauf,0,0,0,5,5,0.5
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 1,Preis,1,0,0,0,1,1.0
 Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 2,Preis,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 1,Verkauf,0,1,4,0,5,2.75
+Mathematik 1 Schulbuch SB.pdf,85,Wirtschaft und Konsum,Stufe 2,Verkauf,0,1,4,0,5,2.75
+Mathematik 1 Schulbuch SB.pdf,86,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,86,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,86,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,86,Gesundheit,Stufe 1,Körper,2,0,6,2,10,5.2
+Mathematik 1 Schulbuch SB.pdf,86,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,86,Globale Entwicklung und Frieden,Stufe 1,Hilfe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,86,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,86,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,86,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,86,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,86,Wirtschaft und Konsum,Stufe 1,Ware,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,87,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,87,Geschlechter und Gleichstellung,Stufe 1,Rolle,0,0,0,3,3,0.3
+Mathematik 1 Schulbuch SB.pdf,87,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,87,Gesundheit,Stufe 1,Körper,6,0,1,2,9,6.7
+Mathematik 1 Schulbuch SB.pdf,87,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,87,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,87,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,87,Wirtschaft und Konsum,Stufe 2,Marke,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 3,Aufgaben,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,88,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,2,2,4,1.2
+Mathematik 1 Schulbuch SB.pdf,88,Gesundheit,Stufe 1,Körper,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Globale Entwicklung und Frieden,Stufe 1,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Globale Entwicklung und Frieden,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Globale Entwicklung und Frieden,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Gemeinsamkeiten,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Gemeinschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Zugehörigkeit,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,88,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,88,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,3,1,4,1.7
+Mathematik 1 Schulbuch SB.pdf,88,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,88,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,88,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,88,Wirtschaft und Konsum,Stufe 1,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,88,Wirtschaft und Konsum,Stufe 2,Handel,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Geschlechter und Gleichstellung,Stufe 1,Gruppe,0,0,3,0,3,1.5
+Mathematik 1 Schulbuch SB.pdf,89,Gesundheit,Stufe 1,Körper,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,89,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Globale Entwicklung und Frieden,Stufe 1,Gruppe,0,0,3,0,3,1.5
+Mathematik 1 Schulbuch SB.pdf,89,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,89,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Begegnung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Gruppe,0,0,3,0,3,1.5
 Mathematik 1 Schulbuch SB.pdf,89,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,89,Natürliche Umwelt und Ressourcen,Stufe 2,Fläche,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,89,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,"Politik, Demokratie und Menschenrechte",Stufe 1,Gruppe,0,0,3,0,3,1.5
+Mathematik 1 Schulbuch SB.pdf,89,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,89,Wirtschaft und Konsum,Stufe 1,Ware,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,90,Geschlechter und Gleichstellung,Stufe 3,Unterschied,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,Gesundheit,Stufe 1,Essen,0,0,2,1,3,1.1
+Mathematik 1 Schulbuch SB.pdf,90,Gesundheit,Stufe 1,Körper,7,0,3,1,11,8.6
+Mathematik 1 Schulbuch SB.pdf,90,Globale Entwicklung und Frieden,Stufe 1,Hilfe,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,90,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,2,1,3,1.1
+Mathematik 1 Schulbuch SB.pdf,90,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,90,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 3,Unterschiede,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,Natürliche Umwelt und Ressourcen,Stufe 1,Erde,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,90,Natürliche Umwelt und Ressourcen,Stufe 2,Stein,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,90,"Politik, Demokratie und Menschenrechte",Stufe 1,Stimme,0,0,3,4,7,1.9
+Mathematik 1 Schulbuch SB.pdf,91,Geschlechter und Gleichstellung,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,91,Geschlechter und Gleichstellung,Stufe 2,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,91,Geschlechter und Gleichstellung,Stufe 2,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,91,Gesundheit,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,91,Gesundheit,Stufe 1,Körper,2,0,2,0,4,3.0
+Mathematik 1 Schulbuch SB.pdf,91,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,91,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,91,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Essen,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,91,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,91,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 2,Werte,0,0,1,0,1,0.6
 Mathematik 1 Schulbuch SB.pdf,91,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,2,0,0,0,2,2.0
-Mathematik 1 Schulbuch SB.pdf,91,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,1,0,0,0,1,1.0
-Mathematik 1 Schulbuch SB.pdf,92,Natürliche Umwelt und Ressourcen,Stufe 2,Fläche,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,91,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,91,Natürliche Umwelt und Ressourcen,Stufe 1,Wasser,1,0,1,1,3,1.6
+Mathematik 1 Schulbuch SB.pdf,91,Natürliche Umwelt und Ressourcen,Stufe 2,Wasser,1,0,1,1,3,1.6
+Mathematik 1 Schulbuch SB.pdf,91,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,91,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,2,0,0,2,1.5
+Mathematik 1 Schulbuch SB.pdf,91,"Politik, Demokratie und Menschenrechte",Stufe 1,Wert,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,91,Wirtschaft und Konsum,Stufe 1,Arbeit,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,92,Gesundheit,Stufe 1,Körper,3,0,1,0,4,3.5
+Mathematik 1 Schulbuch SB.pdf,92,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,92,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Fest,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,92,Natürliche Umwelt und Ressourcen,Stufe 1,Tier,0,0,0,2,2,0.2
+Mathematik 1 Schulbuch SB.pdf,92,Wirtschaft und Konsum,Stufe 3,Verpackung,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,93,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,93,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,93,Gesundheit,Stufe 1,Körper,0,0,3,0,3,1.5
+Mathematik 1 Schulbuch SB.pdf,93,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,0,0,1,0.75
+Mathematik 1 Schulbuch SB.pdf,93,Globale Entwicklung und Frieden,Stufe 1,Hilfe,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,93,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,93,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,Geschlechter und Gleichstellung,Stufe 2,Bildung,0,1,3,0,4,2.45
+Mathematik 1 Schulbuch SB.pdf,95,Geschlechter und Gleichstellung,Stufe 1,Mensch,1,0,0,0,1,1.0
+Mathematik 1 Schulbuch SB.pdf,95,Geschlechter und Gleichstellung,Stufe 2,Recht,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,95,Geschlechter und Gleichstellung,Stufe 1,gleich,0,0,1,1,2,0.6
+Mathematik 1 Schulbuch SB.pdf,95,Globale Entwicklung und Frieden,Stufe 3,Bildung,0,1,3,0,4,2.45
+Mathematik 1 Schulbuch SB.pdf,95,Globale Entwicklung und Frieden,Stufe 1,Frieden,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,Globale Entwicklung und Frieden,Stufe 2,Frieden,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,Globale Entwicklung und Frieden,Stufe 1,Land,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,Kulturelle Identitäten und interkulturelle Verständigung,Stufe 1,Art,0,0,0,4,4,0.4
+Mathematik 1 Schulbuch SB.pdf,95,Natürliche Umwelt und Ressourcen,Stufe 2,Arten,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,95,Natürliche Umwelt und Ressourcen,Stufe 1,Berg,0,0,0,1,1,0.1
+Mathematik 1 Schulbuch SB.pdf,95,Natürliche Umwelt und Ressourcen,Stufe 2,Landschaft,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,"Politik, Demokratie und Menschenrechte",Stufe 3,Frieden,0,0,1,0,1,0.5
+Mathematik 1 Schulbuch SB.pdf,95,"Politik, Demokratie und Menschenrechte",Stufe 3,Gleichheit,0,0,2,0,2,1.1
+Mathematik 1 Schulbuch SB.pdf,95,"Politik, Demokratie und Menschenrechte",Stufe 1,Recht,0,0,2,0,2,1.0
+Mathematik 1 Schulbuch SB.pdf,95,"Politik, Demokratie und Menschenrechte",Stufe 2,Rechte,0,0,2,0,2,1.0
