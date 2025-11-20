@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wahrscheinlichkeits-Drehrad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        #info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #357ABD 0%, #2868A8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #nextBtn {
+            padding: 12px 20px;
+        }
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 48px;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ja {
+            color: #10b981;
+        }
+        .nein {
+            color: #ef4444;
+        }
+        #situation-info {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        .probability-display {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            color: #333;
+        }
+        .instruction {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+        .legend-ja {
+            background: rgb(16, 185, 129);
+        }
+        .legend-nein {
+            background: rgb(239, 68, 68);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>🎯 Wahrscheinlichkeits-Drehrad</h1>
+        <div id="info">→ durchgehend für kompletten Durchlauf · ← zurück zur vorherigen Situation</div>
+        <div id="canvas-container"></div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-ja"></div>
+                <span><strong>JA</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-nein"></div>
+                <span><strong>NEIN</strong></span>
+            </div>
+        </div>
+        <div id="result"></div>
+        <div class="probability-display" id="probability"></div>
+        <div id="situation-info"></div>
+        <div id="controls">
+            <button id="slowSpinBtn">⏱️ Lange drehen</button>
+            <button id="fastSpinBtn">⚡ Kurz drehen</button>
+            <button id="nextBtn">Weiter →</button>
+        </div>
+        <div class="instruction">→ Drehen verdeckt → Scheibe offen → Drehen offen → Nächste Situation · ← Zurück</div>
+    </div>
+
+    <script>
+        // === SITUATIONEN HIER BEARBEITEN ===
+        const situations = [
+            { jaPercent: 9.0, keyword: "Seltenes Ereignis" },
+            { jaPercent: 25.5, keyword: "Regentag" },
+            { jaPercent: 50.0, keyword: "Münzwurf" },
+            { jaPercent: 75.0, keyword: "Sonniger Tag" },
+            { jaPercent: 91.3, keyword: "Sehr wahrscheinlich" },
+            { jaPercent: 15.7, keyword: "Gewinnchance" },
+            { jaPercent: 66.7, keyword: "Zwei von drei" },
+            { jaPercent: 33.3, keyword: "Würfel: 1 oder 2" },
+            { jaPercent: 5.2, keyword: "Unwahrscheinlich" },
+            { jaPercent: 82.4, keyword: "Hohe Chance" }
+        ];
+
+        let currentSituationIndex = 0;
+        let phase = 0; // 0 = verdeckt drehen, 1 = offen drehen, 2 = nächste Situation
+        let spinning = false;
+        let rotation = 0;
+        let spinSpeed = 0;
+        let brakeFactor = 0.96; // Variable Verzögerung
+        let targetRotation = 0;
+        let result = null;
+        let showResult = false;
+        let resultAngle = 0;
+
+        const SPIN_DURATION_SLOW = 4000; // ms - langsames Drehen
+        const SPIN_DURATION_FAST = 1500; // ms - schnelles Drehen
+        const MIN_ROTATIONS = 3;
+
+        function setup() {
+            let canvas = createCanvas(400, 400);
+            canvas.parent('canvas-container');
+            canvas.mousePressed(handleClick);
+            updateInfo();
+        }
+
+        function draw() {
+            background(250);
+            translate(width / 2, height / 2);
+
+            if (spinning) {
+                rotation += spinSpeed;
+                spinSpeed *= brakeFactor; // Variable Verzögerung
+                
+                if (abs(rotation - targetRotation) < 0.1 && spinSpeed < 0.01) {
+                    spinning = false;
+                    rotation = targetRotation;
+                    // Erst jetzt Ergebnis anzeigen
+                    showResult = true;
+                    displayResult();
+                }
+            }
+
+            // Drehrad zeichnen
+            push();
+            rotate(rotation);
+            drawWheel();
+            pop();
+
+            // Zeiger zeichnen
+            drawPointer();
+
+            // Mittelpunkt
+            fill(255);
+            stroke(100);
+            strokeWeight(3);
+            //circle(0, 0, 40);
+            fill(100);
+            noStroke();
+            textAlign(CENTER, CENTER);
+            textSize(20);
+            //text('?', 0, 0);
+        }
+
+        function drawWheel() {
+            const situation = situations[currentSituationIndex];
+            const jaAngle = (situation.jaPercent / 100) * TWO_PI;
+            
+            strokeWeight(2);
+            stroke(255);
+
+            if (phase === 0) {
+                // Verdeckt - neutrales Rad
+                fill(200);
+                circle(0, 0, 320);
+                
+                // Dezente Striche für Textur
+                stroke(180);
+                for (let i = 0; i < 12; i++) {
+                    let angle = (i / 12) * TWO_PI;
+                    let x1 = cos(angle) * 140;
+                    let y1 = sin(angle) * 140;
+                    let x2 = cos(angle) * 160;
+                    let y2 = sin(angle) * 160;
+                    line(x1, y1, x2, y2);
+                }
+            } else {
+                // Offen - zeige Wahrscheinlichkeiten
+                // JA Sektor (grün)
+                fill(16, 185, 129, 180);
+                arc(0, 0, 320, 320, 0, jaAngle, PIE);
+                
+                // NEIN Sektor (rot)
+                fill(239, 68, 68, 180);
+                arc(0, 0, 320, 320, jaAngle, TWO_PI, PIE);
+                
+                // Nur Prozent-Anzeige
+                fill(255);
+                noStroke();
+                textSize(32);
+                textAlign(CENTER, CENTER);
+                
+                // JA Prozent
+                let jaLabelAngle = jaAngle / 2;
+                let jaX = cos(jaLabelAngle) * 100;
+                let jaY = sin(jaLabelAngle) * 100;
+                push();
+                translate(jaX, jaY);
+                rotate(jaLabelAngle);
+                text(situation.jaPercent.toFixed(1) + '%', 0, 0);
+                pop();
+                
+                // NEIN Prozent
+                let neinLabelAngle = jaAngle + (TWO_PI - jaAngle) / 2;
+                let neinX = cos(neinLabelAngle) * 100;
+                let neinY = sin(neinLabelAngle) * 100;
+                push();
+                translate(neinX, neinY);
+                rotate(neinLabelAngle);
+                text((100 - situation.jaPercent).toFixed(1) + '%', 0, 0);
+                pop();
+            }
+        }
+
+        function drawPointer() {
+            push();
+            translate(0, -330); // Position am oberen Rand
+            rotate(HALF_PI); // Zeiger nach unten zeigend
+            fill(120, 120, 120, 150); // Grau mit Transparenz
+            stroke(80, 80, 80, 180); // Dunkleres Grau mit Transparenz
+            strokeWeight(1.5); // Dünnerer Rand
+            // Schlanker und spitzer: weniger breit (±8 statt ±15), länger (190 statt 180)
+            triangle(150, -8, 150, 8, 190, 0);
+            pop();
+        }
+
+        function handleClick() {
+            if (spinning) {
+                // Stoppe sofort und zeige Ergebnis
+                spinning = false;
+                rotation = targetRotation;
+                showResult = true;
+                displayResult();
+            }
+        }
+
+        function startSpin(speed = 'normal') {
+            const situation = situations[currentSituationIndex];
+            const random = Math.random() * 100;
+            result = random < situation.jaPercent;
+            
+            // Berechne Ziel-Winkel (Zeiger zeigt nach oben = -90° = 270° = 3π/2)
+            const jaAngle = (situation.jaPercent / 100) * TWO_PI;
+            let targetAngle;
+            
+            // Anpassung für Zeiger oben: Winkel um -90° verschieben
+            const offset = -HALF_PI;
+            
+            if (result) {
+                // Landet auf JA - irgendwo im JA-Sektor
+                targetAngle = offset + Math.random() * jaAngle;
+            } else {
+                // Landet auf NEIN
+                targetAngle = offset + jaAngle + Math.random() * (TWO_PI - jaAngle);
+            }
+            
+            resultAngle = targetAngle;
+            
+            // Füge mehrere volle Umdrehungen hinzu
+            const fullRotations = MIN_ROTATIONS + Math.random() * 2;
+            targetRotation = rotation + fullRotations * TWO_PI + targetAngle - rotation % TWO_PI;
+            
+            // Geschwindigkeit und Verzögerung basierend auf Parameter
+            if (speed === 'fast') {
+                // "Schnell" = kurz drehen, mittlere Geschwindigkeit, große Verzögerung
+                spinSpeed = 0.3;
+                brakeFactor = 0.93; // Starke Verzögerung
+            } else if (speed === 'slow') {
+                // "Langsam" = lange drehen, hohe Geschwindigkeit, langsame Verzögerung
+                spinSpeed = 0.6;
+                brakeFactor = 0.98; // Schwache Verzögerung
+            } else {
+                spinSpeed = 0.3;
+                brakeFactor = 0.96;
+            }
+            
+            spinning = true;
+            showResult = false;
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('probability').innerHTML = '';
+        }
+
+        function displayResult() {
+            const resultDiv = document.getElementById('result');
+            if (result) {
+                resultDiv.innerHTML = '<span class="ja">JA</span>';
+            } else {
+                resultDiv.innerHTML = '<span class="nein">NEIN</span>';
+            }
+        }
+
+        function updateInfo() {
+            const situation = situations[currentSituationIndex];
+            const infoDiv = document.getElementById('situation-info');
+            const phaseText = phase === 0 ? '🎭 Verdeckt' : '🎯 Offen';
+            infoDiv.innerHTML = `<strong>${phaseText}</strong> · Situation ${currentSituationIndex + 1}/${situations.length}: ${situation.keyword}`;
+        }
+
+        function nextPhase() {
+            if (spinning) {
+                // Wenn am Drehen: nichts tun
+                return;
+            }
+            
+            showResult = false;
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('probability').innerHTML = '';
+            
+            if (phase === 0) {
+                // Von verdeckt zu offen
+                phase = 1;
+            } else if (phase === 1) {
+                // Von offen zur nächsten Situation
+                phase = 0;
+                currentSituationIndex = (currentSituationIndex + 1) % situations.length;
+            }
+            
+            updateInfo();
+        }
+
+        function previousPhase() {
+            if (spinning) {
+                // Stoppe zuerst
+                handleClick();
+                return;
+            }
+            
+            showResult = false;
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('probability').innerHTML = '';
+            
+            if (phase === 1) {
+                // Von offen zu verdeckt
+                phase = 0;
+            } else if (phase === 0) {
+                // Von verdeckt zur vorherigen Situation
+                phase = 1;
+                currentSituationIndex = (currentSituationIndex - 1 + situations.length) % situations.length;
+            }
+            
+            updateInfo();
+        }
+
+        // Button Events
+        document.getElementById('slowSpinBtn').addEventListener('click', () => {
+            if (!spinning && !showResult) {
+                startSpin('slow');
+            }
+        });
+        
+        document.getElementById('fastSpinBtn').addEventListener('click', () => {
+            if (!spinning && !showResult) {
+                startSpin('fast');
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', nextPhase);
+
+        // Globale Keyboard-Events (funktionieren ohne Canvas-Focus)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextStep();
+            } 
+            else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSituation();
+            }
+        });
+    </script>
+</body>
+</html>

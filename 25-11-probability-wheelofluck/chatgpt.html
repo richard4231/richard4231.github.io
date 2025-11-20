@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modernes Wahrscheinlichkeits-Drehrad</title>
+
+    <!-- P5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, #c7d2fe, #6366f1 60%);
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(14px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 28px;
+            color: #1e1b4b;
+        }
+
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0;
+        }
+
+        #situation-info {
+            text-align: center;
+            font-size: 16px;
+            color: #334155;
+            margin-bottom: 15px;
+        }
+
+        #result {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 800;
+            margin-top: 10px;
+            height: 60px;
+        }
+        .ja {
+            color: #10b981;
+        }
+        .nein {
+            color: #ef4444;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+            font-weight: 600;
+            transition: all 0.25s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>🎯 Modernes Wahrscheinlichkeits-Drehrad</h1>
+        <div id="situation-info"></div>
+        <div id="canvas-container"></div>
+        <div id="result"></div>
+        <div id="controls">
+            <button id="nextBtn">Weiter →</button>
+        </div>
+    </div>
+
+    <script>
+        const situations = [
+            { jaPercent: 9.0, keyword: "Seltenes Ereignis" },
+            { jaPercent: 25.5, keyword: "Regentag" },
+            { jaPercent: 50.0, keyword: "Münzwurf" },
+            { jaPercent: 75.0, keyword: "Sonniger Tag" },
+            { jaPercent: 91.3, keyword: "Sehr wahrscheinlich" },
+        ];
+
+        let state = 0; // 0 = verdeckt drehen, 1 = offen anzeigen, 2 = offen drehen
+        let index = 0;
+
+        let spinning = false;
+        let rotation = 0;
+        let speed = 0;
+        let target = 0;
+
+        function setup() {
+            let canvas = createCanvas(420, 420);
+            canvas.parent("canvas-container");
+            updateText();
+        }
+
+        function draw() {
+            background(255, 255, 255, 120);
+            translate(width / 2, height / 2);
+
+            // Smooth Spin
+            if (spinning) {
+                rotation += speed;
+                speed *= 0.985;
+
+                if (abs(rotation - target) < 0.01 && speed < 0.01) {
+                    spinning = false;
+                    rotation = target;
+                    showResult();
+                }
+            }
+
+            push();
+            rotate(rotation);
+            drawWheel();
+            pop();
+
+            drawPointer();
+        }
+
+        function drawWheel() {
+            const s = situations[index];
+            const jaAngle = (s.jaPercent / 100) * TWO_PI;
+
+            noStroke();
+
+            if (state === 0) {
+                fill(200);
+                circle(0, 0, 360);
+            } else {
+                fill(16, 185, 129, 200);
+                arc(0, 0, 360, 360, -HALF_PI, -HALF_PI + jaAngle, PIE);
+
+                fill(239, 68, 68, 200);
+                arc(0, 0, 360, 360, -HALF_PI + jaAngle, -HALF_PI + TWO_PI, PIE);
+            }
+        }
+
+        function drawPointer() {
+            push();
+            translate(0, -180);
+            fill(80, 80, 80);
+            triangle(-12, 0, 12, 0, 0, 26);
+            pop();
+        }
+
+        function nextStep() {
+            if (spinning) return;
+
+            if (state === 0) {
+                spin();
+                state = 1;
+            } else if (state === 1) {
+                state = 2;
+                document.getElementById("result").innerHTML = "";
+            } else if (state === 2) {
+                spin();
+                state = 3;
+            } else {
+                state = 0;
+                index = (index + 1) % situations.length;
+                document.getElementById("result").innerHTML = "";
+                updateText();
+            }
+        }
+
+        function spin() {
+            const s = situations[index];
+            const jaAngle = (s.jaPercent / 100) * TWO_PI;
+
+            const isJa = Math.random() * 100 < s.jaPercent;
+            const angle = isJa
+                ? -HALF_PI + Math.random() * jaAngle
+                : -HALF_PI + jaAngle + Math.random() * (TWO_PI - jaAngle);
+
+            const turns = 4 + Math.random() * 2;
+            target = rotation + turns * TWO_PI + angle - (rotation % TWO_PI);
+
+            speed = 0.6;
+            spinning = true;
+        }
+
+        function showResult() {
+            const s = situations[index];
+            const jaAngle = (s.jaPercent / 100) * TWO_PI;
+            const pos = (rotation % TWO_PI + TWO_PI) % TWO_PI;
+
+            const isJa = pos >= (-HALF_PI + TWO_PI) % TWO_PI && pos <= ((-HALF_PI + jaAngle + TWO_PI) % TWO_PI);
+
+            document.getElementById("result").innerHTML = isJa
+                ? '<span class="ja">JA</span>'
+                : '<span class="nein">NEIN</span>';
+        }
+
+        function updateText() {
+            const s = situations[index];
+            document.getElementById("situation-info").innerHTML =
+                `<strong>Situation ${index + 1}/${situations.length}:</strong> ${s.keyword} (${s.jaPercent}% JA)`;
+        }
+
+        document.getElementById("nextBtn").addEventListener("click", nextStep);
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowRight") nextStep();
+        });
+    </script>
+</body>
+</html>
