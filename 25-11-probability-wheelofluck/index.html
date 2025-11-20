@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wahrscheinlichkeits-Drehrad</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -31,7 +30,7 @@
         }
         #info {
             text-align: center;
-            color: #666;
+            color: #555;
             margin-bottom: 20px;
             font-size: 14px;
         }
@@ -40,33 +39,10 @@
             justify-content: center;
             margin: 20px 0;
         }
-        #controls {
-            text-align: center;
-            margin-top: 20px;
+        canvas {
+            border-radius: 4px;
         }
-        button {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        button:hover {
-            background: linear-gradient(135deg, #357ABD 0%, #2868A8 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        #nextBtn {
-            padding: 12px 20px;
-        }
+
         #result {
             text-align: center;
             margin-top: 20px;
@@ -89,361 +65,435 @@
             margin-top: 15px;
             font-size: 16px;
         }
-        .probability-display {
+        #controls {
             text-align: center;
-            margin-top: 15px;
-            font-size: 18px;
-            color: #333;
+            margin-top: 20px;
+        }
+        button {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #357ABD 0%, #2868A8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
         }
         .instruction {
             text-align: center;
-            color: #888;
+            color: #666;
             font-size: 14px;
             margin-top: 10px;
             font-style: italic;
-        }
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 15px;
-            font-size: 16px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .legend-color {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            border: 2px solid #ddd;
-        }
-        .legend-ja {
-            background: rgb(16, 185, 129);
-        }
-        .legend-nein {
-            background: rgb(239, 68, 68);
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <h1>🎯 Wahrscheinlichkeits-Drehrad</h1>
-        <div id="info">→ durchgehend für kompletten Durchlauf · ← zurück zur vorherigen Situation</div>
-        <div id="canvas-container"></div>
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color legend-ja"></div>
-                <span><strong>JA</strong></span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color legend-nein"></div>
-                <span><strong>NEIN</strong></span>
-            </div>
+        <h1>BNE Gamble</h1>
+        <div id="canvas-container">
+            <canvas id="wheel" width="400" height="400"></canvas>
         </div>
         <div id="result"></div>
-        <div class="probability-display" id="probability"></div>
         <div id="situation-info"></div>
         <div id="controls">
-            <button id="slowSpinBtn">⏱️ Lange drehen</button>
-            <button id="fastSpinBtn">⚡ Kurz drehen</button>
-            <button id="nextBtn">Weiter →</button>
+            <button onclick="app.spin('slow')">Lange drehen</button>
+            <button onclick="app.spin('fast')">Kurz drehen</button>
+            <button onclick="app.next()">Weiter</button>
         </div>
-        <div class="instruction">→ Drehen verdeckt → Scheibe offen → Drehen offen → Nächste Situation · ← Zurück</div>
     </div>
 
     <script>
-        // === SITUATIONEN HIER BEARBEITEN ===
-        const situations = [
-            { jaPercent: 9.0, keyword: "Seltenes Ereignis" },
-            { jaPercent: 25.5, keyword: "Regentag" },
-            { jaPercent: 50.0, keyword: "Münzwurf" },
-            { jaPercent: 75.0, keyword: "Sonniger Tag" },
-            { jaPercent: 91.3, keyword: "Sehr wahrscheinlich" },
-            { jaPercent: 15.7, keyword: "Gewinnchance" },
-            { jaPercent: 66.7, keyword: "Zwei von drei" },
-            { jaPercent: 33.3, keyword: "Würfel: 1 oder 2" },
-            { jaPercent: 5.2, keyword: "Unwahrscheinlich" },
-            { jaPercent: 82.4, keyword: "Hohe Chance" }
-        ];
-
-        let currentSituationIndex = 0;
-        let phase = 0; // 0 = verdeckt drehen, 1 = offen drehen, 2 = nächste Situation
-        let spinning = false;
-        let rotation = 0;
-        let spinSpeed = 0;
-        let brakeFactor = 0.96; // Variable Verzögerung
-        let targetRotation = 0;
-        let result = null;
-        let showResult = false;
-        let resultAngle = 0;
-
-        const SPIN_DURATION_SLOW = 4000; // ms - langsames Drehen
-        const SPIN_DURATION_FAST = 1500; // ms - schnelles Drehen
-        const MIN_ROTATIONS = 3;
-
-        function setup() {
-            let canvas = createCanvas(400, 400);
-            canvas.parent('canvas-container');
-            canvas.mousePressed(handleClick);
-            updateInfo();
-        }
-
-        function draw() {
-            background(250);
-            translate(width / 2, height / 2);
-
-            if (spinning) {
-                rotation += spinSpeed;
-                spinSpeed *= brakeFactor; // Variable Verzögerung
-                
-                if (abs(rotation - targetRotation) < 0.1 && spinSpeed < 0.01) {
-                    spinning = false;
-                    rotation = targetRotation;
-                    // Erst jetzt Ergebnis anzeigen
-                    showResult = true;
-                    displayResult();
+        const app = {
+            // Canvas
+            canvas: null,
+            ctx: null,
+            
+            // Situationen
+            sits: [
+                { jaPercent: 52.0, keyword: "Straftat" },
+                { jaPercent: 9.0, keyword: "Tropenparadies" },
+                { jaPercent: 90.0, keyword: "Elektrifizierung" },
+                { jaPercent: 75.0, keyword: "Gesetze" },
+                { jaPercent: 1.0, keyword: "Plastik" },
+                { jaPercent: 15, keyword: "Ohne Paris" },
+                { jaPercent: 89, keyword: "Mit Paris" },
+                { jaPercent: 60.0, keyword: "Kinder" },
+                { jaPercent: 90.0, keyword: "Wasser" }
+            ],
+            
+            // State
+            sitIdx: 0,
+            open: false,
+            state: 'ready', // 'ready', 'spinning', 'done'
+            result: null, // true = JA, false = NEIN (wird in spin() gesetzt)
+            
+            // Animation
+            angle: 0,
+            targetAngle: 0,
+            speed: 0,
+            
+            init() {
+                this.canvas = document.getElementById('wheel');
+                this.ctx = this.canvas.getContext('2d');
+                this.angle = Math.random() * Math.PI * 2;
+                this.updateInfo();
+                this.animate();
+            },
+            
+            animate() {
+                // Animation Loop
+                if (this.state === 'spinning') {
+                    this.angle += this.speed;
+                    this.speed *= 0.99;
+                    
+                    // Stoppe wenn Geschwindigkeit fast null ist
+                    // OHNE den Winkel zu ändern - lass es natürlich auslaufen
+                    if (this.speed < 0.005 && !this.open) {
+                        this.state = 'done';
+                        this.showResultClosed();
+                    } else if (this.speed < 0.001) {
+                        this.state = 'done';
+                        this.showResultOpen(); // auskommentieren, wenn Resultat im offenen Zustand nicht angzeigt werden soll
+                    }
                 }
-            }
-
-            // Drehrad zeichnen
-            push();
-            rotate(rotation);
-            drawWheel();
-            pop();
-
-            // Zeiger zeichnen
-            drawPointer();
-
-            // Mittelpunkt
-            fill(255);
-            stroke(100);
-            strokeWeight(3);
-            //circle(0, 0, 40);
-            fill(100);
-            noStroke();
-            textAlign(CENTER, CENTER);
-            textSize(20);
-            //text('?', 0, 0);
-        }
-
-        function drawWheel() {
-            const situation = situations[currentSituationIndex];
-            const jaAngle = (situation.jaPercent / 100) * TWO_PI;
-            
-            strokeWeight(2);
-            stroke(255);
-
-            if (phase === 0) {
-                // Verdeckt - neutrales Rad
-                fill(200);
-                circle(0, 0, 320);
                 
-                // Dezente Striche für Textur
-                stroke(180);
-                for (let i = 0; i < 12; i++) {
-                    let angle = (i / 12) * TWO_PI;
-                    let x1 = cos(angle) * 140;
-                    let y1 = sin(angle) * 140;
-                    let x2 = cos(angle) * 160;
-                    let y2 = sin(angle) * 160;
-                    line(x1, y1, x2, y2);
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            },
+            
+            draw() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                
+                // Clear
+                ctx.fillStyle = '#fafafa';
+                ctx.fillRect(0, 0, w, h);
+                
+                ctx.save();
+                ctx.translate(w/2, h/2);
+                
+                // Rad
+                ctx.save();
+                ctx.rotate(this.angle);
+                this.drawWheel();
+                ctx.restore();
+                
+                // Zeiger (oben, Spitze nach unten)
+                ctx.save();
+                ctx.translate(0, -165);
+                ctx.fillStyle = 'rgba(120, 120, 120, 0.6)';
+                ctx.strokeStyle = 'rgba(80, 80, 80, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-8, 0);
+                ctx.lineTo(8, 0);
+                ctx.lineTo(0, 25);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+                
+                ctx.restore(); // keine Redundanz...
+
+                // Mittelpunkt: kleiner Kreis über dem Rad
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = 'rgba(0,0,0,0.12)';
+                ctx.shadowBlur = 8;
+                ctx.arc(w/2, h/2, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                // Dunkler Achspunkt in der Mitte
+                ctx.save();
+                ctx.beginPath();
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = '#888'; // dunkelgrauer Punkt als Achse
+                ctx.arc(w/2, h/2, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+            },
+            
+            drawWheel() {
+                const ctx = this.ctx;
+                const s = this.sits[this.sitIdx];
+                const jaRad = (s.jaPercent / 100) * Math.PI * 2;
+                
+                if (!this.open) {
+                    // Verdeckt
+                    ctx.fillStyle = '#ccc';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 160, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Textur
+                    ctx.strokeStyle = '#b4b4b4';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 12; i++) {
+                        const a = (i / 12) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.cos(a) * 140, Math.sin(a) * 140);
+                        ctx.lineTo(Math.cos(a) * 160, Math.sin(a) * 160);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Offen - JA startet bei -90° (oben)
+                    const startAngle = -Math.PI / 2;
+                    
+                    // JA Sektor (grün)
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, 160, startAngle, startAngle + jaRad);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // NEIN Sektor (rot)
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, 160, startAngle + jaRad, startAngle + Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Rand
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 160, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Muster
+
+                    /* JA-Sektor: Diagonale Linien (weiß, dezent)
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.lineWidth = 1.5;
+                    for (let a = startAngle; a < startAngle + jaRad; a += 0.15) {
+                        const x1 = Math.cos(a) * 40;
+                        const y1 = Math.sin(a) * 40;
+                        const x2 = Math.cos(a) * 160;
+                        const y2 = Math.sin(a) * 160;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                    */
+                    
+                    // NEIN-Sektor: Punkte (weiß, dezent)
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                    for (let a = startAngle + jaRad + 0.2; a < startAngle + Math.PI * 2; a += 0.25) {
+                        for (let r = 40; r < 150; r += 19) {
+                            const x = Math.cos(a) * r;
+                            const y = Math.sin(a) * r;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                    
+                    // Text - JA
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 28px Roboto';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    const jaAngle = startAngle + jaRad / 2;
+                    const jaX = Math.cos(jaAngle) * 110;
+                    const jaY = Math.sin(jaAngle) * 110;
+                    ctx.save();
+                    ctx.translate(jaX, jaY);
+                    ctx.rotate(jaAngle + Math.PI / 2); // Text radial ausrichten
+                    ctx.fillText(s.jaPercent.toFixed(0) + '%', 0, 0); //toFixed(1) für eine Nachkommastelle
+                    ctx.font = 'bold 20px Roboto'; // Optional: kleinere Schrift für "JA"
+                    ctx.fillText('Ja', 0, 30);
+                    ctx.restore();
+                    
+                    // Text - NEIN (radial ausgerichtet)
+                    const neinAngle = startAngle + jaRad + (Math.PI * 2 - jaRad) / 2;
+                    const neinX = Math.cos(neinAngle) * 110;
+                    const neinY = Math.sin(neinAngle) * 110;
+                    ctx.save();
+                    ctx.translate(neinX, neinY);
+                    ctx.rotate(neinAngle + Math.PI / 2); // Text radial ausrichten
+                    ctx.fillText((100 - s.jaPercent).toFixed(0) + '%', 0, 0); //toFixed(1) für eine Nachkommastelle
+                    
+                    ctx.font = 'bold 20px Roboto'; // Optional: kleinere Schrift für "JA"
+                    ctx.fillText('Nein', 0, 30);
+
+                    ctx.restore();
                 }
-            } else {
-                // Offen - zeige Wahrscheinlichkeiten
-                // JA Sektor (grün)
-                fill(16, 185, 129, 180);
-                arc(0, 0, 320, 320, 0, jaAngle, PIE);
+            },
+            
+            spin(type) {
+                if (this.state !== 'ready') return;
                 
-                // NEIN Sektor (rot)
-                fill(239, 68, 68, 180);
-                arc(0, 0, 320, 320, jaAngle, TWO_PI, PIE);
+                const s = this.sits[this.sitIdx];
+                const PI2 = Math.PI * 2;
                 
-                // Nur Prozent-Anzeige
-                fill(255);
-                noStroke();
-                textSize(32);
-                textAlign(CENTER, CENTER);
+                // 1. WÜRFLE JA/NEIN basierend auf Wahrscheinlichkeit
+                const rand = Math.random() * 100;
+                this.result = rand < s.jaPercent; // true = JA, false = NEIN
                 
-                // JA Prozent
-                let jaLabelAngle = jaAngle / 2;
-                let jaX = cos(jaLabelAngle) * 100;
-                let jaY = sin(jaLabelAngle) * 100;
-                push();
-                translate(jaX, jaY);
-                rotate(jaLabelAngle);
-                text(situation.jaPercent.toFixed(1) + '%', 0, 0);
-                pop();
+                // 2. Wähle zufällige Position im entsprechenden Sektor (im Rad-Koordinatensystem)
+                const jaRad = (s.jaPercent / 100) * PI2;
+                const startAngle = -Math.PI / 2;
                 
-                // NEIN Prozent
-                let neinLabelAngle = jaAngle + (TWO_PI - jaAngle) / 2;
-                let neinX = cos(neinLabelAngle) * 100;
-                let neinY = sin(neinLabelAngle) * 100;
-                push();
-                translate(neinX, neinY);
-                rotate(neinLabelAngle);
-                text((100 - situation.jaPercent).toFixed(1) + '%', 0, 0);
-                pop();
-            }
-        }
+                let targetInWheel;
+                if (this.result) {
+                    // JA: Zwischen -90° und -90°+jaRad
+                    targetInWheel = startAngle + Math.random() * jaRad;
+                } else {
+                    // NEIN: Zwischen -90°+jaRad und 270°
+                    targetInWheel = startAngle + jaRad + Math.random() * (PI2 - jaRad);
+                }
+                
+                let finalAngle = -Math.PI/2 - targetInWheel;
+                
+                let diff = finalAngle - this.angle;
+                
+                // Normalisiere diff auf 0 bis 2π (immer vorwärts drehen)
+                diff = diff % PI2;
+                if (diff <= 0) diff += PI2;
+                
+                // 5. Füge 2-4 volle Umdrehungen hinzu für den Effekt
+                const turns = 2 + Math.random() * 2;
+                this.targetAngle = this.angle + turns * PI2 + diff;
+                
+                // 6. Setze Geschwindigkeit
+                this.speed = (type === 'fast') ? 0.3 : 0.6;
+                
+                this.state = 'spinning';
+                document.getElementById('result').innerHTML = '';
+            },    
 
-        function drawPointer() {
-            push();
-            translate(0, -330); // Position am oberen Rand
-            rotate(HALF_PI); // Zeiger nach unten zeigend
-            fill(120, 120, 120, 150); // Grau mit Transparenz
-            stroke(80, 80, 80, 180); // Dunkleres Grau mit Transparenz
-            strokeWeight(1.5); // Dünnerer Rand
-            // Schlanker und spitzer: weniger breit (±8 statt ±15), länger (190 statt 180)
-            triangle(150, -8, 150, 8, 190, 0);
-            pop();
-        }
+            showResultOpen() { //suboptimal, dass zwei verschiedene Methoden. this.result als Variable nutzen?
+                // Warte einen Frame, damit das Canvas fertig gezeichnet ist
+                requestAnimationFrame(() => {
+                    // Lese Pixel-Farbe unter der Zeigerspitze
+                    // Zeiger ist bei (200, 35), Spitze bei ca. (200, 60)
+                    const x = 200;
+                    const y = 60; // Etwas unterhalb der Zeigerspitze, im Rad
+                    
+                    const imageData = this.ctx.getImageData(x, y, 1, 1);
+                    const r = imageData.data[0];
+                    const g = imageData.data[1];
+                    const b = imageData.data[2];
+                    
+                    console.log('Pixel-Farbe unter Zeiger:', r, g, b);
+                    
+                    // JA = grün (16, 185, 129)
+                    // NEIN = rot (239, 68, 68)
+                    // Prüfe welche Farbe näher ist
+                    const distGreen = Math.abs(r - 16) + Math.abs(g - 185) + Math.abs(b - 129);
+                    const distRed = Math.abs(r - 239) + Math.abs(g - 68) + Math.abs(b - 68);
+                    
+                    const isJa = distGreen < distRed;
+                    
+                    document.getElementById('result').innerHTML = 
+                        isJa ? '<span class="ja">JA</span>' : '<span class="nein">NEIN</span>';
+                    
+                    console.log('Ergebnis basierend auf Farbe:', isJa ? 'JA' : 'NEIN');
+                });
+            },
 
-        function handleClick() {
-            if (spinning) {
-                // Stoppe sofort und zeige Ergebnis
-                spinning = false;
-                rotation = targetRotation;
-                showResult = true;
-                displayResult();
-            }
-        }
+            showResultClosed() {
+                // Zeige das in spin() berechnete Ergebnis an
+                document.getElementById('result').innerHTML = 
+                    this.result ? '<span class="ja">JA</span>' : '<span class="nein">NEIN</span>';
+            },
 
-        function startSpin(speed = 'normal') {
-            const situation = situations[currentSituationIndex];
-            const random = Math.random() * 100;
-            result = random < situation.jaPercent;
-            
-            // Berechne Ziel-Winkel (Zeiger zeigt nach oben = -90° = 270° = 3π/2)
-            const jaAngle = (situation.jaPercent / 100) * TWO_PI;
-            let targetAngle;
-            
-            // Anpassung für Zeiger oben: Winkel um -90° verschieben
-            const offset = -HALF_PI;
-            
-            if (result) {
-                // Landet auf JA - irgendwo im JA-Sektor
-                targetAngle = offset + Math.random() * jaAngle;
-            } else {
-                // Landet auf NEIN
-                targetAngle = offset + jaAngle + Math.random() * (TWO_PI - jaAngle);
-            }
-            
-            resultAngle = targetAngle;
-            
-            // Füge mehrere volle Umdrehungen hinzu
-            const fullRotations = MIN_ROTATIONS + Math.random() * 2;
-            targetRotation = rotation + fullRotations * TWO_PI + targetAngle - rotation % TWO_PI;
-            
-            // Geschwindigkeit und Verzögerung basierend auf Parameter
-            if (speed === 'fast') {
-                // "Schnell" = kurz drehen, mittlere Geschwindigkeit, große Verzögerung
-                spinSpeed = 0.3;
-                brakeFactor = 0.93; // Starke Verzögerung
-            } else if (speed === 'slow') {
-                // "Langsam" = lange drehen, hohe Geschwindigkeit, langsame Verzögerung
-                spinSpeed = 0.6;
-                brakeFactor = 0.98; // Schwache Verzögerung
-            } else {
-                spinSpeed = 0.3;
-                brakeFactor = 0.96;
-            }
-            
-            spinning = true;
-            showResult = false;
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('probability').innerHTML = '';
-        }
 
-        function displayResult() {
-            const resultDiv = document.getElementById('result');
-            if (result) {
-                resultDiv.innerHTML = '<span class="ja">JA</span>';
-            } else {
-                resultDiv.innerHTML = '<span class="nein">NEIN</span>';
-            }
-        }
-
-        function updateInfo() {
-            const situation = situations[currentSituationIndex];
-            const infoDiv = document.getElementById('situation-info');
-            const phaseText = phase === 0 ? '🎭 Verdeckt' : '🎯 Offen';
-            infoDiv.innerHTML = `<strong>${phaseText}</strong> · Situation ${currentSituationIndex + 1}/${situations.length}: ${situation.keyword}`;
-        }
-
-        function nextPhase() {
-            if (spinning) {
-                // Wenn am Drehen: nichts tun
-                return;
-            }
+            next() {
+                console.log('next() aufgerufen - state:', this.state, 'open:', this.open);
+                
+                if (this.state === 'spinning') {
+                    console.log('-> Noch am drehen, ignoriere');
+                    return;
+                }
+                
+                if (this.state === 'ready' && !this.open) {
+                    // 1. Drehen verdeckt
+                    console.log('-> Drehen verdeckt');
+                    this.spin('fast');
+                } else if (this.state === 'done' && !this.open) {
+                    // 2. Zeige offen
+                    this.open = true;
+                    this.state = 'ready';
+                    this.result = null;
+                    document.getElementById('result').innerHTML = '';
+                    this.updateInfo();
+                } else if (this.state === 'ready' && this.open) {
+                    // 3. Drehen offen
+                    console.log('-> Drehen offen');
+                    this.spin('fast');
+                } else if (this.state === 'done' && this.open) {
+                    // 4. Nächste Situation
+                    console.log('-> Nächste Situation');
+                    this.open = false;
+                    this.state = 'ready';
+                    this.result = null;
+                    this.sitIdx = (this.sitIdx + 1) % this.sits.length;
+                    this.angle = Math.random() * Math.PI * 2;
+                    document.getElementById('result').innerHTML = '';
+                    this.updateInfo();
+                } else {
+                    console.log('-> Keine Bedingung getroffen!');
+                }
+            },
             
-            showResult = false;
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('probability').innerHTML = '';
+            back() {
+                if (this.state === 'spinning') {
+                    this.angle = this.targetAngle;
+                    this.state = 'done';
+                }
+                this.open = false;
+                this.state = 'ready';
+                this.result = null;
+                this.sitIdx = (this.sitIdx - 1 + this.sits.length) % this.sits.length;
+                this.angle = Math.random() * Math.PI * 2;
+                document.getElementById('result').innerHTML = '';
+                this.updateInfo();
+            },
             
-            if (phase === 0) {
-                // Von verdeckt zu offen
-                phase = 1;
-            } else if (phase === 1) {
-                // Von offen zur nächsten Situation
-                phase = 0;
-                currentSituationIndex = (currentSituationIndex + 1) % situations.length;
+            updateInfo() {
+                const s = this.sits[this.sitIdx];
+                document.getElementById('situation-info').innerHTML = 
+                    `Situation ${this.sitIdx + 1}/${this.sits.length}: ${s.keyword}`;
             }
-            
-            updateInfo();
-        }
-
-        function previousPhase() {
-            if (spinning) {
-                // Stoppe zuerst
-                handleClick();
-                return;
-            }
-            
-            showResult = false;
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('probability').innerHTML = '';
-            
-            if (phase === 1) {
-                // Von offen zu verdeckt
-                phase = 0;
-            } else if (phase === 0) {
-                // Von verdeckt zur vorherigen Situation
-                phase = 1;
-                currentSituationIndex = (currentSituationIndex - 1 + situations.length) % situations.length;
-            }
-            
-            updateInfo();
-        }
-
-        // Button Events
-        document.getElementById('slowSpinBtn').addEventListener('click', () => {
-            if (!spinning && !showResult) {
-                startSpin('slow');
-            }
-        });
+        };
         
-        document.getElementById('fastSpinBtn').addEventListener('click', () => {
-            if (!spinning && !showResult) {
-                startSpin('fast');
-            }
-        });
-        
-        document.getElementById('nextBtn').addEventListener('click', nextPhase);
-
-        // Globale Keyboard-Events (funktionieren ohne Canvas-Focus)
+        // Tastatur
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                nextStep();
-            } 
-            else if (e.key === 'ArrowLeft') {
+                app.next();
+            } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                previousSituation();
+                app.back();
             }
         });
+        
+        // Start
+        app.init();
     </script>
 </body>
 </html>
