@@ -35,6 +35,8 @@
 - [Digitale Medien](https://richard4231.github.io/25-02-rgdigitalmedia/)
 - [Standortbestimmung BNE (Original)](https://richard4231.github.io/25-02-esdcompetence/)
 
+## Weitere Seiten
+– [Generative Art](https://richard4231.github.io/generative-art/)
 <br/> 
 <br/> 
 
