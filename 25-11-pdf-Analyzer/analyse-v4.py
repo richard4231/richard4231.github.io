@@ -546,10 +546,14 @@ def main():
     # KONFIGURATION - HIER ANPASSEN
     # ============================================================
     
-    # Dateipfade
-    excel_pfad = "begriffe_hierarchie.xlsx"  # Deine Excel-Datei
-    pdf_ordner = "pdfs_zu_analysieren"        # Ordner mit PDFs
-    output_csv = "analyse_ergebnisse.csv"     # Ausgabedatei
+    # NEU: Automatische Pfad-Erkennung
+    # Findet Dateien automatisch im selben Ordner wie das Skript
+    SCRIPT_DIR = Path(__file__).parent.absolute()
+    
+    # Dateipfade (relativ zum Skript)
+    excel_pfad = SCRIPT_DIR / "begriffe_hierarchie.xlsx"
+    pdf_ordner = SCRIPT_DIR / "pdfs_zu_analysieren"
+    output_csv = SCRIPT_DIR / "analyse_ergebnisse.csv"
     
     # Suchoptionen
     use_stemming = True          # True = findet Flexionen (z.B. Energie → Energien)
