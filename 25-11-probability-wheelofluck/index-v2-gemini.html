@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BNE Gamble - Fullscreen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --accent-color: #4A90E2;
+            --text-color: #333;
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Kein Scrollen im Fullscreen */
+            display: flex;
+            color: var(--text-color);
+        }
+
+        /* --- Layout Grid --- */
+        #main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Linke Seite: Text & Kontext */
+        #left-panel {
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(255,255,255,0.4);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+
+        h2.situation-counter {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        h1.main-question {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0 0 30px 0;
+            color: #2c3e50;
+        }
+
+        p.description {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #4a5568;
+            max-width: 600px;
+            font-weight: 300;
+        }
+
+        /* Rechte Seite: Rad & Controls */
+        #right-panel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #canvas-container {
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+            transition: transform 0.3s;
+        }
+
+        #result {
+            font-size: 56px;
+            font-weight: 800;
+            height: 70px; /* Platzhalterhöhe */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .ja { color: #10b981; text-shadow: 0 2px 10px rgba(16,185,129,0.3); }
+        .nein { color: #ef4444; text-shadow: 0 2px 10px rgba(239,68,68,0.3); }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        button {
+            background: #2d3748;
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: #4A5568;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        button.primary {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        }
+
+        /* --- Source / Erklärung Popup --- */
+        #source-overlay {
+            position: fixed;
+            bottom: -100%; /* Startet außerhalb des Bildes */
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+            transition: bottom 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            z-index: 100;
+            box-sizing: border-box;
+            border-top: 4px solid #4A90E2;
+        }
+
+        #source-overlay.visible {
+            bottom: 0;
+        }
+
+        .source-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .source-icon {
+            font-size: 30px;
+        }
+
+        .source-text h3 {
+            margin: 0 0 5px 0;
+            color: #4A90E2;
+        }
+        
+        .source-text p {
+            margin: 0;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .close-source {
+            margin-left: auto;
+            background: transparent;
+            color: #999;
+            padding: 5px;
+            box-shadow: none;
+            font-size: 20px;
+        }
+        .close-source:hover {
+            color: #333;
+            background: #eee;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Mobile Anpassung */
+        @media (max-width: 900px) {
+            body { overflow: auto; }
+            #main-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            #left-panel { padding: 30px; padding-bottom: 10px; }
+            #right-panel { padding: 20px; }
+            h1.main-question { font-size: 28px; }
+            canvas { width: 300px; height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-layout">
+        <section id="left-panel">
+            <h2 class="situation-counter" id="sit-counter">Situation 1</h2>
+            <h1 class="main-question" id="sit-question">Laden...</h1>
+            <p class="description" id="sit-desc">Bitte warten.</p>
+        </section>
+
+        <section id="right-panel">
+            <div id="canvas-container">
+                <canvas id="wheel" width="400" height="400"></canvas>
+            </div>
+            <div id="result"></div>
+            
+            <div id="controls">
+                <button id="btn-action" class="primary" onclick="app.handleAction()">Starten</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="source-overlay">
+        <div class="source-content">
+            <div class="source-icon">💡</div>
+            <div class="source-text">
+                <h3>Hintergrund & Fakten</h3>
+                <p id="sit-explanation">Hier steht die Erklärung zur Statistik...</p>
+            </div>
+            <button class="close-source" onclick="app.hideSource()">✕</button>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            canvas: null,
+            ctx: null,
+            
+            // --- DATEN ---
+            // Hier bitte die Texte anpassen!
+            sits: [
+                { 
+                    jaPercent: 52.0, 
+                    keyword: "Straftat",
+                    question: "Wird diese Straftat aufgeklärt?",
+                    description: "Jeden Tag geschehen Verbrechen. Doch wie hoch ist die Wahrscheinlichkeit, dass ein durchschnittliches Delikt tatsächlich von der Polizei gelöst wird?",
+                    explanation: "In Deutschland liegt die Aufklärungsquote über alle Straftaten hinweg bei ca. 52% (PKS Statistik). Bei Diebstahl ist sie viel niedriger, bei Tötungsdelikten viel höher."
+                },
+                { 
+                    jaPercent: 9.0, 
+                    keyword: "Tropenparadies",
+                    question: "Bleibt das Tropenparadies erhalten?",
+                    description: "Wir alle lieben schöne Urlaubsziele. Aber wie steht es um den Schutz der tropischen Regenwälder in den letzten 10 Jahren?",
+                    explanation: "Nur ein Bruchteil der ursprünglichen Regenwälder ist strikt geschützt. Abholzung für Agrarflächen ist weiterhin ein massives Problem."
+                },
+                { 
+                    jaPercent: 90.0, 
+                    keyword: "Elektrifizierung",
+                    question: "Hat dieser Haushalt Strom?",
+                    description: "Strom ist für uns selbstverständlich. Wir blicken auf die globale Bevölkerung: Zieht man ein zufälliges Los, hat dieser Mensch Zugang zu Elektrizität?",
+                    explanation: "Weltweit haben mittlerweile ca. 90% der Menschen Zugang zu Strom. In den letzten Jahrzehnten wurden hier massive Fortschritte erzielt."
+                },
+                { 
+                    jaPercent: 75.0, 
+                    keyword: "Gesetze",
+                    question: "Wird das Gesetz eingehalten?",
+                    description: "Gesetze sind Papier. Die Realität sieht oft anders aus. Wie oft werden Umweltauflagen in diesem Sektor tatsächlich befolgt?",
+                    explanation: "Studien zeigen, dass in diesem spezifischen Sektor die Compliance bei etwa 75% liegt, oft mangels Kontrollen."
+                },
+                { 
+                    jaPercent: 1.0, 
+                    keyword: "Plastik",
+                    question: "Wird dieses Plastik recycelt?",
+                    description: "Du wirfst eine Plastikverpackung weg. Wird daraus tatsächlich wieder ein gleichwertiges Produkt?",
+                    explanation: "Global werden nur etwa 9% des Plastiks recycelt, und nur ca. 1-2% in einem geschlossenen Kreislauf (Cradle-to-Cradle)."
+                },
+                // ... weitere hier einfügen ...
+            ],
+            
+            sitIdx: 0,
+            open: false,
+            state: 'ready', // 'ready', 'spinning', 'done'
+            result: null, 
+            angle: 0,
+            targetAngle: 0,
+            speed: 0,
+            
+            init() {
+                this.canvas = document.getElementById('wheel');
+                this.ctx = this.canvas.getContext('2d');
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Initiale UI
+                this.updateTextUI();
+                this.updateButtonUI();
+                
+                this.animate();
+            },
+
+            // Zentrale Funktion für den Button
+            handleAction() {
+                if (this.state === 'spinning') return;
+
+                // Logik-Fluss:
+                // 1. Start (Verdeckt) -> Spin -> Done (Resultat verdeckt)
+                // 2. Klick "Aufdecken" -> Open = true -> Button "Nochmal drehen (offen)"
+                // 3. Klick "Drehen" -> Spin -> Done (Resultat offen) -> Popup geht auf
+                // 4. Klick "Weiter" -> Nächste Situation
+
+                if (this.state === 'ready' && !this.open) {
+                    // Fall 1: Erster verdeckter Spin
+                    this.spin('fast');
+                } 
+                else if (this.state === 'done' && !this.open) {
+                    // Fall 2: Aufdecken
+                    this.open = true;
+                    this.state = 'ready';
+                    this.result = null; 
+                    document.getElementById('result').innerHTML = '';
+                    this.updateButtonUI();
+                }
+                else if (this.state === 'ready' && this.open) {
+                    // Fall 3: Offener Spin
+                    this.spin('fast');
+                }
+                else if (this.state === 'done' && this.open) {
+                    // Fall 4: Weiter zur nächsten Situation
+                    this.hideSource(); // Sicherstellen, dass Popup weg ist
+                    this.nextSituation();
+                }
+            },
+
+            nextSituation() {
+                this.open = false;
+                this.state = 'ready';
+                this.result = null;
+                this.sitIdx = (this.sitIdx + 1) % this.sits.length;
+                this.angle = Math.random() * Math.PI * 2; // Rad zurücksetzen/drehen
+                document.getElementById('result').innerHTML = '';
+                
+                this.updateTextUI();
+                this.updateButtonUI();
+            },
+
+            updateTextUI() {
+                const s = this.sits[this.sitIdx];
+                // Texte aktualisieren mit Fade-Effekt wäre nice, hier direkt:
+                document.getElementById('sit-counter').textContent = `SITUATION ${this.sitIdx + 1} / ${this.sits.length}`;
+                document.getElementById('sit-question').textContent = s.question;
+                document.getElementById('sit-desc').textContent = s.description;
+                document.getElementById('sit-explanation').textContent = s.explanation;
+            },
+
+            updateButtonUI() {
+                const btn = document.getElementById('btn-action');
+                
+                if (this.state === 'spinning') {
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                    btn.style.opacity = 0.7;
+                    return;
+                }
+                
+                btn.disabled = false;
+                btn.style.opacity = 1;
+
+                if (!this.open && this.state === 'ready') {
+                    btn.textContent = 'Schicksal herausfordern'; // Erster Spin
+                } else if (!this.open && this.state === 'done') {
+                    btn.textContent = 'Wahrscheinlichkeiten aufdecken'; // Zum offenen Modus
+                } else if (this.open && this.state === 'ready') {
+                    btn.textContent = 'Mit Wissen drehen'; // Offener Spin
+                } else if (this.open && this.state === 'done') {
+                    btn.textContent = 'Nächste Situation'; // Weiter
+                }
+            },
+
+            showSource() {
+                document.getElementById('source-overlay').classList.add('visible');
+            },
+
+            hideSource() {
+                document.getElementById('source-overlay').classList.remove('visible');
+            },
+            
+            animate() {
+                if (this.state === 'spinning') {
+                    this.angle += this.speed;
+                    this.speed *= 0.99;
+                    
+                    if (this.speed < 0.001) {
+                        this.state = 'done';
+                        this.finishSpin();
+                    }
+                }
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            },
+
+            finishSpin() {
+                this.updateButtonUI();
+                
+                if (!this.open) {
+                    this.showResultLabel();
+                } else {
+                    this.showResultOpenColor();
+                    // Wenn offen gedreht wurde, zeigen wir nach kurzer Verzögerung die Erklärung
+                    setTimeout(() => {
+                        this.showSource();
+                    }, 1000);
+                }
+            },
+            
+            draw() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                
+                ctx.clearRect(0,0,w,h);
+                
+                ctx.save();
+                ctx.translate(w/2, h/2);
+                
+                // Rad
+                ctx.save();
+                ctx.rotate(this.angle);
+                this.drawWheel();
+                ctx.restore();
+                
+                // Zeiger
+                this.drawPointer(ctx);
+                
+                ctx.restore();
+
+                // Mittelpunkt
+                this.drawCenterPoint(ctx, w, h);
+            },
+
+            drawPointer(ctx) {
+                ctx.save();
+                ctx.translate(0, -165);
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.moveTo(-10, 0);
+                ctx.lineTo(10, 0);
+                ctx.lineTo(0, 30);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            },
+
+            drawCenterPoint(ctx, w, h) {
+                ctx.beginPath();
+                ctx.fillStyle = '#fff';
+                ctx.arc(w/2, h/2, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            },
+            
+            drawWheel() {
+                const ctx = this.ctx;
+                const s = this.sits[this.sitIdx];
+                const jaRad = (s.jaPercent / 100) * Math.PI * 2;
+                const radius = 160;
+                
+                if (!this.open) {
+                    // Verdeckt (Grau)
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Speichen
+                    ctx.strokeStyle = '#cbd5e0';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 12; i++) {
+                        const a = (i / 12) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0,0);
+                        ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Offen
+                    const startAngle = -Math.PI / 2;
+                    
+                    // JA (Grün)
+                    ctx.fillStyle = '#10b981';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, startAngle, startAngle + jaRad);
+                    ctx.fill();
+                    
+                    // NEIN (Rot)
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, startAngle + jaRad, startAngle + Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Prozent-Text
+                    this.drawSectorText(ctx, s.jaPercent + '%', startAngle + jaRad / 2, 110);
+                    this.drawSectorText(ctx, (100 - s.jaPercent) + '%', startAngle + jaRad + (Math.PI * 2 - jaRad) / 2, 110);
+                }
+                
+                // Äußerer Ring
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            },
+
+            drawSectorText(ctx, text, angle, dist) {
+                const x = Math.cos(angle) * dist;
+                const y = Math.sin(angle) * dist;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 24px Roboto';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 0, 0);
+                ctx.restore();
+            },
+            
+            spin(type) {
+                if (this.state !== 'ready') return;
+                
+                const s = this.sits[this.sitIdx];
+                const PI2 = Math.PI * 2;
+                
+                // Ergebnis berechnen
+                const rand = Math.random() * 100;
+                this.result = rand < s.jaPercent; 
+                
+                // Zielwinkel berechnen
+                const jaRad = (s.jaPercent / 100) * PI2;
+                const startAngle = -Math.PI / 2;
+                
+                let targetInWheel;
+                // Leichte Variation, damit es nicht immer in der Mitte des Sektors stoppt
+                if (this.result) {
+                    targetInWheel = startAngle + (Math.random() * 0.8 + 0.1) * jaRad;
+                } else {
+                    targetInWheel = startAngle + jaRad + (Math.random() * 0.8 + 0.1) * (PI2 - jaRad);
+                }
+                
+                let finalAngle = -Math.PI/2 - targetInWheel;
+                let diff = finalAngle - this.angle;
+                diff = diff % PI2;
+                if (diff <= 0) diff += PI2;
+                
+                const turns = 3 + Math.random() * 2;
+                this.targetAngle = this.angle + turns * PI2 + diff;
+                
+                // Animation starten
+                this.speed = 0.5; // Konstante Startgeschwindigkeit
+                this.state = 'spinning';
+                this.updateButtonUI();
+                document.getElementById('result').innerHTML = '';
+                this.hideSource();
+            },
+
+            showResultLabel() {
+                 document.getElementById('result').innerHTML = 
+                    this.result ? '<span class="ja">JA</span>' : '<span class="nein">NEIN</span>';
+            },
+
+            showResultOpenColor() {
+                // Pixel-Check Methode (zuverlässig für visuelles Ergebnis)
+                const x = 200; 
+                const y = 60; // Im Canvas oben
+                const imageData = this.ctx.getImageData(x, y, 1, 1);
+                const [r, g, b] = imageData.data;
+                
+                // Grün (JA) vs Rot (NEIN)
+                const distGreen = Math.abs(r - 16) + Math.abs(g - 185) + Math.abs(b - 129);
+                const distRed = Math.abs(r - 239) + Math.abs(g - 68) + Math.abs(b - 68);
+                
+                const isJa = distGreen < distRed;
+                document.getElementById('result').innerHTML = 
+                    isJa ? '<span class="ja">JA</span>' : '<span class="nein">NEIN</span>';
+            }
+        };
+        
+        // Tastatur Support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === 'ArrowRight') {
+                app.handleAction();
+            }
+        });
+        
+        app.init();
+    </script>
+</body>
+</html>
