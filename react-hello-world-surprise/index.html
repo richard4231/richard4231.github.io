@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Hello World - Überraschung!</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+
+        .hello-button {
+            font-size: 3rem;
+            padding: 2rem 4rem;
+            background: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            color: #667eea;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hello-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .hello-button:active {
+            transform: scale(0.95);
+        }
+
+        .confetti {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .emoji {
+            position: absolute;
+            font-size: 3rem;
+            pointer-events: none;
+            z-index: 5;
+            animation: float 3s ease-out forwards;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .explosion {
+            animation: explode 0.5s ease-out;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s ease infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .click-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            z-index: 10;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .message.show {
+            animation: showMessage 2s ease-out;
+        }
+
+        @keyframes showMessage {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function HelloWorld() {
+            const [clicks, setClicks] = useState(0);
+            const [confettis, setConfettis] = useState([]);
+            const [emojis, setEmojis] = useState([]);
+            const [isRainbow, setIsRainbow] = useState(false);
+            const [showMessage, setShowMessage] = useState(false);
+            const [message, setMessage] = useState('');
+            const buttonRef = useRef(null);
+
+            const emojiList = ['🎉', '🎊', '✨', '⭐', '🌟', '💫', '🎈', '🎆', '🎇', '🌈', '🦄', '🎁'];
+            const messages = [
+                '🎉 SURPRISE! 🎉',
+                '✨ AMAZING! ✨',
+                '🌟 FANTASTIC! 🌟',
+                '🎊 WOW! 🎊',
+                '💫 SPECTACULAR! 💫',
+                '🚀 AWESOME! 🚀'
+            ];
+
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8', '#fdcb6e', '#00b894'];
+
+            const createConfetti = (x, y) => {
+                const newConfettis = [];
+                for (let i = 0; i < 30; i++) {
+                    const angle = (Math.PI * 2 * i) / 30;
+                    const velocity = 5 + Math.random() * 5;
+                    newConfettis.push({
+                        id: Date.now() + i,
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * velocity,
+                        vy: Math.sin(angle) * velocity,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        size: 10 + Math.random() * 15
+                    });
+                }
+                return newConfettis;
+            };
+
+            const createEmojis = (x, y) => {
+                const newEmojis = [];
+                for (let i = 0; i < 10; i++) {
+                    newEmojis.push({
+                        id: Date.now() + i + 1000,
+                        x: x + (Math.random() - 0.5) * 200,
+                        y: y,
+                        emoji: emojiList[Math.floor(Math.random() * emojiList.length)]
+                    });
+                }
+                return newEmojis;
+            };
+
+            const handleClick = (e) => {
+                const rect = e.target.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+
+                setClicks(prev => prev + 1);
+                setConfettis(prev => [...prev, ...createConfetti(x, y)]);
+                setEmojis(prev => [...prev, ...createEmojis(x, y)]);
+                setIsRainbow(true);
+
+                // Show random message
+                setMessage(messages[Math.floor(Math.random() * messages.length)]);
+                setShowMessage(true);
+                setTimeout(() => setShowMessage(false), 2000);
+
+                if (buttonRef.current) {
+                    buttonRef.current.classList.add('explosion');
+                    setTimeout(() => buttonRef.current.classList.remove('explosion'), 500);
+                }
+
+                setTimeout(() => setIsRainbow(false), 3000);
+            };
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setConfettis(prev => {
+                        return prev
+                            .map(c => ({
+                                ...c,
+                                x: c.x + c.vx,
+                                y: c.y + c.vy,
+                                vy: c.vy + 0.5
+                            }))
+                            .filter(c => c.y < window.innerHeight + 100);
+                    });
+                }, 30);
+
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    setEmojis(prev => prev.slice(10));
+                }, 3000);
+                return () => clearTimeout(timer);
+            }, [emojis]);
+
+            return (
+                <>
+                    <div className="click-counter">
+                        Klicks: {clicks}
+                    </div>
+
+                    <button
+                        ref={buttonRef}
+                        className={`hello-button ${isRainbow ? 'rainbow-text' : ''}`}
+                        onClick={handleClick}
+                    >
+                        {isRainbow ? '✨ Hello World! ✨' : 'Hello World!'}
+                    </button>
+
+                    <div className={`message ${showMessage ? 'show' : ''}`}>
+                        {message}
+                    </div>
+
+                    {confettis.map(confetti => (
+                        <div
+                            key={confetti.id}
+                            className="confetti"
+                            style={{
+                                left: confetti.x + 'px',
+                                top: confetti.y + 'px',
+                                backgroundColor: confetti.color,
+                                width: confetti.size + 'px',
+                                height: confetti.size + 'px'
+                            }}
+                        />
+                    ))}
+
+                    {emojis.map(emoji => (
+                        <div
+                            key={emoji.id}
+                            className="emoji"
+                            style={{
+                                left: emoji.x + 'px',
+                                top: emoji.y + 'px'
+                            }}
+                        >
+                            {emoji.emoji}
+                        </div>
+                    ))}
+                </>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HelloWorld />);
+    </script>
+</body>
+</html>
