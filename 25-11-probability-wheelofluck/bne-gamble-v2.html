@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BNE Gamble - Fullscreen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --accent-color: #4A90E2;
+            --text-color: #333;
+            --ja-color: #10b981;
+            --nein-color: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; 
+            display: flex;
+            color: var(--text-color);
+        }
+
+        #main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            height: 100%;
+        }
+
+        #left-panel {
+            padding: 5vmin;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0,0,0,0.05);
+            overflow-y: auto; 
+        }
+
+        h2.situation-counter {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: clamp(12px, 2vw, 16px);
+            color: #666;
+            margin-bottom: 2vh;
+        }
+
+        h1.main-question {
+            font-size: clamp(24px, 5vw, 48px);
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+        }
+
+        p.description {
+            font-size: clamp(16px, 2.5vw, 22px);
+            line-height: 1.6;
+            color: #4a5568;
+            max-width: 650px;
+            font-weight: 300;
+        }
+
+        /* Button für Erklärung */
+        #btn-explain {
+            display: none;
+            margin-top: 25px;
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            width: fit-content;
+        }
+        #btn-explain:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        #right-panel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #wheel-wrapper {
+            position: relative;
+            width: 80%;
+            max-width: 400px; 
+            aspect-ratio: 1 / 1; 
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.2));
+        }
+
+        #result {
+            font-size: clamp(40px, 6vw, 60px);
+            font-weight: 900;
+            height: 80px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .ja { color: var(--ja-color); text-shadow: 0 0 10px rgba(16,185,129,0.5); text-transform: uppercase; }
+        .nein { color: var(--nein-color); text-shadow: 0 0 10px rgba(239,68,68,0.5); text-transform: uppercase; }
+
+        #controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            border: none;
+            padding: 15px 32px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            min-width: 200px;
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(53, 122, 189, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        button.panic {
+            background: #cbd5e0;
+            color: #4a5568;
+            padding: 0;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none; 
+        }
+        button.panic:hover {
+            background: #e53e3e;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        #source-overlay {
+            position: fixed;
+            bottom: -100%; 
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+            transition: bottom 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            z-index: 100;
+            box-sizing: border-box;
+            border-top: 4px solid var(--accent-color);
+        }
+
+        #source-overlay.visible {
+            bottom: 0;
+        }
+
+        .source-content {
+            max-width: 900px; 
+            margin: 0 auto; 
+            position: relative;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .close-source {
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            background: none; 
+            color: #999; 
+            box-shadow: none; 
+            padding: 5px; 
+            font-size: 24px;
+        }
+        
+        @media (max-width: 900px) {
+            body { overflow-y: auto; height: auto; min-height: 100vh; }
+            #main-layout { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: auto 1fr; 
+            }
+            #left-panel { padding: 30px 20px; min-height: auto; }
+            #right-panel { padding: 40px 20px; min-height: 500px;}
+            #wheel-wrapper { width: 90%; max-width: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-layout">
+        <section id="left-panel">
+            <h2 class="situation-counter" id="sit-counter">Situation 1 / X</h2>
+            <h1 class="main-question" id="sit-question">Laden...</h1>
+            <p class="description" id="sit-desc">Bitte warten.</p>
+            <button id="btn-explain" onclick="app.showSource()">💡 Hintergrund & Fakten anzeigen</button>
+        </section>
+
+        <section id="right-panel">
+            <div id="wheel-wrapper">
+                <canvas id="wheel"></canvas>
+            </div>
+            
+            <div id="result"></div>
+            
+            <div id="controls-row">
+                <button id="btn-action" class="primary" onclick="app.handleAction()">Starten</button>
+                <button id="btn-panic" class="panic" onclick="app.forceStop()" title="Sofort stoppen">⚡</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="source-overlay">
+        <div class="source-content">
+            <div style="flex-grow: 1;">
+                <h3 style="color: var(--accent-color); margin-top: 0;">Hintergrund & Fakten</h3>
+                <p id="sit-explanation">Hier steht die Erklärung zur Statistik...</p>
+            </div>
+            <button class="close-source" onclick="app.hideSource()">✕</button>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            canvas: null,
+            ctx: null,
+            
+            logicalSize: 0,
+            wheelRadius: 0, 
+            
+            JA_COLOR: '#10b981',
+            NEIN_COLOR: '#ef4444',
+            
+            sits: [
+                { jaPercent: 52.0, question: "Wird diese Straftat aufgeklärt?", description: "Jeden Tag geschehen Verbrechen. Doch wie hoch ist die Wahrscheinlichkeit, dass ein durchschnittliches Delikt tatsächlich von der Polizei gelöst wird?", explanation: "In Deutschland liegt die Aufklärungsquote über alle Straftaten hinweg bei ca. 52% (PKS Statistik). Bei Diebstahl ist sie viel niedriger, bei Tötungsdelikten viel höher." },
+                { jaPercent: 9.0, question: "Bleibt das Tropenparadies erhalten?", description: "Wir alle lieben schöne Urlaubsziele. Aber wie steht es um den Schutz der tropischen Regenwälder in den letzten 10 Jahren?", explanation: "Nur ein Bruchteil der ursprünglichen Regenwälder ist strikt geschützt. Abholzung für Agrarflächen ist weiterhin ein massives Problem." },
+                { jaPercent: 90.0, question: "Hat dieser Haushalt Strom?", description: "Strom ist für uns selbstverständlich. Wir blicken auf die globale Bevölkerung: Zieht man ein zufälliges Los, hat dieser Mensch Zugang zu Elektrizität?", explanation: "Weltweit haben mittlerweile ca. 90% der Menschen Zugang zu Strom. In den letzten Jahrzehnten wurden hier massive Fortschritte erzielt." },
+                { jaPercent: 75.0, question: "Wird das Gesetz eingehalten?", description: "Gesetze sind Papier. Die Realität sieht oft anders aus. Wie oft werden Umweltauflagen in diesem Sektor tatsächlich befolgt?", explanation: "Studien zeigen, dass in diesem spezifischen Sektor die Compliance bei etwa 75% liegt, oft mangels Kontrollen." },
+                { jaPercent: 1.0, question: "Wird dieses Plastik recycelt?", description: "Du wirfst eine Plastikverpackung weg. Wird daraus tatsächlich wieder ein gleichwertiges Produkt?", explanation: "Global werden nur etwa 9% des Plastiks recycelt, und nur ca. 1-2% in einem geschlossenen Kreislauf (Cradle-to-Cradle)." },
+            ],
+            
+            sitIdx: 0,
+            open: false,      
+            state: 'ready',   
+            result: null,
+            
+            angle: 0,
+            targetAngle: 0,
+            
+            init() {
+                this.canvas = document.getElementById('wheel');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                this.angle = Math.random() * Math.PI * 2;
+                
+                this.updateTextUI();
+                this.updateButtonUI();
+                this.animate();
+            },
+
+            resize() {
+                const wrapper = document.getElementById('wheel-wrapper');
+                const size = wrapper.clientWidth;
+                
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = size * dpr;
+                this.canvas.height = size * dpr;
+                
+                this.logicalSize = size;
+                
+                this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                this.ctx.scale(dpr, dpr);
+                
+                this.wheelRadius = size / 2 * 0.9; 
+                
+                this.draw();
+            },
+            
+            handleAction() {
+                if (this.state === 'spinning') return;
+
+                if (!this.open && this.state === 'ready') {
+                    this.spin();
+                } 
+                else if (!this.open && this.state === 'done') {
+                    this.open = true;
+                    this.state = 'ready';
+                    // Resultat NICHT löschen - es soll angezeigt bleiben
+                    this.updateButtonUI();
+                }
+                else if (this.open && this.state === 'ready') {
+                    this.spin();
+                }
+                else if (this.open && this.state === 'done') {
+                    this.hideSource();
+                    this.nextSituation();
+                }
+            },
+            
+            spin() {
+                if (this.state !== 'ready') return;
+                
+                const s = this.sits[this.sitIdx];
+                const PI2 = Math.PI * 2;
+                const jaRad = (s.jaPercent / 100) * PI2;
+                const pointerPos = -Math.PI / 2; // Zeiger ist oben
+                
+                // FIX: Erst Zielwinkel berechnen, dann Ergebnis daraus ableiten
+                // So stimmt das visuelle Ergebnis IMMER mit dem angezeigten überein
+                
+                const minBuffer = 0.08; // Etwas Abstand vom Rand
+                
+                // Zufälligen Winkel im Rad wählen (gewichtet nach Wahrscheinlichkeit)
+                let winningAngleInWheel;
+                if (Math.random() * 100 < s.jaPercent) {
+                    // JA-Sektor: von 0 bis jaRad
+                    winningAngleInWheel = minBuffer + Math.random() * Math.max(0.01, jaRad - 2 * minBuffer);
+                } else {
+                    // NEIN-Sektor: von jaRad bis 2*PI
+                    const neinSize = PI2 - jaRad;
+                    winningAngleInWheel = jaRad + minBuffer + Math.random() * Math.max(0.01, neinSize - 2 * minBuffer);
+                }
+                
+                // Zielrotation berechnen: Zeiger zeigt auf winningAngleInWheel
+                let targetRotation = pointerPos - winningAngleInWheel;
+                
+                // Differenz zur aktuellen Position
+                let currentNorm = this.angle % PI2;
+                let targetNorm = targetRotation % PI2;
+                if (targetNorm < 0) targetNorm += PI2;
+                
+                let diff = targetNorm - currentNorm;
+                if (diff <= 0) diff += PI2;
+                
+                const extraSpins = PI2 * (5 + Math.random() * 3);
+                this.targetAngle = this.angle + diff + extraSpins;
+                
+                // FIX: Ergebnis aus dem Zielwinkel ableiten (nicht separat würfeln)
+                // Nach der Drehung: welcher Sektor ist unter dem Zeiger?
+                const finalWheelAngle = this.targetAngle % PI2;
+                // Zeiger ist bei -PI/2 (oben). Welcher Punkt des Rades ist dort?
+                let pointUnderPointer = (-Math.PI/2 - finalWheelAngle) % PI2;
+                if (pointUnderPointer < 0) pointUnderPointer += PI2;
+                
+                // JA-Sektor geht von 0 bis jaRad
+                this.result = pointUnderPointer < jaRad;
+                
+                this.state = 'spinning';
+                this.updateButtonUI();
+                this.hideSource();
+                document.getElementById('result').innerHTML = '';
+            },
+            
+            forceStop() {
+                if (this.state !== 'spinning') return;
+                this.angle = this.targetAngle; 
+                this.state = 'done';
+                this.finishSpin();
+            },
+
+            animate() {
+                if (this.state === 'spinning') {
+                    const remaining = this.targetAngle - this.angle;
+                    
+                    if (remaining > 0.001) {
+                        this.angle += remaining * 0.035; 
+                    } else {
+                        this.angle = this.targetAngle;
+                        this.state = 'done';
+                        this.finishSpin();
+                    }
+                }
+                
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            },
+
+            finishSpin() {
+                this.updateButtonUI();
+                
+                const label = this.result ? '<span class="ja">JA</span>' : '<span class="nein">NEIN</span>';
+                document.getElementById('result').innerHTML = label;
+                
+                // Erklärung-Button nur nach dem zweiten Spin (open === true) anzeigen
+                if (this.open) {
+                    document.getElementById('btn-explain').style.display = 'block';
+                }
+            },
+            
+            nextSituation() {
+                this.open = false;
+                this.state = 'ready';
+                this.result = null;
+                this.sitIdx = (this.sitIdx + 1) % this.sits.length;
+                this.angle = Math.random() * Math.PI * 2; 
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('btn-explain').style.display = 'none';
+                
+                this.updateTextUI();
+                this.updateButtonUI();
+            },
+
+            updateTextUI() {
+                const s = this.sits[this.sitIdx];
+                document.getElementById('sit-counter').textContent = `SITUATION ${this.sitIdx + 1} / ${this.sits.length}`;
+                document.getElementById('sit-question').textContent = s.question;
+                document.getElementById('sit-desc').textContent = s.description;
+                document.getElementById('sit-explanation').textContent = s.explanation;
+            },
+
+            updateButtonUI() {
+                const btn = document.getElementById('btn-action');
+                const panicBtn = document.getElementById('btn-panic');
+                
+                if (this.state === 'spinning') {
+                    btn.textContent = 'Dreht...';
+                    btn.disabled = true;
+                    panicBtn.style.display = 'flex'; 
+                    return;
+                }
+                
+                btn.disabled = false;
+                panicBtn.style.display = 'none'; 
+
+                if (!this.open && this.state === 'ready') btn.textContent = 'Schicksal herausfordern';
+                else if (!this.open && this.state === 'done') btn.textContent = 'Wahrscheinlichkeit aufdecken';
+                else if (this.open && this.state === 'ready') btn.textContent = 'Mit Wissen drehen';
+                else if (this.open && this.state === 'done') btn.textContent = 'Nächste Situation';
+            },
+
+            showSource() {
+                document.getElementById('source-overlay').classList.add('visible');
+            },
+
+            hideSource() {
+                document.getElementById('source-overlay').classList.remove('visible');
+            },
+            
+            draw() {
+                if (!this.ctx || this.logicalSize === 0) return;
+                
+                const ctx = this.ctx;
+                const size = this.logicalSize;
+                const r = this.wheelRadius;
+                const centerX = size / 2;
+                const centerY = size / 2;
+                
+                ctx.clearRect(0, 0, size, size);
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                
+                ctx.save();
+                ctx.rotate(this.angle);
+                this.drawWheelContent(r);
+                ctx.restore();
+                
+                this.drawPointer(r);
+                this.drawCenterPoint(r);
+
+                ctx.restore();
+            },
+            
+            drawPointer(r) {
+                const ctx = this.ctx;
+                const pointerTip = r * 0.85; // Spitze endet knapp über dem Rad
+                const pointerBase = r + 20;  // Basis ausserhalb
+                const pointerWidth = 12;
+                
+                ctx.save();
+                
+                // Schatten
+                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 3;
+                
+                // Äussere Form (dunkel)
+                ctx.beginPath();
+                ctx.moveTo(-pointerWidth, -pointerBase);
+                ctx.lineTo(pointerWidth, -pointerBase);
+                ctx.lineTo(0, -pointerTip);
+                ctx.closePath();
+                
+                ctx.fillStyle = 'rgba(80, 80, 80, 0.8)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(60, 60, 60, 0.9)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                // Innere Form (fast transparent, für Tiefe)
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath();
+                ctx.moveTo(-pointerWidth + 4, -pointerBase + 5);
+                ctx.lineTo(pointerWidth - 4, -pointerBase + 5);
+                ctx.lineTo(0, -pointerTip - 8);
+                ctx.closePath();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fill();
+                
+                ctx.restore();
+            },
+            
+            drawCenterPoint(r) {
+                const ctx = this.ctx;
+                
+                // Äusserer Ring
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.12, 0, Math.PI*2);
+                ctx.fillStyle = 'white';
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 5;
+                ctx.fill();
+                
+                // Innerer Punkt
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.05, 0, Math.PI*2);
+                ctx.fillStyle = '#666';
+                ctx.fill();
+            },
+            
+            drawWheelContent(r) {
+                const ctx = this.ctx;
+                const s = this.sits[this.sitIdx];
+                const PI2 = Math.PI * 2;
+                const startAngle = -Math.PI / 2;
+                
+                if (!this.open) {
+                    // VERDECKT (Grau)
+                    ctx.beginPath();
+                    ctx.arc(0, 0, r, 0, PI2);
+                    ctx.fillStyle = '#cbd5e0';
+                    ctx.fill();
+                    ctx.strokeStyle = '#a0aec0';
+                    ctx.lineWidth = r * 0.01;
+                    ctx.stroke();
+                    
+                    // Speichen
+                    for(let i=0; i<12; i++) {
+                        const a = (i / 12) * PI2;
+                        ctx.beginPath();
+                        ctx.moveTo(0,0);
+                        ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+                        ctx.stroke();
+                    }
+
+                } else {
+                    // OFFEN
+                    const jaRad = (s.jaPercent / 100) * PI2;
+                    
+                    // 1. JA Sektor (Grün)
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, r, startAngle, startAngle + jaRad);
+                    ctx.closePath();
+                    ctx.fillStyle = this.JA_COLOR;
+                    ctx.fill();
+                    
+                    // 2. NEIN Sektor (Rot)
+                    const neinStart = startAngle + jaRad;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, r, neinStart, startAngle + PI2);
+                    ctx.closePath();
+                    ctx.fillStyle = this.NEIN_COLOR;
+                    ctx.fill();
+                    
+                    // --- PUNKTE-MUSTER im NEIN-Sektor (wie im Original) ---
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, r, neinStart, startAngle + PI2);
+                    ctx.closePath();
+                    ctx.clip(); 
+                    
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                    for (let a = neinStart + 0.15; a < startAngle + PI2; a += 0.2) {
+                        for (let rad = 35; rad < r - 10; rad += 18) {
+                            const x = Math.cos(a) * rad;
+                            const y = Math.sin(a) * rad;
+                            ctx.beginPath();
+                            ctx.arc(x, y, 3, 0, PI2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                    
+                    // Trennlinie zwischen Sektoren
+                    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(startAngle) * r, Math.sin(startAngle) * r);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(neinStart) * r, Math.sin(neinStart) * r);
+                    ctx.stroke();
+                    
+                    // TEXT LABELS (grösser)
+                    this.drawLabel("JA", s.jaPercent.toFixed(0) + "%", startAngle + jaRad / 2, r * 0.6, r);
+                    
+                    const neinMid = neinStart + (PI2 - jaRad) / 2;
+                    this.drawLabel("NEIN", (100 - s.jaPercent).toFixed(0) + "%", neinMid, r * 0.6, r);
+                }
+                
+                // Rahmen außen
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, PI2);
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = r * 0.025; 
+                ctx.stroke();
+            },
+
+            drawLabel(mainText, subText, angle, dist, r) {
+                const ctx = this.ctx;
+                ctx.save();
+                ctx.translate(Math.cos(angle)*dist, Math.sin(angle)*dist);
+                
+                let textRotation = angle + Math.PI / 2; 
+                if (angle > Math.PI / 2 && angle < 3 * Math.PI / 2) {
+                    textRotation += Math.PI;
+                }
+                
+                ctx.rotate(textRotation);
+                
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Grössere Schrift
+                ctx.font = `bold ${r * 0.14}px Roboto`; 
+                ctx.fillText(mainText, 0, -r * 0.07);
+                
+                ctx.font = `500 ${r * 0.10}px Roboto`; 
+                ctx.fillText(subText, 0, r * 0.09);
+                
+                ctx.restore();
+            },
+        };
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                app.handleAction();
+            }
+        });
+        
+        app.init();
+    </script>
+</body>
+</html>
