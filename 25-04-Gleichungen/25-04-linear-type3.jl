@@ -1,7 +1,7 @@
 using Combinatorics
 using Dates
 
-# Wechsel zum Ausgabeverzeichnis
+# Wechsel zum Ausgabeverzeichnis.
 cd("/Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMBP/richard4231.github.io/25-02-mb21pub/25-04-Gleichungen/Output")
 
 # Hilfsfunktion zum Extrahieren des x-Werts (für die Sortierung)
