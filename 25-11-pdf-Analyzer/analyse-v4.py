@@ -262,7 +262,7 @@ class BegriffSucher:
             
             # Zähle Treffer
             if ist_match:
-                treffer_nach_typ[match_typ] += 1
+                treffer_nach_typ[match_typ] += 1 # type: ignore
         
         return dict(treffer_nach_typ)
     def suche_begriff(self, begriff: str, text: str) -> int:
@@ -286,7 +286,7 @@ class PDFAnalysierer:
     
     def __init__(self, excel_pfad: str, use_stemming: bool = True,
                  case_sensitive: bool = False, exact_match: bool = False,
-                 stufen_filter: List[str] = None):
+                 stufen_filter: List[str] = None): # type: ignore
         """
         Initialisiert den Analysierer.
         
@@ -385,13 +385,13 @@ class PDFAnalysierer:
         Returns:
             DataFrame mit Ergebnissen (mit detaillierten Match-Typen und Score)
         """
-        pdf_pfad = Path(pdf_pfad)
-        if not pdf_pfad.exists():
+        pdf_pfad = Path(pdf_pfad) # type: ignore
+        if not pdf_pfad.exists(): # type: ignore
             print(f"✗ PDF nicht gefunden: {pdf_pfad}")
             return pd.DataFrame()
         
-        print(f"\n📄 Analysiere: {pdf_pfad.name}")
-        print(f"   Größe: {pdf_pfad.stat().st_size / 1024 / 1024:.1f} MB")
+        print(f"\n📄 Analysiere: {pdf_pfad.name}") # type: ignore
+        print(f"   Größe: {pdf_pfad.stat().st_size / 1024 / 1024:.1f} MB") # type: ignore
         
         # PDF öffnen
         try:
@@ -410,7 +410,7 @@ class PDFAnalysierer:
         # Seitenweise analysieren
         seiten_iterator = range(len(doc))
         if TQDM_AVAILABLE:
-            seiten_iterator = tqdm(seiten_iterator, desc="Seiten")
+            seiten_iterator = tqdm(seiten_iterator, desc="Seiten") # type: ignore
         
         for seiten_nr in seiten_iterator:
             seite = doc[seiten_nr]
@@ -419,7 +419,7 @@ class PDFAnalysierer:
             # Jeden Begriff suchen
             for leitidee, stufe, begriff in begriffe_liste:
                 # Detaillierte Suche
-                treffer_nach_typ = self.sucher.suche_begriff_detailliert(begriff, text)
+                treffer_nach_typ = self.sucher.suche_begriff_detailliert(begriff, text) # type: ignore
                 
                 if treffer_nach_typ:
                     # Zähle Treffer nach Typ
@@ -445,7 +445,7 @@ class PDFAnalysierer:
                     anzahl_gesamt = sum(treffer_nach_typ.values())
                     
                     ergebnisse.append({
-                        'PDF': pdf_pfad.name,
+                        'PDF': pdf_pfad.name, # type: ignore
                         'Seite': seiten_nr + 1,  # 1-basiert
                         'Leitidee': leitidee,
                         'Stufe': stufe,
@@ -488,8 +488,8 @@ class PDFAnalysierer:
             pdf_ordner: Pfad zum Ordner mit PDFs
             output_csv: Pfad für die Ausgabe-CSV
         """
-        pdf_ordner = Path(pdf_ordner)
-        pdf_dateien = list(pdf_ordner.glob("*.pdf"))
+        pdf_ordner = Path(pdf_ordner) # type: ignore
+        pdf_dateien = list(pdf_ordner.glob("*.pdf")) # type: ignore
         
         if not pdf_dateien:
             print(f"✗ Keine PDFs gefunden in: {pdf_ordner}")
@@ -598,13 +598,13 @@ def main():
     
     # Analyse starten
     analysierer = PDFAnalysierer(
-        excel_pfad,
+        excel_pfad, # type: ignore
         use_stemming=use_stemming,
         case_sensitive=case_sensitive,
         exact_match=exact_match,
-        stufen_filter=stufen_filter
+        stufen_filter=stufen_filter # type: ignore
     )
-    analysierer.analysiere_mehrere_pdfs(pdf_ordner, output_csv)
+    analysierer.analysiere_mehrere_pdfs(pdf_ordner, output_csv) # type: ignore
     
     print("\n✓ Analyse abgeschlossen")
     print("=" * 60)
