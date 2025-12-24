@@ -385,8 +385,8 @@ class PDFAnalysierer:
         Returns:
             DataFrame mit Ergebnissen (mit detaillierten Match-Typen und Score)
         """
-        pdf_pfad = Path(pdf_pfad)
-        if not pdf_pfad.exists():
+        pdf_pfad = Path(pdf_pfad) # type: ignore
+        if not pdf_pfad.exists(): # type: ignore
             print(f"✗ PDF nicht gefunden: {pdf_pfad}")
             return pd.DataFrame()
         
