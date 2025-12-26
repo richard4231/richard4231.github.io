@@ -927,8 +927,8 @@ class ClusteredShadingApp {
         }
 
         // Generate sphere geometry with noise and color variation
-        const sphereSegments = 24;
-        const sphereRings = 18;
+        const sphereSegments = 48;
+        const sphereRings = 36;
 
         for (const sphere of spheres) {
             const baseVertexOffset = vertexOffset;
@@ -1485,6 +1485,26 @@ class ClusteredShadingApp {
                 this.lastMouseY = e.clientY;
             }
         });
+
+        // Mouse wheel for zoom
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.01;
+            const forward = [
+                -Math.sin(this.camera.rotation[1]),
+                0,
+                -Math.cos(this.camera.rotation[1])
+            ];
+
+            // Zoom in/out by moving camera forward/backward
+            this.camera.position[0] += forward[0] * e.deltaY * zoomSpeed;
+            this.camera.position[2] += forward[2] * e.deltaY * zoomSpeed;
+
+            // Clamp to room bounds
+            const halfSize = 14;
+            this.camera.position[0] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[0]));
+            this.camera.position[2] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[2]));
+        }, { passive: false });
         
         // Resize
         window.addEventListener('resize', () => this.resize());
