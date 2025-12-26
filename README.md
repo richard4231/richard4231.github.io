@@ -13,6 +13,7 @@
 - [Würfelsierpinski II: bunter, schriller, performanter.](https://richard4231.github.io/25-12-xplodingsierpinski-webgpu/)
 - [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
+- [WebGPU Demo](https://richard4231.github.io/25-12-spheres-n-lights-2/)
 
 ## Spikey
 - [Spikey](https://richard4231.github.io/25-02-Spikey-v03/)
