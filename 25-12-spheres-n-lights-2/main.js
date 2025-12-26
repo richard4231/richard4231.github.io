@@ -772,8 +772,8 @@ class ClusteredShadingApp {
 
     createSceneGeometry() {
         // Create a room with floor, ceiling, and walls
-        const roomSize = 30;
-        const roomHeight = 10;
+        const roomSize = 30; //Raumgrösse
+        const roomHeight = 12;
         const halfSize = roomSize / 2;
 
         const vertices = [];
@@ -1332,26 +1332,38 @@ class ClusteredShadingApp {
     }
     
     updateCamera() {
-        const fovSpeed = 0.02;
-        const minFov = 5 * Math.PI / 180; // Für eine weiteres Sichtfeld (Fish-eye Effekt): Erhöhen Sie maxFov
-        const maxFov = 130 * Math.PI / 180; // Für stärkeren Zoom: Verringern Sie minFov:
+        const moveSpeed = 0.15;
 
-        // W/ArrowUp: Zoom in (decrease FOV = objects appear closer)
-        if (this.keys['KeyW'] || this.keys['ArrowUp']) {
-            this.camera.fov = Math.max(minFov, this.camera.fov - fovSpeed);
-        }
-        // S/ArrowDown: Zoom out (increase FOV = objects appear further)
-        if (this.keys['KeyS'] || this.keys['ArrowDown']) {
-            this.camera.fov = Math.min(maxFov, this.camera.fov + fovSpeed);
-        }
+        // Calculate forward and right vectors based on camera yaw (horizontal rotation)
+        const yaw = this.camera.rotation[1]; // Horizontal rotation
+        const yawCos = Math.cos(yaw);
+        const yawSin = Math.sin(yaw);
+
+        // Forward vector (in XZ plane, Y=0 for horizontal movement)
+        const forward = [yawSin, 0, yawCos];
+        // Right vector (perpendicular to forward in XZ plane)
+        const right = [yawCos, 0, -yawSin];
+
+        // Calculate movement based on WASD/Arrow keys
+        let moveForward = 0;
+        let moveRight = 0;
+
+        if (this.keys['KeyW'] || this.keys['ArrowUp']) moveForward -= 1;
+        if (this.keys['KeyS'] || this.keys['ArrowDown']) moveForward += 1;
+        if (this.keys['KeyA'] || this.keys['ArrowLeft']) moveRight -= 1;
+        if (this.keys['KeyD'] || this.keys['ArrowRight']) moveRight += 1;
+
+        // Apply movement relative to camera direction
+        this.camera.position[0] += (forward[0] * moveForward + right[0] * moveRight) * moveSpeed;
+        this.camera.position[2] += (forward[2] * moveForward + right[2] * moveRight) * moveSpeed;
 
         // Space: Move up
         if (this.keys['Space']) {
-            this.camera.position[1] += 0.15;
+            this.camera.position[1] += moveSpeed;
         }
         // Shift: Move down
         if (this.keys['ShiftLeft'] || this.keys['ShiftRight']) {
-            this.camera.position[1] -= 0.15;
+            this.camera.position[1] -= moveSpeed;
         }
 
         // Clamp camera height
