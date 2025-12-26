@@ -554,21 +554,21 @@ class ClusteredShadingApp {
         
         // Settings
         this.settings = {
-            lightCount: 128,
+            lightCount: 1168,
             lightIntensity: 1.0,
-            lightRadius: 5.0,
+            lightRadius: 1.5,
             useClustered: true,
             debugMode: 0, // 0: normal, 1: clusters, 2: heat
             renderLightSprites: true,
-            spriteSize: 1.0,
-            spriteSpeed: 1.0,
-            spriteGlow: 1.0,
+            spriteSize: 2.2,
+            spriteSpeed: 2.7,
+            spriteGlow: 0.8,
         };
         
         // Camera
         this.camera = {
             position: [0, 3, 15],
-            rotation: [0, 0],
+            rotation: [0, 0], // Start rotation
             fov: 60 * Math.PI / 180,
         };
         
@@ -933,12 +933,6 @@ class ClusteredShadingApp {
         for (const sphere of spheres) {
             const baseVertexOffset = vertexOffset;
 
-            // Generate unique pastel color palette for this sphere
-            const baseHue = Math.random();
-            const hueVariation = 0.05 + Math.random() * 0.1; // Slight hue variation
-            const baseSaturation = 0.25 + Math.random() * 0.2;
-            const baseLightness = 0.7 + Math.random() * 0.15;
-
             // Generate sphere vertices with noise displacement
             for (let ring = 0; ring <= sphereRings; ring++) {
                 const phi = (ring / sphereRings) * Math.PI;
@@ -955,17 +949,35 @@ class ClusteredShadingApp {
                     const ny = cosPhi;
                     const nz = sinTheta * sinPhi;
 
-                    // Apply noise for organic displacement
-                    const noiseScale = 3.0;
-                    const noiseValue = this.perlinNoise(
-                        nx * noiseScale + sphere.x * 0.1,
-                        ny * noiseScale + sphere.y * 0.1,
-                        nz * noiseScale + sphere.z * 0.1,
+                    // Apply multiple layers of noise for more organic, terrain-like displacement
+                    const noiseScale1 = 2.0;
+                    const noiseScale2 = 5.0;
+                    const noiseScale3 = 10.0;
+
+                    const noise1 = this.perlinNoise(
+                        nx * noiseScale1 + sphere.x * 0.1,
+                        ny * noiseScale1 + sphere.y * 0.1,
+                        nz * noiseScale1 + sphere.z * 0.1,
                         3
                     );
+                    const noise2 = this.perlinNoise(
+                        nx * noiseScale2 + sphere.x * 0.2,
+                        ny * noiseScale2 + sphere.y * 0.2,
+                        nz * noiseScale2 + sphere.z * 0.2,
+                        4
+                    );
+                    const noise3 = this.perlinNoise(
+                        nx * noiseScale3,
+                        ny * noiseScale3,
+                        nz * noiseScale3,
+                        2
+                    );
 
-                    // Displacement amount (0.1 to 0.25 of radius)
-                    const displacement = (noiseValue * 0.5 - 0.25) * sphere.radius * 0.3;
+                    // Combine multiple noise layers for complex terrain
+                    const combinedNoise = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
+
+                    // More dramatic displacement (up to 60% of radius)
+                    const displacement = (combinedNoise - 0.5) * sphere.radius * 0.6;
                     const displacedRadius = sphere.radius + displacement;
 
                     // Position with noise displacement
@@ -973,22 +985,62 @@ class ClusteredShadingApp {
                     const py = sphere.y + ny * displacedRadius;
                     const pz = sphere.z + nz * displacedRadius;
 
-                    // Position for color gradient (top to bottom)
-                    const v = ring / sphereRings;
+                    // Calculate distance from sphere center for terrain-based coloring
+                    const distFromCenter = displacedRadius / sphere.radius;
 
-                    // Color variation based on position and noise
-                    const colorNoise = this.perlinNoise(nx * 2, ny * 2, nz * 2, 2);
-                    const hue = (baseHue + (v * 0.5 + colorNoise * 0.5) * hueVariation) % 1.0;
-                    const saturation = baseSaturation + colorNoise * 0.1;
-                    const lightness = baseLightness + (v - 0.5) * 0.1 + colorNoise * 0.05;
+                    // Terrain-based coloring: Ocean (blue) → Land (brown/green) → Mountain (gray) → Snow (white)
+                    let r, g, b;
 
-                    // Convert HSL to RGB
-                    const k = (n) => (n + hue * 12) % 12;
-                    const a = saturation * Math.min(lightness, 1 - lightness);
-                    const f = (n) => lightness - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+                    if (distFromCenter < 0.75) {
+                        // Deep ocean - dark blue
+                        const t = distFromCenter / 0.75;
+                        r = 0.1 + t * 0.15;
+                        g = 0.2 + t * 0.25;
+                        b = 0.4 + t * 0.2;
+                    } else if (distFromCenter < 0.95) {
+                        // Shallow water to shore - lighter blue to sandy brown
+                        const t = (distFromCenter - 0.75) / 0.2;
+                        const waterR = 0.25, waterG = 0.45, waterB = 0.6;
+                        const sandR = 0.6, sandG = 0.5, sandB = 0.35;
+                        r = waterR + (sandR - waterR) * t;
+                        g = waterG + (sandG - waterG) * t;
+                        b = waterB + (sandB - waterB) * t;
+                    } else if (distFromCenter < 1.05) {
+                        // Land - brown and green
+                        const t = (distFromCenter - 0.95) / 0.1;
+                        const sandR = 0.6, sandG = 0.5, sandB = 0.35;
+                        const grassR = 0.35, grassG = 0.5, grassB = 0.3;
+                        r = sandR + (grassR - sandR) * t;
+                        g = sandG + (grassG - sandG) * t;
+                        b = sandB + (grassB - sandB) * t;
+                    } else if (distFromCenter < 1.2) {
+                        // Forest to mountain - green to gray
+                        const t = (distFromCenter - 1.05) / 0.15;
+                        const grassR = 0.35, grassG = 0.5, grassB = 0.3;
+                        const rockR = 0.45, rockG = 0.45, rockB = 0.48;
+                        r = grassR + (rockR - grassR) * t;
+                        g = grassG + (rockG - grassG) * t;
+                        b = grassB + (rockB - grassB) * t;
+                    } else if (distFromCenter < 1.35) {
+                        // Mountain - gray
+                        const t = (distFromCenter - 1.2) / 0.15;
+                        const rockR = 0.45, rockG = 0.45, rockB = 0.48;
+                        const snowR = 0.85, snowG = 0.85, snowB = 0.9;
+                        r = rockR + (snowR - rockR) * t;
+                        g = rockG + (snowG - rockG) * t;
+                        b = rockB + (snowB - rockB) * t;
+                    } else {
+                        // Snow peak - white
+                        const t = Math.min((distFromCenter - 1.35) / 0.15, 1.0);
+                        r = 0.85 + t * 0.12;
+                        g = 0.85 + t * 0.12;
+                        b = 0.9 + t * 0.08;
+                    }
 
-                    const r = f(0);
-                    const g = f(8);
+                    // Add subtle noise variation to colors for more natural look
+                    const colorNoise = noise3 * 0.08;
+                    r = Math.max(0, Math.min(1, r + colorNoise));
+                    g = Math.max(0, Math.min(1, g + colorNoise));
 
                     vertices.push(px, py, pz, nx, ny, nz, r, g);
                     vertexOffset++;
@@ -1280,47 +1332,30 @@ class ClusteredShadingApp {
     }
     
     updateCamera() {
-        // Handle input
-        const moveSpeed = 0.15;
-        const forward = [
-            -Math.sin(this.camera.rotation[1]),
-            0,
-            -Math.cos(this.camera.rotation[1])
-        ];
-        const right = [
-            Math.cos(this.camera.rotation[1]),
-            0,
-            -Math.sin(this.camera.rotation[1])
-        ];
-        
+        const fovSpeed = 0.02;
+        const minFov = 5 * Math.PI / 180; // Für eine weiteres Sichtfeld (Fish-eye Effekt): Erhöhen Sie maxFov
+        const maxFov = 130 * Math.PI / 180; // Für stärkeren Zoom: Verringern Sie minFov:
+
+        // W/ArrowUp: Zoom in (decrease FOV = objects appear closer)
         if (this.keys['KeyW'] || this.keys['ArrowUp']) {
-            this.camera.position[0] += forward[0] * moveSpeed;
-            this.camera.position[2] += forward[2] * moveSpeed;
+            this.camera.fov = Math.max(minFov, this.camera.fov - fovSpeed);
         }
+        // S/ArrowDown: Zoom out (increase FOV = objects appear further)
         if (this.keys['KeyS'] || this.keys['ArrowDown']) {
-            this.camera.position[0] -= forward[0] * moveSpeed;
-            this.camera.position[2] -= forward[2] * moveSpeed;
+            this.camera.fov = Math.min(maxFov, this.camera.fov + fovSpeed);
         }
-        if (this.keys['KeyA'] || this.keys['ArrowLeft']) {
-            this.camera.position[0] -= right[0] * moveSpeed;
-            this.camera.position[2] -= right[2] * moveSpeed;
-        }
-        if (this.keys['KeyD'] || this.keys['ArrowRight']) {
-            this.camera.position[0] += right[0] * moveSpeed;
-            this.camera.position[2] += right[2] * moveSpeed;
-        }
+
+        // Space: Move up
         if (this.keys['Space']) {
-            this.camera.position[1] += moveSpeed;
+            this.camera.position[1] += 0.15;
         }
+        // Shift: Move down
         if (this.keys['ShiftLeft'] || this.keys['ShiftRight']) {
-            this.camera.position[1] -= moveSpeed;
+            this.camera.position[1] -= 0.15;
         }
-        
-        // Clamp camera position to room bounds
-        const halfSize = 14;
-        this.camera.position[0] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[0]));
+
+        // Clamp camera height
         this.camera.position[1] = Math.max(0.5, Math.min(9.5, this.camera.position[1]));
-        this.camera.position[2] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[2]));
         
         // Build matrices
         const aspect = this.canvas.width / this.canvas.height;
@@ -1486,24 +1521,16 @@ class ClusteredShadingApp {
             }
         });
 
-        // Mouse wheel for zoom
+        // Mouse wheel for zoom (adjust FOV, same as W/S keys)
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSpeed = 0.01;
-            const forward = [
-                -Math.sin(this.camera.rotation[1]),
-                0,
-                -Math.cos(this.camera.rotation[1])
-            ];
+            const fovSpeed = 0.001;
+            const minFov = 5 * Math.PI / 180;
+            const maxFov = 130 * Math.PI / 180;
 
-            // Zoom in/out by moving camera forward/backward
-            this.camera.position[0] += forward[0] * e.deltaY * zoomSpeed;
-            this.camera.position[2] += forward[2] * e.deltaY * zoomSpeed;
-
-            // Clamp to room bounds
-            const halfSize = 14;
-            this.camera.position[0] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[0]));
-            this.camera.position[2] = Math.max(-halfSize, Math.min(halfSize, this.camera.position[2]));
+            // Scroll up (negative deltaY) = zoom in = decrease FOV
+            this.camera.fov -= e.deltaY * fovSpeed;
+            this.camera.fov = Math.max(minFov, Math.min(maxFov, this.camera.fov));
         }, { passive: false });
         
         // Resize
