@@ -90,41 +90,10 @@
             margin-top: 15px;
             line-height: 1.4;
         }
-        #pickInfo {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 12px 15px;
-            border-radius: 5px;
-            font-size: 13px;
-            display: none;
-            pointer-events: none;
-            max-width: 280px;
-            border: 1px solid #555;
-        }
-        #pickInfo h4 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
-            border-bottom: 1px solid #555;
-            padding-bottom: 5px;
-        }
-        #pickInfo .row {
-            display: flex;
-            justify-content: space-between;
-            margin: 4px 0;
-        }
-        #pickInfo .label {
-            color: #aaa;
-        }
-        #pickInfo .value {
-            font-weight: bold;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <div id="pickInfo"></div>
     <div id="controls">
         <div class="control-group">
             <label>Anzahl Scheiben: <span class="value-display" id="stepsValue">10</span></label>
@@ -158,7 +127,6 @@
         
         <div class="instructions">
             <strong>Steuerung:</strong><br>
-            • Klick: Volumen/Fläche anzeigen<br>
             • Ziehen: Objekt rotieren<br>
             • Mausrad: Zoomen<br>
             • W/A/S/D: Kamera bewegen<br>
@@ -361,54 +329,6 @@
             code: shaderCode,
         });
 
-        // Picking shader - encodes objectId as RGB color for readback
-        const pickingShaderCode = `
-            struct Uniforms {
-                viewProjection: mat4x4f,
-                cameraPosition: vec3f,
-                brightness: f32,
-                light1: vec3f,
-                _pad1: f32,
-                light2: vec3f,
-                _pad2: f32,
-                light3: vec3f,
-                _pad3: f32,
-            }
-
-            struct VertexOutput {
-                @builtin(position) position: vec4f,
-                @location(0) objectId: f32,
-            }
-
-            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-            @vertex fn vs(
-                @location(0) position: vec3f,
-                @location(1) color: vec4f,
-                @location(2) normal: vec3f,
-                @location(3) objectId: f32
-            ) -> VertexOutput {
-                var output: VertexOutput;
-                output.position = uniforms.viewProjection * vec4f(position, 1.0);
-                output.objectId = objectId;
-                return output;
-            }
-
-            @fragment fn fs(input: VertexOutput) -> @location(0) vec4f {
-                // Encode objectId as RGB (can handle up to 256^3 = 16M objects)
-                let id = u32(input.objectId);
-                let r = f32((id >> 16u) & 0xFFu) / 255.0;
-                let g = f32((id >> 8u) & 0xFFu) / 255.0;
-                let b = f32(id & 0xFFu) / 255.0;
-                return vec4f(r, g, b, 1.0);
-            }
-        `;
-
-        const pickingShaderModule = device.createShaderModule({
-            label: 'Picking Shader',
-            code: pickingShaderCode,
-        });
-
         // Pipeline
         const vertexState = {
             module: shaderModule,
@@ -434,41 +354,6 @@
                 module: shaderModule,
                 entryPoint: 'fs',
                 targets: [{ format: presentationFormat }],
-            },
-            primitive: {
-                topology: 'triangle-list',
-                cullMode: 'none',
-            },
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-                format: 'depth24plus',
-            },
-        });
-
-        // Picking Pipeline
-        const pickingPipeline = device.createRenderPipeline({
-            label: 'Picking Pipeline',
-            layout: 'auto',
-            vertex: {
-                module: pickingShaderModule,
-                entryPoint: 'vs',
-                buffers: [
-                    {
-                        arrayStride: 11 * 4,
-                        attributes: [
-                            { shaderLocation: 0, offset: 0, format: 'float32x3' },
-                            { shaderLocation: 1, offset: 12, format: 'float32x4' },
-                            { shaderLocation: 2, offset: 28, format: 'float32x3' },
-                            { shaderLocation: 3, offset: 40, format: 'float32' },
-                        ],
-                    },
-                ],
-            },
-            fragment: {
-                module: pickingShaderModule,
-                entryPoint: 'fs',
-                targets: [{ format: 'rgba8unorm' }],
             },
             primitive: {
                 topology: 'triangle-list',
@@ -719,38 +604,6 @@
             ],
         });
 
-        // Picking bind group (uses same uniform buffer)
-        const pickingBindGroup = device.createBindGroup({
-            layout: pickingPipeline.getBindGroupLayout(0),
-            entries: [
-                { binding: 0, resource: { buffer: uniformBuffer } },
-            ],
-        });
-
-        // Picking textures and buffers
-        let pickingTexture = null;
-        let pickingDepthTexture = null;
-        let pickingTextureSize = { width: 0, height: 0 };
-
-        function createPickingTextures(width, height) {
-            if (pickingTexture) pickingTexture.destroy();
-            if (pickingDepthTexture) pickingDepthTexture.destroy();
-
-            pickingTexture = device.createTexture({
-                size: [width, height],
-                format: 'rgba8unorm',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-            });
-
-            pickingDepthTexture = device.createTexture({
-                size: [width, height],
-                format: 'depth24plus',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            });
-
-            pickingTextureSize = { width, height };
-        }
-
         // Set canvas size with HiDPI/Retina support
         const dpr = window.devicePixelRatio || 1;
         canvas.width = window.innerWidth * dpr;
@@ -819,208 +672,12 @@
             }
         });
 
-        canvas.addEventListener('mouseup', (e) => {
+        canvas.addEventListener('mouseup', () => {
             isDragging = false;
         });
 
-        // Pick info display
-        const pickInfo = document.getElementById('pickInfo');
-        let lastClickX = 0;
-        let lastClickY = 0;
-        let pickingInProgress = false;
-
-        function hidePickInfo() {
-            pickInfo.style.display = 'none';
-        }
-
-        function showPickInfo(x, y, ringIndex, isHemisphere, data) {
-            const objectType = isHemisphere ? 'Halbkugel-Scheibe' : 'Torus-Ring';
-
-            let html = `<h4>${objectType} #${ringIndex + 1}</h4>`;
-            html += `<div class="row"><span class="label">Höhe:</span><span class="value">${data.height.toFixed(4)}</span></div>`;
-
-            if (isHemisphere) {
-                html += `<div class="row"><span class="label">Radius:</span><span class="value">${data.radius.toFixed(4)}</span></div>`;
-            } else {
-                html += `<div class="row"><span class="label">Äusserer R:</span><span class="value">${data.outerRadius.toFixed(4)}</span></div>`;
-                html += `<div class="row"><span class="label">Innerer R:</span><span class="value">${data.innerRadius.toFixed(4)}</span></div>`;
-            }
-
-            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseArea.toFixed(6)}</span></div>`;
-            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volume.toFixed(6)}</span></div>`;
-
-            pickInfo.innerHTML = html;
-            pickInfo.style.display = 'block';
-
-            // Position near cursor but within viewport
-            let posX = x + 15;
-            let posY = y + 15;
-            if (posX + 280 > window.innerWidth) posX = x - 295;
-            if (posY + 200 > window.innerHeight) posY = y - 215;
-
-            pickInfo.style.left = posX + 'px';
-            pickInfo.style.top = posY + 'px';
-        }
-
-        async function performPicking(mouseX, mouseY) {
-            if (pickingInProgress) return;
-            pickingInProgress = true;
-
-            try {
-                const currentDpr = window.devicePixelRatio || 1;
-                const width = canvas.width;
-                const height = canvas.height;
-
-                // Ensure picking textures exist and are correct size
-                if (!pickingTexture || pickingTextureSize.width !== width || pickingTextureSize.height !== height) {
-                    createPickingTextures(width, height);
-                }
-
-                // Calculate view-projection matrix (same as render loop)
-                const aspect = width / height;
-                const projection = mat4.perspective(camera.fov, aspect, camera.near, camera.far);
-
-                let viewTarget = camera.target;
-                let viewPosition = camera.position;
-                if (cameraFlyActive) {
-                    viewPosition = vec3.create(
-                        Math.cos(flyTime) * flyRadius,
-                        flyHeight + Math.sin(flyTime * 0.5) * 200,
-                        Math.sin(flyTime) * flyRadius
-                    );
-                    viewTarget = vec3.create(0, 0, 0);
-                }
-
-                const view = mat4.lookAt(viewPosition, viewTarget, camera.up);
-                const rotationMatrix = mat4.identity();
-                mat4.rotateX(rotationMatrix, rotation.x, rotationMatrix);
-                mat4.rotateY(rotationMatrix, rotation.y, rotationMatrix);
-                const viewProjection = mat4.multiply(projection, mat4.multiply(view, rotationMatrix));
-
-                // Update uniforms
-                const uniformData = new Float32Array(32);
-                uniformData.set(viewProjection, 0);
-                uniformData.set([...viewPosition, currentBrightness], 16);
-                uniformData.set([0.5, 1.0, 0.8, 0], 20);
-                uniformData.set([-0.8, 0.3, 0.5, 0], 24);
-                uniformData.set([0.2, -0.5, -0.6, 0], 28);
-                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
-
-                // Render picking pass
-                const encoder = device.createCommandEncoder();
-                const renderPass = encoder.beginRenderPass({
-                    colorAttachments: [{
-                        view: pickingTexture.createView(),
-                        clearValue: { r: 0, g: 0, b: 0, a: 0 },
-                        loadOp: 'clear',
-                        storeOp: 'store',
-                    }],
-                    depthStencilAttachment: {
-                        view: pickingDepthTexture.createView(),
-                        depthClearValue: 1.0,
-                        depthLoadOp: 'clear',
-                        depthStoreOp: 'store',
-                    },
-                });
-
-                renderPass.setPipeline(pickingPipeline);
-                renderPass.setVertexBuffer(0, vertexBuffer);
-                renderPass.setBindGroup(0, pickingBindGroup);
-                renderPass.draw(numVertices);
-                renderPass.end();
-
-                // Copy pixel to a fresh staging buffer
-                const pixelX = Math.floor(mouseX * currentDpr);
-                const pixelY = Math.floor(mouseY * currentDpr);
-
-                // Create a fresh staging buffer for this pick (256 bytes minimum aligned)
-                const stagingBuffer = device.createBuffer({
-                    size: 256,
-                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-                });
-
-                encoder.copyTextureToBuffer(
-                    { texture: pickingTexture, origin: { x: pixelX, y: pixelY } },
-                    { buffer: stagingBuffer, bytesPerRow: 256, rowsPerImage: 1 },
-                    { width: 1, height: 1 }
-                );
-
-                device.queue.submit([encoder.finish()]);
-
-                // Read back pixel
-                await stagingBuffer.mapAsync(GPUMapMode.READ);
-                const data = new Uint8Array(stagingBuffer.getMappedRange(0, 4));
-                const r = data[0];
-                const g = data[1];
-                const b = data[2];
-                const a = data[3];
-                stagingBuffer.unmap();
-                stagingBuffer.destroy();
-
-                // Decode objectId from RGB
-                const objectId = (r << 16) | (g << 8) | b;
-
-                if (a === 0) {
-                    // Clicked on background (cleared with alpha=0)
-                    hidePickInfo();
-                    pickingInProgress = false;
-                    return;
-                }
-
-                // Calculate ring index from objectId
-                const ringIndex = Math.floor(objectId / currentSegments);
-                const totalRings = currentSteps * 2; // hemisphere + tori
-
-                if (ringIndex >= totalRings) {
-                    // Clicked on table
-                    hidePickInfo();
-                    pickingInProgress = false;
-                    return;
-                }
-
-                // Determine if hemisphere or torus and get corresponding data
-                const isHemisphere = ringIndex < currentSteps;
-                const actualRingIndex = isHemisphere ? ringIndex : ringIndex - currentSteps;
-
-                if (isHemisphere && volumeData.hemisphere[actualRingIndex]) {
-                    showPickInfo(mouseX, mouseY, actualRingIndex, true, volumeData.hemisphere[actualRingIndex]);
-                } else if (!isHemisphere && volumeData.tori[actualRingIndex]) {
-                    showPickInfo(mouseX, mouseY, actualRingIndex, false, volumeData.tori[actualRingIndex]);
-                } else {
-                    hidePickInfo();
-                }
-            } catch (err) {
-                console.error('Picking error:', err);
-            }
-
-            pickingInProgress = false;
-        }
-
-        // Click handler for picking (only if not dragging)
-        let mouseDownPos = { x: 0, y: 0 };
-        canvas.addEventListener('mousedown', (e) => {
-            mouseDownPos = { x: e.clientX, y: e.clientY };
-        }, true);
-
-        canvas.addEventListener('click', (e) => {
-            // Only pick if mouse didn't move much (not a drag)
-            const dx = e.clientX - mouseDownPos.x;
-            const dy = e.clientY - mouseDownPos.y;
-            if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
-                performPicking(e.clientX, e.clientY);
-            }
-        });
-
-        // Hide pick info when starting to drag
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                hidePickInfo();
-            }
-        }, true);
-
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            hidePickInfo(); // Hide pick info when zooming
             const zoomSpeed = 0.3; // Increased from 0.1
             const direction = vec3.subtract(camera.target, camera.position);
             const distance = vec3.length(direction);
@@ -1053,7 +710,6 @@
 
             if (anyKeyPressed) {
                 keyHoldTime += deltaTime;
-                hidePickInfo(); // Hide pick info when moving camera
             } else {
                 keyHoldTime = 0;
             }
@@ -1210,9 +866,7 @@
         cameraFlyBtn.addEventListener('click', () => {
             cameraFlyActive = !cameraFlyActive;
             cameraFlyBtn.classList.toggle('active');
-            if (cameraFlyActive) {
-                hidePickInfo(); // Hide pick info when camera fly starts
-            } else {
+            if (!cameraFlyActive) {
                 flyTime = 0;
             }
         });
@@ -1295,7 +949,6 @@
                 canvas.width = width;
                 canvas.height = height;
                 createDepthTexture(width, height);
-                createPickingTextures(width, height);
             }
 
             // Calculate view-projection matrix
@@ -1359,7 +1012,6 @@
 
         // Initialize
         createDepthTexture(canvas.width, canvas.height);
-        createPickingTextures(canvas.width, canvas.height);
         requestAnimationFrame(render);
     </script>
 </body>
