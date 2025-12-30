@@ -11,7 +11,7 @@
 ## 3D
 - [Würfelsierpinski](https://richard4231.github.io/25-02-xplodingsierpinski/)
 - [Würfelsierpinski II: bunter, schriller, performanter.](https://richard4231.github.io/25-12-xplodingsierpinski-webgpu/)
-- [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/22-09-v02cavalieri/)
+- [Prinzip von Cavalieri Halbkugel](https://richard4231.github.io/25-12-cavalieri-v03/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 - [WebGPU Demo](https://richard4231.github.io/25-12-spheres-n-lights-2/)
 

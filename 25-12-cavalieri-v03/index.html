@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGPU Ring Geometrie</title>
+    <title>Herleitung Kugelvolumen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,24 +14,64 @@
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', Arial, sans-serif;
             overflow: hidden;
             background: #333;
+            border: 10px solid #cccccc;
+            box-sizing: border-box;
         }
         canvas {
             display: block;
-            width: 100vw;
-            height: 100vh;
+            width: calc(100vw - 20px);
+            height: calc(100vh - 20px);
+        }
+        #pageTitle {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            pointer-events: none;
         }
         #controls {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 15px;
+            left: 15px;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 15px;
             border-radius: 5px;
             min-width: 250px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        #controls.hidden {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #togglePanel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid #666;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            transition: left 0.3s ease;
+        }
+        #togglePanel:hover {
+            background: rgba(50, 50, 50, 0.9);
+        }
+        #togglePanel.panel-open {
+            left: 285px;
         }
         .control-group {
             margin-bottom: 15px;
@@ -124,8 +167,11 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <h1 id="pageTitle">Herleitung Kugelvolumen</h1>
     <div id="pickInfo"></div>
+    <button id="togglePanel" class="panel-open">☰</button>
     <div id="controls">
+        <h3 style="margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #555;">Steuerung</h3>
         <div class="control-group">
             <label>Anzahl Scheiben: <span class="value-display" id="stepsValue">10</span></label>
             <input type="range" id="stepsSlider" min="3" max="100" value="10" step="1">
@@ -169,7 +215,6 @@
     <script type="module">
         import { mat4, vec3 } from 'https://wgpu-matrix.org/dist/2.x/wgpu-matrix.module.js';
 
-        // noch einbauen: Roboto oder so, Titel, Panel verkleinerbar machen. Weniger genaue Zahlen. 4 Stellen nach Komma reicht für Volumen und Fläche
         // Farbschemata
         const colorSchemes = [
             { name: 'Ocean', mode: 'segment', from: [135, 206, 250], to: [25, 25, 112] },
@@ -855,28 +900,28 @@
 
         function showPickInfo(x, y, ringIndex, isHemisphere, data) {
             const objectType = isHemisphere ? 'Halbkugel-Scheibe' : 'Torus-Ring';
-            const abweichung = ((1 - volumeData.polygonFactor) * 100).toFixed(2);
+            const abweichung = ((1 - volumeData.polygonFactor) * 100).toFixed(3);
 
             let html = `<h4>${objectType} #${ringIndex + 1}</h4>`;
-            html += `<div class="row"><span class="label">Höhe:</span><span class="value">${data.height.toFixed(4)}</span></div>`;
+            html += `<div class="row"><span class="label">Höhe:</span><span class="value">${data.height.toFixed(3)}</span></div>`;
 
             if (isHemisphere) {
-                html += `<div class="row"><span class="label">Radius:</span><span class="value">${data.radius.toFixed(4)}</span></div>`;
+                html += `<div class="row"><span class="label">Radius:</span><span class="value">${data.radius.toFixed(3)}</span></div>`;
             } else {
-                html += `<div class="row"><span class="label">Äusserer R:</span><span class="value">${data.outerRadius.toFixed(4)}</span></div>`;
-                html += `<div class="row"><span class="label">Innerer R:</span><span class="value">${data.innerRadius.toFixed(4)}</span></div>`;
+                html += `<div class="row"><span class="label">Äusserer R:</span><span class="value">${data.outerRadius.toFixed(3)}</span></div>`;
+                html += `<div class="row"><span class="label">Innerer R:</span><span class="value">${data.innerRadius.toFixed(3)}</span></div>`;
             }
 
             html += `<div style="margin-top:8px; padding-top:6px; border-top:1px solid #444;">`;
             html += `<div style="font-size:11px; color:#888; margin-bottom:4px;">Ideal (Kreis):</div>`;
-            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseArea.toFixed(6)}</span></div>`;
-            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volume.toFixed(6)}</span></div>`;
+            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseArea.toFixed(4)}</span></div>`;
+            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volume.toFixed(4)}</span></div>`;
             html += `</div>`;
 
             html += `<div style="margin-top:8px; padding-top:6px; border-top:1px solid #444;">`;
             html += `<div style="font-size:11px; color:#888; margin-bottom:4px;">Polygon (${volumeData.segments}-Eck, -${abweichung}%):</div>`;
-            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseAreaPolygon.toFixed(6)}</span></div>`;
-            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volumePolygon.toFixed(6)}</span></div>`;
+            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseAreaPolygon.toFixed(4)}</span></div>`;
+            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volumePolygon.toFixed(4)}</span></div>`;
             html += `</div>`;
 
             pickInfo.innerHTML = html;
@@ -1121,6 +1166,15 @@
                 camera.target = vec3.subtract(camera.target, vec3.scale(camera.up, speed));
             }
         }
+
+        // Panel toggle
+        const togglePanelBtn = document.getElementById('togglePanel');
+        const controlsPanel = document.getElementById('controls');
+
+        togglePanelBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('hidden');
+            togglePanelBtn.classList.toggle('panel-open');
+        });
 
         // UI Controls
         const stepsSlider = document.getElementById('stepsSlider');
