@@ -1004,54 +1004,86 @@
                 renderPass.draw(numVertices);
                 renderPass.end();
 
-                // Copy pixel to a fresh staging buffer
-                const pixelX = Math.floor(mouseX * currentDpr);
-                const pixelY = Math.floor(mouseY * currentDpr);
+                // Copy a 5x5 pixel area for more reliable picking
+                const sampleSize = 5;
+                const halfSize = Math.floor(sampleSize / 2);
+                const centerX = Math.floor(mouseX * currentDpr);
+                const centerY = Math.floor(mouseY * currentDpr);
 
-                // Create a fresh staging buffer for this pick (256 bytes minimum aligned)
+                // Clamp to canvas bounds
+                const startX = Math.max(0, centerX - halfSize);
+                const startY = Math.max(0, centerY - halfSize);
+                const endX = Math.min(width - 1, centerX + halfSize);
+                const endY = Math.min(height - 1, centerY + halfSize);
+                const actualWidth = endX - startX + 1;
+                const actualHeight = endY - startY + 1;
+
+                // bytesPerRow must be aligned to 256
+                const bytesPerRow = 256;
+                const bufferSize = bytesPerRow * actualHeight;
+
                 const stagingBuffer = device.createBuffer({
-                    size: 256,
+                    size: bufferSize,
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 });
 
                 encoder.copyTextureToBuffer(
-                    { texture: pickingTexture, origin: { x: pixelX, y: pixelY } },
-                    { buffer: stagingBuffer, bytesPerRow: 256, rowsPerImage: 1 },
-                    { width: 1, height: 1 }
+                    { texture: pickingTexture, origin: { x: startX, y: startY } },
+                    { buffer: stagingBuffer, bytesPerRow: bytesPerRow, rowsPerImage: actualHeight },
+                    { width: actualWidth, height: actualHeight }
                 );
 
                 device.queue.submit([encoder.finish()]);
 
-                // Read back pixel
+                // Read back pixels and count ring occurrences
                 await stagingBuffer.mapAsync(GPUMapMode.READ);
-                const data = new Uint8Array(stagingBuffer.getMappedRange(0, 4));
-                const r = data[0];
-                const g = data[1];
-                const b = data[2];
-                const a = data[3];
+                const data = new Uint8Array(stagingBuffer.getMappedRange());
+
+                // Count occurrences of each ringIndex (not objectId, to group segments of same ring)
+                const ringCounts = new Map();
+                let totalValidPixels = 0;
+                const totalRings = currentSteps * 2;
+
+                for (let row = 0; row < actualHeight; row++) {
+                    for (let col = 0; col < actualWidth; col++) {
+                        const offset = row * bytesPerRow + col * 4;
+                        const r = data[offset];
+                        const g = data[offset + 1];
+                        const b = data[offset + 2];
+                        const a = data[offset + 3];
+
+                        if (a === 0) continue; // Skip background
+
+                        const objectId = (r << 16) | (g << 8) | b;
+                        const ringIdx = Math.floor(objectId / currentSegments);
+
+                        if (ringIdx >= totalRings) continue; // Skip table
+
+                        totalValidPixels++;
+                        ringCounts.set(ringIdx, (ringCounts.get(ringIdx) || 0) + 1);
+                    }
+                }
+
                 stagingBuffer.unmap();
                 stagingBuffer.destroy();
 
-                // Decode objectId from RGB
-                const objectId = (r << 16) | (g << 8) | b;
-
-                if (a === 0) {
-                    // Clicked on background (cleared with alpha=0)
+                // Find the most common ring (majority voting)
+                if (totalValidPixels === 0) {
                     hidePickInfo();
                     pickingInProgress = false;
                     return;
                 }
 
-                // Calculate ring index from objectId
-                const ringIndex = Math.floor(objectId / currentSegments);
-                const totalRings = currentSteps * 2; // hemisphere + tori
-
-                if (ringIndex >= totalRings) {
-                    // Clicked on table
-                    hidePickInfo();
-                    pickingInProgress = false;
-                    return;
+                let bestRingIndex = -1;
+                let bestCount = 0;
+                for (const [ringIdx, count] of ringCounts) {
+                    if (count > bestCount) {
+                        bestCount = count;
+                        bestRingIndex = ringIdx;
+                    }
                 }
+
+                const ringIndex = bestRingIndex;
 
                 // Determine if hemisphere or torus and get corresponding data
                 const isHemisphere = ringIndex < currentSteps;
