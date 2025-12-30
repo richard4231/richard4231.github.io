@@ -169,7 +169,6 @@
     <script type="module">
         import { mat4, vec3 } from 'https://wgpu-matrix.org/dist/2.x/wgpu-matrix.module.js';
 
-        // noch einbauen: Roboto oder so, Titel, Panel verkleinerbar machen. Weniger genaue Zahlen. 4 Stellen nach Komma reicht für Volumen und Fläche
         // Farbschemata
         const colorSchemes = [
             { name: 'Ocean', mode: 'segment', from: [135, 206, 250], to: [25, 25, 112] },
@@ -188,57 +187,46 @@
         let currentColorScheme = 0;
 
         // Volumen- und Flächenberechnung (normalisiert auf Radius = 1)
-        function calculateVolumesAndAreas(nsteps, nSegments = 96) {
+        function calculateVolumesAndAreas(nsteps) {
             const R = 1; // Normalisierter Radius
             const h1 = R / nsteps; // Höhe jeder Scheibe
-
-            // Polygon-Korrekturfaktor: (n/2) * sin(2π/n) vs π
-            // Ein n-Eck hat Fläche (n/2) * r² * sin(2π/n) statt π * r²
-            const polygonFactor = (nSegments / 2) * Math.sin(2 * Math.PI / nSegments) / Math.PI;
 
             const results = {
                 hemisphere: [],
                 tori: [],
                 totalHemisphere: 0,
-                totalTori: 0,
-                totalHemispherePolygon: 0,
-                totalToriPolygon: 0,
-                polygonFactor: polygonFactor,
-                segments: nSegments
+                totalTori: 0
             };
 
             for (let j = 0; j < nsteps; j++) {
                 // Halbkugel (Zylinder/Scheiben)
+                // Höhe vom Boden: h = j * h1
                 const h = j * h1;
+                // Radius der Scheibe: r = sqrt(R² - h²)
                 const r_disc = Math.sqrt(R * R - h * h);
-                // Ideale Werte (Kreis)
+                // Volumen = π * r² * h1
                 const volume_disc = Math.PI * r_disc * r_disc * h1;
+                // Grundfläche = Volumen / Höhe = π * r²
                 const area_disc = Math.PI * r_disc * r_disc;
-                // Polygon-Werte (n-Eck)
-                const area_disc_polygon = area_disc * polygonFactor;
-                const volume_disc_polygon = volume_disc * polygonFactor;
 
                 results.hemisphere.push({
                     step: j,
                     height: h,
                     radius: r_disc,
                     volume: volume_disc,
-                    volumePolygon: volume_disc_polygon,
-                    baseArea: area_disc,
-                    baseAreaPolygon: area_disc_polygon
+                    baseArea: area_disc
                 });
                 results.totalHemisphere += volume_disc;
-                results.totalHemispherePolygon += volume_disc_polygon;
 
                 // Tori (Ringe)
+                // Äusserer Radius = R (konstant)
+                // Innerer Radius = h (entspricht der Höhe bei Halbkugel)
                 const r_outer = R;
                 const r_inner = h;
-                // Ideale Werte (Kreisring)
+                // Volumen = π * (r_outer² - r_inner²) * h1
                 const volume_ring = Math.PI * (r_outer * r_outer - r_inner * r_inner) * h1;
+                // Grundfläche = Volumen / Höhe = π * (r_outer² - r_inner²)
                 const area_ring = Math.PI * (r_outer * r_outer - r_inner * r_inner);
-                // Polygon-Werte (n-Eck-Ring)
-                const area_ring_polygon = area_ring * polygonFactor;
-                const volume_ring_polygon = volume_ring * polygonFactor;
 
                 results.tori.push({
                     step: j,
@@ -246,12 +234,9 @@
                     outerRadius: r_outer,
                     innerRadius: r_inner,
                     volume: volume_ring,
-                    volumePolygon: volume_ring_polygon,
-                    baseArea: area_ring,
-                    baseAreaPolygon: area_ring_polygon
+                    baseArea: area_ring
                 });
                 results.totalTori += volume_ring;
-                results.totalToriPolygon += volume_ring_polygon;
             }
 
             // Theoretisches Volumen einer Halbkugel: (2/3) * π * R³
@@ -261,7 +246,7 @@
         }
 
         // Berechnung speichern und in Konsole ausgeben
-        let volumeData = calculateVolumesAndAreas(10, 96);
+        let volumeData = calculateVolumesAndAreas(10);
         console.log('=== Cavalieri-Prinzip: Volumen- und Flächenberechnung ===');
         console.log('Normalisierter Radius R = 1');
         console.log('');
@@ -274,14 +259,9 @@
             console.log(`   ${j.toString().padStart(2)}   |     ${hArea}     |   ${tArea}   |  ${diff}`);
         }
         console.log('');
-        console.log('Gesamtvolumen Halbkugel (ideal):', volumeData.totalHemisphere.toFixed(6));
-        console.log('Gesamtvolumen Tori (ideal):', volumeData.totalTori.toFixed(6));
+        console.log('Gesamtvolumen Halbkugel:', volumeData.totalHemisphere.toFixed(6));
+        console.log('Gesamtvolumen Tori:', volumeData.totalTori.toFixed(6));
         console.log('Theoretisches Volumen (2/3)πR³:', volumeData.theoreticalVolume.toFixed(6));
-        console.log('');
-        console.log(`Polygon-Faktor (${volumeData.segments}-Eck):`, volumeData.polygonFactor.toFixed(6));
-        console.log('Abweichung vom Idealwert:', ((1 - volumeData.polygonFactor) * 100).toFixed(3) + '%');
-        console.log('Polygon-Volumen Halbkugel:', volumeData.totalHemispherePolygon.toFixed(6));
-        console.log('Polygon-Volumen Tori:', volumeData.totalToriPolygon.toFixed(6));
 
         // WebGPU Setup
         const canvas = document.getElementById('canvas');
@@ -855,7 +835,6 @@
 
         function showPickInfo(x, y, ringIndex, isHemisphere, data) {
             const objectType = isHemisphere ? 'Halbkugel-Scheibe' : 'Torus-Ring';
-            const abweichung = ((1 - volumeData.polygonFactor) * 100).toFixed(2);
 
             let html = `<h4>${objectType} #${ringIndex + 1}</h4>`;
             html += `<div class="row"><span class="label">Höhe:</span><span class="value">${data.height.toFixed(4)}</span></div>`;
@@ -867,17 +846,8 @@
                 html += `<div class="row"><span class="label">Innerer R:</span><span class="value">${data.innerRadius.toFixed(4)}</span></div>`;
             }
 
-            html += `<div style="margin-top:8px; padding-top:6px; border-top:1px solid #444;">`;
-            html += `<div style="font-size:11px; color:#888; margin-bottom:4px;">Ideal (Kreis):</div>`;
             html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseArea.toFixed(6)}</span></div>`;
             html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volume.toFixed(6)}</span></div>`;
-            html += `</div>`;
-
-            html += `<div style="margin-top:8px; padding-top:6px; border-top:1px solid #444;">`;
-            html += `<div style="font-size:11px; color:#888; margin-bottom:4px;">Polygon (${volumeData.segments}-Eck, -${abweichung}%):</div>`;
-            html += `<div class="row"><span class="label">Grundfläche:</span><span class="value">${data.baseAreaPolygon.toFixed(6)}</span></div>`;
-            html += `<div class="row"><span class="label">Volumen:</span><span class="value">${data.volumePolygon.toFixed(6)}</span></div>`;
-            html += `</div>`;
 
             pickInfo.innerHTML = html;
             pickInfo.style.display = 'block';
@@ -886,7 +856,7 @@
             let posX = x + 15;
             let posY = y + 15;
             if (posX + 280 > window.innerWidth) posX = x - 295;
-            if (posY + 250 > window.innerHeight) posY = y - 265;
+            if (posY + 200 > window.innerHeight) posY = y - 215;
 
             pickInfo.style.left = posX + 'px';
             pickInfo.style.top = posY + 'px';
@@ -1161,8 +1131,8 @@
             numVertices = geometryData.length / 11;
 
             // Volumenberechnung aktualisieren
-            volumeData = calculateVolumesAndAreas(currentSteps, currentSegments);
-            console.log(`=== Aktualisiert für ${currentSteps} Scheiben, ${currentSegments} Segmente ===`);
+            volumeData = calculateVolumesAndAreas(currentSteps);
+            console.log(`=== Aktualisiert für ${currentSteps} Scheiben ===`);
             console.log('Gesamtvolumen Halbkugel:', volumeData.totalHemisphere.toFixed(6));
             console.log('Gesamtvolumen Tori:', volumeData.totalTori.toFixed(6));
             console.log('Theoretisches Volumen:', volumeData.theoreticalVolume.toFixed(6));
@@ -1194,10 +1164,6 @@
 
             device.queue.writeBuffer(vertexBuffer, 0, geometryData);
             numVertices = geometryData.length / 11;
-
-            // Volumenberechnung aktualisieren (Polygon-Faktor ändert sich)
-            volumeData = calculateVolumesAndAreas(currentSteps, currentSegments);
-            console.log(`=== Polygon-Genauigkeit: ${currentSegments} Segmente, Abweichung: ${((1 - volumeData.polygonFactor) * 100).toFixed(3)}% ===`);
         });
 
         // Color scheme buttons
@@ -1297,7 +1263,7 @@
             numVertices = geometryData.length / 11;
 
             // Update volume data
-            volumeData = calculateVolumesAndAreas(10, 96);
+            volumeData = calculateVolumesAndAreas(10);
         });
 
         // Render loop
