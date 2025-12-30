@@ -169,8 +169,8 @@
     <canvas id="canvas"></canvas>
     <h1 id="pageTitle">Herleitung Kugelvolumen</h1>
     <div id="pickInfo"></div>
-    <button id="togglePanel" class="panel-open">☰</button>
-    <div id="controls">
+    <button id="togglePanel">☰</button>
+    <div id="controls" class="hidden">
         <h3 style="margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #555;">Steuerung</h3>
         <div class="control-group">
             <label>Anzahl Scheiben: <span class="value-display" id="stepsValue">10</span></label>
@@ -204,7 +204,7 @@
         
         <div class="instructions">
             <strong>Steuerung:</strong><br>
-            • Klick: Volumen/Fläche anzeigen<br>
+            • Klick: Flächeninhalt anzeigen (ungenau)<br>
             • Ziehen: Objekt rotieren<br>
             • Mausrad: Zoomen<br>
             • W/A/S/D: Kamera bewegen<br>
@@ -310,7 +310,7 @@
         console.log('=== Cavalieri-Prinzip: Volumen- und Flächenberechnung ===');
         console.log('Normalisierter Radius R = 1');
         console.log('');
-        console.log('Scheibe | Halbkugel-Fläche | Torus-Fläche | Differenz');
+        console.log('Scheibe | Halbkugel-Fläche | Ring-Fläche | Differenz');
         console.log('--------|------------------|--------------|----------');
         for (let j = 0; j < volumeData.hemisphere.length; j++) {
             const hArea = volumeData.hemisphere[j].baseArea.toFixed(6);
@@ -899,7 +899,7 @@
         }
 
         function showPickInfo(x, y, ringIndex, isHemisphere, data) {
-            const objectType = isHemisphere ? 'Halbkugel-Scheibe' : 'Torus-Ring';
+            const objectType = isHemisphere ? 'Scheibe' : 'Kreisring';
             const abweichung = ((1 - volumeData.polygonFactor) * 100).toFixed(3);
 
             let html = `<h4>${objectType} #${ringIndex + 1}</h4>`;
