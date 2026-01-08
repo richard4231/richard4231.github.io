@@ -6,7 +6,11 @@
       "Bash(brew install:*)",
       "Bash(pipx install:*)",
       "Bash(pipx upgrade:*)",
-      "Bash(~/.local/bin/poetry:*)"
+      "Bash(~/.local/bin/poetry:*)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(node -e:*)",
+      "Bash(node create_excel.js:*)"
     ]
   }
 }

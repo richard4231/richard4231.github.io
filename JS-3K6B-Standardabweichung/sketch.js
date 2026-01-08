@@ -70,6 +70,12 @@ let boxplotHeight = 30; // Höhe des Boxplot-Bereichs
 let quartile1 = 0;
 let quartile3 = 0;
 
+// Intervall-Linien (gespiegelt um Mittelwert)
+let showIntervallLinien = false;
+let intervallAbstand = 5;  // Abstand vom Mittelwert in Gramm (kontinuierlich)
+let intervallSliderLinien;  // Slider für die Linien
+let intervallLinienColor = [140, 80, 180, 200]; // Violett für Intervall-Linien
+
 // Farben (wie im Original)
 let color1 = [238, 172, 136, 200]; // Orange für Packungen
 // let color1 = [0, 135, 191, 200]; // Blau für Packungen
@@ -214,7 +220,51 @@ async function setup() {
   
   // Initialisiere Boxplot-Position (in der Mitte des Diagramms)
   boxplotY = canvasHeight / 2;
-  
+
+  // Checkbox für Intervall-Linien
+  let intervallLinienCheckbox = createCheckbox('Intervall-Linien anzeigen', showIntervallLinien);
+  intervallLinienCheckbox.parent(controlPanel);
+  intervallLinienCheckbox.style('margin-bottom', '15px');
+  intervallLinienCheckbox.style('display', 'block');
+  intervallLinienCheckbox.changed(() => {
+    showIntervallLinien = intervallLinienCheckbox.checked();
+    // Zeige/verstecke den Slider
+    document.getElementById('intervallLinienSliderDiv').style.display = showIntervallLinien ? 'block' : 'none';
+    drawVisualization();
+  });
+
+  // Container für Intervall-Slider (zunächst versteckt)
+  let intervallLinienDiv = createDiv();
+  intervallLinienDiv.parent(controlPanel);
+  intervallLinienDiv.id('intervallLinienSliderDiv');
+  intervallLinienDiv.style('display', 'none');
+  intervallLinienDiv.style('margin-bottom', '15px');
+  intervallLinienDiv.style('padding', '10px');
+  intervallLinienDiv.style('background', 'rgba(140, 80, 180, 0.1)');
+  intervallLinienDiv.style('border-radius', '5px');
+
+  let intervallLinienLabel = createP('Abstand vom Mittelwert: <span id="intervallAbstandValue">5.0</span> g');
+  intervallLinienLabel.parent(intervallLinienDiv);
+  intervallLinienLabel.style('margin', '0 0 5px 0');
+  intervallLinienLabel.style('font-size', '13px');
+
+  intervallSliderLinien = createSlider(0.5, 20, 5, 0.1);
+  intervallSliderLinien.parent(intervallLinienDiv);
+  intervallSliderLinien.style('width', '100%');
+  intervallSliderLinien.input(() => {
+    intervallAbstand = intervallSliderLinien.value();
+    document.getElementById('intervallAbstandValue').textContent = nf(intervallAbstand, 1, 1);
+    drawVisualization();
+  });
+
+  // Anzeige für theoretischen und experimentellen Anteil
+  let anteilAnzeige = createP('');
+  anteilAnzeige.parent(intervallLinienDiv);
+  anteilAnzeige.id('anteilAnzeige');
+  anteilAnzeige.style('margin', '10px 0 0 0');
+  anteilAnzeige.style('font-size', '13px');
+  anteilAnzeige.style('line-height', '1.5');
+
   // Checkbox für viele Packungen (Multiplikator)
   let multiplikatorCheckbox = createCheckbox('Sehr viele Packungen (×100)', multiplikatorAktiv);
   multiplikatorCheckbox.parent(controlPanel);
@@ -408,7 +458,10 @@ function drawVisualization() {
   
   // Histogramm/Packungen zeichnen
   drawHistogram(backgroundLayer, currentHistogram);
-  
+
+  // Intervall-Linien zeichnen (falls aktiviert)
+  drawIntervallLinien(backgroundLayer);
+
   // Boxplot zeichnen (falls aktiviert)
   drawBoxplot(backgroundLayer);
 }
@@ -452,9 +505,10 @@ function drawCoordinateSystem(pg) {
     let x = map(m, minMasse, maxMasse, margin, canvasWidth - margin);
     pg.textAlign(CENTER, TOP);
     pg.text(m, x, canvasHeight - margin + 5);
-    pg.stroke(200);
+    pg.stroke(100);
     pg.strokeWeight(1);
-    pg.line(x, canvasHeight - margin, x, canvasHeight - margin - 5);
+    // Linie sowohl oberhalb als auch unterhalb der X-Achse
+    pg.line(x, canvasHeight - margin + 5, x, canvasHeight - margin - 5);
   }
   
   // Y-Achse Beschriftung (Anzahl)
@@ -700,8 +754,106 @@ function drawBoxplot(pg) {
   pg.textAlign(RIGHT, CENTER);
   pg.textSize(12);
   pg.text('Boxplot', margin - 10, y);
-  
+
   pg.pop();
+}
+
+/**
+ * Zeichnet die Intervall-Linien (gespiegelt um den Mittelwert)
+ * und berechnet die Anteile
+ */
+function drawIntervallLinien(pg) {
+  if (!showIntervallLinien) return;
+
+  pg.push();
+
+  // Berechne die Positionen der beiden Linien
+  let untereGrenze = mittelwert - intervallAbstand;
+  let obereGrenze = mittelwert + intervallAbstand;
+
+  let xUnten = map(untereGrenze, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xOben = map(obereGrenze, minMasse, maxMasse, margin, canvasWidth - margin);
+  let xMitte = map(mittelwert, minMasse, maxMasse, margin, canvasWidth - margin);
+
+  // Schattierter Bereich zwischen den Linien
+  pg.fill(intervallLinienColor[0], intervallLinienColor[1], intervallLinienColor[2], 30);
+  pg.noStroke();
+  pg.rect(xUnten, margin, xOben - xUnten, canvasHeight - 2 * margin);
+
+  // Linien zeichnen (durchgezogen, gut sichtbar)
+  pg.stroke(intervallLinienColor);
+  pg.strokeWeight(2.5);
+  pg.drawingContext.setLineDash([]);
+
+  // Untere Linie
+  pg.line(xUnten, canvasHeight - margin, xUnten, margin);
+  // Obere Linie
+  pg.line(xOben, canvasHeight - margin, xOben, margin);
+
+  // Mittelwert-Linie (dünn, gestrichelt)
+  pg.stroke(intervallLinienColor[0], intervallLinienColor[1], intervallLinienColor[2], 100);
+  pg.strokeWeight(1);
+  pg.drawingContext.setLineDash([3, 3]);
+  pg.line(xMitte, canvasHeight - margin, xMitte, margin);
+  pg.drawingContext.setLineDash([]);
+
+  // Beschriftungen an den Linien
+  pg.noStroke();
+  pg.fill(intervallLinienColor);
+  pg.textSize(11);
+  pg.textAlign(CENTER, TOP);
+  pg.text(nf(untereGrenze, 1, 1) + 'g', xUnten, canvasHeight - margin + 22);
+  pg.text(nf(obereGrenze, 1, 1) + 'g', xOben, canvasHeight - margin + 22);
+
+  // Berechne theoretischen Anteil (aus Normalverteilung)
+  // P(μ - d ≤ X ≤ μ + d) = 2 * Φ(d/σ) - 1
+  let zWert = intervallAbstand / standardabweichung;
+  let theoretischerAnteil = erf(zWert / Math.sqrt(2)) * 100;
+
+  // Berechne experimentellen Anteil (aus den generierten Daten)
+  let anzahlImIntervall = 0;
+  for (let gewicht of packungen) {
+    if (gewicht >= untereGrenze && gewicht <= obereGrenze) {
+      anzahlImIntervall++;
+    }
+  }
+  let experimentellerAnteil = packungen.length > 0 ? (anzahlImIntervall / packungen.length * 100) : 0;
+
+  // Aktualisiere die Anzeige im Control Panel
+  let anteilElement = document.getElementById('anteilAnzeige');
+  if (anteilElement) {
+    let sigmaVielfaches = intervallAbstand / standardabweichung;
+    anteilElement.innerHTML =
+      `<b>±${nf(sigmaVielfaches, 1, 2)}σ</b> (±${nf(intervallAbstand, 1, 1)}g)<br>` +
+      `Theoretisch: <b>${nf(theoretischerAnteil, 1, 1)}%</b><br>` +
+      `Experimentell: <b>${nf(experimentellerAnteil, 1, 1)}%</b> (${anzahlImIntervall}/${packungen.length})`;
+  }
+
+  pg.pop();
+}
+
+/**
+ * Fehlerfunktion (erf) für die Normalverteilung
+ * Approximation nach Abramowitz and Stegun
+ */
+function erf(x) {
+  // Konstanten für die Approximation
+  const a1 =  0.254829592;
+  const a2 = -0.284496736;
+  const a3 =  1.421413741;
+  const a4 = -1.453152027;
+  const a5 =  1.061405429;
+  const p  =  0.3275911;
+
+  // Vorzeichen speichern
+  let sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+
+  // Approximation
+  let t = 1.0 / (1.0 + p * x);
+  let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+  return sign * y;
 }
 
 /**
