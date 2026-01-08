@@ -10,7 +10,14 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(node -e:*)",
-      "Bash(node create_excel.js:*)"
+      "Bash(node create_excel.js:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(git -C /Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMac/richard4231.github.io status)",
+      "Bash(git -C /Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMac/richard4231.github.io diff)",
+      "Bash(git -C /Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMac/richard4231.github.io log --oneline -5)",
+      "Bash(git -C /Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMac/richard4231.github.io add CLAUDE.md .claude/settings.local.json)",
+      "Bash(git -C /Users/andreasrichard/Library/CloudStorage/OneDrive-Persönlich/01JupyterAndCo/04GitHub/GitHubCloneMac/richard4231.github.io commit -m \"$\\(cat <<''EOF''\nCLAUDE.md um Konversationspfade und Projektübersicht ergänzt\n\n- Korrekter Pfad zu Claude Code Konversationen dokumentiert\n- Tabelle mit wichtigen Konversationen \\(Wurzelschnecke, Standardabweichung\\)\n- Projektübersicht für 26-01-Wurzelschnecke mit Tech-Details\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

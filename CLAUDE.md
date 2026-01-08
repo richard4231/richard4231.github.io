@@ -34,13 +34,32 @@ Claude Code conversations are stored locally. To preserve context:
 
 ### macOS Claude Code conversations location:
 ```
-~/.claude/
+~/.claude/projects/-Users-andreasrichard-Library-CloudStorage-OneDrive-Perso-nlich-01JupyterAndCo-04GitHub-GitHubCloneMac-richard4231-github-io/
 ```
 
-### Specific conversation files:
+### Wichtige Konversationen:
+
+| Datum | Thema | Datei |
+|-------|-------|-------|
+| 2026-01-08 | 26-01-Wurzelschnecke (WebGPU 3D-Spirale, Theodorus, interaktive Dreiecke) | `010e8d48-c8c4-4316-a237-27c7925106a6.jsonl` |
+| 2026-01-08 | JS-3K6B-Standardabweichung (Normalverteilung, CSV/Excel Export, interaktive Intervall-Linien) | `0429689c-838f-4010-8859-0703a058e9f8.jsonl` |
+
+### Weitere Dateien:
 - Main config: `~/.claude/settings.json`
 - Projects: `~/.claude/projects/`
-- This project's Claude data: `~/.claude/projects/-Users-andreasrichard-Library-CloudStorage-OneDrive-Persönlich-01JupyterAndCo-04GitHub-GitHubCloneMac-richard4231.github.io/`
+
+## Projektübersicht
+
+### 26-01-Wurzelschnecke
+**Interaktive 3D-Wurzelschnecke (Theodorus-Spirale)**
+- **Tech:** WebGPU (kein p5.js!), wgpu-matrix für 3D-Mathematik
+- **Features:**
+  - 3D-Darstellung mit goldbrauner Farbpalette (`#D4A574` bis `#5D4037`)
+  - Leuchtende goldene Kanten mit Glow-Effekt
+  - Interaktive Steuerung: Mausziehen (Rotation), Mausrad (Zoom), WASD (Kamera)
+  - Klick auf Dreieck zeigt mathematische Infos (Katheten, Hypotenuse, Satz des Pythagoras)
+  - Slider für Anzahl Dreiecke, 3D-Spirale (Z-Versatz), Helligkeit
+- **Mathematik:** Jedes Dreieck n hat Kathete a=1, Kathete b=√n, Hypotenuse c=√(n+1)
 
 ## Notes
 - Some projects have German folder names with umlauts (e.g., `Binärzahlenspiel`)
