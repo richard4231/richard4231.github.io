@@ -1,1 +1,0 @@
-"""SLMS Backend Application."""
