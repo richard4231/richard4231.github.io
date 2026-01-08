@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(poetry install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(brew install:*)",
+      "Bash(pipx install:*)",
+      "Bash(pipx upgrade:*)",
+      "Bash(~/.local/bin/poetry:*)"
+    ]
+  }
+}
