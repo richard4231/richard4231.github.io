@@ -48,6 +48,7 @@
             min-width: 260px;
             border: 2px solid #8B7355;
             transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 100;
         }
         #controls.hidden {
             transform: translateX(-100%);
@@ -65,7 +66,7 @@
             padding: 8px 12px;
             cursor: pointer;
             font-size: 14px;
-            z-index: 100;
+            z-index: 1000;
             transition: left 0.3s ease;
         }
         #togglePanel:hover {
