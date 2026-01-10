@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodecasphere Subdivision – Kugeloberflächen-Annäherung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        canvas {
+            flex: 1;
+            display: block;
+        }
+        #controls {
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        input[type="range"] {
+            width: 200px;
+            accent-color: #4ecdc4;
+        }
+        .stats {
+            font-size: 14px;
+            background: rgba(78, 205, 196, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        #error {
+            color: #ff6b6b;
+            padding: 40px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="controls">
+            <div class="control-group">
+                <label>Subdivisions: <span id="subdivValue">0</span></label>
+                <input type="range" id="subdivisions" min="0" max="6" value="0" step="1">
+            </div>
+            <div class="control-group">
+                <label>Rotation</label>
+                <input type="range" id="rotation" min="0" max="360" value="0">
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="showSphere" checked>
+                <label for="showSphere">Referenzkugel anzeigen</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="autoRotate" checked>
+                <label for="autoRotate">Auto-Rotation</label>
+            </div>
+            <div class="stats" id="stats">
+                Dreiecke: 36 | Vertices: 20 | Subdivision: 0
+            </div>
+        </div>
+    </div>
+    <div id="error" style="display:none;"></div>
+
+    <script type="module">
+        // ============================================
+        // MATHEMATIK-UTILITIES
+        // ============================================
+        
+        const vec3 = {
+            create: (x = 0, y = 0, z = 0) => [x, y, z],
+            normalize: (v) => {
+                const len = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+                return len > 0 ? [v[0]/len, v[1]/len, v[2]/len] : [0, 0, 0];
+            },
+            add: (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]],
+            sub: (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]],
+            scale: (v, s) => [v[0]*s, v[1]*s, v[2]*s],
+            cross: (a, b) => [
+                a[1]*b[2] - a[2]*b[1],
+                a[2]*b[0] - a[0]*b[2],
+                a[0]*b[1] - a[1]*b[0]
+            ],
+            dot: (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+        };
+
+        // 4x4 Matrix-Utilities
+        const mat4 = {
+            identity: () => [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            ],
+            perspective: (fov, aspect, near, far) => {
+                // WebGPU NDC: Z von 0 (near) bis 1 (far), linkshändiges System
+                const f = 1.0 / Math.tan(fov / 2);
+                return [
+                    f / aspect, 0, 0, 0,
+                    0, f, 0, 0,
+                    0, 0, far / (near - far), -1,
+                    0, 0, near * far / (near - far), 0
+                ];
+            },
+            lookAt: (eye, center, up) => {
+                const z = vec3.normalize(vec3.sub(eye, center));
+                const x = vec3.normalize(vec3.cross(up, z));
+                const y = vec3.cross(z, x);
+                return [
+                    x[0], y[0], z[0], 0,
+                    x[1], y[1], z[1], 0,
+                    x[2], y[2], z[2], 0,
+                    -vec3.dot(x, eye), -vec3.dot(y, eye), -vec3.dot(z, eye), 1
+                ];
+            },
+            rotateX: (m, angle) => {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                // Column-major: Spalte 1 = m[4..7], Spalte 2 = m[8..11]
+                const m10 = m[4], m11 = m[5], m12 = m[6], m13 = m[7];
+                const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
+                return [
+                    m[0], m[1], m[2], m[3],
+                    m10 * c + m20 * s, m11 * c + m21 * s, m12 * c + m22 * s, m13 * c + m23 * s,
+                    m20 * c - m10 * s, m21 * c - m11 * s, m22 * c - m12 * s, m23 * c - m13 * s,
+                    m[12], m[13], m[14], m[15]
+                ];
+            },
+            rotateY: (m, angle) => {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                // Column-major: Spalte 0 = m[0..3], Spalte 2 = m[8..11]
+                const m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3];
+                const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
+                return [
+                    m00 * c - m20 * s, m01 * c - m21 * s, m02 * c - m22 * s, m03 * c - m23 * s,
+                    m[4], m[5], m[6], m[7],
+                    m00 * s + m20 * c, m01 * s + m21 * c, m02 * s + m22 * c, m03 * s + m23 * c,
+                    m[12], m[13], m[14], m[15]
+                ];
+            },
+            multiply: (a, b) => {
+                const out = new Array(16);
+                // Column-major Multiplikation für WebGPU
+                for (let col = 0; col < 4; col++) {
+                    for (let row = 0; row < 4; row++) {
+                        out[col * 4 + row] =
+                            a[0 * 4 + row] * b[col * 4 + 0] +
+                            a[1 * 4 + row] * b[col * 4 + 1] +
+                            a[2 * 4 + row] * b[col * 4 + 2] +
+                            a[3 * 4 + row] * b[col * 4 + 3];
+                    }
+                }
+                return out;
+            }
+        };
+
+        // ============================================
+        // POLYEDER-GENERIERUNG
+        // ============================================
+
+        function createIcosahedron() {
+            const t = (1 + Math.sqrt(5)) / 2; // Goldener Schnitt
+
+            // 12 Vertices des Ikosaeders, normalisiert auf Einheitskugel
+            const vertices = [
+                [-1,  t,  0], [ 1,  t,  0], [-1, -t,  0], [ 1, -t,  0],
+                [ 0, -1,  t], [ 0,  1,  t], [ 0, -1, -t], [ 0,  1, -t],
+                [ t,  0, -1], [ t,  0,  1], [-t,  0, -1], [-t,  0,  1]
+            ].map(v => vec3.normalize(v));
+
+            // 20 Dreiecksflächen (Indizes, CCW für WebGPU)
+            const faces = [
+                [0, 5, 11], [0, 1, 5], [0, 7, 1], [0, 10, 7], [0, 11, 10],
+                [1, 9, 5], [5, 4, 11], [11, 2, 10], [10, 6, 7], [7, 8, 1],
+                [3, 4, 9], [3, 2, 4], [3, 6, 2], [3, 8, 6], [3, 9, 8],
+                [4, 5, 9], [2, 11, 4], [6, 10, 2], [8, 7, 6], [9, 1, 8]
+            ];
+
+            return { vertices, faces };
+        }
+
+        function createDodecahedron() {
+            const phi = (1 + Math.sqrt(5)) / 2; // Goldener Schnitt ≈ 1.618
+            const invPhi = 1 / phi;              // 1/φ ≈ 0.618
+
+            // 20 Vertices des Dodekaeders
+            const vertices = [
+                // 8 Würfel-Vertices (±1, ±1, ±1)
+                [ 1,  1,  1], [ 1,  1, -1], [ 1, -1,  1], [ 1, -1, -1],
+                [-1,  1,  1], [-1,  1, -1], [-1, -1,  1], [-1, -1, -1],
+                // 12 Rechteck-Vertices
+                [0,  phi,  invPhi], [0,  phi, -invPhi], [0, -phi,  invPhi], [0, -phi, -invPhi],
+                [ invPhi, 0,  phi], [ invPhi, 0, -phi], [-invPhi, 0,  phi], [-invPhi, 0, -phi],
+                [ phi,  invPhi, 0], [ phi, -invPhi, 0], [-phi,  invPhi, 0], [-phi, -invPhi, 0]
+            ].map(v => vec3.normalize(v));
+
+            // 12 Pentagon-Flächen (5-Ecke)
+            const pentagons = [
+                [0, 16, 17, 2, 12],   // Rechts vorne
+                [0, 12, 14, 4, 8],    // Oben vorne
+                [0, 8, 9, 1, 16],     // Rechts oben
+                [1, 9, 5, 15, 13],    // Rechts hinten
+                [1, 13, 3, 17, 16],   // Rechts unten
+                [2, 17, 3, 11, 10],   // Unten vorne
+                [2, 10, 6, 14, 12],   // Links vorne
+                [3, 13, 15, 7, 11],   // Unten hinten
+                [4, 14, 6, 19, 18],   // Links oben
+                [5, 9, 8, 4, 18],     // Oben hinten
+                [6, 10, 11, 7, 19],   // Unten links
+                [7, 15, 5, 18, 19]    // Links hinten
+            ];
+
+            // Pentagone NICHT in Dreiecke umwandeln - als Pentagon-Array zurückgeben
+            return { vertices, pentagons };
+        }
+
+        // Pentagon-Subdivision: Jedes Pentagon → 5 Dreiecke (vom Pentagon-Schwerpunkt)
+        function subdividePentagons(vertices, pentagons) {
+            const newVertices = [...vertices];
+            const newFaces = [];
+
+            for (const pentagon of pentagons) {
+                // Pentagon-Schwerpunkt berechnen
+                let cx = 0, cy = 0, cz = 0;
+                for (const idx of pentagon) {
+                    const v = vertices[idx];
+                    cx += v[0];
+                    cy += v[1];
+                    cz += v[2];
+                }
+                const centroid = vec3.normalize([cx / 5, cy / 5, cz / 5]);
+
+                const centroidIdx = newVertices.length;
+                newVertices.push(centroid);
+
+                // 5 Dreiecke vom Schwerpunkt zu den Pentagon-Kanten (CCW für WebGPU)
+                for (let i = 0; i < 5; i++) {
+                    const i0 = pentagon[i];
+                    const i1 = pentagon[(i + 1) % 5];
+                    newFaces.push([i0, centroidIdx, i1]);  // Invertiert für CCW
+                }
+            }
+
+            return { vertices: newVertices, faces: newFaces };
+        }
+
+        // Midpoint-Subdivision: Jedes Dreieck → 4 Dreiecke (Kantenhalbierung)
+        function subdivideMidpoint(vertices, faces) {
+            const newVertices = [...vertices];
+            const newFaces = [];
+
+            // Map für Kanten-Mittelpunkte (vermeidet Duplikate)
+            const midpointCache = new Map();
+
+            function getMidpointIndex(i0, i1) {
+                // Kanonische Kanten-ID (kleinerer Index zuerst)
+                const key = i0 < i1 ? `${i0},${i1}` : `${i1},${i0}`;
+
+                if (midpointCache.has(key)) {
+                    return midpointCache.get(key);
+                }
+
+                // Mittelpunkt berechnen und auf Kugel projizieren
+                const v0 = vertices[i0];
+                const v1 = vertices[i1];
+                const midpoint = vec3.normalize([
+                    (v0[0] + v1[0]) / 2,
+                    (v0[1] + v1[1]) / 2,
+                    (v0[2] + v1[2]) / 2
+                ]);
+
+                const idx = newVertices.length;
+                newVertices.push(midpoint);
+                midpointCache.set(key, idx);
+                return idx;
+            }
+
+            for (const [i0, i1, i2] of faces) {
+                // Mittelpunkte der 3 Kanten
+                const m01 = getMidpointIndex(i0, i1);
+                const m12 = getMidpointIndex(i1, i2);
+                const m20 = getMidpointIndex(i2, i0);
+
+                // 4 neue Dreiecke (CCW für WebGPU - Winding Order beibehalten)
+                newFaces.push([i0, m20, m01]);   // Ecke bei v0
+                newFaces.push([i1, m01, m12]);   // Ecke bei v1
+                newFaces.push([i2, m12, m20]);   // Ecke bei v2
+                newFaces.push([m01, m20, m12]);  // Mittleres Dreieck
+            }
+
+            return { vertices: newVertices, faces: newFaces };
+        }
+
+        function generateIcosphere(subdivisions) {
+            let mesh = createIcosahedron();
+
+            for (let i = 0; i < subdivisions; i++) {
+                mesh = subdivideMidpoint(mesh.vertices, mesh.faces);
+            }
+
+            return mesh;
+        }
+
+        function generateDodecasphere(subdivisions) {
+            // Progression:
+            // Subdiv 0: 20 V, 36 F (Fan-Triangulation der 12 Pentagone)
+            // Subdiv 1: 32 V, 60 F (Pentagon-Schwerpunkte: 20 + 12 = 32 vertices, 12×5 = 60 faces)
+            // Subdiv 2: 122 V, 240 F (Midpoint: +90 Kantenmittelpunkte, 60×4 = 240 faces)
+            // Subdiv 3: 482 V, 960 F (Midpoint: +360 Kantenmittelpunkte, 240×4 = 960 faces)
+
+            const dodeca = createDodecahedron();
+
+            if (subdivisions === 0) {
+                // Keine Subdivision: Pentagone direkt in Dreiecke umwandeln
+                // (einfache Fan-Triangulation vom ersten Vertex, CCW für WebGPU)
+                const faces = [];
+                for (const pentagon of dodeca.pentagons) {
+                    for (let i = 1; i < 4; i++) {
+                        faces.push([pentagon[0], pentagon[i + 1], pentagon[i]]);  // Invertiert für CCW
+                    }
+                }
+                return { vertices: dodeca.vertices, faces };
+            }
+
+            // Erste Subdivision: Pentagon-Schwerpunkte → 5 Dreiecke pro Pentagon
+            let mesh = subdividePentagons(dodeca.vertices, dodeca.pentagons);
+
+            // Weitere Subdivisions: Klassische Midpoint-Subdivision (Kantenhalbierung)
+            for (let i = 1; i < subdivisions; i++) {
+                mesh = subdivideMidpoint(mesh.vertices, mesh.faces);
+            }
+
+            return mesh;
+        }
+
+        // Mesh zu Vertex-Buffer konvertieren (Position + Normal)
+        function meshToVertexData(mesh) {
+            const data = [];
+
+            for (const [i0, i1, i2] of mesh.faces) {
+                const v0 = mesh.vertices[i0];
+                const v1 = mesh.vertices[i1];
+                const v2 = mesh.vertices[i2];
+
+                // Da alle Vertices auf der Einheitskugel liegen,
+                // ist die Vertex-Position = Normale (zeigt nach außen)
+                // Das ergibt konsistentes Smooth Shading
+                for (const v of [v0, v1, v2]) {
+                    data.push(v[0], v[1], v[2]);  // position
+                    data.push(v[0], v[1], v[2]);  // normal = position (Einheitskugel)
+                }
+            }
+
+            return new Float32Array(data);
+        }
+
+        // Referenzkugel als Wireframe-Vertices generieren
+        function createSphereWireframe(segments = 32, rings = 16) {
+            const vertices = [];
+            
+            // Längengrade
+            for (let i = 0; i < segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                for (let j = 0; j <= rings; j++) {
+                    const phi = (j / rings) * Math.PI;
+                    const x = Math.sin(phi) * Math.cos(theta);
+                    const y = Math.cos(phi);
+                    const z = Math.sin(phi) * Math.sin(theta);
+                    vertices.push(x, y, z);
+                    
+                    if (j < rings) {
+                        const phiNext = ((j + 1) / rings) * Math.PI;
+                        vertices.push(
+                            Math.sin(phiNext) * Math.cos(theta),
+                            Math.cos(phiNext),
+                            Math.sin(phiNext) * Math.sin(theta)
+                        );
+                    }
+                }
+            }
+            
+            // Breitengrade
+            for (let j = 1; j < rings; j++) {
+                const phi = (j / rings) * Math.PI;
+                for (let i = 0; i <= segments; i++) {
+                    const theta = (i / segments) * Math.PI * 2;
+                    vertices.push(
+                        Math.sin(phi) * Math.cos(theta),
+                        Math.cos(phi),
+                        Math.sin(phi) * Math.sin(theta)
+                    );
+                    
+                    if (i < segments) {
+                        const thetaNext = ((i + 1) / segments) * Math.PI * 2;
+                        vertices.push(
+                            Math.sin(phi) * Math.cos(thetaNext),
+                            Math.cos(phi),
+                            Math.sin(phi) * Math.sin(thetaNext)
+                        );
+                    }
+                }
+            }
+            
+            return new Float32Array(vertices);
+        }
+
+        // ============================================
+        // WEBGPU SHADER
+        // ============================================
+        
+        const meshShaderCode = `
+            struct Uniforms {
+                mvp: mat4x4f,
+                model: mat4x4f,
+                lightDir: vec3f,
+                viewPos: vec3f,
+            }
+            
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+            
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) worldPos: vec3f,
+                @location(1) normal: vec3f,
+            }
+            
+            @vertex
+            fn vertexMain(
+                @location(0) position: vec3f,
+                @location(1) normal: vec3f
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.mvp * vec4f(position, 1.0);
+                output.worldPos = (uniforms.model * vec4f(position, 1.0)).xyz;
+                output.normal = normalize((uniforms.model * vec4f(normal, 0.0)).xyz);
+                return output;
+            }
+            
+            @fragment
+            fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+                let normal = normalize(input.normal);
+                let lightDir = normalize(uniforms.lightDir);
+                let viewDir = normalize(uniforms.viewPos - input.worldPos);
+                
+                // Ambient
+                let ambient = vec3f(0.15, 0.15, 0.2);
+                
+                // Diffuse (Lambert)
+                let diff = max(dot(normal, lightDir), 0.0);
+                let diffuse = diff * vec3f(0.7, 0.85, 0.9);
+                
+                // Specular (Blinn-Phong)
+                let halfDir = normalize(lightDir + viewDir);
+                let spec = pow(max(dot(normal, halfDir), 0.0), 64.0);
+                let specular = spec * vec3f(1.0, 1.0, 1.0);
+                
+                // Rim Light für Tiefe
+                let rim = 1.0 - max(dot(viewDir, normal), 0.0);
+                let rimLight = pow(rim, 3.0) * vec3f(0.2, 0.4, 0.5);
+                
+                let color = ambient + diffuse + specular * 0.5 + rimLight;
+                return vec4f(color, 1.0);
+            }
+        `;
+
+        const wireframeShaderCode = `
+            struct Uniforms {
+                mvp: mat4x4f,
+                model: mat4x4f,
+                lightDir: vec3f,
+                viewPos: vec3f,
+            }
+            
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+            
+            @vertex
+            fn vertexMain(@location(0) position: vec3f) -> @builtin(position) vec4f {
+                return uniforms.mvp * vec4f(position * 1.001, 1.0); // Leicht größer
+            }
+            
+            @fragment
+            fn fragmentMain() -> @location(0) vec4f {
+                return vec4f(0.4, 0.8, 0.9, 0.6); // Besser sichtbares Cyan
+            }
+        `;
+
+        // ============================================
+        // HAUPTPROGRAMM
+        // ============================================
+        
+        async function main() {
+            const canvas = document.getElementById('canvas');
+            const errorDiv = document.getElementById('error');
+            
+            // WebGPU initialisieren
+            if (!navigator.gpu) {
+                errorDiv.textContent = 'WebGPU wird von diesem Browser nicht unterstützt. Bitte Chrome 113+ oder Edge 113+ verwenden.';
+                errorDiv.style.display = 'block';
+                document.getElementById('controls').style.display = 'none';
+                return;
+            }
+            
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
+                errorDiv.textContent = 'Kein WebGPU-Adapter gefunden.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const device = await adapter.requestDevice();
+            const context = canvas.getContext('webgpu');
+            const format = navigator.gpu.getPreferredCanvasFormat();
+            
+            context.configure({
+                device,
+                format,
+                alphaMode: 'premultiplied'
+            });
+
+            // Canvas-Größe initial setzen
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.floor(canvas.clientWidth * dpr);
+            canvas.height = Math.floor(canvas.clientHeight * dpr);
+
+            // Depth Texture
+            let depthTexture = device.createTexture({
+                size: [canvas.width, canvas.height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+
+            // Shader Module
+            const meshShaderModule = device.createShaderModule({ code: meshShaderCode });
+            const wireframeShaderModule = device.createShaderModule({ code: wireframeShaderCode });
+
+            // Uniform Buffer
+            const uniformBuffer = device.createBuffer({
+                size: 256, // 2x mat4 + 2x vec3 + padding
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+
+            // Bind Group Layout
+            const bindGroupLayout = device.createBindGroupLayout({
+                entries: [{
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    buffer: { type: 'uniform' }
+                }]
+            });
+
+            const bindGroup = device.createBindGroup({
+                layout: bindGroupLayout,
+                entries: [{
+                    binding: 0,
+                    resource: { buffer: uniformBuffer }
+                }]
+            });
+
+            const pipelineLayout = device.createPipelineLayout({
+                bindGroupLayouts: [bindGroupLayout]
+            });
+
+            // Mesh Pipeline
+            const meshPipeline = device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: meshShaderModule,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 24, // 6 floats
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: 'float32x3' },  // position
+                            { shaderLocation: 1, offset: 12, format: 'float32x3' }  // normal
+                        ]
+                    }]
+                },
+                fragment: {
+                    module: meshShaderModule,
+                    entryPoint: 'fragmentMain',
+                    targets: [{ format }]
+                },
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'back'
+                },
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less'
+                }
+            });
+
+            // Wireframe Pipeline (mit Blending für Transparenz)
+            const wireframePipeline = device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: wireframeShaderModule,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 12,
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: 'float32x3' }
+                        ]
+                    }]
+                },
+                fragment: {
+                    module: wireframeShaderModule,
+                    entryPoint: 'fragmentMain',
+                    targets: [{
+                        format,
+                        blend: {
+                            color: {
+                                srcFactor: 'src-alpha',
+                                dstFactor: 'one-minus-src-alpha',
+                                operation: 'add'
+                            },
+                            alpha: {
+                                srcFactor: 'one',
+                                dstFactor: 'one-minus-src-alpha',
+                                operation: 'add'
+                            }
+                        }
+                    }]
+                },
+                primitive: {
+                    topology: 'line-list'
+                },
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less'
+                }
+            });
+
+            // Referenzkugel-Buffer
+            const sphereData = createSphereWireframe();
+            const sphereBuffer = device.createBuffer({
+                size: sphereData.byteLength,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+            });
+            device.queue.writeBuffer(sphereBuffer, 0, sphereData);
+            const sphereVertexCount = sphereData.length / 3;
+
+            // State
+            let meshBuffer = null;
+            let meshVertexCount = 0;
+            let currentSubdivisions = -1;
+
+            function updateMesh(subdivisions) {
+                if (subdivisions === currentSubdivisions) return;
+                currentSubdivisions = subdivisions;
+
+                const mesh = generateDodecasphere(subdivisions);
+                const vertexData = meshToVertexData(mesh);
+
+                meshVertexCount = vertexData.length / 6;
+
+                if (meshBuffer) meshBuffer.destroy();
+                meshBuffer = device.createBuffer({
+                    size: vertexData.byteLength,
+                    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+                });
+                device.queue.writeBuffer(meshBuffer, 0, vertexData);
+
+                // Stats aktualisieren
+                document.getElementById('stats').textContent =
+                    `Dreiecke: ${mesh.faces.length} | Vertices: ${mesh.vertices.length} | Subdivision: ${subdivisions}`;
+            }
+
+            // UI
+            const subdivSlider = document.getElementById('subdivisions');
+            const subdivValue = document.getElementById('subdivValue');
+            const rotationSlider = document.getElementById('rotation');
+            const showSphereCheckbox = document.getElementById('showSphere');
+            const autoRotateCheckbox = document.getElementById('autoRotate');
+
+            subdivSlider.addEventListener('input', () => {
+                const val = parseInt(subdivSlider.value);
+                subdivValue.textContent = val;
+                updateMesh(val);
+            });
+
+            // Drag-Rotation
+            let isDragging = false;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+            let dragRotationX = 0;  // Vertikale Rotation
+            let dragRotationY = 0;  // Horizontale Rotation
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+
+                dragRotationY += deltaX * 0.01;  // Horizontales Ziehen → Y-Rotation
+                dragRotationX += deltaY * 0.01;  // Vertikales Ziehen → X-Rotation
+
+                // X-Rotation begrenzen (nicht über Kopf drehen)
+                dragRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, dragRotationX));
+
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            // Touch-Support für mobile Geräte
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    lastMouseX = e.touches[0].clientX;
+                    lastMouseY = e.touches[0].clientY;
+                }
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                e.preventDefault();
+
+                const deltaX = e.touches[0].clientX - lastMouseX;
+                const deltaY = e.touches[0].clientY - lastMouseY;
+
+                dragRotationY += deltaX * 0.01;
+                dragRotationX += deltaY * 0.01;
+                dragRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, dragRotationX));
+
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            });
+
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            canvas.style.cursor = 'grab';
+
+            // Initiales Mesh
+            updateMesh(0);
+
+            // Resize Handler
+            function resize() {
+                const dpr = window.devicePixelRatio || 1;
+                const width = Math.floor(canvas.clientWidth * dpr);
+                const height = Math.floor(canvas.clientHeight * dpr);
+                
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    depthTexture.destroy();
+                    depthTexture = device.createTexture({
+                        size: [width, height],
+                        format: 'depth24plus',
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    });
+                }
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Render Loop
+            let time = 0;
+            
+            function frame() {
+                time += 0.016;
+
+                // Kameraposition
+                const aspect = canvas.width / canvas.height || 1;
+                const eye = [0, 0, 3.5];
+                const center = [0, 0, 0];
+                const up = [0, 1, 0];
+                
+                // Rotation
+                let rotationAngleY = parseFloat(rotationSlider.value) * Math.PI / 180 + dragRotationY;
+                if (autoRotateCheckbox.checked) {
+                    rotationAngleY += time * 0.5;
+                }
+
+                // Matrizen
+                const projection = mat4.perspective(Math.PI / 4, aspect, 0.1, 100);
+                const view = mat4.lookAt(eye, center, up);
+                // Erst Y-Rotation, dann X-Rotation (für intuitive Drag-Steuerung)
+                let model = mat4.rotateY(mat4.identity(), rotationAngleY);
+                model = mat4.rotateX(model, dragRotationX);
+                const mvp = mat4.multiply(mat4.multiply(projection, view), model);
+                
+                // Uniforms (40 floats = 160 bytes)
+                const uniformData = new Float32Array(40);
+                uniformData.set(mvp, 0);       // 0-15
+                uniformData.set(model, 16);    // 16-31
+                
+                // Light direction (von oben rechts) - ab Index 32
+                const lightDir = vec3.normalize([1, 1, 1]);
+                uniformData[32] = lightDir[0];
+                uniformData[33] = lightDir[1];
+                uniformData[34] = lightDir[2];
+                // padding at 35
+                
+                // View position - ab Index 36
+                uniformData[36] = eye[0];
+                uniformData[37] = eye[1];
+                uniformData[38] = eye[2];
+                
+                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+                // Render Pass
+                const commandEncoder = device.createCommandEncoder();
+                const passEncoder = commandEncoder.beginRenderPass({
+                    colorAttachments: [{
+                        view: context.getCurrentTexture().createView(),
+                        clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1 },
+                        loadOp: 'clear',
+                        storeOp: 'store'
+                    }],
+                    depthStencilAttachment: {
+                        view: depthTexture.createView(),
+                        depthClearValue: 1,
+                        depthLoadOp: 'clear',
+                        depthStoreOp: 'store'
+                    }
+                });
+
+                // Referenzkugel zuerst (wenn aktiviert)
+                if (showSphereCheckbox.checked) {
+                    passEncoder.setPipeline(wireframePipeline);
+                    passEncoder.setBindGroup(0, bindGroup);
+                    passEncoder.setVertexBuffer(0, sphereBuffer);
+                    passEncoder.draw(sphereVertexCount);
+                }
+
+                // Icosphere Mesh
+                if (meshBuffer) {
+                    passEncoder.setPipeline(meshPipeline);
+                    passEncoder.setBindGroup(0, bindGroup);
+                    passEncoder.setVertexBuffer(0, meshBuffer);
+                    passEncoder.draw(meshVertexCount);
+                }
+
+                passEncoder.end();
+                device.queue.submit([commandEncoder.finish()]);
+
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        main();
+    </script>
+</body>
+</html>
