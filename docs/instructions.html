@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anleitung: Screenshots erzeugen</title>
+</head>
+<body style="font-family:Arial,Helvetica,sans-serif;padding:2rem;max-width:900px;margin:auto;">
+<h1>Automatisches Erfassen von Screenshots</h1>
+<p>Diese Anleitung erklärt, wie du Vorschaubilder für die Simulationen erzeugst.</p>
+<ol>
+<li>Installiere Node (falls noch nicht vorhanden).</li>
+<li>Erzeuge die Daten-Datei aus der Haupt-README:
+<pre><code>node scripts/generate_data.js</code></pre>
+Dies erzeugt <code>docs/data.json</code>.</li>
+3. Installiere `puppeteer-core` (empfohlen, verwendet den lokal installierten Chrome):
+<pre><code>npm install puppeteer-core --save-dev</code></pre>
+</li>
+<li>Erzeuge Screenshots (mit lokal installiertem Chrome):
+<pre><code>CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" node scripts/capture-screenshots.js</code></pre>
+Die Bilder werden in <code>docs/screenshots/</code> abgelegt. Falls du keine Umgebungsvariable setzt, versucht das Skript den Standard-Pfad für Chrome auf macOS zu verwenden.
+</li>
+<li>Lokale Vorschau: du kannst einfach einen einfachen HTTP-Server verwenden:
+<pre><code>cd docs
+python3 -m http.server 8000
+# dann öffne http://localhost:8000/</code></pre>
+</li>
+<li>Deployment: wähle in den GitHub Pages Einstellungen den Ordner <code>/docs</code> als Quelle oder kopiere die Dateien ins Root.</li>
+</ol>
+<p>Falls manche Seiten dynamisch Inhalte nachladen, kann es nötig sein, die Wartezeit im Skript <code>scripts/capture-screenshots.js</code> zu erhöhen.</p>
+</body>
+</html>

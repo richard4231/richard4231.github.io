@@ -1,0 +1,171 @@
+[
+  {
+    "section": "Simulationen",
+    "items": [
+      {
+        "title": "Gummibärchen",
+        "url": "https://richard4231.github.io/25-02-gummybears/",
+        "img": "screenshots/richard4231.github.io-25-02-gummybears.png"
+      },
+      {
+        "title": "Schokolinsen",
+        "url": "https://richard4231.github.io/25-03-chocolatebeans/",
+        "img": "screenshots/richard4231.github.io-25-03-chocolatebeans.png"
+      },
+      {
+        "title": "Greenhouse Gamble",
+        "url": "https://richard4231.github.io/25-11-greenhouse-gamble/",
+        "img": "screenshots/richard4231.github.io-25-11-greenhouse-gamble.png"
+      }
+    ]
+  },
+  {
+    "section": "Muster erkunden",
+    "items": [
+      {
+        "title": "Pascal meets Sierpinksi",
+        "url": "https://richard4231.github.io/21-04-pascaltriangleoptimized/",
+        "img": "screenshots/richard4231.github.io-21-04-pascaltriangleoptimized.png"
+      }
+    ]
+  },
+  {
+    "section": "3D",
+    "items": [
+      {
+        "title": "Würfelsierpinski",
+        "url": "https://richard4231.github.io/25-02-xplodingsierpinski/",
+        "img": "screenshots/richard4231.github.io-25-02-xplodingsierpinski.png"
+      },
+      {
+        "title": "Würfelsierpinski II: bunter, schriller, performanter.",
+        "url": "https://richard4231.github.io/25-12-xplodingsierpinski-webgpu/",
+        "img": "screenshots/richard4231.github.io-25-12-xplodingsierpinski-webgpu.png"
+      },
+      {
+        "title": "Prinzip von Cavalieri Halbkugel",
+        "url": "https://richard4231.github.io/25-12-cavalieri-v03/",
+        "img": "screenshots/richard4231.github.io-25-12-cavalieri-v03.png"
+      },
+      {
+        "title": "Wurzelschnecke",
+        "url": "https://richard4231.github.io/26-01-Wurzelschnecke/",
+        "img": "screenshots/richard4231.github.io-26-01-Wurzelschnecke.png"
+      },
+      {
+        "title": "Kubische Zahlen rekursiv",
+        "url": "https://richard4231.github.io/24-11-exploding-cubes/",
+        "img": "screenshots/richard4231.github.io-24-11-exploding-cubes.png"
+      },
+      {
+        "title": "WebGPU Demo",
+        "url": "https://richard4231.github.io/25-12-spheres-n-lights-2/",
+        "img": "screenshots/richard4231.github.io-25-12-spheres-n-lights-2.png"
+      }
+    ]
+  },
+  {
+    "section": "Spikey",
+    "items": [
+      {
+        "title": "Spikey",
+        "url": "https://richard4231.github.io/25-02-Spikey-v03/",
+        "img": "screenshots/richard4231.github.io-25-02-Spikey-v03.png"
+      },
+      {
+        "title": "Spikey Vierfarbenproblem",
+        "url": "https://richard4231.github.io/25-02-Spikey-v03b/",
+        "img": "screenshots/richard4231.github.io-25-02-Spikey-v03b.png"
+      },
+      {
+        "title": "bunter Spikey",
+        "url": "https://richard4231.github.io/25-02-Spikey-v04colorful/",
+        "img": "screenshots/richard4231.github.io-25-02-Spikey-v04colorful.png"
+      }
+    ]
+  },
+  {
+    "section": "Mathbuch",
+    "items": [
+      {
+        "title": "Ziffernkarten",
+        "url": "https://richard4231.github.io/25-02-mb21pub/25-02-Ziffernkarten/",
+        "img": "screenshots/richard4231.github.io-25-02-mb21pub-25-02-Ziffernkarten.png"
+      },
+      {
+        "title": "Einfaches Würfelset",
+        "url": "https://richard4231.github.io/25-02-mb21pub/SimpleDice/",
+        "img": "screenshots/richard4231.github.io-25-02-mb21pub-SimpleDice.png"
+      },
+      {
+        "title": "Einfacher Doppelwürfel",
+        "url": "https://richard4231.github.io/25-02-3ddicebox/",
+        "img": "screenshots/richard4231.github.io-25-02-3ddicebox.png"
+      },
+      {
+        "title": "Kontospiel v2",
+        "url": "https://richard4231.github.io/25-09-Kontospiel/",
+        "img": "screenshots/richard4231.github.io-25-09-Kontospiel.png"
+      }
+    ]
+  },
+  {
+    "section": "Mathematische Spielereien",
+    "items": [
+      {
+        "title": "Sonnenblume",
+        "url": "https://richard4231.github.io/22-09-v1tournesol/",
+        "img": "screenshots/richard4231.github.io-22-09-v1tournesol.png"
+      },
+      {
+        "title": "Pi Paths",
+        "url": "https://richard4231.github.io/22-09-PiPaths-v02/",
+        "img": "screenshots/richard4231.github.io-22-09-PiPaths-v02.png"
+      },
+      {
+        "title": "Pi Paths 3D",
+        "url": "https://richard4231.github.io/22-09-PiPaths-v03-3D/",
+        "img": "screenshots/richard4231.github.io-22-09-PiPaths-v03-3D.png"
+      }
+    ]
+  },
+  {
+    "section": "Radargraphen",
+    "items": [
+      {
+        "title": "Handlungsfelder PH ABC",
+        "url": "https://richard4231.github.io/20-07-radargraphBPA/",
+        "img": "screenshots/richard4231.github.io-20-07-radargraphBPA.png"
+      },
+      {
+        "title": "Aspekte guten Mathematikunterrichts",
+        "url": "https://richard4231.github.io/20-12-radargraphRGMU/",
+        "img": "screenshots/richard4231.github.io-20-12-radargraphRGMU.png"
+      },
+      {
+        "title": "Digitale Medien",
+        "url": "https://richard4231.github.io/25-02-rgdigitalmedia/",
+        "img": "screenshots/richard4231.github.io-25-02-rgdigitalmedia.png"
+      },
+      {
+        "title": "Standortbestimmung BNE (Original)",
+        "url": "https://richard4231.github.io/25-02-esdcompetence/",
+        "img": "screenshots/richard4231.github.io-25-02-esdcompetence.png"
+      }
+    ]
+  },
+  {
+    "section": "Weitere Seiten",
+    "items": [
+      {
+        "title": "Generative Art",
+        "url": "https://richard4231.github.io/generative-art/",
+        "img": "screenshots/richard4231.github.io-generative-art.png"
+      }
+    ]
+  },
+  {
+    "section": "GitHub Pages Site",
+    "items": []
+  }
+]

@@ -43,4 +43,24 @@
 <br/> 
 <br/> 
 
+---
+
+## GitHub Pages Site
+Eine einfache Übersichtsseite mit Vorschaubildern findest du in `docs/index.html`.
+
+- Generiere die Daten automatisch mit:
+
+```bash
+node scripts/generate_data.js
+```
+
+- Erstelle Screenshots (Puppeteer):
+
+```bash
+npm install puppeteer --save-dev
+node scripts/capture-screenshots.js
+```
+
+Die Seite wird aus `docs/` served; in den GitHub Pages Einstellungen kannst du `docs/` als Quelle auswählen.
+
 
