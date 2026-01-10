@@ -33,12 +33,12 @@ function LinienZeichnen(){
   var x1,y1,x2,y2
   noFill();
   stroke(209);
-  R = 120;
+  R = 60;
   for (var i=0; i<n; i++){
-      x1=sin(i*2*PI/n)*(R+40);
-      y1=cos(i*2*PI/n)*(R+40);  
-      x2=sin(i*2*PI/n)*(R+350);
-      y2=cos(i*2*PI/n)*(R+350); 
+      x1=sin(i*2*PI/n)*(R+20);
+      y1=cos(i*2*PI/n)*(R+20);  
+      x2=sin(i*2*PI/n)*(R+250);
+      y2=cos(i*2*PI/n)*(R+250); 
      line(width/2+x1,height/2+y1,width/2+x2,height/2+y2);   
    }
 }
