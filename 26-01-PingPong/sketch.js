@@ -67,10 +67,11 @@ function initbackground(){
  kreiseZeichnen();
  LinienZeichnen();
  fill(color(44,44,44));
- textAlign(LEFT);
+ textAlign(CENTER, CENTER);
+ textFont('Roboto');
  textSize(22);
  // s = "Press h for help";
- // text(s, 10, 790); 
+ // text(s, 10, 790);
 }
 
 // Anzeige oben links
@@ -268,11 +269,13 @@ function draw(){
     drawcurve();
     writeNum();
     drawblob();
-    x_=width/2-20;
-    y_=height/2+10;
+    x_=width/2;
+    y_=height/2;
     fill(255);
     noStroke();
-    rect(x_,y_-30,58,50);
+    rectMode(CENTER);
+    rect(x_,y_,70,50);
+    rectMode(CORNER);
     fill(44);
     text(s,x_,y_);
   }
