@@ -1,5 +1,6 @@
 "use strict"
 
+var _audioCtx = null;
 var t,
     counter,pos,oldpos,step,n,nn,r_k,dimx,R,ping,nping,npong,pong,r,
     schale,kor,
@@ -8,6 +9,7 @@ var t,
     speed,nspeed,
     blob,
     speedSlider,pingSlider,pongSlider,nSlider,myCanvas,
+    soundCheckbox, soundOn = false,
     showhelp=false,
     SPEED_INV=80;
 
@@ -31,12 +33,12 @@ function LinienZeichnen(){
   var x1,y1,x2,y2
   noFill();
   stroke(209);
-  R = 60;
+  R = 120;
   for (var i=0; i<n; i++){
-      x1=sin(i*2*PI/n)*(R+20);
-      y1=cos(i*2*PI/n)*(R+20);  
-      x2=sin(i*2*PI/n)*(R+250);
-      y2=cos(i*2*PI/n)*(R+250); 
+      x1=sin(i*2*PI/n)*(R+40);
+      y1=cos(i*2*PI/n)*(R+40);  
+      x2=sin(i*2*PI/n)*(R+350);
+      y2=cos(i*2*PI/n)*(R+350); 
      line(width/2+x1,height/2+y1,width/2+x2,height/2+y2);   
    }
 }
@@ -77,7 +79,7 @@ function setup(){
     // START init variables
     ping=3;
     pong=4;
-    speed=4;
+    speed=3;
     pos=0;
     counter=1;
     step=1;
@@ -95,6 +97,7 @@ function setup(){
     nSlider = select('#slidernumber');
     pingSlider = select('#sliderpingnumber');
     pongSlider = select('#sliderpongnumber');
+    soundCheckbox = select('#soundCheckbox');
 
     // Label-Elemente
     let speedLabel = select('#labelgamespeed');
@@ -104,6 +107,18 @@ function setup(){
     let valueN = select('#value_n');
     let valuePing = select('#value_ping');
     let valuePong = select('#value_pong');
+    let valuePingPong = select('#value_pingpong');
+  // PingPong-Zahl initial setzen
+  valuePingPong.html(ping * pong);
+    // Sound-Checkbox
+    soundCheckbox.changed(() => {
+      soundOn = soundCheckbox.elt.checked;
+    });
+
+    // Regler korrekt initialisieren (speed=3)
+    speedSlider.value(3);
+    speedLabel.html(3);
+    setspeed(Math.round(1.0/3*SPEED_INV));
 
     // Event-Listener für Panel
     speedSlider.input(() => {
@@ -114,16 +129,19 @@ function setup(){
       nLabel.html(nSlider.value());
       setnumber(nSlider.value());
       valueN.html(nSlider.value());
+      valuePingPong.html(pingSlider.value() * pongSlider.value());
     });
     pingSlider.input(() => {
       pingLabel.html(pingSlider.value());
       setpingnumber(pingSlider.value());
       valuePing.html(pingSlider.value());
+      valuePingPong.html(pingSlider.value() * pongSlider.value());
     });
     pongSlider.input(() => {
       pongLabel.html(pongSlider.value());
       setpongnumber(pongSlider.value());
       valuePong.html(pongSlider.value());
+      valuePingPong.html(pingSlider.value() * pongSlider.value());
     });
 
     // Initialwerte im Value-Panel setzen
@@ -136,31 +154,77 @@ function setup(){
 }
 
 function writeNum(){
-  if ((counter%ping==0)&&(counter%pong==0)){
+    if ((counter%ping==0)&&(counter%pong==0)){
       s="PiPo";
       blob = color(230,0,0);
       kor=0;
-  }else{ 
-    if (counter%ping==0) {
+      if (soundOn) playPiPoSound();
+    }else{ 
+     if (counter%ping==0) {
        s="Ping";
        blob = color(0,0,160);
        kor=3;
        step= step*(-1);
        schale=schale+1;
-    }else { 
+       if (soundOn) playPingSound();
+     }else { 
        if(counter%pong==0){
-          s="Pong";
-          blob = color(0,160,0);
-          kor=3;
-          step = step*(-1);
-          schale=schale+1;
+         s="Pong";
+         blob = color(0,160,0);
+         kor=3;
+         step = step*(-1);
+         schale=schale+1;
+         if (soundOn) playPongSound();
        }else{
-          s=counter.toString();   
-          blob = color(160,160,160);  
-          kor=0;
+         s=counter.toString();   
+         blob = color(160,160,160);  
+         kor=0;
        }
+     }
     }
+// Einfache Ping/Pong/PiPo Sounds mit Web Audio API
+function playPingSound() {
+  var ctx = getAudioCtx();
+  var o = ctx.createOscillator();
+  var g = ctx.createGain();
+  o.type = 'sine';
+  o.frequency.value = 660;
+  g.gain.value = 0.12;
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.08);
+}
+
+function playPongSound() {
+  var ctx = getAudioCtx();
+  var o = ctx.createOscillator();
+  var g = ctx.createGain();
+  o.type = 'triangle';
+  o.frequency.value = 440;
+  g.gain.value = 0.12;
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.08);
+}
+
+function playPiPoSound() {
+  var ctx = getAudioCtx();
+  var o = ctx.createOscillator();
+  var g = ctx.createGain();
+  o.type = 'square';
+  o.frequency.value = 880;
+  g.gain.value = 0.18;
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.13);
+}
+
+function getAudioCtx() {
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
+  return _audioCtx;
+}
 } 
   
 function drawcurve(){
