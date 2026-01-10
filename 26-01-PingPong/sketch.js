@@ -1,7 +1,4 @@
-
-// erkläre "use strict"
-/* alles aktualisieren, nettes gui, vergleichbar mit den Besipielen bei Wurzelschnecke)
-    */
+"use strict"
 
 var t,
     counter,pos,oldpos,step,n,nn,r_k,dimx,R,ping,nping,npong,pong,r,
