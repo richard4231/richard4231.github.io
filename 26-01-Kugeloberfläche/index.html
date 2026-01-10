@@ -379,12 +379,15 @@
                 const v1 = mesh.vertices[i1];
                 const v2 = mesh.vertices[i2];
 
-                // Da alle Vertices auf der Einheitskugel liegen,
-                // ist die Vertex-Position = Normale (zeigt nach außen)
-                // Das ergibt konsistentes Smooth Shading
+                // Flächennormale berechnen
+                const edge1 = vec3.sub(v1, v0);
+                const edge2 = vec3.sub(v2, v0);
+                const normal = vec3.normalize(vec3.cross(edge1, edge2));
+
+                // 3 Vertices pro Dreieck mit gleicher Normale (flat shading)
                 for (const v of [v0, v1, v2]) {
-                    data.push(v[0], v[1], v[2]);  // position
-                    data.push(v[0], v[1], v[2]);  // normal = position (Einheitskugel)
+                    data.push(v[0], v[1], v[2]);       // position
+                    data.push(normal[0], normal[1], normal[2]); // normal
                 }
             }
 
