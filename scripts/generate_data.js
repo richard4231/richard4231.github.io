@@ -20,7 +20,16 @@ for(const line of lines){
   if(li && cur){
     const title = li[1].trim();
     const url = li[2].trim();
-    const slug = url.replace(/https?:\/\//,'').replace(/\/$/,'').replace(/[:\/\?=&#]/g,'-').replace(/[^a-zA-Z0-9-_\.]/g,'').split('/').join('-');
+    // create a short slug from the last non-empty path segment of the URL (fallback to hostname)
+    let slug;
+    try{
+      const u = new URL(url);
+      const parts = u.pathname.replace(/\/$/,'').split('/').filter(Boolean);
+      slug = parts.length ? parts[parts.length-1] : u.hostname.replace(/\./g,'-');
+    }catch(e){
+      slug = url.replace(/https?:\/\//,'').replace(/\/$/,'').replace(/[:\/\?=&#]/g,'-').replace(/[^a-zA-Z0-9-_\.]/g,'').split('/').join('-');
+    }
+    slug = slug.replace(/[^a-zA-Z0-9-_\.]/g,'-');
     const img = `screenshots/${slug}.png`;
     cur.items.push({title, url, img});
   }
