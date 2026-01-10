@@ -22,11 +22,13 @@ function drawKreis(k,rr){
 
 // Hintergrund Kreise
 function kreiseZeichnen(){   
-   noFill();
-   stroke(229);
-   for (var i=0; i<34; i++){
-       ellipse(width/2,height/2, 160+i*14, 160+i*14);
-    }
+  noFill();
+  stroke(229);
+  var anzahlKreise = 44; // 10 mehr als vorher
+  var abstand = 14;
+  for (var i=0; i<anzahlKreise; i++){
+     ellipse(width/2,height/2, 160+i*abstand, 160+i*abstand);
+   }
 }
 
 function LinienZeichnen(){
@@ -34,11 +36,12 @@ function LinienZeichnen(){
   noFill();
   stroke(209);
   R = 60;
+  var maxRadius = 160 + (44-1)*14; // wie größter Kreis
   for (var i=0; i<n; i++){
       x1=sin(i*2*PI/n)*(R+20);
       y1=cos(i*2*PI/n)*(R+20);  
-      x2=sin(i*2*PI/n)*(R+250);
-      y2=cos(i*2*PI/n)*(R+250); 
+      x2=sin(i*2*PI/n)*(maxRadius/2);
+      y2=cos(i*2*PI/n)*(maxRadius/2); 
      line(width/2+x1,height/2+y1,width/2+x2,height/2+y2);   
    }
 }
