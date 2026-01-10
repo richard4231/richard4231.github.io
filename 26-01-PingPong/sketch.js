@@ -70,25 +70,7 @@ function initbackground(){
 
 // Anzeige oben links
 function pingpongvalue(){
-  var s1,s2,s3,s4;
-  fill(255);
-  noStroke();
-  rect(0,0, 140, 54);
-  rect(0,height-70, 140, height);
-  rect(width-110,0,width,77);
-
-  textAlign(LEFT);
-  s1 = "ping = "+ping;
-  s2 = "pong = "+pong;
-  s3 = "n = "+n;
-  s4 = "speed = "+round(SPEED_INV/speed);
-  fill(color(0,0,160));
-  text(s1,width-110,20);
-  fill(color(0,160,0));
-  text(s2,width-110,70);
-  fill(0);
-  text(s3,10,20);
-  text(s4,0,height-30);
+  // Anzeige auf Canvas entfernt, Werte werden im Value-Panel angezeigt
 }
 
 function setup(){
@@ -101,35 +83,57 @@ function setup(){
     step=1;
     n=8;
     r_k=22;
-     
-    myCanvas = createCanvas(800, 800); 
+    myCanvas = createCanvas(800, 800);
     myCanvas.parent('canvasWrapper');
     initbackground();
-    initdraw();    
-
+    initdraw();
     s=counter.toString();
     pingpongvalue();
-    pingSlider = createSlider(3,14,3);
-    pingSlider.parent('canvasWrapper');
-    pingSlider.position(width-135,24);
 
-    pongSlider = createSlider(3,14,4);
-    pongSlider.parent('canvasWrapper');
-    pongSlider.position(width-135,76);
+    // Panel-Elemente referenzieren
+    speedSlider = select('#slidergamespeed');
+    nSlider = select('#slidernumber');
+    pingSlider = select('#sliderpingnumber');
+    pongSlider = select('#sliderpongnumber');
 
-    nSlider = createSlider(4,30,9);
-    nSlider.parent('canvasWrapper');
-    nSlider.position(0,24);
+    // Label-Elemente
+    let speedLabel = select('#labelgamespeed');
+    let nLabel = select('#labelnumber');
+    let pingLabel = select('#labelpingnumber');
+    let pongLabel = select('#labelpongnumber');
+    let valueN = select('#value_n');
+    let valuePing = select('#value_ping');
+    let valuePong = select('#value_pong');
 
-    speedSlider = createSlider(1,12,3);
-    speedSlider.parent('canvasWrapper');
-    speedSlider.position(0,height-20);
+    // Event-Listener für Panel
+    speedSlider.input(() => {
+      speedLabel.html(speedSlider.value());
+      setspeed(Math.round(1.0/speedSlider.value()*SPEED_INV));
+    });
+    nSlider.input(() => {
+      nLabel.html(nSlider.value());
+      setnumber(nSlider.value());
+      valueN.html(nSlider.value());
+    });
+    pingSlider.input(() => {
+      pingLabel.html(pingSlider.value());
+      setpingnumber(pingSlider.value());
+      valuePing.html(pingSlider.value());
+    });
+    pongSlider.input(() => {
+      pongLabel.html(pongSlider.value());
+      setpongnumber(pongSlider.value());
+      valuePong.html(pongSlider.value());
+    });
+
+    // Initialwerte im Value-Panel setzen
+    valueN.html(n);
+    valuePing.html(ping);
+    valuePong.html(pong);
 
     select("#btn_restart").mousePressed(restart);
     smooth();
-
-
- }
+}
 
 function writeNum(){
   if ((counter%ping==0)&&(counter%pong==0)){
@@ -186,29 +190,8 @@ function drawblob(){
 
 // Main LOOP
 function draw(){
-  nspeed = Math.round(1.0/speedSlider.value()*SPEED_INV);
-  if (nspeed != speed){
-    setspeed(nspeed);
-  }
-
-  nn = nSlider.value();
-  if (nn != n){
-    setnumber(nn);
-  }
-  nping = pingSlider.value();
-  if (nping != ping){
-    setpingnumber(nping);
-  }
-
-
-  npong = pongSlider.value();
-  if (npong != pong){
-    setpongnumber(npong);
-  }
-
-
+  // Panel-gesteuerte Werte werden direkt über Events gesetzt
   if (frameCount%speed==0){
-    //initdraw();
     fill(color(255,255,255));
     drawKreis(pos,r_k*0.90);
     counter = counter + 1;
@@ -225,8 +208,7 @@ function draw(){
     rect(x_,y_-30,58,50);
     fill(44);
     text(s,x_,y_);
-
-  }  
+  }
 }
 
 // Methods
