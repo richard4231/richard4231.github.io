@@ -1,0 +1,140 @@
+[
+  {
+    "section": "Über diese Seite",
+    "category": "welcome",
+    "isWelcome": true,
+    "items": []
+  },
+  {
+    "section": "Simulationen",
+    "category": "main",
+    "items": [
+      {
+        "title": "Gummibärchen",
+        "url": "https://richard4231.github.io/25-02-gummybears/",
+        "img": "screenshots/25-02-gummybears.png"
+      },
+      {
+        "title": "Schokolinsen",
+        "url": "https://richard4231.github.io/25-03-chocolatebeans/",
+        "img": "screenshots/25-03-chocolatebeans.png"
+      },
+      {
+        "title": "Greenhouse Gamble",
+        "url": "https://richard4231.github.io/25-11-greenhouse-gamble/",
+        "img": "screenshots/25-11-greenhouse-gamble.png"
+      }
+    ]
+  },
+  {
+    "section": "Muster erkunden",
+    "category": "main",
+    "items": [
+      {
+        "title": "Pascal meets Sierpinksi",
+        "url": "https://richard4231.github.io/21-04-pascaltriangleoptimized/",
+        "img": "screenshots/21-04-pascaltriangleoptimized.png"
+      }
+    ]
+  },
+  {
+    "section": "3D",
+    "category": "main",
+    "items": [
+      {
+        "title": "Würfelsierpinski",
+        "url": "https://richard4231.github.io/25-02-xplodingsierpinski/",
+        "img": "screenshots/25-02-xplodingsierpinski.png"
+      },
+      {
+        "title": "Würfelsierpinski II: bunter, schriller, performanter.",
+        "url": "https://richard4231.github.io/25-12-xplodingsierpinski-webgpu/",
+        "img": "screenshots/25-12-xplodingsierpinski-webgpu.png"
+      },
+      {
+        "title": "Prinzip von Cavalieri Halbkugel",
+        "url": "https://richard4231.github.io/25-12-cavalieri-v03/",
+        "img": "screenshots/25-12-cavalieri-v03.png"
+      },
+      {
+        "title": "Wurzelschnecke",
+        "url": "https://richard4231.github.io/26-01-Wurzelschnecke/",
+        "img": "screenshots/26-01-Wurzelschnecke.png"
+      },
+      {
+        "title": "Kubische Zahlen rekursiv",
+        "url": "https://richard4231.github.io/24-11-exploding-cubes/",
+        "img": "screenshots/24-11-exploding-cubes.png"
+      },
+      {
+        "title": "WebGPU Demo",
+        "url": "https://richard4231.github.io/25-12-spheres-n-lights-2/",
+        "img": "screenshots/25-12-spheres-n-lights-2.png"
+      }
+    ]
+  },
+  {
+    "section": "Spikey",
+    "category": "main",
+    "items": [
+      {
+        "title": "Spikey",
+        "url": "https://richard4231.github.io/25-02-Spikey-v03/",
+        "img": "screenshots/25-02-Spikey-v03.png"
+      },
+      {
+        "title": "Spikey Vierfarbenproblem",
+        "url": "https://richard4231.github.io/25-02-Spikey-v03b/",
+        "img": "screenshots/25-02-Spikey-v03b.png"
+      },
+      {
+        "title": "bunter Spikey",
+        "url": "https://richard4231.github.io/25-02-Spikey-v04colorful/",
+        "img": "screenshots/25-02-Spikey-v04colorful.png"
+      }
+    ]
+  },
+  {
+    "section": "Mathematische Spielereien",
+    "category": "main",
+    "items": [
+      {
+        "title": "Sonnenblume",
+        "url": "https://richard4231.github.io/22-09-tournesol/",
+        "img": "screenshots/22-09-tournesol.png"
+      },
+      {
+        "title": "Pi Paths",
+        "url": "https://richard4231.github.io/22-09-PiPaths-v02/",
+        "img": "screenshots/22-09-PiPaths-v02.png"
+      },
+      {
+        "title": "Pi Paths 3D",
+        "url": "https://richard4231.github.io/22-09-PiPaths-v03-3D/",
+        "img": "screenshots/22-09-PiPaths-v03-3D.png"
+      },
+            {
+        "title": "Pi Paths 3D v05",
+        "url": "https://richard4231.github.io/26-01-PiPaths-spheres-v05/",
+        "img": "screenshots/26-01-PiPaths-spheres-v05.png"
+      }
+    ]
+  },
+  {
+    "section": "Weitere Seiten",
+    "category": "further",
+    "items": [
+      {
+        "title": "Generative Art",
+        "url": "https://richard4231.github.io/generative-art/",
+        "img": "screenshots/generative-art.png"
+      }
+    ]
+  },
+  {
+    "section": "Impressum",
+    "category": "welcome",
+    "isImpressum": true,
+    "items": []
+  }
+]

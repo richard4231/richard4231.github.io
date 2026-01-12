@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wurzelschnecke</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+            border: 10px solid #8B7355;
+            box-sizing: border-box;
+        }
+        canvas {
+            display: block;
+            width: calc(100vw - 20px);
+            height: calc(100vh - 20px);
+        }
+        #pageTitle {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #D4A574;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            pointer-events: none;
+        }
+        #controls {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(30, 25, 20, 0.95);
+            color: #D4A574;
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 260px;
+            border: 2px solid #8B7355;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 100;
+        }
+        #controls.hidden {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #togglePanel {
+            position: absolute;
+            top: 15px;
+            left: 280px;
+            background: rgba(30, 25, 20, 0.95);
+            color: #D4A574;
+            border: 2px solid #8B7355;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+            transition: left 0.3s ease;
+        }
+        #togglePanel:hover {
+            background: rgba(50, 40, 30, 0.95);
+        }
+        #togglePanel.panel-closed {
+            left: 15px;
+        }
+        #togglePanel .hamburger {
+            display: none;
+        }
+        #togglePanel .close {
+            display: inline;
+        }
+        #togglePanel.panel-closed .hamburger {
+            display: inline;
+        }
+        #togglePanel.panel-closed .close {
+            display: none;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #C4956A;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #D4A574;
+        }
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #E8C49A;
+        }
+        button {
+            padding: 8px 15px;
+            background: #5D4037;
+            color: #D4A574;
+            border: 1px solid #8B7355;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #6D5047;
+        }
+        .instructions {
+            font-size: 11px;
+            color: #A08060;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        #pickInfo {
+            position: absolute;
+            background: rgba(30, 25, 20, 0.95);
+            color: #D4A574;
+            padding: 15px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            pointer-events: none;
+            max-width: 300px;
+            border: 2px solid #8B7355;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        #pickInfo h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #E8C49A;
+            border-bottom: 1px solid #5D4037;
+            padding-bottom: 8px;
+        }
+        #pickInfo .section {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #4D3027;
+        }
+        #pickInfo .section-title {
+            font-size: 11px;
+            color: #A08060;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #pickInfo .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+        #pickInfo .label {
+            color: #A08060;
+        }
+        #pickInfo .value {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #E8C49A;
+        }
+        #pickInfo .formula {
+            font-family: 'Courier New', monospace;
+            color: #C4956A;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <h1 id="pageTitle">Wurzelschnecke</h1>
+    <div id="pickInfo"></div>
+    <button id="togglePanel"><span class="hamburger">&#9776;</span><span class="close">&#10005;</span></button>
+    <div id="controls">
+        <h3 style="margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #5D4037; color: #E8C49A;">Steuerung</h3>
+        <div class="control-group">
+            <label>Anzahl Dreiecke: <span class="value-display" id="countValue">17</span></label>
+            <input type="range" id="countSlider" min="1" max="100" value="17" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>3D-Spirale (Z-Versatz): <span class="value-display" id="zOffsetValue">0</span></label>
+            <input type="range" id="zOffsetSlider" min="0" max="100" value="0" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>Helligkeit: <span class="value-display" id="brightnessValue">100%</span></label>
+            <input type="range" id="brightnessSlider" min="20" max="200" value="100" step="5">
+        </div>
+
+        <div class="control-group" style="display: flex; gap: 10px;">
+            <button id="resetBtn">Zurücksetzen</button>
+        </div>
+
+        <div class="instructions">
+            <strong>Steuerung:</strong><br>
+            • Klick: Dreieck-Info anzeigen<br>
+            • Ziehen: Szene rotieren<br>
+            • Mausrad: Zoomen<br>
+            • W/A/S/D: Kamera bewegen<br>
+            • Pfeiltasten: Zoom rein/raus
+        </div>
+    </div>
+
+    <script type="module">
+        import { mat4, vec3 } from 'https://wgpu-matrix.org/dist/2.x/wgpu-matrix.module.js';
+
+        // Gold-Braun Farbpalette
+        const colorFrom = [212, 165, 116]; // #D4A574 - helles Gold
+        const colorTo = [93, 64, 55];       // #5D4037 - dunkles Braun
+        const edgeColor = [255, 220, 150];  // Leuchtende goldene Kanten
+
+        // WebGPU Setup
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('webgpu');
+
+        if (!navigator.gpu) {
+            alert('WebGPU wird von diesem Browser nicht unterstützt!');
+            throw new Error('WebGPU not supported');
+        }
+
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+
+        context.configure({
+            device,
+            format: presentationFormat,
+            alphaMode: 'premultiplied',
+        });
+
+        // Shader Code für Flächen
+        const shaderCode = `
+            struct Uniforms {
+                viewProjection: mat4x4f,
+                cameraPosition: vec3f,
+                brightness: f32,
+                highlightId: f32,
+                time: f32,
+                _pad: vec2f,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) color: vec4f,
+                @location(1) normal: vec3f,
+                @location(2) worldPos: vec3f,
+                @location(3) objectId: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex fn vs(
+                @location(0) position: vec3f,
+                @location(1) color: vec4f,
+                @location(2) normal: vec3f,
+                @location(3) objectId: f32
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.viewProjection * vec4f(position, 1.0);
+                output.color = color;
+                output.normal = normal;
+                output.worldPos = position;
+                output.objectId = objectId;
+                return output;
+            }
+
+            @fragment fn fs(input: VertexOutput) -> @location(0) vec4f {
+                let normal = normalize(input.normal);
+
+                // Mehrere Lichtquellen für bessere Sichtbarkeit
+                let light1 = normalize(vec3f(0.5, 0.5, 1.0));
+                let light2 = normalize(vec3f(-0.5, 0.3, 0.8));
+                let light3 = normalize(vec3f(0.0, -0.5, 0.5));
+
+                let viewDir = normalize(uniforms.cameraPosition - input.worldPos);
+
+                // Ambient (höher für bessere Grundsichtbarkeit)
+                let ambient = 0.4;
+
+                // Diffuse von mehreren Lichtquellen
+                let diffuse1 = max(dot(normal, light1), 0.0) * 0.4;
+                let diffuse2 = max(dot(normal, light2), 0.0) * 0.3;
+                let diffuse3 = max(abs(dot(normal, light3)), 0.0) * 0.2; // abs für Rückseite
+
+                // Specular
+                let halfDir = normalize(light1 + viewDir);
+                let specular = pow(max(dot(normal, halfDir), 0.0), 32.0) * 0.3;
+
+                var lighting = (ambient + diffuse1 + diffuse2 + diffuse3 + specular) * uniforms.brightness;
+
+                // Highlight check
+                var finalColor = input.color.rgb;
+                if (abs(input.objectId - uniforms.highlightId) < 0.5 && uniforms.highlightId >= 0.0) {
+                    finalColor = vec3f(0.0, 0.9, 1.0); // Cyan highlight
+                    lighting = max(lighting, 1.2);
+                }
+
+                return vec4f(finalColor * lighting, input.color.a);
+            }
+        `;
+
+        // Shader für leuchtende Kanten
+        const lineShaderCode = `
+            struct Uniforms {
+                viewProjection: mat4x4f,
+                cameraPosition: vec3f,
+                brightness: f32,
+                highlightId: f32,
+                time: f32,
+                _pad: vec2f,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) color: vec4f,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex fn vs(
+                @location(0) position: vec3f,
+                @location(1) color: vec4f
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.viewProjection * vec4f(position, 1.0);
+                output.color = color;
+                return output;
+            }
+
+            @fragment fn fs(input: VertexOutput) -> @location(0) vec4f {
+                // Pulsierender Glow-Effekt
+                let glow = 0.8 + 0.2 * sin(uniforms.time * 2.0);
+                return vec4f(input.color.rgb * glow * uniforms.brightness, input.color.a);
+            }
+        `;
+
+        const shaderModule = device.createShaderModule({
+            label: 'Wurzelschnecke Shader',
+            code: shaderCode,
+        });
+
+        const lineShaderModule = device.createShaderModule({
+            label: 'Line Shader',
+            code: lineShaderCode,
+        });
+
+        // Picking shader
+        const pickingShaderCode = `
+            struct Uniforms {
+                viewProjection: mat4x4f,
+                cameraPosition: vec3f,
+                brightness: f32,
+                highlightId: f32,
+                time: f32,
+                _pad: vec2f,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) objectId: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex fn vs(
+                @location(0) position: vec3f,
+                @location(1) color: vec4f,
+                @location(2) normal: vec3f,
+                @location(3) objectId: f32
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.viewProjection * vec4f(position, 1.0);
+                output.objectId = objectId;
+                return output;
+            }
+
+            @fragment fn fs(input: VertexOutput) -> @location(0) vec4f {
+                let id = u32(input.objectId + 1.0);
+                let r = f32((id >> 16u) & 0xFFu) / 255.0;
+                let g = f32((id >> 8u) & 0xFFu) / 255.0;
+                let b = f32(id & 0xFFu) / 255.0;
+                return vec4f(r, g, b, 1.0);
+            }
+        `;
+
+        const pickingShaderModule = device.createShaderModule({
+            label: 'Picking Shader',
+            code: pickingShaderCode,
+        });
+
+        // Pipeline für Flächen
+        const vertexBufferLayout = {
+            arrayStride: 11 * 4,
+            attributes: [
+                { shaderLocation: 0, offset: 0, format: 'float32x3' },
+                { shaderLocation: 1, offset: 12, format: 'float32x4' },
+                { shaderLocation: 2, offset: 28, format: 'float32x3' },
+                { shaderLocation: 3, offset: 40, format: 'float32' },
+            ],
+        };
+
+        // Pipeline für Linien (einfacher: nur Position und Farbe)
+        const lineVertexBufferLayout = {
+            arrayStride: 7 * 4, // position(3) + color(4)
+            attributes: [
+                { shaderLocation: 0, offset: 0, format: 'float32x3' },
+                { shaderLocation: 1, offset: 12, format: 'float32x4' },
+            ],
+        };
+
+        const pipeline = device.createRenderPipeline({
+            label: 'Wurzelschnecke Pipeline',
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                entryPoint: 'vs',
+                buffers: [vertexBufferLayout],
+            },
+            fragment: {
+                module: shaderModule,
+                entryPoint: 'fs',
+                targets: [{
+                    format: presentationFormat,
+                    blend: {
+                        color: { srcFactor: 'src-alpha', dstFactor: 'one-minus-src-alpha' },
+                        alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+                    },
+                }],
+            },
+            primitive: {
+                topology: 'triangle-list',
+                cullMode: 'none',
+            },
+            depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'less',
+                format: 'depth24plus',
+            },
+        });
+
+        const linePipeline = device.createRenderPipeline({
+            label: 'Line Pipeline',
+            layout: 'auto',
+            vertex: {
+                module: lineShaderModule,
+                entryPoint: 'vs',
+                buffers: [lineVertexBufferLayout],
+            },
+            fragment: {
+                module: lineShaderModule,
+                entryPoint: 'fs',
+                targets: [{
+                    format: presentationFormat,
+                    blend: {
+                        color: { srcFactor: 'src-alpha', dstFactor: 'one' }, // Additives Blending für Glow
+                        alpha: { srcFactor: 'one', dstFactor: 'one' },
+                    },
+                }],
+            },
+            primitive: {
+                topology: 'line-list',
+            },
+            depthStencil: {
+                depthWriteEnabled: false,
+                depthCompare: 'less-equal',
+                format: 'depth24plus',
+            },
+        });
+
+        const pickingPipeline = device.createRenderPipeline({
+            label: 'Picking Pipeline',
+            layout: 'auto',
+            vertex: {
+                module: pickingShaderModule,
+                entryPoint: 'vs',
+                buffers: [vertexBufferLayout],
+            },
+            fragment: {
+                module: pickingShaderModule,
+                entryPoint: 'fs',
+                targets: [{ format: 'rgba8unorm' }],
+            },
+            primitive: {
+                topology: 'triangle-list',
+                cullMode: 'none',
+            },
+            depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'less',
+                format: 'depth24plus',
+            },
+        });
+
+        // Wurzelschnecke Geometrie
+        function lerpColor(from, to, t) {
+            return [
+                (from[0] + (to[0] - from[0]) * t) / 255,
+                (from[1] + (to[1] - from[1]) * t) / 255,
+                (from[2] + (to[2] - from[2]) * t) / 255,
+                1.0
+            ];
+        }
+
+        function generateWurzelschnecke(count, zOffsetFactor) {
+            const triangleVertices = [];
+            const lineVertices = [];
+            const scale = 50;
+
+            let currentAngle = 0;
+
+            // Berechne die Mitte für zentrierten Z-Versatz
+            const midIndex = (count + 1) / 2;
+
+            for (let n = 1; n <= count; n++) {
+                const innerKathete = Math.sqrt(n);
+                const outerKathete = 1;
+
+                // Z-Position zentriert: negative Werte vor der Mitte, positive nach der Mitte
+                const zPos = (n - midIndex) * zOffsetFactor * 0.5;
+
+                const t = (n - 1) / Math.max(count - 1, 1);
+                const color = lerpColor(colorFrom, colorTo, t);
+
+                // Leuchtende Kantenfarbe (Gold mit Helligkeitsverlauf)
+                const edgeT = 0.7 + 0.3 * (1 - t);
+                const lineColor = [
+                    edgeColor[0] / 255 * edgeT,
+                    edgeColor[1] / 255 * edgeT,
+                    edgeColor[2] / 255 * edgeT,
+                    1.0
+                ];
+
+                const angleAtCenter = Math.atan(outerKathete / innerKathete);
+
+                const p1 = [0, 0, zPos];
+                const p2 = [
+                    Math.cos(currentAngle) * innerKathete * scale,
+                    Math.sin(currentAngle) * innerKathete * scale,
+                    zPos
+                ];
+                const perpAngle = currentAngle + Math.PI / 2;
+                const p3 = [
+                    p2[0] + Math.cos(perpAngle) * outerKathete * scale,
+                    p2[1] + Math.sin(perpAngle) * outerKathete * scale,
+                    zPos
+                ];
+
+                const normal = [0, 0, 1];
+                const normalBack = [0, 0, -1];
+
+                // Dreieck Vorderseite
+                triangleVertices.push(...p1, ...color, ...normal, n - 1);
+                triangleVertices.push(...p2, ...color, ...normal, n - 1);
+                triangleVertices.push(...p3, ...color, ...normal, n - 1);
+
+                // Dreieck Rückseite
+                triangleVertices.push(...p1, ...color, ...normalBack, n - 1);
+                triangleVertices.push(...p3, ...color, ...normalBack, n - 1);
+                triangleVertices.push(...p2, ...color, ...normalBack, n - 1);
+
+                // Leuchtende Kanten (3 Linien pro Dreieck)
+                // Kante 1: P1 -> P2 (innere Kathete)
+                lineVertices.push(...p1, ...lineColor);
+                lineVertices.push(...p2, ...lineColor);
+
+                // Kante 2: P2 -> P3 (äussere Kathete = 1)
+                lineVertices.push(...p2, ...lineColor);
+                lineVertices.push(...p3, ...lineColor);
+
+                // Kante 3: P3 -> P1 (Hypotenuse)
+                lineVertices.push(...p3, ...lineColor);
+                lineVertices.push(...p1, ...lineColor);
+
+                currentAngle += angleAtCenter;
+            }
+
+            return {
+                triangles: new Float32Array(triangleVertices),
+                lines: new Float32Array(lineVertices)
+            };
+        }
+
+        // Berechnung der Dreieckseigenschaften
+        function getTriangleInfo(n) {
+            const innerKathete = Math.sqrt(n);
+            const outerKathete = 1;
+            const hypotenuse = Math.sqrt(n + 1);
+            const area = (innerKathete * outerKathete) / 2;
+
+            return {
+                number: n,
+                katheteA: outerKathete,
+                katheteB: innerKathete,
+                katheteB_display: `√${n}`,
+                hypotenuse: hypotenuse,
+                hypotenuse_display: `√${n + 1}`,
+                aSquared: 1,
+                bSquared: n,
+                cSquared: n + 1,
+                area: area,
+                area_display: `√${n}/2`
+            };
+        }
+
+        // Initial geometry
+        let currentCount = 17;
+        let currentZOffset = 0;
+        let displayZOffset = 0; // Angezeigte Wert (kann 0 sein)
+        let selectedTriangle = -1;
+        // Minimaler Z-Offset um Z-Fighting zu verhindern
+        const MIN_Z_OFFSET = 0.01;
+        let geometryData = generateWurzelschnecke(currentCount, MIN_Z_OFFSET);
+
+        let vertexBuffer = device.createBuffer({
+            label: 'Vertex Buffer',
+            size: Math.max(geometryData.triangles.byteLength, 100 * 6 * 11 * 4),
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        });
+        device.queue.writeBuffer(vertexBuffer, 0, geometryData.triangles);
+        let numVertices = geometryData.triangles.length / 11;
+
+        let lineBuffer = device.createBuffer({
+            label: 'Line Buffer',
+            size: Math.max(geometryData.lines.byteLength, 100 * 6 * 7 * 4),
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        });
+        device.queue.writeBuffer(lineBuffer, 0, geometryData.lines);
+        let numLineVertices = geometryData.lines.length / 7;
+
+        // Uniforms
+        const uniformBufferSize = 128;
+        let currentBrightness = 1.0;
+        let animTime = 0;
+
+        const uniformBuffer = device.createBuffer({
+            size: uniformBufferSize,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        const bindGroup = device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+        });
+
+        const lineBindGroup = device.createBindGroup({
+            layout: linePipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+        });
+
+        const pickingBindGroup = device.createBindGroup({
+            layout: pickingPipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+        });
+
+        // Picking textures
+        let pickingTexture = null;
+        let pickingDepthTexture = null;
+        let pickingTextureSize = { width: 0, height: 0 };
+
+        function createPickingTextures(width, height) {
+            if (pickingTexture) pickingTexture.destroy();
+            if (pickingDepthTexture) pickingDepthTexture.destroy();
+
+            pickingTexture = device.createTexture({
+                size: [width, height],
+                format: 'rgba8unorm',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+            });
+
+            pickingDepthTexture = device.createTexture({
+                size: [width, height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+
+            pickingTextureSize = { width, height };
+        }
+
+        // Canvas size
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+
+        // Depth texture
+        let depthTexture = null;
+
+        function createDepthTexture(width, height) {
+            if (depthTexture) depthTexture.destroy();
+            depthTexture = device.createTexture({
+                size: [width, height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+        }
+
+        // Camera - schaut direkt auf die XY-Ebene
+        const camera = {
+            position: vec3.create(0, 0, 600),
+            target: vec3.create(0, 0, 0), // Zentrum der Spirale
+            up: vec3.create(0, 1, 0),
+            fov: 60 * Math.PI / 180,
+            near: 1,
+            far: 5000,
+        };
+
+        // Mouse interaction für Rotation
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let rotation = { x: 0, y: 0 };
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+                rotation.y -= deltaX * 0.01;
+                rotation.x += deltaY * 0.01;
+                // Begrenze X-Rotation (nicht ganz bis ±90°, um Gimbal Lock zu vermeiden)
+                rotation.x = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, rotation.x));
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => { isDragging = false; });
+        canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+        // Zoom mit Mausrad
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            hidePickInfo();
+            const zoomSpeed = 1.0;
+            camera.position[2] = Math.max(100, Math.min(camera.position[2] + e.deltaY * zoomSpeed, 2000));
+        }, { passive: false });
+
+        // Keyboard controls
+        const keys = {};
+        window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; keys[e.key] = false; });
+
+        function updateCameraFromKeys(deltaTime) {
+            const speed = 200 * deltaTime;
+            if (keys['w']) { camera.target[1] += speed; }
+            if (keys['s']) { camera.target[1] -= speed; }
+            if (keys['a']) { camera.target[0] -= speed; }
+            if (keys['d']) { camera.target[0] += speed; }
+            if (keys['ArrowUp']) { camera.position[2] -= speed * 2; camera.position[2] = Math.max(100, camera.position[2]); }
+            if (keys['ArrowDown']) { camera.position[2] += speed * 2; camera.position[2] = Math.min(2000, camera.position[2]); }
+        }
+
+        // Pick info display
+        const pickInfo = document.getElementById('pickInfo');
+
+        function hidePickInfo() {
+            pickInfo.style.display = 'none';
+            selectedTriangle = -1;
+        }
+
+        function showPickInfo(x, y, triangleIndex) {
+            const info = getTriangleInfo(triangleIndex + 1);
+            selectedTriangle = triangleIndex;
+
+            let html = `<h4>Dreieck #${info.number}</h4>`;
+
+            html += `<div class="section">`;
+            html += `<div class="section-title">Seitenlängen</div>`;
+            html += `<div class="row"><span class="label">Kathete a:</span><span class="value">1</span></div>`;
+            html += `<div class="row"><span class="label">Kathete b:</span><span class="value">${info.katheteB_display} = ${info.katheteB.toFixed(4)}</span></div>`;
+            html += `<div class="row"><span class="label">Hypotenuse c:</span><span class="value">${info.hypotenuse_display} = ${info.hypotenuse.toFixed(4)}</span></div>`;
+            html += `</div>`;
+
+            html += `<div class="section">`;
+            html += `<div class="section-title">Quadrate der Seitenlängen</div>`;
+            html += `<div class="row"><span class="label">a²:</span><span class="value">${info.aSquared}</span></div>`;
+            html += `<div class="row"><span class="label">b²:</span><span class="value">${info.bSquared}</span></div>`;
+            html += `<div class="row"><span class="label">c² = a² + b²:</span><span class="value">${info.cSquared}</span></div>`;
+            html += `</div>`;
+
+            html += `<div class="section">`;
+            html += `<div class="section-title">Flächeninhalt</div>`;
+            html += `<div class="row"><span class="label">A = ½·a·b:</span><span class="value">${info.area_display} = ${info.area.toFixed(4)}</span></div>`;
+            html += `</div>`;
+
+            pickInfo.innerHTML = html;
+            pickInfo.style.display = 'block';
+
+            let posX = x + 15;
+            let posY = y + 15;
+            if (posX + 300 > window.innerWidth) posX = x - 315;
+            if (posY + 280 > window.innerHeight) posY = y - 295;
+
+            pickInfo.style.left = posX + 'px';
+            pickInfo.style.top = posY + 'px';
+        }
+
+        let pickingInProgress = false;
+
+        async function performPicking(mouseX, mouseY) {
+            if (pickingInProgress) return;
+            pickingInProgress = true;
+
+            try {
+                const currentDpr = window.devicePixelRatio || 1;
+                const width = canvas.width;
+                const height = canvas.height;
+
+                if (!pickingTexture || pickingTextureSize.width !== width || pickingTextureSize.height !== height) {
+                    createPickingTextures(width, height);
+                }
+
+                const aspect = width / height;
+                const projection = mat4.perspective(camera.fov, aspect, camera.near, camera.far);
+
+                // View matrix mit Rotation
+                const eye = vec3.create(
+                    camera.position[2] * Math.sin(rotation.y) * Math.cos(rotation.x),
+                    camera.position[2] * Math.sin(rotation.x),
+                    camera.position[2] * Math.cos(rotation.y) * Math.cos(rotation.x)
+                );
+                vec3.add(eye, camera.target, eye);
+
+                const view = mat4.lookAt(eye, camera.target, camera.up);
+                const viewProjection = mat4.multiply(projection, view);
+
+                const uniformData = new Float32Array(32);
+                uniformData.set(viewProjection, 0);
+                uniformData.set([eye[0], eye[1], eye[2], currentBrightness], 16);
+                uniformData.set([-1, animTime, 0, 0], 20);
+                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+                const encoder = device.createCommandEncoder();
+                const renderPass = encoder.beginRenderPass({
+                    colorAttachments: [{
+                        view: pickingTexture.createView(),
+                        clearValue: { r: 0, g: 0, b: 0, a: 0 },
+                        loadOp: 'clear',
+                        storeOp: 'store',
+                    }],
+                    depthStencilAttachment: {
+                        view: pickingDepthTexture.createView(),
+                        depthClearValue: 1.0,
+                        depthLoadOp: 'clear',
+                        depthStoreOp: 'store',
+                    },
+                });
+
+                renderPass.setPipeline(pickingPipeline);
+                renderPass.setVertexBuffer(0, vertexBuffer);
+                renderPass.setBindGroup(0, pickingBindGroup);
+                renderPass.draw(numVertices);
+                renderPass.end();
+
+                const pixelX = Math.floor(mouseX * currentDpr);
+                const pixelY = Math.floor(mouseY * currentDpr);
+
+                const bytesPerRow = 256;
+                const stagingBuffer = device.createBuffer({
+                    size: bytesPerRow,
+                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                });
+
+                encoder.copyTextureToBuffer(
+                    { texture: pickingTexture, origin: { x: Math.min(pixelX, width - 1), y: Math.min(pixelY, height - 1) } },
+                    { buffer: stagingBuffer, bytesPerRow: bytesPerRow },
+                    { width: 1, height: 1 }
+                );
+
+                device.queue.submit([encoder.finish()]);
+
+                await stagingBuffer.mapAsync(GPUMapMode.READ);
+                const data = new Uint8Array(stagingBuffer.getMappedRange());
+
+                const r = data[0];
+                const g = data[1];
+                const b = data[2];
+                const a = data[3];
+
+                stagingBuffer.unmap();
+                stagingBuffer.destroy();
+
+                if (a === 0) {
+                    hidePickInfo();
+                } else {
+                    const objectId = ((r << 16) | (g << 8) | b) - 1;
+                    if (objectId >= 0 && objectId < currentCount) {
+                        showPickInfo(mouseX, mouseY, objectId);
+                    } else {
+                        hidePickInfo();
+                    }
+                }
+            } catch (err) {
+                console.error('Picking error:', err);
+            }
+
+            pickingInProgress = false;
+        }
+
+        // Click handler
+        let mouseDownPos = { x: 0, y: 0 };
+        canvas.addEventListener('mousedown', (e) => {
+            mouseDownPos = { x: e.clientX, y: e.clientY };
+        }, true);
+
+        canvas.addEventListener('click', (e) => {
+            const dx = e.clientX - mouseDownPos.x;
+            const dy = e.clientY - mouseDownPos.y;
+            if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+                performPicking(e.clientX, e.clientY);
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) hidePickInfo();
+        }, true);
+
+        // Panel toggle
+        const togglePanelBtn = document.getElementById('togglePanel');
+        const controlsPanel = document.getElementById('controls');
+
+        togglePanelBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('hidden');
+            togglePanelBtn.classList.toggle('panel-closed');
+        });
+
+        // UI Controls
+        const countSlider = document.getElementById('countSlider');
+        const countValue = document.getElementById('countValue');
+        const zOffsetSlider = document.getElementById('zOffsetSlider');
+        const zOffsetValue = document.getElementById('zOffsetValue');
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const brightnessValue = document.getElementById('brightnessValue');
+
+        function updateGeometry() {
+            // Verwende immer mindestens MIN_Z_OFFSET um Z-Fighting zu verhindern
+            const effectiveZOffset = Math.max(currentZOffset, MIN_Z_OFFSET);
+            geometryData = generateWurzelschnecke(currentCount, effectiveZOffset);
+            device.queue.writeBuffer(vertexBuffer, 0, geometryData.triangles);
+            numVertices = geometryData.triangles.length / 11;
+            device.queue.writeBuffer(lineBuffer, 0, geometryData.lines);
+            numLineVertices = geometryData.lines.length / 7;
+            hidePickInfo();
+        }
+
+        countSlider.addEventListener('input', (e) => {
+            currentCount = parseInt(e.target.value);
+            countValue.textContent = currentCount;
+            updateGeometry();
+        });
+
+        zOffsetSlider.addEventListener('input', (e) => {
+            displayZOffset = parseFloat(e.target.value);
+            currentZOffset = displayZOffset;
+            zOffsetValue.textContent = displayZOffset.toFixed(0); // Zeige den eingestellten Wert (kann 0 sein)
+            updateGeometry();
+        });
+
+        brightnessSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            brightnessValue.textContent = value + '%';
+            currentBrightness = value / 100;
+        });
+
+        // Reset button
+        const resetBtn = document.getElementById('resetBtn');
+        resetBtn.addEventListener('click', () => {
+            camera.position = vec3.create(0, 0, 600);
+            camera.target = vec3.create(0, 0, 0);
+            rotation.x = 0;
+            rotation.y = 0;
+
+            countSlider.value = 17;
+            countValue.textContent = '17';
+            currentCount = 17;
+
+            zOffsetSlider.value = 0;
+            zOffsetValue.textContent = '0';
+            currentZOffset = 0;
+            displayZOffset = 0;
+
+            brightnessSlider.value = 100;
+            brightnessValue.textContent = '100%';
+            currentBrightness = 1.0;
+
+            updateGeometry();
+        });
+
+        // Render loop
+        let lastTime = 0;
+        function render(time) {
+            time *= 0.001;
+            const deltaTime = Math.min(time - lastTime, 0.1);
+            lastTime = time;
+            animTime = time;
+
+            updateCameraFromKeys(deltaTime);
+
+            // Resize if needed
+            const currentDpr = window.devicePixelRatio || 1;
+            const width = Math.floor(canvas.clientWidth * currentDpr);
+            const height = Math.floor(canvas.clientHeight * currentDpr);
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+                createDepthTexture(width, height);
+                createPickingTextures(width, height);
+            }
+
+            // Calculate view matrix mit Rotation um das Zentrum
+            const aspect = canvas.width / canvas.height;
+            const projection = mat4.perspective(camera.fov, aspect, camera.near, camera.far);
+
+            // Kamera-Position basierend auf Rotation
+            const distance = camera.position[2];
+            const eye = vec3.create(
+                distance * Math.sin(rotation.y) * Math.cos(rotation.x),
+                distance * Math.sin(rotation.x),
+                distance * Math.cos(rotation.y) * Math.cos(rotation.x)
+            );
+            vec3.add(eye, camera.target, eye);
+
+            const view = mat4.lookAt(eye, camera.target, camera.up);
+            const viewProjection = mat4.multiply(projection, view);
+
+            // Update uniforms
+            const uniformData = new Float32Array(32);
+            uniformData.set(viewProjection, 0);
+            uniformData.set([eye[0], eye[1], eye[2], currentBrightness], 16);
+            uniformData.set([selectedTriangle, animTime, 0, 0], 20);
+            device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+            // Render
+            const encoder = device.createCommandEncoder();
+            const textureView = context.getCurrentTexture().createView();
+
+            const renderPass = encoder.beginRenderPass({
+                colorAttachments: [{
+                    view: textureView,
+                    clearValue: { r: 0.08, g: 0.06, b: 0.05, a: 1 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+                depthStencilAttachment: {
+                    view: depthTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: 'clear',
+                    depthStoreOp: 'store',
+                },
+            });
+
+            // Zeichne zuerst die Flächen
+            renderPass.setPipeline(pipeline);
+            renderPass.setVertexBuffer(0, vertexBuffer);
+            renderPass.setBindGroup(0, bindGroup);
+            renderPass.draw(numVertices);
+
+            // Dann die leuchtenden Kanten darüber
+            renderPass.setPipeline(linePipeline);
+            renderPass.setVertexBuffer(0, lineBuffer);
+            renderPass.setBindGroup(0, lineBindGroup);
+            renderPass.draw(numLineVertices);
+
+            renderPass.end();
+
+            device.queue.submit([encoder.finish()]);
+            requestAnimationFrame(render);
+        }
+
+        // Initialize
+        createDepthTexture(canvas.width, canvas.height);
+        createPickingTextures(canvas.width, canvas.height);
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>

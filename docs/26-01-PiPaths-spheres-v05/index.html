@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi-Pfad 3D - WebGPU</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Lade Pi-Daten...</p>
+    </div>
+    <div id="error" style="display: none;"></div>
+    <div id="info"></div>
+
+    <!-- Libraries müssen VOR dem Modul geladen werden -->
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19.2/dist/lil-gui.umd.min.js"></script>
+    <script src="https://wgpu-matrix.org/dist/2.x/wgpu-matrix.js"></script>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

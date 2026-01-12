@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Berufskonzept - 5×5×5 Würfel-Matrix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            overflow: hidden;
+            color: #fff;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 350px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 100;
+            color: #333;
+        }
+        
+        #controls h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #0a192f;
+            border-bottom: 2px solid #172a45;
+            padding-bottom: 8px;
+        }
+        
+        #controls h3 {
+            font-size: 14px;
+            color: #172a45;
+            margin: 15px 0 10px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .button-group button {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #172a45;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .button-group button:hover {
+            background: #0a192f;
+            transform: translateY(-1px);
+        }
+        
+        .button-group button.active {
+            background: #ff6b6b;
+        }
+        
+        .slider-control {
+            margin: 12px 0;
+        }
+        
+        .slider-control label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .slider-control input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            font-size: 13px;
+        }
+        
+        .dimension-control {
+            background: rgba(23, 42, 69, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .dimension-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #172a45;
+        }
+        
+        .layer-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        
+        .layer-buttons button {
+            flex: 1;
+            min-width: 60px;
+            padding: 6px 4px;
+            border: 1px solid #172a45;
+            border-radius: 4px;
+            background: white;
+            color: #172a45;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        
+        .layer-buttons button:hover {
+            background: #f0f0f0;
+        }
+        
+        .layer-buttons button.active {
+            background: #172a45;
+            color: white;
+        }
+        
+        .layer-buttons button.dimmed {
+            opacity: 0.3;
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 320px;
+            color: #333;
+            font-size: 12px;
+        }
+        
+        #info h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: #0a192f;
+        }
+        
+        .cube-info {
+            background: rgba(23, 42, 69, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            min-height: 60px;
+        }
+        
+        .dimension-legend {
+            margin: 8px 0;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+        
+        .dimension-legend strong {
+            color: #172a45;
+        }
+        
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 300px;
+            color: #333;
+            font-size: 11px;
+        }
+        
+        .hint {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 235, 59, 0.2);
+            border-left: 3px solid #ffeb3b;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="controls">
+        <h2>5×5×5 Berufskonzept-Matrix</h2>
+        
+        <div class="control-group">
+            <h3>Steuerung</h3>
+            <div class="button-group">
+                <button id="explodeBtn">Explodieren</button>
+                <button id="resetBtn">Reset</button>
+                <button id="rotateBtn">Auto-Rotation</button>
+                <button id="showAllBtn">Alle zeigen</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Darstellungsoptionen</h3>
+            <div class="slider-control">
+                <label>Explosionsgrad: <span id="explodeValue">0.0</span></label>
+                <input type="range" id="explode" min="0" max="8" step="0.2" value="0">
+            </div>
+            <div class="slider-control">
+                <label>Würfelgrösse: <span id="sizeValue">1</span></label>
+                <input type="range" id="cubeSize" min="0.2" max="5" step="0.1" value="1">
+            </div>
+            <div class="slider-control" style="display: none;">
+                <label>Transparenz-Multiplikator: <span id="opacityValue">1.0</span></label>
+                <input type="range" id="opacity" min="0.3" max="1" step="0.05" value="1.0">
+            </div>
+            <div class="checkbox-item" style="margin-top: 15px;">
+                <input type="checkbox" id="showLabelsCheckbox" checked>
+                <label for="showLabelsCheckbox" style="cursor: pointer;">Beschriftungen anzeigen</label>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Dimension 1: Bereiche</h3>
+            <div class="dimension-control">
+                <div class="dimension-title">5 Konzeptbereiche</div>
+                <div class="layer-buttons" id="xAxisButtons"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Dimension 2: Fächer</h3>
+            <div class="dimension-control">
+                <div class="dimension-title">Allgemein + 4 Fächer</div>
+                <div class="layer-buttons" id="yAxisButtons"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Dimension 3: Reflexionsebenen</h3>
+            <div class="dimension-control">
+                <div class="dimension-title">Von unten nach oben</div>
+                <div class="layer-buttons" id="zAxisButtons"></div>
+            </div>
+        </div>
+        
+        <div class="hint">
+            💡 <strong>Tipp:</strong> Klicke auf Schicht-Buttons, um einzelne Ebenen ein-/auszublenden. Ziehe mit der Maus, um zu drehen.
+        </div>
+    </div>
+    
+    <div id="info">
+        <h3>Würfel-Details</h3>
+        <div class="cube-info" id="cubeDetails">
+            Bewege die Maus über einen Würfel für Details zum Schnittpunkt der drei Dimensionen.
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, raycaster, mouse;
+        let cubes = [];
+        let explodeAmount = 0;
+        let cubeSize = 1;  // 1.3x größer als ursprünglich 0.4
+        let autoRotate = false;  // Startet ohne Auto-Rotation
+        let showLabels = true;  // Beschriftungen anzeigen
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let targetRotation = { x: 0.3, y: 0.4 };
+        let currentRotation = { x: 0.3, y: 0.4 };
+        let cameraDistance = 25;  // Kontrollierbare Kamera-Distanz
+        
+        // Dimensionsdefinitionen
+        const dimensions = {
+            x: {
+                name: 'Bereiche',
+                labels: [
+                    'Klassenführung',
+                    'Beurteilung',
+                    'Zusammenarbeit',
+                    'BNE',
+                    'Allgemein'  // war HuI
+                ],
+                colors: [
+                    0x45b7d1,  // Klassenführung - Blau
+                    0xff6b6b,  // Beurteilung - Rot
+                    0x4ecdc4,  // Zusammenarbeit - Türkis
+                    0x96ceb4,  // BNE - Grün
+                    0xffeaa7   // Allgemein - Gelb
+                ]
+            },
+            y: {
+                name: 'Fächer',
+                labels: [
+                    'RZG',        // war Allgemein
+                    'Mathematik',
+                    'Deutsch',
+                    'NT',
+                    'Allgemein'   // war RZG
+                ],
+                colors: [
+                    0xe17055,  // RZG - Rot-Orange
+                    0xa29bfe,  // Mathematik - Lila
+                    0xfd79a8,  // Deutsch - Pink
+                    0xfdcb6e,  // NT - Orange
+                    0xecf0f1   // Allgemein - Hellgrau
+                ]
+            },
+            z: {
+                name: 'Reflexionsebenen',
+                labels: [
+                    'Das bin ich',
+                    'Das will ich',
+                    'Das muss ich',
+                    'Das ist mir wichtig',
+                    'Produkte'  // war "Das Praktische"
+                ],
+                colors: [
+                    0x2d3436,  // Das bin ich - Dunkelgrau (innen)
+                    0x636e72,  // Das will ich
+                    0x74b9ff,  // Das muss ich
+                    0x55efc4,  // Das ist mir wichtig
+                    0xffeaa7   // Produkte - Gelb (außen)
+                ]
+            }
+        };
+        
+        // Visibility state für jede Dimension
+        let visibleLayers = {
+            x: [true, true, true, true, true],
+            y: [true, true, true, true, true],
+            z: [true, true, true, true, true]
+        };
+        
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a192f);
+            // Nebel deutlich reduziert, damit Würfel nicht verschwinden
+            scene.fog = new THREE.Fog(0x0a192f, 50, 150);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(15, 12, 15);
+            camera.lookAt(0, 2, 0);  // Blicke auf die mittlere Höhe
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Raycaster
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(10, 10, 10);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0x64b5f6, 0.4);
+            directionalLight2.position.set(-10, -10, -10);
+            scene.add(directionalLight2);
+            
+            const pointLight = new THREE.PointLight(0xff6b6b, 0.3, 100);
+            pointLight.position.set(0, 15, 0);
+            scene.add(pointLight);
+            
+            // Create 5x5x5 cube grid
+            createCubeGrid();
+            
+            // Setup UI
+            setupDimensionButtons();
+            
+            // Event listeners
+            setupEventListeners();
+            
+            // Animation
+            animate();
+        }
+        
+        function createCubeGrid() {
+            const gridSize = 5;
+            
+            for (let x = 0; x < gridSize; x++) {
+                for (let y = 0; y < gridSize; y++) {
+                    for (let z = 0; z < gridSize; z++) {
+                        createCube(x, y, z);
+                    }
+                }
+            }
+            
+            // Initiale Positionierung
+            updateCubePositions();
+        }
+        
+        function createTextTexture(text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const context = canvas.getContext('2d');
+            
+            // Hintergrund mit Farbe
+            context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
+            context.fillRect(0, 0, 512, 512);
+            
+            // Text
+            context.fillStyle = '#ffffff';
+            context.strokeStyle = '#000000';
+            context.lineWidth = 3;
+            context.font = 'Bold 48px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            // Text umbrechen wenn zu lang
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            
+            for (let i = 1; i < words.length; i++) {
+                const testLine = currentLine + ' ' + words[i];
+                const metrics = context.measureText(testLine);
+                if (metrics.width > 450) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+            
+            // Zentriert zeichnen
+            const lineHeight = 55;
+            const startY = 256 - ((lines.length - 1) * lineHeight) / 2;
+            
+            lines.forEach((line, i) => {
+                const y = startY + i * lineHeight;
+                context.strokeText(line, 256, y);
+                context.fillText(line, 256, y);
+            });
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+        
+        function createCube(x, y, z) {
+            // Geometrie mit Größe 1 erstellen
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            
+            // Farbmischung: Hauptfarbe ist das Fach (Y), leichte Nuancierung durch Z
+            const colorY = new THREE.Color(dimensions.y.colors[y]);
+            const colorZ = new THREE.Color(dimensions.z.colors[z]);
+            
+            // Y (Fach) ist dominant mit 80%, Z (Reflexionsebene) gibt Nuance mit 20%
+            const mixedColor = new THREE.Color();
+            mixedColor.r = colorY.r * 0.8 + colorZ.r * 0.2;
+            mixedColor.g = colorY.g * 0.8 + colorZ.g * 0.2;
+            mixedColor.b = colorY.b * 0.8 + colorZ.b * 0.2;
+            
+            // Transparenz basierend auf Z (Höhe): unten transparent, oben opak
+            const baseOpacity = 0.3 + (z / 4) * 0.65;
+            
+            // Erstelle 6 Materialien für die Würfelseiten
+            // Jeder Würfel wird auf 3 Seiten beschriftet: X-Seite, Y-Seite, Z-Seite
+            const materials = [];
+            
+            // 0: right (+X) - Beschriftung mit X-Dimension (Bereich)
+            materials.push(new THREE.MeshPhongMaterial({
+                map: createTextTexture(dimensions.x.labels[x], mixedColor.getHex()),
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100
+            }));
+            
+            // 1: left (-X) - Keine Beschriftung
+            materials.push(new THREE.MeshPhongMaterial({
+                color: mixedColor,
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100,
+                specular: 0x444444
+            }));
+            
+            // 2: top (+Y) - Beschriftung mit Z-Dimension (Reflexionsebene)
+            materials.push(new THREE.MeshPhongMaterial({
+                map: createTextTexture(dimensions.z.labels[z], mixedColor.getHex()),
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100
+            }));
+            
+            // 3: bottom (-Y) - Keine Beschriftung
+            materials.push(new THREE.MeshPhongMaterial({
+                color: mixedColor,
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100,
+                specular: 0x444444
+            }));
+            
+            // 4: front (+Z) - Beschriftung mit Y-Dimension (Fach)
+            materials.push(new THREE.MeshPhongMaterial({
+                map: createTextTexture(dimensions.y.labels[y], mixedColor.getHex()),
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100
+            }));
+            
+            // 5: back (-Z) - Keine Beschriftung
+            materials.push(new THREE.MeshPhongMaterial({
+                color: mixedColor,
+                transparent: true,
+                opacity: baseOpacity,
+                shininess: 100,
+                specular: 0x444444
+            }));
+            
+            const cube = new THREE.Mesh(geometry, materials);
+            
+            // Initiale Skalierung auf cubeSize
+            cube.scale.set(cubeSize, cubeSize, cubeSize);
+            
+            // Position wird später durch updateCubePositions gesetzt
+            cube.position.set(0, 0, 0);
+            
+            // Wireframe
+            const edges = new THREE.EdgesGeometry(geometry);
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.15 + (z / 4) * 0.35  // Auch Wireframe wird nach oben sichtbarer
+            });
+            const wireframe = new THREE.LineSegments(edges, lineMaterial);
+            cube.add(wireframe);
+            
+            cube.userData = {
+                gridPos: { x, y, z },
+                originalColor: mixedColor.clone(),
+                baseOpacity: baseOpacity,
+                dimensions: {
+                    x: dimensions.x.labels[x],
+                    y: dimensions.y.labels[y],
+                    z: dimensions.z.labels[z]
+                },
+                // Speichere die Texturen für späteres Ein-/Ausschalten
+                textMaps: {
+                    0: materials[0].map,  // right (+X)
+                    2: materials[2].map,  // top (+Y)
+                    4: materials[4].map   // front (+Z)
+                }
+            };
+            
+            scene.add(cube);
+            cubes.push(cube);
+        }
+        
+        function updateCubePositions() {
+            const gridSize = 5;
+            // Gap wird dynamisch: bei explodeAmount = 0 ist gap = 0 (keine Lücken)
+            const gap = explodeAmount > 0 ? 0.05 : 0;
+            const offset = cubeSize + gap;
+            
+            cubes.forEach(cube => {
+                const { x, y, z } = cube.userData.gridPos;
+                
+                // Base position
+                // X = Bereiche (horizontal, zentriert)
+                // Z (Reflexionsebenen) wird zu Y-Position (vertikal, von unten nach oben)
+                // Y (Fächer) wird zu Z-Position (horizontal, Tiefe, zentriert)
+                const baseX = (x - 2) * offset;
+                const baseY = z * offset;  // Z ist jetzt vertikal nach oben, startet bei 0
+                const baseZ = (y - 2) * offset;
+                
+                // Explosion offset (zusätzlicher Abstand)
+                const explosionX = (x - 2) * explodeAmount * 0.5;
+                const explosionY = z * explodeAmount * 0.5;  // Z-Ebenen nach oben
+                const explosionZ = (y - 2) * explodeAmount * 0.5;
+                
+                cube.position.set(
+                    baseX + explosionX,
+                    baseY + explosionY,
+                    baseZ + explosionZ
+                );
+                
+                // Update visibility based on layer selection
+                const visible = visibleLayers.x[x] && 
+                               visibleLayers.y[y] && 
+                               visibleLayers.z[z];
+                cube.visible = visible;
+            });
+        }
+        
+        function updateCubeSizes() {
+            cubes.forEach(cube => {
+                cube.scale.set(cubeSize, cubeSize, cubeSize);
+            });
+            // Positionen müssen auch neu berechnet werden, weil sich die Würfelgröße ändert
+            updateCubePositions();
+        }
+        
+        function toggleLabels() {
+            cubes.forEach(cube => {
+                if (Array.isArray(cube.material)) {
+                    // Seite 0 (right +X), 2 (top +Y), 4 (front +Z) haben Beschriftungen
+                    [0, 2, 4].forEach(index => {
+                        if (showLabels) {
+                            cube.material[index].map = cube.userData.textMaps[index];
+                        } else {
+                            cube.material[index].map = null;
+                        }
+                        cube.material[index].needsUpdate = true;
+                    });
+                }
+            });
+        }
+        
+        function setupDimensionButtons() {
+            // X-Axis (Bereiche)
+            const xContainer = document.getElementById('xAxisButtons');
+            dimensions.x.labels.forEach((label, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = label;
+                btn.className = 'active';
+                btn.style.borderLeftColor = `#${dimensions.x.colors[index].toString(16).padStart(6, '0')}`;
+                btn.style.borderLeftWidth = '4px';
+                btn.onclick = () => toggleLayer('x', index, btn);
+                xContainer.appendChild(btn);
+            });
+            
+            // Y-Axis (Fächer)
+            const yContainer = document.getElementById('yAxisButtons');
+            dimensions.y.labels.forEach((label, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = label;
+                btn.className = 'active';
+                btn.style.borderLeftColor = `#${dimensions.y.colors[index].toString(16).padStart(6, '0')}`;
+                btn.style.borderLeftWidth = '4px';
+                btn.onclick = () => toggleLayer('y', index, btn);
+                yContainer.appendChild(btn);
+            });
+            
+            // Z-Axis (Reflexionsebenen)
+            const zContainer = document.getElementById('zAxisButtons');
+            dimensions.z.labels.forEach((label, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = label;
+                btn.className = 'active';
+                btn.style.borderLeftColor = `#${dimensions.z.colors[index].toString(16).padStart(6, '0')}`;
+                btn.style.borderLeftWidth = '4px';
+                btn.onclick = () => toggleLayer('z', index, btn);
+                zContainer.appendChild(btn);
+            });
+        }
+        
+        function toggleLayer(axis, index, button) {
+            visibleLayers[axis][index] = !visibleLayers[axis][index];
+            button.classList.toggle('active');
+            button.classList.toggle('dimmed');
+            updateCubePositions();
+        }
+        
+        function setupEventListeners() {
+            // Explode slider
+            document.getElementById('explode').addEventListener('input', (e) => {
+                explodeAmount = parseFloat(e.target.value);
+                document.getElementById('explodeValue').textContent = explodeAmount.toFixed(1);
+                updateCubePositions();
+            });
+            
+            // Cube size slider
+            document.getElementById('cubeSize').addEventListener('input', (e) => {
+                cubeSize = parseFloat(e.target.value);
+                document.getElementById('sizeValue').textContent = cubeSize.toFixed(2);
+                updateCubeSizes();
+                updateCubePositions();
+            });
+            
+            // Opacity slider
+            document.getElementById('opacity').addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                document.getElementById('opacityValue').textContent = value.toFixed(2);
+                cubes.forEach(cube => {
+                    // Verwende baseOpacity als Basis und multipliziere mit dem Slider-Wert
+                    // cube.material ist ein Array von 6 Materialien
+                    if (Array.isArray(cube.material)) {
+                        cube.material.forEach(mat => {
+                            mat.opacity = cube.userData.baseOpacity * value;
+                        });
+                    } else {
+                        cube.material.opacity = cube.userData.baseOpacity * value;
+                    }
+                });
+            });
+            
+            // Buttons
+            document.getElementById('explodeBtn').addEventListener('click', () => {
+                const newValue = explodeAmount === 0 ? 4 : 0;
+                document.getElementById('explode').value = newValue;
+                explodeAmount = newValue;
+                document.getElementById('explodeValue').textContent = newValue.toFixed(1);
+                updateCubePositions();
+            });
+            
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                explodeAmount = 0;
+                document.getElementById('explode').value = 0;
+                document.getElementById('explodeValue').textContent = '0.0';
+                targetRotation = { x: 0.3, y: 0.4 };
+                autoRotate = false;
+                document.getElementById('rotateBtn').classList.remove('active');
+                
+                // Reset all layers to visible
+                visibleLayers = {
+                    x: [true, true, true, true, true],
+                    y: [true, true, true, true, true],
+                    z: [true, true, true, true, true]
+                };
+                
+                // Update all buttons
+                document.querySelectorAll('.layer-buttons button').forEach(btn => {
+                    btn.classList.add('active');
+                    btn.classList.remove('dimmed');
+                });
+                
+                updateCubePositions();
+            });
+            
+            document.getElementById('rotateBtn').addEventListener('click', function() {
+                autoRotate = !autoRotate;
+                this.classList.toggle('active');
+            });
+            
+            document.getElementById('showAllBtn').addEventListener('click', () => {
+                const allVisible = visibleLayers.x.every(v => v) && 
+                                  visibleLayers.y.every(v => v) && 
+                                  visibleLayers.z.every(v => v);
+                
+                const newState = !allVisible;
+                visibleLayers = {
+                    x: [newState, newState, newState, newState, newState],
+                    y: [newState, newState, newState, newState, newState],
+                    z: [newState, newState, newState, newState, newState]
+                };
+                
+                document.querySelectorAll('.layer-buttons button').forEach(btn => {
+                    if (newState) {
+                        btn.classList.add('active');
+                        btn.classList.remove('dimmed');
+                    } else {
+                        btn.classList.remove('active');
+                        btn.classList.add('dimmed');
+                    }
+                });
+                
+                updateCubePositions();
+            });
+            
+            // Labels Checkbox
+            document.getElementById('showLabelsCheckbox').addEventListener('change', (e) => {
+                showLabels = e.target.checked;
+                toggleLabels();
+            });
+            
+            // Mouse controls
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                autoRotate = false;
+                document.getElementById('rotateBtn').classList.remove('active');
+            });
+            
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                // Update mouse position for raycasting
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                if (isDragging) {
+                    const deltaX = e.offsetX - previousMousePosition.x;
+                    const deltaY = e.offsetY - previousMousePosition.y;
+                    
+                    targetRotation.y -= deltaX * 0.01;
+                    targetRotation.x += deltaY * 0.01;
+                }
+                
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+
+                // Begrenze vertikale Rotation um Gimbal Lock zu vermeiden
+                // Erlaubt Rotation von ca. -85° bis +85°
+                targetRotation.x = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, targetRotation.x));
+            });
+            
+            renderer.domElement.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            renderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomSpeed = 0.05;
+                cameraDistance *= (1 + (e.deltaY > 0 ? zoomSpeed : -zoomSpeed));
+                cameraDistance = Math.max(10, Math.min(50, cameraDistance));  // Clamp zwischen 10 und 50
+            });
+            
+            // Window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function checkIntersections() {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(cubes);
+            
+            // Reset all highlights
+            cubes.forEach(cube => {
+                if (Array.isArray(cube.material)) {
+                    cube.material.forEach(mat => {
+                        if (mat.emissive) {
+                            mat.emissive.setHex(0x000000);
+                            mat.emissiveIntensity = 0;
+                        }
+                    });
+                } else {
+                    cube.material.emissive.setHex(0x000000);
+                    cube.material.emissiveIntensity = 0;
+                }
+            });
+            
+            if (intersects.length > 0) {
+                const intersectedCube = intersects[0].object;
+                
+                // Highlight
+                if (Array.isArray(intersectedCube.material)) {
+                    intersectedCube.material.forEach(mat => {
+                        if (mat.emissive) {
+                            mat.emissive.setHex(0xffffff);
+                            mat.emissiveIntensity = 0.3;
+                        }
+                    });
+                } else {
+                    intersectedCube.material.emissive.setHex(0xffffff);
+                    intersectedCube.material.emissiveIntensity = 0.3;
+                }
+                
+                // Show info
+                const dims = intersectedCube.userData.dimensions;
+                const pos = intersectedCube.userData.gridPos;
+                
+                document.getElementById('cubeDetails').innerHTML = `
+                    <strong>Position:</strong> (${pos.x}, ${pos.y}, ${pos.z})<br><br>
+                    <strong>Bereich:</strong> ${dims.x}<br>
+                    <strong>Fach:</strong> ${dims.y}<br>
+                    <strong>Reflexionsebene:</strong> ${dims.z}<br><br>
+                    <em>Dieser Würfel repräsentiert den Schnittpunkt dieser drei Dimensionen in deinem Berufskonzept.</em>
+                `;
+                
+                renderer.domElement.style.cursor = 'pointer';
+            } else {
+                document.getElementById('cubeDetails').textContent = 
+                    'Bewege die Maus über einen Würfel für Details zum Schnittpunkt der drei Dimensionen.';
+                renderer.domElement.style.cursor = 'default';
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Auto rotation
+            if (autoRotate) {
+                targetRotation.y += 0.002;
+            }
+            
+            // Smooth rotation
+            currentRotation.x += (targetRotation.x - currentRotation.x) * 0.1;
+            currentRotation.y += (targetRotation.y - currentRotation.y) * 0.1;
+            
+            // Apply rotation to camera
+            const lookAtHeight = 2;  // Mittlere Höhe der Würfel-Schichten
+            
+            // Rotiere um den Punkt (0, lookAtHeight, 0)
+            camera.position.x = cameraDistance * Math.sin(currentRotation.y) * Math.cos(currentRotation.x);
+            camera.position.y = lookAtHeight + cameraDistance * Math.sin(currentRotation.x);
+            camera.position.z = cameraDistance * Math.cos(currentRotation.y) * Math.cos(currentRotation.x);
+            camera.lookAt(0, lookAtHeight, 0);
+            
+            // Check for intersections
+            checkIntersections();
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

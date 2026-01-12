@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetraederfraktal aus Würfeln – 3D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; overflow: hidden; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #gui {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(20,20,40,0.92); border-radius: 12px;
+            padding: 20px; color: #e0e0e0; font-size: 13px;
+            min-width: 240px; z-index: 100;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            max-height: calc(100vh - 40px); overflow-y: auto;
+        }
+        #gui h2 { margin-bottom: 16px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; }
+        .row { margin-bottom: 12px; }
+        .row label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #a0a0a0; }
+        .row label span:last-child { color: #7dd3fc; }
+        input[type="range"] { width: 100%; }
+        select { width: 100%; padding: 8px; background: #2a2a4a; border: 1px solid #444; border-radius: 6px; color: #e0e0e0; }
+        #status { position: fixed; bottom: 20px; left: 20px; color: #7dd3fc; font-size: 12px; font-family: monospace; }
+        #error { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #c00; color: #fff; padding: 20px; border-radius: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <div id="gui">
+        <h2>Regler</h2>
+        <div class="row">
+            <label>Farbschema <span id="vScheme">Regenbogen</span></label>
+            <select id="scheme">
+                <option value="0">Regenbogen (HSB)</option>
+                <option value="1">Blau-Rot Gradient</option>
+                <option value="2">Schachbrett</option>
+                <option value="3">Höhenbasiert</option>
+                <option value="4">Neon-Glow</option>
+            </select>
+        </div>
+        <div class="row">
+            <label>Hintergrund <span id="vBg">Nebel</span></label>
+            <select id="bg">
+                <option value="0">Schwarz</option>
+                <option value="1">Dunkel</option>
+                <option value="2">Mitternachtsblau</option>
+                <option value="3">Warm Grau</option>
+                <option value="4" selected>Nebel</option>
+                <option value="5">Heller Verlauf</option>
+                <option value="6">Sonnenuntergang</option>
+            </select>
+        </div>
+        <div class="row"><label>Skalierung X <span id="vX">1.00</span></label><input type="range" id="sX" min="0" max="1.5" step="0.05" value="1"></div>
+        <div class="row"><label>Skalierung Y <span id="vY">1.00</span></label><input type="range" id="sY" min="0" max="1.5" step="0.05" value="1"></div>
+        <div class="row"><label>Skalierung Z <span id="vZ">1.00</span></label><input type="range" id="sZ" min="0" max="1.5" step="0.05" value="1"></div>
+        <div class="row"><label>Geschwindigkeit <span id="vSpeed">0.50</span></label><input type="range" id="speed" min="-2" max="2" step="0.1" value="0.5"></div>
+        <div class="row"><label>Potenz 2^n <span id="vPow">3</span></label><input type="range" id="pow" min="1" max="10" step="1" value="3"></div>
+        <div class="row"><label>Orbit <span id="vOrb">An</span></label><input type="range" id="orb" min="0" max="1" step="1" value="1"></div>
+        <div class="row"><label>Licht <span id="vLight">100</span></label><input type="range" id="light" min="0" max="150" step="5" value="100"></div>
+    </div>
+    <div id="status">Lade...</div>
+    <div id="error"></div>
+
+<script type="module">
+// noch etwas unschön in Safari und Firefox.
+
+const MATRICES = {
+    2: [1,2,2,1],
+    4: [1,2,3,4,2,1,4,3,3,4,1,2,4,3,2,1],
+    8: [1,2,3,4,5,6,7,8,2,1,4,3,6,5,8,7,3,4,1,2,7,8,5,6,4,3,2,1,8,7,6,5,5,6,7,8,1,2,3,4,6,5,8,7,2,1,4,3,7,8,5,6,3,4,1,2,8,7,6,5,4,3,2,1],
+    16: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,2,1,4,3,6,5,8,7,10,9,12,11,14,13,16,15,3,4,1,2,7,8,5,6,11,12,9,10,15,16,13,14,4,3,2,1,8,7,6,5,12,11,10,9,16,15,14,13,5,6,7,8,1,2,3,4,13,14,15,16,9,10,11,12,6,5,8,7,2,1,4,3,14,13,16,15,10,9,12,11,7,8,5,6,3,4,1,2,15,16,13,14,11,12,9,10,8,7,6,5,4,3,2,1,16,15,14,13,12,11,10,9,9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8,10,9,12,11,14,13,16,15,2,1,4,3,6,5,8,7,11,12,9,10,15,16,13,14,3,4,1,2,7,8,5,6,12,11,10,9,16,15,14,13,4,3,2,1,8,7,6,5,13,14,15,16,9,10,11,12,5,6,7,8,1,2,3,4,14,13,16,15,10,9,12,11,6,5,8,7,2,1,4,3,15,16,13,14,11,12,9,10,7,8,5,6,3,4,1,2,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+}; // Vorgefertigte Matrizen für n=2,4,8,16
+
+// Generiere größere Matrizen dynamisch mit XOR-Muster
+function getMatrix(n) {
+    if (MATRICES[n]) return MATRICES[n];
+    // Generiere on-the-fly für größere n
+    const arr = new Array(n * n);
+    for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+            arr[i + j * n] = ((i ^ j) % n) + 1;
+        }
+    }
+    return arr;
+}
+
+// Hintergrund-Farbpaletten [oben, unten] für Gradient
+const BACKGROUNDS = [
+    { name: 'Schwarz', top: [0, 0, 0], bot: [0, 0, 0] },
+    { name: 'Dunkel', top: [0.04, 0.04, 0.08], bot: [0.08, 0.08, 0.12] },
+    { name: 'Mitternachtsblau', top: [0.02, 0.05, 0.15], bot: [0.08, 0.12, 0.25] },
+    { name: 'Warm Grau', top: [0.18, 0.16, 0.14], bot: [0.12, 0.11, 0.10] },
+    { name: 'Nebel', top: [0.35, 0.38, 0.42], bot: [0.20, 0.22, 0.25] },
+    { name: 'Heller Verlauf', top: [0.95, 0.95, 0.95], bot: [0.65, 0.65, 0.68] },
+    { name: 'Sonnenuntergang', top: [0.12, 0.08, 0.18], bot: [0.25, 0.12, 0.08] },
+];
+
+const $ = id => document.getElementById(id);
+const status = msg => $('status').textContent = msg;
+const error = msg => { $('error').textContent = msg; $('error').style.display = 'block'; };
+
+let S = { x:1, y:1, z:1, speed:0.5, pow:3, orb:1, light:100, scheme:0, bg:4 };
+let cam = { rx:-0.3, ry:0.5, zoom:1, drag:false, mx:0, my:0 };
+let autoRot = 0;
+let lastT = 0;
+
+const shaderSrc = `
+struct U { mvp: mat4x4f, light: vec4f, p: vec4f, bg1: vec4f, bg2: vec4f }
+@group(0) @binding(0) var<uniform> u: U;
+
+struct VIn { @location(0) pos: vec3f, @location(1) nrm: vec3f }
+struct IIn { @location(2) off: vec3f, @location(3) dat: vec2f }
+struct VOut { @builtin(position) pos: vec4f, @location(0) nrm: vec3f, @location(1) wp: vec3f, @location(2) mv: f32 }
+
+@vertex fn vs(v: VIn, i: IIn) -> VOut {
+    var o: VOut;
+    // Würfelgröße wird durch dat.y übergeben (= cubeSize)
+    let scaledPos = v.pos * i.dat.y;
+    let wp = scaledPos + i.off;
+    o.pos = u.mvp * vec4f(wp, 1.0);
+    o.nrm = v.nrm;
+    o.wp = wp;
+    o.mv = i.dat.x;
+    return o;
+}
+
+fn hsv(h:f32,s:f32,v:f32)->vec3f{
+    let c=v*s; let x=c*(1.0-abs((h/60.0)%2.0-1.0)); let m=v-c;
+    var r=vec3f(0.0);
+    let hi=h%360.0;
+    if(hi<60.0){r=vec3f(c,x,0.0);}
+    else if(hi<120.0){r=vec3f(x,c,0.0);}
+    else if(hi<180.0){r=vec3f(0.0,c,x);}
+    else if(hi<240.0){r=vec3f(0.0,x,c);}
+    else if(hi<300.0){r=vec3f(x,0.0,c);}
+    else{r=vec3f(c,0.0,x);}
+    return r+m;
+}
+
+@fragment fn fs(i: VOut) -> @location(0) vec4f {
+    let n = normalize(i.nrm);
+    let l = normalize(u.light.xyz);
+    let diff = max(dot(n,l),0.0)*0.7 + 0.3;
+    let li = u.p.x/100.0;
+    let sch = u.p.y;
+    let t = u.p.z;
+    let gn = u.p.w;
+    let tv = (i.mv-1.0)/max(gn-1.0,1.0);
+    
+    var col: vec3f;
+    if(sch<0.5){ col=hsv(tv*360.0,0.8,0.85); }
+    else if(sch<1.5){ col=mix(vec3f(0.2,0.4,0.9),vec3f(0.9,0.2,0.3),tv); }
+    else if(sch<2.5){ 
+        let ck=step(0.0,sin(i.wp.x*0.15)*sin(i.wp.z*0.15));
+        col=mix(vec3f(0.12,0.12,0.2),hsv(tv*360.0,0.9,0.9),ck);
+    }
+    else if(sch<3.5){
+        let h=(i.wp.y+400.0)/800.0;
+        col=mix(mix(vec3f(0.1,0.2,0.5),vec3f(0.2,0.8,0.3),clamp(h*2.0,0.0,1.0)),vec3f(1.0,0.95,0.8),clamp((h-0.5)*2.0,0.0,1.0));
+    }
+    else{ col=hsv(tv*120.0+180.0,0.9,0.9)*(sin(t*3.0+tv*6.28)*0.3+0.7); }
+    
+    return vec4f(col*diff*li + col*0.1, 1.0);
+}
+
+// Fullscreen quad für Hintergrund-Gradient
+struct BGOut { @builtin(position) pos: vec4f, @location(0) uv: vec2f }
+
+@vertex fn vsBg(@builtin(vertex_index) i: u32) -> BGOut {
+    var p = array<vec2f,3>(vec2f(-1,-1), vec2f(3,-1), vec2f(-1,3));
+    var o: BGOut;
+    o.pos = vec4f(p[i], 0.999, 1.0);
+    o.uv = p[i] * 0.5 + 0.5;
+    return o;
+}
+
+@fragment fn fsBg(i: BGOut) -> @location(0) vec4f {
+    let col = mix(u.bg2.rgb, u.bg1.rgb, i.uv.y);
+    return vec4f(col, 1.0);
+}
+`;
+
+// Einheitswürfel (Größe 1, wird im Shader skaliert)
+function cubeVerts() {
+    const h = 0.5;
+    const f = (x,y,z,nx,ny,nz) => [x,y,z,nx,ny,nz];
+    const face = (a,b,c,d,nx,ny,nz) => [...f(...a,nx,ny,nz),...f(...b,nx,ny,nz),...f(...c,nx,ny,nz),...f(...a,nx,ny,nz),...f(...c,nx,ny,nz),...f(...d,nx,ny,nz)];
+    return new Float32Array([
+        ...face([-h,-h,h],[h,-h,h],[h,h,h],[-h,h,h],0,0,1),
+        ...face([h,-h,-h],[-h,-h,-h],[-h,h,-h],[h,h,-h],0,0,-1),
+        ...face([-h,h,h],[h,h,h],[h,h,-h],[-h,h,-h],0,1,0),
+        ...face([-h,-h,-h],[h,-h,-h],[h,-h,h],[-h,-h,h],0,-1,0),
+        ...face([h,-h,h],[h,-h,-h],[h,h,-h],[h,h,h],1,0,0),
+        ...face([-h,-h,-h],[-h,-h,h],[-h,h,h],[-h,h,-h],-1,0,0),
+    ]);
+}
+
+function mat4Pers(fov,asp,n,f){
+    const t=1/Math.tan(fov/2), d=n-f;
+    return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/d,-1, 0,0,2*f*n/d,0]);
+}
+function mat4Look(e,c,u){
+    const z=norm(sub(e,c)), x=norm(cross(u,z)), y=cross(z,x);
+    return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot(x,e),-dot(y,e),-dot(z,e),1]);
+}
+function mat4Mul(a,b){
+    const o=new Float32Array(16);
+    for(let i=0;i<4;i++)for(let j=0;j<4;j++)o[j*4+i]=a[i]*b[j*4]+a[i+4]*b[j*4+1]+a[i+8]*b[j*4+2]+a[i+12]*b[j*4+3];
+    return o;
+}
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm=v=>{const l=Math.hypot(...v);return l?[v[0]/l,v[1]/l,v[2]/l]:[0,0,1];};
+
+async function main() {
+    if(!navigator.gpu) return error('WebGPU nicht verfügbar. Chrome 113+ erforderlich.');
+    status('Adapter...');
+    const adapter = await navigator.gpu.requestAdapter();
+    if(!adapter) return error('Kein GPU-Adapter gefunden.');
+    status('Device...');
+    const device = await adapter.requestDevice();
+    const canvas = $('c');
+    const ctx = canvas.getContext('webgpu');
+    const fmt = navigator.gpu.getPreferredCanvasFormat();
+    ctx.configure({device, format:fmt, alphaMode:'premultiplied'});
+    
+    status('Shader...');
+    const shader = device.createShaderModule({code:shaderSrc});
+    const info = await shader.getCompilationInfo();
+    for(const m of info.messages) if(m.type==='error') return error('Shader: '+m.message);
+    
+    const verts = cubeVerts();
+    const vBuf = device.createBuffer({size:verts.byteLength, usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});
+    device.queue.writeBuffer(vBuf,0,verts);
+    
+    // Uniform buffer: mvp(64) + light(16) + params(16) + bg1(16) + bg2(16) = 128 bytes
+    const uBuf = device.createBuffer({size:128, usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+    
+    let iBuf, iCnt=0;
+    
+    function mkInst(){
+        const n = 1 << S.pow;
+        const mat = getMatrix(n);
+        
+        // Würfelgröße so berechnen, dass alle n Würfel zusammen 400 Einheiten einnehmen
+        const totalSize = 400;
+        const cubeSize = totalSize / n;  // Größe eines Würfels
+        
+        const d = [];
+        for(let j = 0; j < n; j++) {
+            for(let i = 0; i < n; i++) {
+                const mv = mat[i + j * n] || 1;
+                
+                // Position: Würfel berühren sich bei slider=1
+                // Offset so, dass das Gitter zentriert ist
+                const x = (i - (n-1)/2) * cubeSize * S.x;
+                const y = (mv - (n+1)/2) * cubeSize * S.y;
+                const z = (j - (n-1)/2) * cubeSize * S.z;
+                
+                // dat.x = matrixValue, dat.y = cubeSize (für Shader-Skalierung)
+                d.push(x, y, z, mv, cubeSize);
+            }
+        }
+        
+        iCnt = n * n;
+        const arr = new Float32Array(d);
+        if(iBuf) iBuf.destroy();
+        iBuf = device.createBuffer({size: arr.byteLength, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST});
+        device.queue.writeBuffer(iBuf, 0, arr);
+        return n;
+    }
+    
+    let curN = mkInst();
+    
+    // Cube Pipeline
+    const pipe = device.createRenderPipeline({
+        layout:'auto',
+        vertex:{
+            module:shader, entryPoint:'vs',
+            buffers:[
+                {arrayStride:24, attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x3'}]},
+                {arrayStride:20, stepMode:'instance', attributes:[{shaderLocation:2,offset:0,format:'float32x3'},{shaderLocation:3,offset:12,format:'float32x2'}]}
+            ]
+        },
+        fragment:{module:shader, entryPoint:'fs', targets:[{format:fmt}]},
+        primitive:{topology:'triangle-list', cullMode:'back'},
+        depthStencil:{format:'depth24plus', depthWriteEnabled:true, depthCompare:'less'}
+    });
+    
+    // Background Pipeline
+    const bgPipe = device.createRenderPipeline({
+        layout:'auto',
+        vertex:{ module:shader, entryPoint:'vsBg' },
+        fragment:{ module:shader, entryPoint:'fsBg', targets:[{format:fmt}] },
+        primitive:{ topology:'triangle-list' },
+        depthStencil:{ format:'depth24plus', depthWriteEnabled:false, depthCompare:'always' }
+    });
+    
+    const bgBindGroup = device.createBindGroup({
+        layout: bgPipe.getBindGroupLayout(0),
+        entries:[{binding:0, resource:{buffer:uBuf}}]
+    });
+    
+    const bg = device.createBindGroup({layout:pipe.getBindGroupLayout(0), entries:[{binding:0,resource:{buffer:uBuf}}]});
+    
+    let depth;
+    function resize(){
+        const dpr = devicePixelRatio || 1;
+        canvas.width = canvas.clientWidth * dpr | 0;
+        canvas.height = canvas.clientHeight * dpr | 0;
+        if(depth) depth.destroy();
+        depth = device.createTexture({size:[canvas.width,canvas.height], format:'depth24plus', usage:GPUTextureUsage.RENDER_ATTACHMENT});
+    }
+    addEventListener('resize', resize); 
+    resize();
+    
+    canvas.onmousedown = e => { if(S.orb){ cam.drag=true; cam.mx=e.clientX; cam.my=e.clientY; }};
+    onmouseup = () => cam.drag = false;
+    onmousemove = e => {
+        if(cam.drag){
+            cam.ry += (e.clientX - cam.mx) * 0.005;
+            cam.rx += (e.clientY - cam.my) * 0.005;
+            cam.rx = Math.max(-1.5, Math.min(1.5, cam.rx));
+            cam.mx = e.clientX;
+            cam.my = e.clientY;
+        }
+    };
+    canvas.onwheel = e => { e.preventDefault(); cam.zoom *= 1 - e.deltaY * 0.001; cam.zoom = Math.max(0.05, Math.min(5, cam.zoom)); }; // Zoombereich einstellen 0.2 bis 5 (ganz weg von Figur)
+    
+    // GUI
+    const bind = (id, key, valId, isToggle, decimals = 2) => {
+      const el = $(id);
+      const vEl = valId ? $(valId) : null;
+      el.oninput = () => {
+          S[key] = parseFloat(el.value);
+          if(vEl) vEl.textContent = isToggle ? (S[key] ? 'An' : 'Aus') : S[key].toFixed(decimals);
+      };
+    };  
+
+    bind('sX','x','vX'); bind('sY','y','vY'); bind('sZ','z','vZ'); 
+    bind('speed','speed','vSpeed'); bind('pow','pow','vPow', 0); bind('orb','orb','vOrb',true);
+    bind('light','light','vLight', 0);  
+
+    $('scheme').onchange = () => { S.scheme = +$('scheme').value; $('vScheme').textContent = $('scheme').selectedOptions[0].text; };
+    $('bg').onchange = () => { S.bg = +$('bg').value; $('vBg').textContent = BACKGROUNDS[S.bg].name; };
+    
+    const t0 = performance.now();
+    status('Rendering...');
+    
+    function frame(){
+        curN = mkInst();
+        const t = (performance.now() - t0) / 1000;
+        const n = 1 << S.pow;
+        
+        // const dist = (300 + n * 2) * cam.zoom;
+        const dist = (600) * cam.zoom;
+
+        const dt = t - lastT;
+        lastT = t;
+        if (S.orb) autoRot += dt * S.speed * 0.5;
+        const cx = Math.sin(cam.ry + autoRot) * Math.cos(cam.rx) * dist;
+        const cy = Math.sin(cam.rx) * dist;
+        const cz = Math.cos(cam.ry + autoRot) * Math.cos(cam.rx) * dist;
+        
+        const proj = mat4Pers(Math.PI / 3, canvas.width / canvas.height, 1, 10000);
+        const view = mat4Look([cx, cy, cz], [0, 0, 0], [0, 1, 0]);
+        const mvp = mat4Mul(proj, view);
+        
+        // Hintergrundfarben
+        const bgCol = BACKGROUNDS[S.bg];
+        
+        const uData = new Float32Array(32);
+        uData.set(mvp, 0);
+        uData.set([0.5, 0.6, 0.4, 1], 16);  // light
+        uData.set([S.light, S.scheme, t, n], 20);  // params
+        uData.set([...bgCol.top, 1], 24);  // bg1
+        uData.set([...bgCol.bot, 1], 28);  // bg2
+        device.queue.writeBuffer(uBuf, 0, uData);
+        
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginRenderPass({
+            colorAttachments:[{
+                view: ctx.getCurrentTexture().createView(),
+                loadOp: 'clear',
+                clearValue: {r:0, g:0, b:0, a:1},
+                storeOp: 'store'
+            }],
+            depthStencilAttachment:{
+                view: depth.createView(),
+                depthClearValue: 1,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store'
+            }
+        });
+        
+        // Hintergrund zeichnen
+        pass.setPipeline(bgPipe);
+        pass.setBindGroup(0, bgBindGroup);
+        pass.draw(3);
+        
+        // Würfel zeichnen
+        pass.setPipeline(pipe);
+        pass.setBindGroup(0, bg);
+        pass.setVertexBuffer(0, vBuf);
+        pass.setVertexBuffer(1, iBuf);
+        pass.draw(36, iCnt);
+        
+        pass.end();
+        device.queue.submit([enc.finish()]);
+        
+        status(`${iCnt} Würfel | n=${n}`);
+        requestAnimationFrame(frame);
+    }
+    frame();
+}
+
+main().catch(e => { console.error(e); error(e.message); });
+</script>
+</body>
+</html>

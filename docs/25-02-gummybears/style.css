@@ -1,0 +1,22 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.fancy-button.size.active {
+  border: 4px solid #FDB931;
+  background: linear-gradient(45deg, #FDB931, #FFD700);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+canvas {
+  display: block;
+}

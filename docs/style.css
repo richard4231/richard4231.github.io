@@ -1,0 +1,183 @@
+:root{
+  --bg:#fafaf8;
+  --card:#fff;
+  --muted:#6b7280;
+  --border:#e6e8eb;
+  --hover-shadow:0 4px 12px rgba(0,0,0,0.08);
+  --transition:all 0.2s ease;
+
+
+  /* Farbpalette (harmonisch abgestimmt mit https://color.adobe.com/de/) */
+  --color-welcome:#97a6b6;
+  --color-main:#b0b597;
+  --color-further:#b59896;
+  --color-active:#27405E;
+
+  /* Pastell-Farbpalette (harmonisch abgestimmt)
+  --color-welcome:#4e1de2;      // Sanftes Lila - "Über diese Seite"
+  --color-main:#7dd3c0;          // Mintgrün - Hauptkategorien
+  --color-further:#f9a8d4;       // Rosa - "Weitere Seiten"
+  --color-active:#f65c5c;        // Kräftiges Violett - Aktiver Button
+  */
+
+  /* ========================================
+     HINTERGRUND-FARB-KONFIGURATION
+     Passe diese Werte an, um die Hintergrundfarben zu ändern
+     ======================================== */
+
+  /* Hintergrund-Intensität (0.0 = transparent, 1.0 = volle Farbe) */
+  --bg-opacity: 0.25;
+
+  /* Hintergrundfarben pro Kategorie (RGB-Werte ohne Alpha)
+     Die Kategorien werden aus data.json gelesen.
+     Format: --bg-category-KATEGORIENAME: R, G, B;
+
+     NEUE KATEGORIE HINZUFÜGEN:
+     1. Hier eine neue Variable definieren: --bg-category-NEUERNAME: R, G, B;
+     2. In data.json die neue Kategorie verwenden: "category": "NEUERNAME"
+  */
+  --bg-category-welcome: 151, 166, 182;    /* Über diese Seite, Impressum */
+  --bg-category-main: 176, 181, 151;       /* Simulationen, Muster, 3D, Spikey, Math. Spielereien */
+  --bg-category-further: 181, 152, 150;    /* Weitere Seiten */
+
+  /* Aktuelle Hintergrundfarbe (wird durch JavaScript gesetzt) */
+  --current-bg: var(--bg-category-welcome);
+}
+*{box-sizing:border-box}
+body{
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  margin:0;
+  background:rgba(var(--current-bg), var(--bg-opacity));
+  color:#1a1a1a;
+  transition:background 0.4s ease;
+}
+.site-header{padding:2.5rem 1rem; text-align:center;background:linear-gradient(180deg,#fff 0%,rgba(250,250,248,0.8) 100%);border-bottom:1px solid var(--border)}
+.site-header h1{margin:0 0 0.5rem 0;color:var(--color-active);font-size:2.2rem;font-weight:700}
+.site-header .lead{color:var(--muted);max-width:900px;margin:0.5rem auto;font-size:1.05rem;line-height:1.6}
+/* Tabs: zentriert mit harmonischer Aufteilung */
+.tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.5rem;
+  padding:1rem;
+  justify-content:center;
+  align-items:stretch;
+  max-width:1200px;
+  margin:0 auto;
+}
+.tab{
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:0.75rem 1.5rem;
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
+  box-sizing:border-box;
+  min-width:140px;
+  height:60px; /* Feste Höhe für alle Buttons */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:500;
+  font-size:0.95rem;
+  line-height:1.3;
+  position:relative;
+  transition:var(--transition);
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  border-top:3px solid transparent;
+}
+
+/* Kategorie-Farben: 3-Farben-Palette */
+.tab:nth-child(1){border-top-color:var(--color-welcome)}      /* Über diese Seite */
+.tab:nth-child(2){border-top-color:var(--color-main)}         /* Simulationen */
+.tab:nth-child(3){border-top-color:var(--color-main)}         /* Muster erkunden */
+.tab:nth-child(4){border-top-color:var(--color-main)}         /* 3D */
+.tab:nth-child(5){border-top-color:var(--color-main)}         /* Spikey */
+.tab:nth-child(6){border-top-color:var(--color-main)}         /* Math. Spielereien */
+.tab:nth-child(7){border-top-color:var(--color-further)}      /* Weitere Seiten */
+.tab:nth-child(8){border-top-color:var(--color-welcome)}     /* Impressum */
+
+.tab:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--hover-shadow);
+  border-color:var(--color-active);
+}
+
+.tab.active{
+  background:var(--color-active);
+  color:#fff;
+  border-color:var(--color-active);
+  box-shadow:0 4px 12px rgba(139,92,246,0.3);
+  transform:translateY(-2px);
+}
+
+.tab.active:hover{
+  background:var(--color-active);
+  opacity:0.95;
+}
+
+/* Responsive Breakpoints */
+@media (max-width:599px){
+  .tab{min-width:calc(50% - 0.5rem);flex:1 1 calc(50% - 0.5rem)}
+}
+@media (min-width:600px) and (max-width:899px){
+  .tab{min-width:calc(33.333% - 0.5rem);flex:0 1 calc(33.333% - 0.5rem)}
+}
+@media (min-width:900px){
+  .tab{flex:0 1 auto}
+}
+.content{padding:1rem 2rem;max-width:1200px;margin:0 auto}
+.section{display:none}
+.section.active{display:block;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-top:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,360px));gap:1.25rem;justify-content:center;align-items:stretch}
+
+/* Card Styles mit Hover-Effekten */
+.card{
+  background:var(--card);
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  transition:var(--transition);
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--hover-shadow);
+  border-color:var(--color-active);
+}
+.card img{
+  width:100%;
+  height:auto;
+  object-fit:cover;
+  background:#e5e7eb;
+  aspect-ratio:16/10;
+  transition:var(--transition);
+}
+.card:hover img{
+  opacity:0.95;
+}
+.card .meta{padding:1rem;display:flex;flex-direction:column;justify-content:space-between;flex:1}
+.card .meta h3{margin:0 0 0.4rem 0;font-size:1.05rem;color:var(--color-active);font-weight:600}
+.card .meta p{margin:0;color:var(--muted);font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card a{display:block;text-decoration:none;color:inherit}
+
+/* Willkommens-Section speziell stylen */
+.welcome-section{
+  background:linear-gradient(135deg,rgba(125,211,192,0.1) 0%,rgba(167,139,250,0.1) 100%);
+  border:2px solid var(--border);
+  padding:2rem;
+  border-radius:12px;
+  line-height:1.7;
+}
+.welcome-section h2{color:var(--color-active);margin-top:0;font-size:1.8rem}
+.welcome-section h3{color:var(--color-welcome);margin-top:1.5rem;font-size:1.3rem}
+.welcome-section p{color:#333;margin:0.8rem 0}
+.welcome-section ul{color:#333;margin:0.5rem 0;padding-left:1.5rem}
+.welcome-section li{margin:0.4rem 0}
+
+.footer{padding:2rem;text-align:center;color:var(--muted)}
+@media (min-width:900px){.site-header{padding:3rem}}

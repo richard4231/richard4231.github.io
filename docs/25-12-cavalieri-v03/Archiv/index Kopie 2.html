@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Ring Geometrie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: #333;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            min-width: 250px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .color-button {
+            width: 40px;
+            height: 40px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-button:hover {
+            transform: scale(1.1);
+        }
+        .color-button.active {
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        button {
+            padding: 8px 15px;
+            background: #4a4a4a;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #5a5a5a;
+        }
+        button.active {
+            background: #2a7fff;
+            border-color: #2a7fff;
+        }
+        .instructions {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+        <div class="control-group">
+            <label>Anzahl Scheiben: <span class="value-display" id="stepsValue">10</span></label>
+            <input type="range" id="stepsSlider" min="3" max="100" value="10" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>Abstand: <span class="value-display" id="heightValue">0</span></label>
+            <input type="range" id="heightSlider" min="0" max="60" value="0" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>Polygon-Genauigkeit: <span class="value-display" id="segmentsValue">96</span></label>
+            <input type="range" id="segmentsSlider" min="12" max="180" value="96" step="6">
+        </div>
+
+        <div class="control-group">
+            <label>Helligkeit: <span class="value-display" id="brightnessValue">100%</span></label>
+            <input type="range" id="brightnessSlider" min="20" max="200" value="100" step="5">
+        </div>
+
+        <div class="control-group">
+            <label>Farbschema:</label>
+            <div class="color-grid" id="colorGrid"></div>
+        </div>
+
+        <div class="control-group" style="display: flex; gap: 10px;">
+            <button id="cameraFlyBtn">Kameraflug</button>
+            <button id="resetBtn">Zurücksetzen</button>
+        </div>
+        
+        <div class="instructions">
+            <strong>Steuerung:</strong><br>
+            • Ziehen: Objekt rotieren<br>
+            • Mausrad: Zoomen<br>
+            • W/A/S/D: Kamera bewegen<br>
+            • Pfeiltasten: Kamera hoch/runter
+        </div>
+    </div>
+
+    <script type="module">
+        import { mat4, vec3 } from 'https://wgpu-matrix.org/dist/2.x/wgpu-matrix.module.js';
+
+        // Farbschemata
+        const colorSchemes = [
+            { name: 'Ocean', mode: 'segment', from: [135, 206, 250], to: [25, 25, 112] },
+            { name: 'Fire', mode: 'position', from: [255, 240, 120], to: [255, 140, 20] },
+            { name: 'Position', mode: 'position', from: [255, 100, 100], to: [100, 100, 255] },
+            { name: 'Faces', mode: 'faces',
+              colors: [
+                [255, 200, 100], // Top
+                [100, 200, 255], // Bottom
+                [100, 255, 150], // Outer
+                [255, 150, 200]  // Inner
+              ]
+            }
+        ];
+
+        let currentColorScheme = 0;
+
+        // Volumen- und Flächenberechnung (normalisiert auf Radius = 1)
+        function calculateVolumesAndAreas(nsteps) {
+            const R = 1; // Normalisierter Radius
+            const h1 = R / nsteps; // Höhe jeder Scheibe
+
+            const results = {
+                hemisphere: [],
+                tori: [],
+                totalHemisphere: 0,
+                totalTori: 0
+            };
+
+            for (let j = 0; j < nsteps; j++) {
+                // Halbkugel (Zylinder/Scheiben)
+                // Höhe vom Boden: h = j * h1
+                const h = j * h1;
+                // Radius der Scheibe: r = sqrt(R² - h²)
+                const r_disc = Math.sqrt(R * R - h * h);
+                // Volumen = π * r² * h1
+                const volume_disc = Math.PI * r_disc * r_disc * h1;
+                // Grundfläche = Volumen / Höhe = π * r²
+                const area_disc = Math.PI * r_disc * r_disc;
+
+                results.hemisphere.push({
+                    step: j,
+                    height: h,
+                    radius: r_disc,
+                    volume: volume_disc,
+                    baseArea: area_disc
+                });
+                results.totalHemisphere += volume_disc;
+
+                // Tori (Ringe)
+                // Äusserer Radius = R (konstant)
+                // Innerer Radius = h (entspricht der Höhe bei Halbkugel)
+                const r_outer = R;
+                const r_inner = h;
+                // Volumen = π * (r_outer² - r_inner²) * h1
+                const volume_ring = Math.PI * (r_outer * r_outer - r_inner * r_inner) * h1;
+                // Grundfläche = Volumen / Höhe = π * (r_outer² - r_inner²)
+                const area_ring = Math.PI * (r_outer * r_outer - r_inner * r_inner);
+
+                results.tori.push({
+                    step: j,
+                    height: h,
+                    outerRadius: r_outer,
+                    innerRadius: r_inner,
+                    volume: volume_ring,
+                    baseArea: area_ring
+                });
+                results.totalTori += volume_ring;
+            }
+
+            // Theoretisches Volumen einer Halbkugel: (2/3) * π * R³
+            results.theoreticalVolume = (2/3) * Math.PI * R * R * R;
+
+            return results;
+        }
+
+        // Berechnung speichern und in Konsole ausgeben
+        let volumeData = calculateVolumesAndAreas(10);
+        console.log('=== Cavalieri-Prinzip: Volumen- und Flächenberechnung ===');
+        console.log('Normalisierter Radius R = 1');
+        console.log('');
+        console.log('Scheibe | Halbkugel-Fläche | Torus-Fläche | Differenz');
+        console.log('--------|------------------|--------------|----------');
+        for (let j = 0; j < volumeData.hemisphere.length; j++) {
+            const hArea = volumeData.hemisphere[j].baseArea.toFixed(6);
+            const tArea = volumeData.tori[j].baseArea.toFixed(6);
+            const diff = Math.abs(volumeData.hemisphere[j].baseArea - volumeData.tori[j].baseArea).toFixed(10);
+            console.log(`   ${j.toString().padStart(2)}   |     ${hArea}     |   ${tArea}   |  ${diff}`);
+        }
+        console.log('');
+        console.log('Gesamtvolumen Halbkugel:', volumeData.totalHemisphere.toFixed(6));
+        console.log('Gesamtvolumen Tori:', volumeData.totalTori.toFixed(6));
+        console.log('Theoretisches Volumen (2/3)πR³:', volumeData.theoreticalVolume.toFixed(6));
+
+        // WebGPU Setup
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('webgpu');
+        
+        if (!navigator.gpu) {
+            alert('WebGPU wird von diesem Browser nicht unterstützt!');
+            throw new Error('WebGPU not supported');
+        }
+
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+        
+        context.configure({
+            device,
+            format: presentationFormat,
+            alphaMode: 'premultiplied',
+        });
+
+        // Shader Code with multiple light sources
+        const shaderCode = `
+            struct Uniforms {
+                viewProjection: mat4x4f,
+                cameraPosition: vec3f,
+                brightness: f32,
+                light1: vec3f,
+                _pad1: f32,
+                light2: vec3f,
+                _pad2: f32,
+                light3: vec3f,
+                _pad3: f32,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) color: vec4f,
+                @location(1) normal: vec3f,
+                @location(2) worldPos: vec3f,
+                @location(3) objectId: f32,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            @vertex fn vs(
+                @location(0) position: vec3f,
+                @location(1) color: vec4f,
+                @location(2) normal: vec3f,
+                @location(3) objectId: f32
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.viewProjection * vec4f(position, 1.0);
+                output.color = color;
+                output.normal = normal;
+                output.worldPos = position;
+                output.objectId = objectId;
+                return output;
+            }
+
+            fn calculateLight(normal: vec3f, lightDir: vec3f, viewDir: vec3f) -> f32 {
+                // Diffuse
+                let diffuse = max(dot(normal, lightDir), 0.0) * 0.5;
+
+                // Specular
+                let halfDir = normalize(lightDir + viewDir);
+                let specular = pow(max(dot(normal, halfDir), 0.0), 32.0) * 0.2;
+
+                return diffuse + specular;
+            }
+
+            @fragment fn fs(input: VertexOutput) -> @location(0) vec4f {
+                let normal = normalize(input.normal);
+                let viewDir = normalize(uniforms.cameraPosition - input.worldPos);
+
+                // Ambient base
+                let ambient = 0.2;
+
+                // Calculate lighting from 3 sources
+                let light1Dir = normalize(uniforms.light1);
+                let light2Dir = normalize(uniforms.light2);
+                let light3Dir = normalize(uniforms.light3);
+
+                var lighting = ambient;
+                lighting += calculateLight(normal, light1Dir, viewDir);
+                lighting += calculateLight(normal, light2Dir, viewDir);
+                lighting += calculateLight(normal, light3Dir, viewDir);
+
+                // Apply brightness
+                lighting *= uniforms.brightness;
+
+                return vec4f(input.color.rgb * lighting, input.color.a);
+            }
+        `;
+
+        const shaderModule = device.createShaderModule({
+            label: 'Ring Shader',
+            code: shaderCode,
+        });
+
+        // Pipeline
+        const vertexState = {
+            module: shaderModule,
+            entryPoint: 'vs',
+            buffers: [
+                {
+                    arrayStride: 11 * 4, // position(3) + color(4) + normal(3) + objectId(1)
+                    attributes: [
+                        { shaderLocation: 0, offset: 0, format: 'float32x3' },  // position
+                        { shaderLocation: 1, offset: 12, format: 'float32x4' }, // color
+                        { shaderLocation: 2, offset: 28, format: 'float32x3' }, // normal
+                        { shaderLocation: 3, offset: 40, format: 'float32' },   // objectId
+                    ],
+                },
+            ],
+        };
+
+        const pipeline = device.createRenderPipeline({
+            label: 'Ring Pipeline',
+            layout: 'auto',
+            vertex: vertexState,
+            fragment: {
+                module: shaderModule,
+                entryPoint: 'fs',
+                targets: [{ format: presentationFormat }],
+            },
+            primitive: {
+                topology: 'triangle-list',
+                cullMode: 'none',
+            },
+            depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'less',
+                format: 'depth24plus',
+            },
+        });
+
+        // Geometrie-Generierung
+        function lerpColor(from, to, t) {
+            return [
+                from[0] + (to[0] - from[0]) * t,
+                from[1] + (to[1] - from[1]) * t,
+                from[2] + (to[2] - from[2]) * t,
+                255
+            ];
+        }
+
+        function generateRingGeometry(radius, height, innerRadius, offset, steps, colorScheme, objectIdBase, ringIndex, totalRings) {
+            const vertices = [];
+            const angle = 2 * Math.PI / steps;
+
+            for (let i = 0; i < steps; i++) {
+                const u = i * angle;
+                const u1 = (i + 1) * angle;
+
+                // Color based on mode
+                let colorNorm;
+                if (colorScheme.mode === 'segment') {
+                    const color = lerpColor(colorScheme.from, colorScheme.to, i / steps);
+                    colorNorm = [color[0]/255, color[1]/255, color[2]/255, 1.0];
+                } else if (colorScheme.mode === 'position') {
+                    const color = lerpColor(colorScheme.from, colorScheme.to, ringIndex / totalRings);
+                    colorNorm = [color[0]/255, color[1]/255, color[2]/255, 1.0];
+                } else if (colorScheme.mode === 'uniform') {
+                    colorNorm = [colorScheme.color[0]/255, colorScheme.color[1]/255, colorScheme.color[2]/255, 1.0];
+                }
+
+                // Outer ring vertices
+                const x0 = Math.sin(u) * radius;
+                const z0 = Math.cos(u) * radius;
+                const x1 = Math.sin(u1) * radius;
+                const z1 = Math.cos(u1) * radius;
+
+                // Inner ring vertices
+                const x2 = Math.sin(u1) * innerRadius;
+                const z2 = Math.cos(u1) * innerRadius;
+                const x3 = Math.sin(u) * innerRadius;
+                const z3 = Math.cos(u) * innerRadius;
+
+                const y0 = offset;
+                const y1 = offset + height;
+
+                const objectId = objectIdBase + i;
+
+                // For 'faces' mode, calculate colors per face
+                if (colorScheme.mode === 'faces') {
+                    const topColor = [colorScheme.colors[0][0]/255, colorScheme.colors[0][1]/255, colorScheme.colors[0][2]/255, 1.0];
+                    const bottomColor = [colorScheme.colors[1][0]/255, colorScheme.colors[1][1]/255, colorScheme.colors[1][2]/255, 1.0];
+                    const outerColor = [colorScheme.colors[2][0]/255, colorScheme.colors[2][1]/255, colorScheme.colors[2][2]/255, 1.0];
+                    const innerColor = [colorScheme.colors[3][0]/255, colorScheme.colors[3][1]/255, colorScheme.colors[3][2]/255, 1.0];
+
+                    // Bottom face
+                    addQuad(vertices,
+                        [x0, y0, z0], [x1, y0, z1], [x2, y0, z2], [x3, y0, z3],
+                        [0, -1, 0], bottomColor, objectId);
+
+                    // Outer side face
+                    const outerNormal = vec3.normalize([x0, 0, z0]);
+                    addQuad(vertices,
+                        [x0, y0, z0], [x0, y1, z0], [x1, y1, z1], [x1, y0, z1],
+                        outerNormal, outerColor, objectId);
+
+                    // Top face
+                    addQuad(vertices,
+                        [x0, y1, z0], [x1, y1, z1], [x2, y1, z2], [x3, y1, z3],
+                        [0, 1, 0], topColor, objectId);
+
+                    // Inner side face
+                    const innerNormal = vec3.normalize([-x3, 0, -z3]);
+                    addQuad(vertices,
+                        [x3, y0, z3], [x2, y0, z2], [x2, y1, z2], [x3, y1, z3],
+                        innerNormal, innerColor, objectId);
+                } else {
+                    // Bottom face (outer to inner) - normal points down
+                    addQuad(vertices,
+                        [x0, y0, z0], [x1, y0, z1], [x2, y0, z2], [x3, y0, z3],
+                        [0, -1, 0], colorNorm, objectId);
+
+                    // Outer side face - normal points outward
+                    const outerNormal = vec3.normalize([x0, 0, z0]);
+                    addQuad(vertices,
+                        [x0, y0, z0], [x0, y1, z0], [x1, y1, z1], [x1, y0, z1],
+                        outerNormal, colorNorm, objectId);
+
+                    // Top face - normal points up
+                    addQuad(vertices,
+                        [x0, y1, z0], [x1, y1, z1], [x2, y1, z2], [x3, y1, z3],
+                        [0, 1, 0], colorNorm, objectId);
+
+                    // Inner side face - normal points inward
+                    const innerNormal = vec3.normalize([-x3, 0, -z3]);
+                    addQuad(vertices,
+                        [x3, y0, z3], [x2, y0, z2], [x2, y1, z2], [x3, y1, z3],
+                        innerNormal, colorNorm, objectId);
+                }
+            }
+
+            return vertices;
+        }
+
+        function addQuad(vertices, p0, p1, p2, p3, normal, color, objectId) {
+            // Triangle 1: p0, p1, p2
+            vertices.push(...p0, ...color, ...normal, objectId);
+            vertices.push(...p1, ...color, ...normal, objectId);
+            vertices.push(...p2, ...color, ...normal, objectId);
+
+            // Triangle 2: p0, p2, p3
+            vertices.push(...p0, ...color, ...normal, objectId);
+            vertices.push(...p2, ...color, ...normal, objectId);
+            vertices.push(...p3, ...color, ...normal, objectId);
+        }
+
+        // Generate a box/table geometry
+        function generateBoxGeometry(x, y, z, width, height, depth, color, objectId) {
+            const vertices = [];
+            const colorNorm = [color[0]/255, color[1]/255, color[2]/255, 1.0];
+
+            const hw = width / 2;
+            const hd = depth / 2;
+
+            // 8 corners of the box
+            const corners = [
+                [x - hw, y, z - hd],           // 0: bottom-left-front
+                [x + hw, y, z - hd],           // 1: bottom-right-front
+                [x + hw, y, z + hd],           // 2: bottom-right-back
+                [x - hw, y, z + hd],           // 3: bottom-left-back
+                [x - hw, y + height, z - hd],  // 4: top-left-front
+                [x + hw, y + height, z - hd],  // 5: top-right-front
+                [x + hw, y + height, z + hd],  // 6: top-right-back
+                [x - hw, y + height, z + hd],  // 7: top-left-back
+            ];
+
+            // Top face
+            addQuad(vertices, corners[4], corners[5], corners[6], corners[7], [0, 1, 0], colorNorm, objectId);
+            // Bottom face
+            addQuad(vertices, corners[0], corners[3], corners[2], corners[1], [0, -1, 0], colorNorm, objectId);
+            // Front face
+            addQuad(vertices, corners[0], corners[1], corners[5], corners[4], [0, 0, -1], colorNorm, objectId);
+            // Back face
+            addQuad(vertices, corners[2], corners[3], corners[7], corners[6], [0, 0, 1], colorNorm, objectId);
+            // Left face
+            addQuad(vertices, corners[3], corners[0], corners[4], corners[7], [-1, 0, 0], colorNorm, objectId);
+            // Right face
+            addQuad(vertices, corners[1], corners[2], corners[6], corners[5], [1, 0, 0], colorNorm, objectId);
+
+            return vertices;
+        }
+
+        function generateAllGeometry(heightOffset, colorScheme, nsteps = 10, segments = 96) {
+            const radius = 200;
+            const hslice = radius / nsteps;
+            const allVertices = [];
+            let objectIdCounter = 0;
+
+            // Semisphere (shifted left to center rotation) - pointing UP
+            const centerOffset = radius * 1.5;
+            for (let j = 0; j < nsteps; j++) {
+                const h2 = hslice * j;
+                const r1 = Math.sqrt(radius * radius - h2 * h2);
+                const r2 = 0;
+                const h1 = radius / nsteps;
+                const voffset = (h1 + heightOffset) * j;
+                const ringVerts = generateRingGeometry(r1, h1, r2, voffset, segments, colorScheme, objectIdCounter, j, nsteps);
+
+                // Shift left to center
+                for (let k = 0; k < ringVerts.length; k += 11) {
+                    ringVerts[k] -= centerOffset;
+                }
+
+                allVertices.push(...ringVerts);
+                objectIdCounter += segments;
+            }
+
+            // Tori (shifted right to center rotation) - stacking UP
+            for (let j = 0; j < nsteps; j++) {
+                const h2 = hslice * j;
+                const r2 = h2;
+                const h1 = radius / nsteps;
+                const voffset = (h1 + heightOffset) * j;
+                const ringVerts = generateRingGeometry(radius, h1, r2, voffset, segments, colorScheme, objectIdCounter, j, nsteps);
+
+                // Shift right to center
+                for (let k = 0; k < ringVerts.length; k += 11) {
+                    ringVerts[k] += centerOffset;
+                }
+
+                allVertices.push(...ringVerts);
+                objectIdCounter += segments;
+            }
+
+            // Table (anthracite colored box below both objects)
+            const anthracite = [50, 50, 55];
+            const tableWidth = radius * 8;  // Wide enough to span both objects (doubled)
+            const tableHeight = 40;          // Doubled
+            const tableDepth = radius * 5;   // Doubled
+            const tableY = -tableHeight - 10;  // Below the objects with small gap
+            const tableVerts = generateBoxGeometry(0, tableY, 0, tableWidth, tableHeight, tableDepth, anthracite, objectIdCounter);
+            allVertices.push(...tableVerts);
+
+            return new Float32Array(allVertices);
+        }
+
+        // Initial geometry
+        let geometryData = generateAllGeometry(0, colorSchemes[currentColorScheme]);
+        let vertexBuffer = device.createBuffer({
+            label: 'Vertex Buffer',
+            size: geometryData.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        });
+        device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+        let numVertices = geometryData.length / 11;
+
+        // Uniforms
+        const uniformBufferSize =
+            16 * 4 + // viewProjection matrix (64 bytes)
+            4 * 4 +  // cameraPosition + brightness (16 bytes)
+            4 * 4 +  // light1 + padding (16 bytes)
+            4 * 4 +  // light2 + padding (16 bytes)
+            4 * 4;   // light3 + padding (16 bytes)
+        // Total: 128 bytes = 32 floats
+
+        let currentBrightness = 1.0;
+
+        const uniformBuffer = device.createBuffer({
+            size: uniformBufferSize,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        const bindGroup = device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: { buffer: uniformBuffer } },
+            ],
+        });
+
+        // Set canvas size with HiDPI/Retina support
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        console.log('Canvas size:', canvas.width, 'x', canvas.height, '(DPR:', dpr + ')');
+
+        // Depth texture
+        let depthTexture = null;
+
+        function createDepthTexture(width, height) {
+            if (depthTexture) {
+                depthTexture.destroy();
+            }
+            depthTexture = device.createTexture({
+                size: [width, height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+            console.log('Created depth texture:', width, 'x', height);
+        }
+
+        // Camera state
+        const camera = {
+            position: vec3.create(0, 700, 1200),
+            target: vec3.create(0, 100, 50), // Center at origin
+            up: vec3.create(0, 1, 0), // definiert Richtung für up/down
+            fov: 60 * Math.PI / 180,
+            near: 1,
+            far: 5000,
+        };
+
+        console.log('Camera position:', camera.position);
+        console.log('Camera target:', camera.target);
+        console.log('Generated vertices:', numVertices);
+        console.log('First few vertices:', geometryData.slice(0, 33));
+
+        // Camera fly animation
+        let cameraFlyActive = false;
+        let flyTime = 0;
+        const flyRadius = 1500;
+        const flyHeight = 500;
+        const flySpeed = 0.5;
+
+        // Mouse interaction
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let rotation = { x: 0.15, y: -20 * Math.PI / 180 }; // Leicht nach vorne gekippt, 20° im Uhrzeigersinn
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+
+                rotation.y += deltaX * 0.005;
+                rotation.x += deltaY * 0.005;
+
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.3; // Increased from 0.1
+            const direction = vec3.subtract(camera.target, camera.position);
+            const distance = vec3.length(direction);
+            vec3.normalize(direction, direction);
+
+            const zoomDelta = e.deltaY * zoomSpeed;
+            const newDistance = Math.max(100, Math.min(distance + zoomDelta, 3000));
+
+            camera.position = vec3.subtract(camera.target, vec3.scale(direction, newDistance));
+        });
+
+        // Keyboard controls with acceleration
+        const keys = {};
+        let keyHoldTime = 0;
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            keys[e.key] = true; // For arrow keys
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            keys[e.key] = false;
+        });
+
+        function updateCameraFromKeys(deltaTime) {
+            if (cameraFlyActive) return;
+
+            // Check if any movement key is pressed
+            const anyKeyPressed = keys['w'] || keys['s'] || keys['a'] || keys['d'] ||
+                                  keys['ArrowUp'] || keys['ArrowDown'];
+
+            if (anyKeyPressed) {
+                keyHoldTime += deltaTime;
+            } else {
+                keyHoldTime = 0;
+            }
+
+            // Speed doubles after 1 second of holding
+            const speedMultiplier = keyHoldTime > 1.0 ? 2.0 : 1.0;
+            const speed = 300 * deltaTime * speedMultiplier;
+
+            const direction = vec3.normalize(vec3.subtract(camera.target, camera.position));
+            const right = vec3.normalize(vec3.cross(direction, camera.up));
+
+            if (keys['w']) {
+                camera.position = vec3.add(camera.position, vec3.scale(direction, speed));
+                camera.target = vec3.add(camera.target, vec3.scale(direction, speed));
+            }
+            if (keys['s']) {
+                camera.position = vec3.subtract(camera.position, vec3.scale(direction, speed));
+                camera.target = vec3.subtract(camera.target, vec3.scale(direction, speed));
+            }
+            if (keys['a']) {
+                camera.position = vec3.subtract(camera.position, vec3.scale(right, speed));
+                camera.target = vec3.subtract(camera.target, vec3.scale(right, speed));
+            }
+            if (keys['d']) {
+                camera.position = vec3.add(camera.position, vec3.scale(right, speed));
+                camera.target = vec3.add(camera.target, vec3.scale(right, speed));
+            }
+            // Arrow up/down for vertical movement
+            if (keys['ArrowUp']) {
+                camera.position = vec3.add(camera.position, vec3.scale(camera.up, speed));
+                camera.target = vec3.add(camera.target, vec3.scale(camera.up, speed));
+            }
+            if (keys['ArrowDown']) {
+                camera.position = vec3.subtract(camera.position, vec3.scale(camera.up, speed));
+                camera.target = vec3.subtract(camera.target, vec3.scale(camera.up, speed));
+            }
+        }
+
+        // UI Controls
+        const stepsSlider = document.getElementById('stepsSlider');
+        const stepsValue = document.getElementById('stepsValue');
+        const heightSlider = document.getElementById('heightSlider');
+        const heightValue = document.getElementById('heightValue');
+        const segmentsSlider = document.getElementById('segmentsSlider');
+        const segmentsValue = document.getElementById('segmentsValue');
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const brightnessValue = document.getElementById('brightnessValue');
+
+        let currentSteps = 10;
+        let currentSegments = 96;
+
+        brightnessSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            brightnessValue.textContent = value + '%';
+            currentBrightness = value / 100;
+        });
+
+        stepsSlider.addEventListener('input', (e) => {
+            currentSteps = parseInt(e.target.value);
+            stepsValue.textContent = currentSteps;
+            const heightOffset = parseFloat(heightSlider.value);
+            geometryData = generateAllGeometry(heightOffset, colorSchemes[currentColorScheme], currentSteps, currentSegments);
+
+            // Recreate buffer if needed
+            if (geometryData.byteLength > vertexBuffer.size) {
+                vertexBuffer.destroy();
+                vertexBuffer = device.createBuffer({
+                    label: 'Vertex Buffer',
+                    size: geometryData.byteLength,
+                    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                });
+            }
+
+            device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+            numVertices = geometryData.length / 11;
+
+            // Volumenberechnung aktualisieren
+            volumeData = calculateVolumesAndAreas(currentSteps);
+            console.log(`=== Aktualisiert für ${currentSteps} Scheiben ===`);
+            console.log('Gesamtvolumen Halbkugel:', volumeData.totalHemisphere.toFixed(6));
+            console.log('Gesamtvolumen Tori:', volumeData.totalTori.toFixed(6));
+            console.log('Theoretisches Volumen:', volumeData.theoreticalVolume.toFixed(6));
+        });
+
+        heightSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            heightValue.textContent = value.toFixed(0);
+            geometryData = generateAllGeometry(value, colorSchemes[currentColorScheme], currentSteps, currentSegments);
+            device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+            numVertices = geometryData.length / 11;
+        });
+
+        segmentsSlider.addEventListener('input', (e) => {
+            currentSegments = parseInt(e.target.value);
+            segmentsValue.textContent = currentSegments;
+            const heightOffset = parseFloat(heightSlider.value);
+            geometryData = generateAllGeometry(heightOffset, colorSchemes[currentColorScheme], currentSteps, currentSegments);
+
+            // Recreate buffer if needed
+            if (geometryData.byteLength > vertexBuffer.size) {
+                vertexBuffer.destroy();
+                vertexBuffer = device.createBuffer({
+                    label: 'Vertex Buffer',
+                    size: geometryData.byteLength,
+                    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                });
+            }
+
+            device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+            numVertices = geometryData.length / 11;
+        });
+
+        // Color scheme buttons
+        const colorGrid = document.getElementById('colorGrid');
+        colorSchemes.forEach((scheme, index) => {
+            const button = document.createElement('div');
+            button.className = 'color-button' + (index === 0 ? ' active' : '');
+
+            // Set button background based on scheme type
+            if (scheme.mode === 'faces') {
+                // Show a grid of the 4 colors
+                button.style.background = `linear-gradient(to right,
+                    rgb(${scheme.colors[0][0]}, ${scheme.colors[0][1]}, ${scheme.colors[0][2]}) 0%,
+                    rgb(${scheme.colors[0][0]}, ${scheme.colors[0][1]}, ${scheme.colors[0][2]}) 25%,
+                    rgb(${scheme.colors[1][0]}, ${scheme.colors[1][1]}, ${scheme.colors[1][2]}) 25%,
+                    rgb(${scheme.colors[1][0]}, ${scheme.colors[1][1]}, ${scheme.colors[1][2]}) 50%,
+                    rgb(${scheme.colors[2][0]}, ${scheme.colors[2][1]}, ${scheme.colors[2][2]}) 50%,
+                    rgb(${scheme.colors[2][0]}, ${scheme.colors[2][1]}, ${scheme.colors[2][2]}) 75%,
+                    rgb(${scheme.colors[3][0]}, ${scheme.colors[3][1]}, ${scheme.colors[3][2]}) 75%)`;
+            } else if (scheme.mode === 'uniform') {
+                button.style.background = `rgb(${scheme.color[0]}, ${scheme.color[1]}, ${scheme.color[2]})`;
+            } else {
+                button.style.background = `linear-gradient(135deg,
+                    rgb(${scheme.from[0]}, ${scheme.from[1]}, ${scheme.from[2]}),
+                    rgb(${scheme.to[0]}, ${scheme.to[1]}, ${scheme.to[2]}))`;
+            }
+
+            button.title = scheme.name;
+            button.addEventListener('click', () => {
+                currentColorScheme = index;
+                document.querySelectorAll('.color-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+
+                const heightOffset = parseFloat(heightSlider.value);
+                geometryData = generateAllGeometry(heightOffset, colorSchemes[currentColorScheme], currentSteps, currentSegments);
+                device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+                numVertices = geometryData.length / 11;
+            });
+            colorGrid.appendChild(button);
+        });
+
+        // Camera fly button
+        const cameraFlyBtn = document.getElementById('cameraFlyBtn');
+        cameraFlyBtn.addEventListener('click', () => {
+            cameraFlyActive = !cameraFlyActive;
+            cameraFlyBtn.classList.toggle('active');
+            if (!cameraFlyActive) {
+                flyTime = 0;
+            }
+        });
+
+        // Reset button
+        const resetBtn = document.getElementById('resetBtn');
+        resetBtn.addEventListener('click', () => {
+            // Stop camera fly if active
+            if (cameraFlyActive) {
+                cameraFlyActive = false;
+                cameraFlyBtn.classList.remove('active');
+                flyTime = 0;
+            }
+
+            // Reset camera
+            camera.position = vec3.create(0, 700, 1200);
+            camera.target = vec3.create(0, 100, 50);
+
+            // Reset rotation
+            rotation.x = 0.15;
+            rotation.y = -20 * Math.PI / 180;
+
+            // Reset sliders
+            stepsSlider.value = 10;
+            stepsValue.textContent = '10';
+            currentSteps = 10;
+
+            heightSlider.value = 0;
+            heightValue.textContent = '0';
+
+            segmentsSlider.value = 96;
+            segmentsValue.textContent = '96';
+            currentSegments = 96;
+
+            brightnessSlider.value = 100;
+            brightnessValue.textContent = '100%';
+            currentBrightness = 1.0;
+
+            // Reset color scheme
+            currentColorScheme = 0;
+            document.querySelectorAll('.color-button').forEach((b, i) => {
+                b.classList.toggle('active', i === 0);
+            });
+
+            // Regenerate geometry
+            geometryData = generateAllGeometry(0, colorSchemes[0], 10, 96);
+            device.queue.writeBuffer(vertexBuffer, 0, geometryData);
+            numVertices = geometryData.length / 11;
+
+            // Update volume data
+            volumeData = calculateVolumesAndAreas(10);
+        });
+
+        // Render loop
+        let lastTime = 0;
+        function render(time) {
+            time *= 0.001; // Convert to seconds
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            // Update camera from keyboard
+            updateCameraFromKeys(deltaTime);
+
+            // Update camera fly
+            if (cameraFlyActive) {
+                flyTime += deltaTime * flySpeed;
+                camera.position = vec3.create(
+                    Math.cos(flyTime) * flyRadius,
+                    flyHeight + Math.sin(flyTime * 0.5) * 200,
+                    Math.sin(flyTime) * flyRadius
+                );
+                camera.target = vec3.create(0, 0, 0);
+            }
+
+            // Resize canvas if needed (with HiDPI support)
+            const currentDpr = window.devicePixelRatio || 1;
+            const width = Math.floor(canvas.clientWidth * currentDpr);
+            const height = Math.floor(canvas.clientHeight * currentDpr);
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+                createDepthTexture(width, height);
+            }
+
+            // Calculate view-projection matrix
+            const aspect = canvas.width / canvas.height;
+            const projection = mat4.perspective(camera.fov, aspect, camera.near, camera.far);
+            const view = mat4.lookAt(camera.position, camera.target, camera.up);
+            
+            // Apply rotation from mouse drag
+            const rotationMatrix = mat4.identity();
+            mat4.rotateX(rotationMatrix, rotation.x, rotationMatrix);
+            mat4.rotateY(rotationMatrix, rotation.y, rotationMatrix);
+            
+            const viewProjection = mat4.multiply(projection, mat4.multiply(view, rotationMatrix));
+
+            // Update uniforms with 3 light sources
+            const uniformData = new Float32Array(32); // 128 bytes / 4 = 32 floats
+            uniformData.set(viewProjection, 0);
+            uniformData.set([...camera.position, currentBrightness], 16);
+            // Light 1: from top-front-right
+            uniformData.set([0.5, 1.0, 0.8, 0], 20);
+            // Light 2: from left-front
+            uniformData.set([-0.8, 0.3, 0.5, 0], 24);
+            // Light 3: from below-back (fill light)
+            uniformData.set([0.2, -0.5, -0.6, 0], 28);
+
+            device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+            // Render
+            const encoder = device.createCommandEncoder();
+            const textureView = context.getCurrentTexture().createView();
+
+            const renderPass = encoder.beginRenderPass({
+                colorAttachments: [{
+                    view: textureView,
+                    clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+                depthStencilAttachment: {
+                    view: depthTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: 'clear',
+                    depthStoreOp: 'store',
+                },
+            });
+
+            renderPass.setPipeline(pipeline);
+            renderPass.setVertexBuffer(0, vertexBuffer);
+            renderPass.setBindGroup(0, bindGroup);
+            renderPass.draw(numVertices);
+            renderPass.end();
+
+            if (time < 1) { // Log once at start
+                console.log('Rendering with', numVertices, 'vertices');
+                console.log('ViewProjection matrix:', viewProjection);
+            }
+
+            device.queue.submit([encoder.finish()]);
+            requestAnimationFrame(render);
+        }
+
+        // Initialize
+        createDepthTexture(canvas.width, canvas.height);
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>

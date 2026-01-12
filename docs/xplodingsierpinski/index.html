@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <script type="text/javascript">
+            const redirectURL = "https://richard4231.github.io/25-02-xplodingsierpinski/";
+            document.addEventListener('DOMContentLoaded', function() {
+                // Meta refresh
+                const meta = document.createElement('meta');
+                meta.httpEquiv = "refresh";
+                meta.content = "0; url=" + redirectURL;
+                document.head.appendChild(meta);
+                
+                // JavaScript redirect
+                window.location.href = redirectURL;
+                
+                // Update link href
+                document.getElementById('redirect-link').href = redirectURL;
+            });
+        </script>
+        <title>Page Redirection</title>
+    </head>
+    <body>
+        If you are not redirected automatically, follow this <a id="redirect-link" href='#'>link</a>.
+    </body>
+</html>
