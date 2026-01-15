@@ -416,3 +416,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+docs/.DS_Store
+docs/22-09-PiPaths-v02/.DS_Store
+docs/25-02-gummybears/.DS_Store
+docs/25-03-chocolatebeans/.DS_Store
