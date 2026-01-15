@@ -44,13 +44,15 @@ let currentHistogram = {};  // Aktuelles Histogramm für Hover-Erkennung
 let anzahlSlider;
 let stdabwSlider;
 let intervallSlider;
+let mittelwertSlider;
 let showStatsCheckbox;
 let controlPanel;
 let backgroundLayer;
 let infoText;
 
 // Statistik
-let showStats = false;
+let showMedian = false;
+let showMittelwert = false;
 let median = 0;
 let berechneteMittelwert = 0;
 let fixedCurveHeight = true;  // Toggle für fixe Kurvenhöhe
@@ -75,6 +77,13 @@ let showIntervallLinien = false;
 let intervallAbstand = 5;  // Abstand vom Mittelwert in Gramm (kontinuierlich)
 let intervallSliderLinien;  // Slider für die Linien
 let intervallLinienColor = [140, 80, 180, 200]; // Violett für Intervall-Linien
+
+// Flächenaufteilung
+let showFlaechenaufteilung = false;
+let cutoffPunkt = 1010;  // Trennpunkt in Gramm
+let cutoffSlider;  // Slider für den Cut-off Point
+let flaecheLinksColor = [255, 150, 150, 100]; // Hellrot
+let flaecheRechtsColor = [150, 200, 255, 100]; // Hellblau
 
 // Farben (wie im Original)
 let color1 = [238, 172, 136, 200]; // Orange für Packungen
@@ -191,12 +200,37 @@ async function setup() {
   intervallSlider.style('margin-bottom', '15px');
   intervallSlider.input(updateIntervall);
   
-  // Checkbox für Median/Mittelwert
-  showStatsCheckbox = createCheckbox('Median & Mittelwert anzeigen', showStats);
-  showStatsCheckbox.parent(controlPanel);
-  showStatsCheckbox.style('margin-bottom', '15px');
-  showStatsCheckbox.style('display', 'block');
-  showStatsCheckbox.changed(updateStats);
+  // Mittelwert Slider
+  let mittelwertLabel = createP('Mittelwert: <span id="mittelwertValue">1010</span> g');
+  mittelwertLabel.parent(controlPanel);
+  mittelwertLabel.style('margin', '0 0 5px 0');
+  mittelwertLabel.style('font-weight', 'bold');
+  
+  mittelwertSlider = createSlider(990, 1030, 1010, 0.5);
+  mittelwertSlider.parent(controlPanel);
+  mittelwertSlider.style('width', '100%');
+  mittelwertSlider.style('margin-bottom', '15px');
+  mittelwertSlider.input(updateMittelwert);
+  
+  // Checkbox für Median
+  let showMedianCheckbox = createCheckbox('Median anzeigen', showMedian);
+  showMedianCheckbox.parent(controlPanel);
+  showMedianCheckbox.style('margin-bottom', '15px');
+  showMedianCheckbox.style('display', 'block');
+  showMedianCheckbox.changed(() => {
+    showMedian = showMedianCheckbox.checked();
+    drawVisualization();
+  });
+  
+  // Checkbox für Mittelwert
+  let showMittelwertCheckbox = createCheckbox('Mittelwert anzeigen', showMittelwert);
+  showMittelwertCheckbox.parent(controlPanel);
+  showMittelwertCheckbox.style('margin-bottom', '15px');
+  showMittelwertCheckbox.style('display', 'block');
+  showMittelwertCheckbox.changed(() => {
+    showMittelwert = showMittelwertCheckbox.checked();
+    drawVisualization();
+  });
   
   // Checkbox für Standardabweichung
   let showStdDevCheckbox = createCheckbox('Standardabweichung anzeigen', showStdDev);
@@ -265,6 +299,49 @@ async function setup() {
   anteilAnzeige.style('font-size', '13px');
   anteilAnzeige.style('line-height', '1.5');
 
+  // Checkbox für Flächenaufteilung
+  let flaechenCheckbox = createCheckbox('Flächenaufteilung anzeigen', showFlaechenaufteilung);
+  flaechenCheckbox.parent(controlPanel);
+  flaechenCheckbox.style('margin-bottom', '15px');
+  flaechenCheckbox.style('display', 'block');
+  flaechenCheckbox.changed(() => {
+    showFlaechenaufteilung = flaechenCheckbox.checked();
+    document.getElementById('flaechenSliderDiv').style.display = showFlaechenaufteilung ? 'block' : 'none';
+    drawVisualization();
+  });
+
+  // Container für Flächen-Slider (zunächst versteckt)
+  let flaechenDiv = createDiv();
+  flaechenDiv.parent(controlPanel);
+  flaechenDiv.id('flaechenSliderDiv');
+  flaechenDiv.style('display', 'none');
+  flaechenDiv.style('margin-bottom', '15px');
+  flaechenDiv.style('padding', '10px');
+  flaechenDiv.style('background', 'rgba(200, 200, 255, 0.15)');
+  flaechenDiv.style('border-radius', '5px');
+
+  let cutoffLabel = createP('Trennpunkt: <span id="cutoffValue">1010.0</span> g');
+  cutoffLabel.parent(flaechenDiv);
+  cutoffLabel.style('margin', '0 0 5px 0');
+  cutoffLabel.style('font-size', '13px');
+
+  cutoffSlider = createSlider(990, 1030, 1010, 0.5);
+  cutoffSlider.parent(flaechenDiv);
+  cutoffSlider.style('width', '100%');
+  cutoffSlider.input(() => {
+    cutoffPunkt = cutoffSlider.value();
+    document.getElementById('cutoffValue').textContent = nf(cutoffPunkt, 1, 1);
+    drawVisualization();
+  });
+
+  // Anzeige für die Flächenprozente
+  let flaechenAnzeige = createP('');
+  flaechenAnzeige.parent(flaechenDiv);
+  flaechenAnzeige.id('flaechenAnzeige');
+  flaechenAnzeige.style('margin', '10px 0 0 0');
+  flaechenAnzeige.style('font-size', '13px');
+  flaechenAnzeige.style('line-height', '1.5');
+
   // Checkbox für viele Packungen (Multiplikator)
   let multiplikatorCheckbox = createCheckbox('Sehr viele Packungen (×100)', multiplikatorAktiv);
   multiplikatorCheckbox.parent(controlPanel);
@@ -302,7 +379,7 @@ async function setup() {
   legendeText.style('color', '#666');
   
   // Info-Text
-  infoText = createP(`Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgrösse: ${intervallGroesse} g`);
+  infoText = createP(`Theoretischer Mittelwert: ${nf(mittelwert, 1, 1)} g<br>Intervallgrösse: ${nf(intervallGroesse, 1, 1)} g`);
   infoText.parent(controlPanel);
   infoText.id('infoText');
   infoText.style('margin', '10px 0 0 0');
@@ -348,16 +425,19 @@ function updateIntervall() {
   intervallGroesse = intervallSlider.value();
   binSize = intervallGroesse; // Für Kompatibilität
   document.getElementById('intervallValue').textContent = nf(intervallGroesse, 1, 1);
-  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${mittelwert} g<br>Intervallgrösse: ${nf(intervallGroesse, 1, 1)} g`;
+  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${nf(mittelwert, 1, 1)} g<br>Intervallgrösse: ${nf(intervallGroesse, 1, 1)} g`;
   // Nur Visualisierung neu zeichnen, nicht die Zufallsverteilung neu generieren
   drawVisualization();
 }
 
 /**
- * Aktualisiert die Statistik-Anzeige
+ * Aktualisiert den Mittelwert
  */
-function updateStats() {
-  showStats = showStatsCheckbox.checked();
+function updateMittelwert() {
+  mittelwert = mittelwertSlider.value();
+  document.getElementById('mittelwertValue').textContent = nf(mittelwert, 1, 1);
+  document.getElementById('infoText').innerHTML = `Theoretischer Mittelwert: ${nf(mittelwert, 1, 1)} g<br>Intervallgrösse: ${nf(intervallGroesse, 1, 1)} g`;
+  generatePackungen();
   drawVisualization();
 }
 
@@ -453,6 +533,9 @@ function drawVisualization() {
   // Koordinatensystem zeichnen (benötigt maxHoehe)
   drawCoordinateSystem(backgroundLayer);
   
+  // Flächenaufteilung zeichnen (vor der Kurve, damit sie darunter liegt)
+  drawFlaechenaufteilung(backgroundLayer);
+  
   // Normalverteilungskurve zeichnen
   drawNormalCurve(backgroundLayer);
   
@@ -480,16 +563,17 @@ function drawCoordinateSystem(pg) {
   pg.noStroke();
   pg.textSize(20);
   pg.textAlign(CENTER, TOP);
-  pg.text("3R6 Standardabweichung erkunden", canvasWidth / 2, 10);
+  pg.text("3K6 Standardabweichung erkunden", canvasWidth / 2, 10);
   
   pg.stroke(100);
   pg.strokeWeight(2);
   
   // X-Achse
-  pg.line(margin, canvasHeight - margin, canvasWidth - margin, canvasHeight - margin);
+  pg.line(margin -30, canvasHeight - margin, canvasWidth, canvasHeight - margin);
+  pg.line(0, canvasHeight - margin, margin - 50, canvasHeight - margin);
   
   // Y-Achse
-  pg.line(margin, canvasHeight - margin, margin, margin);
+  pg.line(margin - 25, canvasHeight - margin + 10, margin - 25, margin);
   
   // Beschriftungen
   if (font_polo) {
@@ -499,15 +583,18 @@ function drawCoordinateSystem(pg) {
   pg.noStroke();
   pg.textSize(14);
   
-  // X-Achse Beschriftung (Masse in g)
+  // X-Achse Intervallbeschriftung (Masse in g)
   let stepX = 5;
+  
   for (let m = minMasse; m <= maxMasse; m += stepX) {
-    let x = map(m, minMasse, maxMasse, margin, canvasWidth - margin);
+    let x = map(m, minMasse, maxMasse, margin, canvasWidth-margin);
+    pg.noStroke();
     pg.textAlign(CENTER, TOP);
     pg.text(m, x, canvasHeight - margin + 5);
+    
+    // Linie sowohl oberhalb als auch unterhalb der X-Achse
     pg.stroke(100);
     pg.strokeWeight(1);
-    // Linie sowohl oberhalb als auch unterhalb der X-Achse
     pg.line(x, canvasHeight - margin + 5, x, canvasHeight - margin - 5);
   }
   
@@ -552,18 +639,21 @@ function drawCoordinateSystem(pg) {
       // Säulen-Modus: normale kontinuierliche Skalierung
       y = map(anzahl, 0, maxHoehe, canvasHeight - margin, margin);
     }
-    
-    pg.text(Math.round(anzahl), margin - 10, y);
-    pg.stroke(200);
+    // Zahlen
+    pg.noStroke();
+    pg.text(Math.round(anzahl), margin - 35, y);
+
+    // Linien
+    pg.stroke(100);
     pg.strokeWeight(1);
-    pg.line(margin, y, margin + 5, y);
+    pg.line(margin - 30, y, margin - 20, y);
   }
   
   // Achsenbeschriftung
   pg.noStroke();
   pg.textSize(16);
   pg.textAlign(CENTER, TOP);
-  pg.text("Masse (g)", canvasWidth / 2, canvasHeight - 20);
+  pg.text("Masse (g)", canvasWidth / 2, canvasHeight - 30);
   
   pg.push();
   pg.translate(15, canvasHeight / 2);
@@ -598,7 +688,8 @@ function drawNormalCurve(pg) {
   }
   
   pg.beginShape();
-  for (let m = minMasse; m <= maxMasse; m += 0.5) {
+  // Erweitere den Zeichenbereich deutlich über die Achsenbeschriftung hinaus
+  for (let m = minMasse - 4; m <= maxMasse + 4; m += 0.5) {
     let x = map(m, minMasse, maxMasse, margin, canvasWidth - margin);
     let density = normalDensity(m, mittelwert, standardabweichung);
     
@@ -619,29 +710,36 @@ function drawNormalCurve(pg) {
   }
   pg.endShape();
   
-  // Median und Mittelwert Linien zeichnen (wenn aktiviert)
-  if (showStats) {
-    // Median
+  // Median Linie zeichnen (wenn aktiviert)
+  if (showMedian) {
     pg.stroke(medianColor);
     pg.strokeWeight(2);
     pg.drawingContext.setLineDash([5, 5]);
     let xMedian = map(median, minMasse, maxMasse, margin, canvasWidth - margin);
     pg.line(xMedian, canvasHeight - margin, xMedian, margin);
-    
-    // Mittelwert
-    pg.stroke(mittelwertColor);
-    pg.drawingContext.setLineDash([10, 5]);
-    let xMittelwert = map(berechneteMittelwert, minMasse, maxMasse, margin, canvasWidth - margin);
-    pg.line(xMittelwert, canvasHeight - margin, xMittelwert, margin);
-    
     pg.drawingContext.setLineDash([]);
     
-    // Beschriftungen
+    // Beschriftung
     pg.noStroke();
     pg.textSize(12);
     pg.textAlign(CENTER, BOTTOM);
     pg.fill(medianColor);
     pg.text('Median: ' + nf(median, 1, 1) + 'g', xMedian, margin - 5);
+  }
+  
+  // Mittelwert Linie zeichnen (wenn aktiviert)
+  if (showMittelwert) {
+    pg.stroke(mittelwertColor);
+    pg.strokeWeight(2);
+    pg.drawingContext.setLineDash([10, 5]);
+    let xMittelwert = map(berechneteMittelwert, minMasse, maxMasse, margin, canvasWidth - margin);
+    pg.line(xMittelwert, canvasHeight - margin, xMittelwert, margin);
+    pg.drawingContext.setLineDash([]);
+    
+    // Beschriftung
+    pg.noStroke();
+    pg.textSize(12);
+    pg.textAlign(CENTER, BOTTOM);
     pg.fill(mittelwertColor);
     pg.text('Mittelwert: ' + nf(berechneteMittelwert, 1, 1) + 'g', xMittelwert, margin - 20);
   }
@@ -833,6 +931,135 @@ function drawIntervallLinien(pg) {
 }
 
 /**
+ * Zeichnet die Flächenaufteilung unter der Normalverteilungskurve
+ */
+function drawFlaechenaufteilung(pg) {
+  if (!showFlaechenaufteilung) return;
+
+  pg.push();
+
+  // Berechne die erwartete maximale Höhe (am Mittelwert)
+  let maxErwarteteHoehe = anzahlPackungen * intervallGroesse * normalDensity(mittelwert, mittelwert, standardabweichung);
+  
+  let kurvenSkalierung;
+  if (fixedCurveHeight) {
+    kurvenSkalierung = maxHoehe;
+  } else {
+    kurvenSkalierung = Math.min(maxErwarteteHoehe, maxHoehe);
+  }
+
+  // Zeichne linke Fläche (hellrot)
+  pg.fill(flaecheLinksColor);
+  pg.noStroke();
+  pg.beginShape();
+  
+  // Startpunkt unten links - deutlich weiter links als minMasse
+  let xStart = map(minMasse - 4, minMasse, maxMasse, margin, canvasWidth - margin);
+  pg.vertex(xStart, canvasHeight - margin);
+  
+  // Kurve von links bis zum Cut-off
+  for (let m = minMasse - 4; m <= cutoffPunkt; m += 0.5) {
+    let x = map(m, minMasse, maxMasse, margin, canvasWidth - margin);
+    let density = normalDensity(m, mittelwert, standardabweichung);
+    
+    let skalierteAnzahl;
+    if (fixedCurveHeight) {
+      skalierteAnzahl = density / normalDensity(mittelwert, mittelwert, standardabweichung) * maxHoehe;
+    } else {
+      skalierteAnzahl = anzahlPackungen * intervallGroesse * density;
+      skalierteAnzahl = Math.min(skalierteAnzahl, maxHoehe);
+    }
+    
+    let y = map(skalierteAnzahl, 0, maxHoehe, canvasHeight - margin, margin);
+    pg.vertex(x, y);
+  }
+  
+  // Runter zum Cut-off auf der X-Achse
+  let xCutoff = map(cutoffPunkt, minMasse, maxMasse, margin, canvasWidth - margin);
+  pg.vertex(xCutoff, canvasHeight - margin);
+  
+  pg.endShape(CLOSE);
+
+  // Zeichne rechte Fläche (hellblau)
+  pg.fill(flaecheRechtsColor);
+  pg.noStroke();
+  pg.beginShape();
+  
+  // Startpunkt am Cut-off auf X-Achse
+  pg.vertex(xCutoff, canvasHeight - margin);
+  
+  // Kurve vom Cut-off bis rechts
+  for (let m = cutoffPunkt; m <= maxMasse + 4; m += 0.5) {
+    let x = map(m, minMasse, maxMasse, margin, canvasWidth - margin);
+    let density = normalDensity(m, mittelwert, standardabweichung);
+    
+    let skalierteAnzahl;
+    if (fixedCurveHeight) {
+      skalierteAnzahl = density / normalDensity(mittelwert, mittelwert, standardabweichung) * maxHoehe;
+    } else {
+      skalierteAnzahl = anzahlPackungen * intervallGroesse * density;
+      skalierteAnzahl = Math.min(skalierteAnzahl, maxHoehe);
+    }
+    
+    let y = map(skalierteAnzahl, 0, maxHoehe, canvasHeight - margin, margin);
+    pg.vertex(x, y);
+  }
+  
+  // Runter zu rechts auf der X-Achse - deutlich weiter rechts als maxMasse
+  let xEnd = map(maxMasse + 4, minMasse, maxMasse, margin, canvasWidth - margin);
+  pg.vertex(xEnd, canvasHeight - margin);
+  
+  pg.endShape(CLOSE);
+
+  // Trennlinie am Cut-off
+  pg.stroke(100, 100, 100, 200);
+  pg.strokeWeight(2);
+  pg.drawingContext.setLineDash([8, 4]);
+  pg.line(xCutoff, canvasHeight - margin, xCutoff, margin);
+  pg.drawingContext.setLineDash([]);
+
+  // Beschriftung am Cut-off
+  pg.noStroke();
+  pg.fill(80);
+  pg.textSize(11);
+  pg.textAlign(CENTER, TOP);
+  pg.text(nf(cutoffPunkt, 1, 1) + 'g', xCutoff, canvasHeight - margin + 22);
+
+  // Berechne experimentelle Prozente (aus den Stichproben)
+  let anzahlLinks = 0;
+  let anzahlRechts = 0;
+  for (let gewicht of packungen) {
+    if (gewicht < cutoffPunkt) {
+      anzahlLinks++;
+    } else {
+      anzahlRechts++;
+    }
+  }
+  let prozentLinks = packungen.length > 0 ? (anzahlLinks / packungen.length * 100) : 0;
+  let prozentRechts = packungen.length > 0 ? (anzahlRechts / packungen.length * 100) : 0;
+
+  // Berechne theoretische Prozente (aus der Normalverteilung)
+  // P(X < cutoff) = Φ((cutoff - μ) / σ)
+  let zWert = (cutoffPunkt - mittelwert) / standardabweichung;
+  let theoretischLinks = (0.5 * (1 + erf(zWert / Math.sqrt(2)))) * 100;
+  let theoretischRechts = 100 - theoretischLinks;
+
+  // Aktualisiere die Anzeige im Control Panel
+  let flaechenElement = document.getElementById('flaechenAnzeige');
+  if (flaechenElement) {
+    flaechenElement.innerHTML =
+      `<div style="color: rgb(200, 50, 50); font-weight: bold; margin-bottom: 5px;">◀ Links (< ${nf(cutoffPunkt, 1, 1)}g):</div>` +
+      `Theoretisch: <b>${nf(theoretischLinks, 1, 1)}%</b><br>` +
+      `Experimentell: <b>${nf(prozentLinks, 1, 1)}%</b> (${anzahlLinks}/${packungen.length})<br><br>` +
+      `<div style="color: rgb(50, 100, 200); font-weight: bold; margin-bottom: 5px;">▶ Rechts (≥ ${nf(cutoffPunkt, 1, 1)}g):</div>` +
+      `Theoretisch: <b>${nf(theoretischRechts, 1, 1)}%</b><br>` +
+      `Experimentell: <b>${nf(prozentRechts, 1, 1)}%</b> (${anzahlRechts}/${packungen.length})`;
+  }
+
+  pg.pop();
+}
+
+/**
  * Fehlerfunktion (erf) für die Normalverteilung
  * Approximation nach Abramowitz and Stegun
  */
@@ -904,9 +1131,15 @@ function drawPackungenMode(pg, histogram) {
     for (let i = 0; i < anzahl && i < binPackungen.length; i++) {
       let yPos = canvasHeight - margin - (i + 1) * packungHoehe;
       
-      pg.fill(color1);
-      pg.stroke(50);
-      pg.strokeWeight(1);
+      if (showFlaechenaufteilung) {
+        pg.noFill();
+        pg.stroke(color1[0], color1[1], color1[2], 255);
+        pg.strokeWeight(2);
+      } else {
+        pg.fill(color1);
+        pg.stroke(50);
+        pg.strokeWeight(1);
+      }
       pg.rect(x - packungBreite / 2, yPos, packungBreite, packungHoehe, 2);
       
       // Gewicht auf Packung schreiben - verwende das tatsächliche Gewicht aus dem Bin
@@ -944,8 +1177,14 @@ function drawPunkteMode(pg, histogram) {
       // Verwende die gleiche Skalierung wie bei Säulen für glatten Übergang
       let yPos = map(i + 0.5, 0, maxHoehe, canvasHeight - margin, margin);
       
-      pg.fill(color2);
-      pg.noStroke();
+      if (showFlaechenaufteilung) {
+        pg.noFill();
+        pg.stroke(color2[0], color2[1], color2[2], 255);
+        pg.strokeWeight(1.5);
+      } else {
+        pg.fill(color2);
+        pg.noStroke();
+      }
       pg.circle(x, yPos, punktGroesse);
     }
   }
@@ -973,9 +1212,15 @@ function drawLinienMode(pg, histogram) {
     // Höhe der Säule basierend auf maxHoehe
     let barHeight = map(anzahl, 0, maxHoehe, 0, verfuegbareHoehe);
     
-    pg.fill(color2);
-    pg.stroke(200, 100, 50);  // Feiner oranger Rand
-    pg.strokeWeight(0.5);
+    if (showFlaechenaufteilung) {
+      pg.noFill();
+      pg.stroke(color1[0], color1[1], color1[2], 255);
+      pg.strokeWeight(2);
+    } else {
+      pg.fill(color2);
+      pg.stroke(200, 100, 50);  // Feiner oranger Rand
+      pg.strokeWeight(0.5);
+    }
     pg.rect(x - saulenBreite / 2, canvasHeight - margin - barHeight, saulenBreite, barHeight);
   }
   
