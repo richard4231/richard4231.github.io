@@ -70,6 +70,11 @@
         "title": "WebGPU Demo",
         "url": "https://richard4231.github.io/25-12-spheres-n-lights-2/",
         "img": "screenshots/25-12-spheres-n-lights-2.png"
+      },
+      {
+        "title": "Kugelvolumen und Pyramiden",
+        "url": "https://richard4231.github.io/26-01-KugelvolumenPyramiden/",
+        "img": "screenshots/26-01-KugelvolumenPyramiden.png"
       }
     ]
   },

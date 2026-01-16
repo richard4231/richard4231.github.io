@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kugelvolumenannäherung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        canvas {
+            flex: 1;
+            display: block;
+        }
+        #controls {
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        input[type="range"] {
+            width: 200px;
+            accent-color: #4ecdc4;
+        }
+        .stats {
+            font-size: 14px;
+            background: rgba(78, 205, 196, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        #error {
+            color: #ff6b6b;
+            padding: 40px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4ecdc4;
+        }
+        input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #4ecdc4;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        select {
+            width: 200px;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            color: #eee;
+            font-size: 14px;
+        }
+        select option {
+            background: #1a1a2e;
+            color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="controls">
+            <div class="control-group">
+                <label>Polyeder-Basis</label>
+                <div style="display: flex; gap: 15px; margin-top: 5px;">
+                    <label class="radio-label">
+                        <input type="radio" name="polyhedron" value="dodecahedron" checked>
+                        Dodekaeder (12 Flächen)
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="polyhedron" value="icosahedron">
+                        Ikosaeder (20 Flächen)
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Unterteilungen: <span id="subdivValue">0</span></label>
+                <input type="range" id="subdivisions" min="0" max="7" value="0" step="1">
+            </div>
+
+            <div class="control-group">
+                <label>Farbschema</label>
+                <select id="colorScheme">
+                    <option value="default">Standard Blau</option>
+                    <option value="rainbow">Regenbogen</option>
+                    <option value="thermal">Wärmebild</option>
+                    <option value="sunset">Sonnenuntergang</option>
+                    <option value="ocean">Ozean</option>
+                    <option value="forest">Wald</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Pyramiden-Animation: <span id="pyramidValue">0% (Kugel)</span></label>
+                <input type="range" id="pyramidHeight" min="0" max="100" value="0" step="1">
+                <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
+                    0%: Kugel → 15%: Pyramiden → 35%: Expansion → 65%: Bogen → 85%: Rotation → 100%: Landung
+                </div>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="showSphere" checked>
+                <label for="showSphere">Referenzkugel anzeigen</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="showPlate">
+                <label for="showPlate">Basis-Ebene anzeigen</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="autoRotate">
+                <label for="autoRotate">Auto-Rotation</label>
+            </div>
+            <div class="stats" id="stats">
+                Dreiecke: 36 | Kanten: 20 | Unterteilungen: 0
+            </div>
+        </div>
+    </div>
+    <div id="error" style="display:none;"></div>
+
+    <script type="module">
+        // ============================================
+        // MATHEMATIK-UTILITIES
+        // ============================================
+        
+        const vec3 = {
+            create: (x = 0, y = 0, z = 0) => [x, y, z],
+            normalize: (v) => {
+                const len = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+                return len > 0 ? [v[0]/len, v[1]/len, v[2]/len] : [0, 0, 0];
+            },
+            add: (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]],
+            sub: (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]],
+            scale: (v, s) => [v[0]*s, v[1]*s, v[2]*s],
+            cross: (a, b) => [
+                a[1]*b[2] - a[2]*b[1],
+                a[2]*b[0] - a[0]*b[2],
+                a[0]*b[1] - a[1]*b[0]
+            ],
+            dot: (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+        };
+
+        // 4x4 Matrix-Utilities
+        const mat4 = {
+            identity: () => [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            ],
+            perspective: (fov, aspect, near, far) => {
+                // WebGPU NDC: Z von 0 (near) bis 1 (far), linkshändiges System
+                const f = 1.0 / Math.tan(fov / 2);
+                return [
+                    f / aspect, 0, 0, 0,
+                    0, f, 0, 0,
+                    0, 0, far / (near - far), -1,
+                    0, 0, near * far / (near - far), 0
+                ];
+            },
+            lookAt: (eye, center, up) => {
+                const z = vec3.normalize(vec3.sub(eye, center));
+                const x = vec3.normalize(vec3.cross(up, z));
+                const y = vec3.cross(z, x);
+                return [
+                    x[0], y[0], z[0], 0,
+                    x[1], y[1], z[1], 0,
+                    x[2], y[2], z[2], 0,
+                    -vec3.dot(x, eye), -vec3.dot(y, eye), -vec3.dot(z, eye), 1
+                ];
+            },
+            rotateX: (m, angle) => {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                // Column-major: Spalte 1 = m[4..7], Spalte 2 = m[8..11]
+                const m10 = m[4], m11 = m[5], m12 = m[6], m13 = m[7];
+                const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
+                return [
+                    m[0], m[1], m[2], m[3],
+                    m10 * c + m20 * s, m11 * c + m21 * s, m12 * c + m22 * s, m13 * c + m23 * s,
+                    m20 * c - m10 * s, m21 * c - m11 * s, m22 * c - m12 * s, m23 * c - m13 * s,
+                    m[12], m[13], m[14], m[15]
+                ];
+            },
+            rotateY: (m, angle) => {
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                // Column-major: Spalte 0 = m[0..3], Spalte 2 = m[8..11]
+                const m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3];
+                const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
+                return [
+                    m00 * c - m20 * s, m01 * c - m21 * s, m02 * c - m22 * s, m03 * c - m23 * s,
+                    m[4], m[5], m[6], m[7],
+                    m00 * s + m20 * c, m01 * s + m21 * c, m02 * s + m22 * c, m03 * s + m23 * c,
+                    m[12], m[13], m[14], m[15]
+                ];
+            },
+            multiply: (a, b) => {
+                const out = new Array(16);
+                // Column-major Multiplikation für WebGPU
+                for (let col = 0; col < 4; col++) {
+                    for (let row = 0; row < 4; row++) {
+                        out[col * 4 + row] =
+                            a[0 * 4 + row] * b[col * 4 + 0] +
+                            a[1 * 4 + row] * b[col * 4 + 1] +
+                            a[2 * 4 + row] * b[col * 4 + 2] +
+                            a[3 * 4 + row] * b[col * 4 + 3];
+                    }
+                }
+                return out;
+            }
+        };
+
+        // ============================================
+        // POLYEDER-GENERIERUNG
+        // ============================================
+
+        function createIcosahedron() {
+            const t = (1 + Math.sqrt(5)) / 2; // Goldener Schnitt
+
+            // 12 Vertices des Ikosaeders, normalisiert auf Einheitskugel
+            const vertices = [
+                [-1,  t,  0], [ 1,  t,  0], [-1, -t,  0], [ 1, -t,  0],
+                [ 0, -1,  t], [ 0,  1,  t], [ 0, -1, -t], [ 0,  1, -t],
+                [ t,  0, -1], [ t,  0,  1], [-t,  0, -1], [-t,  0,  1]
+            ].map(v => vec3.normalize(v));
+
+            // 20 Dreiecksflächen (Indizes, CCW für WebGPU)
+            const faces = [
+                [0, 5, 11], [0, 1, 5], [0, 7, 1], [0, 10, 7], [0, 11, 10],
+                [1, 9, 5], [5, 4, 11], [11, 2, 10], [10, 6, 7], [7, 8, 1],
+                [3, 4, 9], [3, 2, 4], [3, 6, 2], [3, 8, 6], [3, 9, 8],
+                [4, 5, 9], [2, 11, 4], [6, 10, 2], [8, 7, 6], [9, 1, 8]
+            ];
+
+            return { vertices, faces };
+        }
+
+        function createDodecahedron() {
+            const phi = (1 + Math.sqrt(5)) / 2; // Goldener Schnitt ≈ 1.618
+            const invPhi = 1 / phi;              // 1/φ ≈ 0.618
+
+            // 20 Vertices des Dodekaeders
+            const vertices = [
+                // 8 Würfel-Vertices (±1, ±1, ±1)
+                [ 1,  1,  1], [ 1,  1, -1], [ 1, -1,  1], [ 1, -1, -1],
+                [-1,  1,  1], [-1,  1, -1], [-1, -1,  1], [-1, -1, -1],
+                // 12 Rechteck-Vertices
+                [0,  phi,  invPhi], [0,  phi, -invPhi], [0, -phi,  invPhi], [0, -phi, -invPhi],
+                [ invPhi, 0,  phi], [ invPhi, 0, -phi], [-invPhi, 0,  phi], [-invPhi, 0, -phi],
+                [ phi,  invPhi, 0], [ phi, -invPhi, 0], [-phi,  invPhi, 0], [-phi, -invPhi, 0]
+            ].map(v => vec3.normalize(v));
+
+            // 12 Pentagon-Flächen (5-Ecke)
+            const pentagons = [
+                [0, 16, 17, 2, 12],   // Rechts vorne
+                [0, 12, 14, 4, 8],    // Oben vorne
+                [0, 8, 9, 1, 16],     // Rechts oben
+                [1, 9, 5, 15, 13],    // Rechts hinten
+                [1, 13, 3, 17, 16],   // Rechts unten
+                [2, 17, 3, 11, 10],   // Unten vorne
+                [2, 10, 6, 14, 12],   // Links vorne
+                [3, 13, 15, 7, 11],   // Unten hinten
+                [4, 14, 6, 19, 18],   // Links oben
+                [5, 9, 8, 4, 18],     // Oben hinten
+                [6, 10, 11, 7, 19],   // Unten links
+                [7, 15, 5, 18, 19]    // Links hinten
+            ];
+
+            // Pentagone NICHT in Dreiecke umwandeln - als Pentagon-Array zurückgeben
+            return { vertices, pentagons };
+        }
+
+        // Pentagon-Subdivision: Jedes Pentagon → 5 Dreiecke (vom Pentagon-Schwerpunkt)
+        function subdividePentagons(vertices, pentagons) {
+            const newVertices = [...vertices];
+            const newFaces = [];
+
+            for (const pentagon of pentagons) {
+                // Pentagon-Schwerpunkt berechnen
+                let cx = 0, cy = 0, cz = 0;
+                for (const idx of pentagon) {
+                    const v = vertices[idx];
+                    cx += v[0];
+                    cy += v[1];
+                    cz += v[2];
+                }
+                const centroid = vec3.normalize([cx / 5, cy / 5, cz / 5]);
+
+                const centroidIdx = newVertices.length;
+                newVertices.push(centroid);
+
+                // 5 Dreiecke vom Schwerpunkt zu den Pentagon-Kanten (CCW für WebGPU)
+                for (let i = 0; i < 5; i++) {
+                    const i0 = pentagon[i];
+                    const i1 = pentagon[(i + 1) % 5];
+                    newFaces.push([i0, i1, centroidIdx]);  // CCW: Basis-Kante → Zentrum
+                }
+            }
+
+            return { vertices: newVertices, faces: newFaces };
+        }
+
+        // Midpoint-Subdivision: Jedes Dreieck → 4 Dreiecke (Kantenhalbierung)
+        function subdivideMidpoint(vertices, faces) {
+            const newVertices = [...vertices];
+            const newFaces = [];
+
+            // Map für Kanten-Mittelpunkte (vermeidet Duplikate)
+            const midpointCache = new Map();
+
+            function getMidpointIndex(i0, i1) {
+                // Kanonische Kanten-ID (kleinerer Index zuerst)
+                const key = i0 < i1 ? `${i0},${i1}` : `${i1},${i0}`;
+
+                if (midpointCache.has(key)) {
+                    return midpointCache.get(key);
+                }
+
+                // Mittelpunkt berechnen und auf Kugel projizieren
+                const v0 = vertices[i0];
+                const v1 = vertices[i1];
+                const midpoint = vec3.normalize([
+                    (v0[0] + v1[0]) / 2,
+                    (v0[1] + v1[1]) / 2,
+                    (v0[2] + v1[2]) / 2
+                ]);
+
+                const idx = newVertices.length;
+                newVertices.push(midpoint);
+                midpointCache.set(key, idx);
+                return idx;
+            }
+
+            for (const [i0, i1, i2] of faces) {
+                // Mittelpunkte der 3 Kanten
+                const m01 = getMidpointIndex(i0, i1);
+                const m12 = getMidpointIndex(i1, i2);
+                const m20 = getMidpointIndex(i2, i0);
+
+                // 4 neue Dreiecke mit konsistenter CCW-Orientierung
+                newFaces.push([i0, m01, m20]);   // Ecke bei v0
+                newFaces.push([i1, m12, m01]);   // Ecke bei v1  
+                newFaces.push([i2, m20, m12]);   // Ecke bei v2
+                newFaces.push([m01, m12, m20]);  // Mittleres Dreieck (CCW)
+            }
+
+            return { vertices: newVertices, faces: newFaces };
+        }
+
+        function generateIcosphere(subdivisions) {
+            let mesh = createIcosahedron();
+
+            for (let i = 0; i < subdivisions; i++) {
+                mesh = subdivideMidpoint(mesh.vertices, mesh.faces);
+            }
+
+            return mesh;
+        }
+
+        function generatePolyhedronSphere(type, subdivisions) {
+            if (type === 'icosahedron') {
+                return generateIcosphere(subdivisions);
+            } else {
+                return generateDodecasphere(subdivisions);
+            }
+        }
+
+        function generateDodecasphere(subdivisions) {
+            // Progression:
+            // Subdiv 0: 20 V, 36 F (Fan-Triangulation der 12 Pentagone)
+            // Subdiv 1: 32 V, 60 F (Pentagon-Schwerpunkte: 20 + 12 = 32 vertices, 12×5 = 60 faces)
+            // Subdiv 2: 122 V, 240 F (Midpoint: +90 Kantenmittelpunkte, 60×4 = 240 faces)
+            // Subdiv 3: 482 V, 960 F (Midpoint: +360 Kantenmittelpunkte, 240×4 = 960 faces)
+
+            const dodeca = createDodecahedron();
+
+            if (subdivisions === 0) {
+                // Keine Subdivision: Pentagone direkt in Dreiecke umwandeln
+                // (einfache Fan-Triangulation vom ersten Vertex, CCW für WebGPU)
+                const faces = [];
+                for (const pentagon of dodeca.pentagons) {
+                    for (let i = 1; i < 4; i++) {
+                        faces.push([pentagon[0], pentagon[i], pentagon[i + 1]]);  // CCW für WebGPU
+                    }
+                }
+                return { vertices: dodeca.vertices, faces };
+            }
+
+            // Erste Subdivision: Pentagon-Schwerpunkte → 5 Dreiecke pro Pentagon
+            let mesh = subdividePentagons(dodeca.vertices, dodeca.pentagons);
+
+            // Weitere Unterteilungen: Klassische Midpoint-Subdivision (Kantenhalbierung)
+            for (let i = 1; i < subdivisions; i++) {
+                mesh = subdivideMidpoint(mesh.vertices, mesh.faces);
+            }
+
+            return mesh;
+        }
+
+        // Mesh zu Vertex-Buffer konvertieren (Position + Normal)
+        function meshToVertexData(mesh) {
+            const data = [];
+
+            for (const [i0, i1, i2] of mesh.faces) {
+                const v0 = mesh.vertices[i0];
+                const v1 = mesh.vertices[i1];
+                const v2 = mesh.vertices[i2];
+
+                // Flächennormale berechnen
+                const edge1 = vec3.sub(v1, v0);
+                const edge2 = vec3.sub(v2, v0);
+                const normal = vec3.normalize(vec3.cross(edge1, edge2));
+
+                // 3 Vertices pro Dreieck mit gleicher Normale (flat shading)
+                for (const v of [v0, v1, v2]) {
+                    data.push(v[0], v[1], v[2]);       // position
+                    data.push(normal[0], normal[1], normal[2]); // normal
+                }
+            }
+
+            return new Float32Array(data);
+        }
+
+        // Farbschemen definieren
+        const COLOR_SCHEMES = {
+            default: () => [0.7, 0.85, 0.9],
+            rainbow: (index, total) => {
+                const hue = (index / total) * 360;
+                return hsvToRgb(hue, 1.0, 1.0);
+            },
+            thermal: (index, total) => {
+                const t = index / total;
+                if (t < 0.25) return [0, 4*t, 1];
+                if (t < 0.5) return [0, 1, 1-4*(t-0.25)];
+                if (t < 0.75) return [4*(t-0.5), 1, 0];
+                return [1, 1-4*(t-0.75), 0];
+            },
+            sunset: (index, total) => {
+                const t = index / total;
+                const r = 1.0 - 0.3 * t;
+                const g = 0.5 + 0.3 * Math.sin(t * Math.PI);
+                const b = 0.2 + 0.4 * t;
+                return [r, g, b];
+            },
+            ocean: (index, total) => {
+                const t = index / total;
+                return [0.1 + 0.3*t, 0.4 + 0.4*t, 0.8 + 0.2*t];
+            },
+            forest: (index, total) => {
+                const t = index / total;
+                return [0.1 + 0.4*t, 0.5 + 0.4*t, 0.1 + 0.3*t];
+            }
+        };
+
+        function hsvToRgb(h, s, v) {
+            const c = v * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+
+            if (h < 60) [r, g, b] = [c, x, 0];
+            else if (h < 120) [r, g, b] = [x, c, 0];
+            else if (h < 180) [r, g, b] = [0, c, x];
+            else if (h < 240) [r, g, b] = [0, x, c];
+            else if (h < 300) [r, g, b] = [x, 0, c];
+            else [r, g, b] = [c, 0, x];
+
+            return [r + m, g + m, b + m];
+        }
+
+        // Mesh mit Farben zu Vertex-Buffer konvertieren (Position + Normal + Color)
+        function meshToVertexDataWithColors(mesh, colorScheme) {
+            const data = [];
+            const colorFn = COLOR_SCHEMES[colorScheme];
+
+            for (let faceIndex = 0; faceIndex < mesh.faces.length; faceIndex++) {
+                const [i0, i1, i2] = mesh.faces[faceIndex];
+                const v0 = mesh.vertices[i0];
+                const v1 = mesh.vertices[i1];
+                const v2 = mesh.vertices[i2];
+
+                // Flächennormale berechnen (CCW-orientiert)
+                const edge1 = vec3.sub(v1, v0);
+                const edge2 = vec3.sub(v2, v0);
+                let normal = vec3.cross(edge1, edge2);
+                
+                // Sicherstellen, dass die Normale nach außen zeigt
+                const center = [(v0[0] + v1[0] + v2[0]) / 3, (v0[1] + v1[1] + v2[1]) / 3, (v0[2] + v1[2] + v2[2]) / 3];
+                const toCenter = vec3.normalize(center);
+                if (vec3.dot(normal, toCenter) > 0) {
+                    normal = vec3.scale(normal, -1);
+                }
+                normal = vec3.normalize(normal);
+
+                // Farbe für diese Fläche bestimmen
+                const color = colorFn(faceIndex, mesh.faces.length);
+
+                // 3 Vertices pro Dreieck mit gleicher Normale und Farbe
+                for (const v of [v0, v1, v2]) {
+                    data.push(v[0], v[1], v[2]);           // position
+                    data.push(normal[0], normal[1], normal[2]); // normal
+                    data.push(color[0], color[1], color[2]);    // color
+                }
+            }
+
+            return new Float32Array(data);
+        }
+
+        // ============================================
+        // PYRAMIDEN-ANIMATION (NEU)
+        // ============================================
+        
+        // Berechne Gitter-Positionen für alle Pyramiden
+        function calculateGridPositions(pyramidCount, baseY = -2.8) {
+            const positions = [];
+            
+            // Spiralmuster für natürlichere Anordnung
+            const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~137.5°
+            const spacing = 0.35; // Abstand zwischen Pyramiden
+            
+            for (let i = 0; i < pyramidCount; i++) {
+                const radius = spacing * Math.sqrt(i + 0.5);
+                const angle = i * goldenAngle;
+                positions.push([
+                    radius * Math.cos(angle),
+                    baseY,
+                    radius * Math.sin(angle)
+                ]);
+            }
+            return positions;
+        }
+
+        // Easing-Funktion für sanfte Animationen
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        // Hauptfunktion für Pyramiden-Animation
+        function meshToPyramidData(mesh, colorScheme, animationProgress = 0.0, showPlate = false) {
+            const data = [];
+            const colorFn = COLOR_SCHEMES[colorScheme];
+            const pyramidCount = mesh.faces.length;
+            
+            // Kugelzentrum (Ursprung)
+            const sphereCenter = [0, 0, 0];
+            const sphereRadius = 1.0;
+            
+            // Gitter-Positionen vorberechnen
+            const gridPositions = calculateGridPositions(pyramidCount);
+            
+            // Animation in 5 Phasen (0.0 - 1.0):
+            // Phase 1 (0.00-0.15): Pyramiden werden sichtbar (Spitze im Zentrum)
+            // Phase 2 (0.15-0.35): Radiale Expansion (vom Zentrum weg)
+            // Phase 3 (0.35-0.65): Bogen-Bewegung zur Landeposition
+            // Phase 4 (0.65-0.85): Rotation (Spitze dreht nach oben)
+            // Phase 5 (0.85-1.00): Feinpositionierung auf Gitter
+
+            for (let faceIndex = 0; faceIndex < pyramidCount; faceIndex++) {
+                const [i0, i1, i2] = mesh.faces[faceIndex];
+                const v0 = mesh.vertices[i0];
+                const v1 = mesh.vertices[i1];
+                const v2 = mesh.vertices[i2];
+
+                // Farbe für diese Pyramide
+                const color = colorFn(faceIndex, pyramidCount);
+                const sideColor = [color[0] * 0.75, color[1] * 0.75, color[2] * 0.75];
+
+                // Schwerpunkt der Grundfläche (auf Kugeloberfläche)
+                const baseCenter = [
+                    (v0[0] + v1[0] + v2[0]) / 3,
+                    (v0[1] + v1[1] + v2[1]) / 3,
+                    (v0[2] + v1[2] + v2[2]) / 3
+                ];
+                
+                // Richtung vom Zentrum zur Grundfläche (Normalenrichtung)
+                const outwardDir = vec3.normalize(baseCenter);
+                
+                // Pyramidenspitze = Kugelzentrum
+                const apex = [...sphereCenter];
+                
+                // Zielposition auf dem Gitter
+                const targetPos = gridPositions[faceIndex];
+                
+                // Berechne Pyramidengröße für spätere Skalierung
+                const pyramidHeight = sphereRadius; // Höhe = Radius
+
+                // ======= ANIMATION BERECHNEN =======
+                
+                let currentApex = [...apex];
+                let currentV0 = [...v0];
+                let currentV1 = [...v1];
+                let currentV2 = [...v2];
+                let showPyramidSides = false;
+                let showBase = true;
+                
+                if (animationProgress > 0) {
+                    // Phase 1 (0.00-0.15): Pyramiden-Seiten erscheinen
+                    if (animationProgress <= 0.15) {
+                        const t = animationProgress / 0.15;
+                        showPyramidSides = t > 0.1; // Seiten erscheinen schnell
+                        // Pyramide ist noch in Originalposition
+                    }
+                    // Phase 2 (0.15-0.35): Radiale Expansion
+                    else if (animationProgress <= 0.35) {
+                        showPyramidSides = true;
+                        const t = easeOutCubic((animationProgress - 0.15) / 0.2);
+                        const expansionDist = t * 0.8; // Expansion um 0.8 Einheiten
+                        
+                        // Alle Vertices nach außen verschieben
+                        const offset = vec3.scale(outwardDir, expansionDist);
+                        currentApex = vec3.add(apex, offset);
+                        currentV0 = vec3.add(v0, offset);
+                        currentV1 = vec3.add(v1, offset);
+                        currentV2 = vec3.add(v2, offset);
+                    }
+                    // Phase 3 (0.35-0.65): Bogen-Bewegung zur Zielposition + Beginn Ausrichtung
+                    else if (animationProgress <= 0.65) {
+                        showPyramidSides = true;
+                        const t = easeInOutCubic((animationProgress - 0.35) / 0.3);
+                        
+                        // Startposition (nach Expansion)
+                        const expansionOffset = vec3.scale(outwardDir, 0.8);
+                        const startApex = vec3.add(apex, expansionOffset);
+                        const startV0 = vec3.add(v0, expansionOffset);
+                        const startV1 = vec3.add(v1, expansionOffset);
+                        const startV2 = vec3.add(v2, expansionOffset);
+                        const startCenter = vec3.add(baseCenter, expansionOffset);
+                        
+                        // Endposition (über dem Gitterpunkt)
+                        const endCenter = [targetPos[0], targetPos[1] + pyramidHeight + 0.5, targetPos[2]];
+                        
+                        // Bogen-Interpolation mit Kontrollpunkt oben
+                        const controlHeight = Math.max(startCenter[1], endCenter[1]) + 1.5;
+                        const controlPoint = [
+                            (startCenter[0] + endCenter[0]) / 2,
+                            controlHeight,
+                            (startCenter[2] + endCenter[2]) / 2
+                        ];
+                        
+                        // Quadratische Bezier-Interpolation für den Schwerpunkt
+                        const currentCenter = quadraticBezier(startCenter, controlPoint, endCenter, t);
+                        
+                        // Interpoliere zwischen ursprünglicher Ausrichtung und Ziel-Ausrichtung
+                        // Ziel: Spitze oben (Y+), Grundfläche unten (Y-)
+                        const targetApexLocal = [0, pyramidHeight, 0]; // Spitze nach OBEN relativ zum Basiszentrum
+                        
+                        // Start-Geometrie (lokale Koordinaten)
+                        const startApexLocal = vec3.sub(apex, baseCenter);
+                        const startV0Local = vec3.sub(v0, baseCenter);
+                        const startV1Local = vec3.sub(v1, baseCenter);
+                        const startV2Local = vec3.sub(v2, baseCenter);
+                        
+                        // Berechne Rotation von Start- zu Ziel-Ausrichtung
+                        const interpolatedApex = lerpVec3(startApexLocal, targetApexLocal, t);
+                        
+                        // Für die Basis-Vertices: Rotiere zur horizontalen Ebene
+                        const rotatedV0 = rotateToHorizontal(startV0Local, outwardDir, t);
+                        const rotatedV1 = rotateToHorizontal(startV1Local, outwardDir, t);
+                        const rotatedV2 = rotateToHorizontal(startV2Local, outwardDir, t);
+                        
+                        currentApex = vec3.add(currentCenter, interpolatedApex);
+                        currentV0 = vec3.add(currentCenter, rotatedV0);
+                        currentV1 = vec3.add(currentCenter, rotatedV1);
+                        currentV2 = vec3.add(currentCenter, rotatedV2);
+                    }
+                    // Phase 4 (0.65-0.85): Feinausrichtung - Pyramiden bewegen sich zum Gitter
+                    else if (animationProgress <= 0.85) {
+                        showPyramidSides = true;
+                        const t = easeInOutCubic((animationProgress - 0.65) / 0.2);
+                        
+                        // Behalte die originale rotierte Geometrie bei
+                        const rotatedApexLocal = [0, pyramidHeight, 0]; // Spitze nach oben
+                        const rotatedV0Local = rotateToHorizontal(vec3.sub(v0, baseCenter), outwardDir, 1.0);
+                        const rotatedV1Local = rotateToHorizontal(vec3.sub(v1, baseCenter), outwardDir, 1.0);
+                        const rotatedV2Local = rotateToHorizontal(vec3.sub(v2, baseCenter), outwardDir, 1.0);
+                        
+                        // Startposition (Ende von Phase 3: über dem Gitterpunkt schwebend)
+                        const startCenter = [targetPos[0], targetPos[1] + pyramidHeight + 0.5, targetPos[2]];
+                        
+                        // Zielposition: dichter beieinander auf dem Gitter
+                        // Skaliere die Gitterpositionen, damit Pyramiden sich annähern
+                        const gridScale = 0.6; // Kompakteres Gitter
+                        const endCenter = [
+                            targetPos[0] * gridScale,
+                            targetPos[1] + pyramidHeight,
+                            targetPos[2] * gridScale
+                        ];
+                        
+                        // Interpoliere Position
+                        const currentCenter = lerpVec3(startCenter, endCenter, t);
+                        
+                        currentApex = vec3.add(currentCenter, rotatedApexLocal);
+                        currentV0 = vec3.add(currentCenter, rotatedV0Local);
+                        currentV1 = vec3.add(currentCenter, rotatedV1Local);
+                        currentV2 = vec3.add(currentCenter, rotatedV2Local);
+                    }
+                    // Phase 5 (0.85-1.00): Finale Landung - Pyramiden berühren sich
+                    else {
+                        showPyramidSides = true;
+                        showBase = true;
+                        const t = easeOutCubic((animationProgress - 0.85) / 0.15);
+                        
+                        // Behalte die originale rotierte Geometrie bei
+                        const finalApexLocal = [0, pyramidHeight, 0];
+                        const finalV0Local = rotateToHorizontal(vec3.sub(v0, baseCenter), outwardDir, 1.0);
+                        const finalV1Local = rotateToHorizontal(vec3.sub(v1, baseCenter), outwardDir, 1.0);
+                        const finalV2Local = rotateToHorizontal(vec3.sub(v2, baseCenter), outwardDir, 1.0);
+                        
+                        // Von Phase 4 Ende zur finalen Position
+                        const gridScale = 0.6;
+                        const startCenter = [
+                            targetPos[0] * gridScale,
+                            targetPos[1] + pyramidHeight,
+                            targetPos[2] * gridScale
+                        ];
+                        
+                        // Finale Position: noch kompakter (Pyramiden berühren sich)
+                        const finalGridScale = 0.35; // Sehr kompakt
+                        const endCenter = [
+                            targetPos[0] * finalGridScale,
+                            targetPos[1] + pyramidHeight,
+                            targetPos[2] * finalGridScale
+                        ];
+                        
+                        // Interpoliere zur finalen Position
+                        const currentCenter = lerpVec3(startCenter, endCenter, t);
+                        
+                        currentApex = vec3.add(currentCenter, finalApexLocal);
+                        currentV0 = vec3.add(currentCenter, finalV0Local);
+                        currentV1 = vec3.add(currentCenter, finalV1Local);
+                        currentV2 = vec3.add(currentCenter, finalV2Local);
+                    }
+                }
+
+                // ======= GEOMETRIE HINZUFÜGEN =======
+                
+                // Basis-Dreieck (Grundfläche der Pyramide)
+                if (showBase) {
+                    addTriangleToData(data, currentV0, currentV1, currentV2, color);
+                }
+                
+                // Pyramiden-Seitenflächen
+                if (showPyramidSides) {
+                    addTriangleToData(data, currentV0, currentV1, currentApex, sideColor);
+                    addTriangleToData(data, currentV1, currentV2, currentApex, sideColor);
+                    addTriangleToData(data, currentV2, currentV0, currentApex, sideColor);
+                }
+            }
+
+            // Basis-Platte hinzufügen (wenn aktiviert und ab Phase 3)
+            if (showPlate && animationProgress > 0.35) {
+                const plateOpacity = Math.min(1, (animationProgress - 0.35) / 0.3);
+                addBasePlate(data, animationProgress, pyramidCount);
+            }
+
+            return new Float32Array(data);
+        }
+
+        // Quadratische Bezier-Interpolation
+        function quadraticBezier(p0, p1, p2, t) {
+            const mt = 1 - t;
+            return [
+                mt * mt * p0[0] + 2 * mt * t * p1[0] + t * t * p2[0],
+                mt * mt * p0[1] + 2 * mt * t * p1[1] + t * t * p2[1],
+                mt * mt * p0[2] + 2 * mt * t * p1[2] + t * t * p2[2]
+            ];
+        }
+
+        // Lineare Interpolation zwischen zwei Vektoren
+        function lerpVec3(a, b, t) {
+            return [
+                a[0] + t * (b[0] - a[0]),
+                a[1] + t * (b[1] - a[1]),
+                a[2] + t * (b[2] - a[2])
+            ];
+        }
+
+        // Rotiere einen Punkt zur horizontalen Ausrichtung
+        // Interpoliert von der ursprünglichen Position zur Position in einer horizontalen Ebene
+        function rotateToHorizontal(localPoint, originalDir, t) {
+            // Berechne die Rotationsmatrix, die originalDir auf +Y mappt
+            // (da die Spitze nach OBEN zeigen soll, Basis unten)
+            
+            const targetDir = [0, 1, 0]; // Zielrichtung: nach OBEN
+            
+            // Berechne Rotationsachse (Kreuzprodukt)
+            let axis = vec3.cross(originalDir, targetDir);
+            const axisLen = Math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);
+            
+            if (axisLen < 0.001) {
+                // Vektoren sind parallel oder antiparallel
+                if (originalDir[1] > 0) {
+                    // Bereits richtig ausgerichtet
+                    return [...localPoint];
+                } else {
+                    // Um 180° drehen - verwende X-Achse als Rotationsachse
+                    axis = [1, 0, 0];
+                }
+            } else {
+                axis = [axis[0]/axisLen, axis[1]/axisLen, axis[2]/axisLen];
+            }
+            
+            // Berechne Rotationswinkel
+            const dot = vec3.dot(originalDir, targetDir);
+            const angle = Math.acos(Math.max(-1, Math.min(1, dot))) * t;
+            
+            // Rodrigues' Rotationsformel
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const dotAP = vec3.dot(axis, localPoint);
+            const cross = vec3.cross(axis, localPoint);
+            
+            return [
+                localPoint[0] * cos + cross[0] * sin + axis[0] * dotAP * (1 - cos),
+                localPoint[1] * cos + cross[1] * sin + axis[1] * dotAP * (1 - cos),
+                localPoint[2] * cos + cross[2] * sin + axis[2] * dotAP * (1 - cos)
+            ];
+        }
+
+        // Rotation eines Punktes um eine Achse durch den Ursprung (für Kompatibilität)
+        function rotateAroundCenter(point, angle, axis) {
+            // Vereinfachte Rotation: Wir rotieren hauptsächlich um eine horizontale Achse
+            // die senkrecht zur radialen Richtung steht
+            
+            // Berechne eine horizontale Achse senkrecht zur Ausrichtung
+            const up = [0, 1, 0];
+            let rotAxis = vec3.cross(axis, up);
+            if (vec3.dot(rotAxis, rotAxis) < 0.001) {
+                rotAxis = [1, 0, 0]; // Fallback wenn axis parallel zu up
+            }
+            rotAxis = vec3.normalize(rotAxis);
+            
+            // Rodrigues' Rotationsformel
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const dot = vec3.dot(rotAxis, point);
+            const cross = vec3.cross(rotAxis, point);
+            
+            return [
+                point[0] * cos + cross[0] * sin + rotAxis[0] * dot * (1 - cos),
+                point[1] * cos + cross[1] * sin + rotAxis[1] * dot * (1 - cos),
+                point[2] * cos + cross[2] * sin + rotAxis[2] * dot * (1 - cos)
+            ];
+        }
+
+        // Alte Funktion entfernen und durch Alias ersetzen
+        const meshToAnimatedPyramidData = meshToPyramidData;
+
+        // Hilfsfunktion: Füge Dreieck zu Vertex-Data hinzu
+        function addTriangleToData(data, v0, v1, v2, color) {
+            const edge1 = vec3.sub(v1, v0);
+            const edge2 = vec3.sub(v2, v0);
+            let normal = vec3.cross(edge1, edge2);
+            
+            // Normale nach außen orientieren (verbesserte Logik)
+            const center = [(v0[0] + v1[0] + v2[0]) / 3, (v0[1] + v1[1] + v2[1]) / 3, (v0[2] + v1[2] + v2[2]) / 3];
+            const len = Math.sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+            if (len > 0.0001) {
+                normal = [normal[0]/len, normal[1]/len, normal[2]/len];
+            }
+
+            for (const v of [v0, v1, v2]) {
+                data.push(v[0], v[1], v[2]);
+                data.push(normal[0], normal[1], normal[2]);
+                data.push(color[0], color[1], color[2]);
+            }
+        }
+
+        // Hilfsfunktion: Füge Basis-Platte hinzu
+        function addBasePlate(data, animationProgress, pyramidCount = 36) {
+            const plateY = -3.0;
+            // Plattengröße basierend auf Pyramidenanzahl
+            const plateSize = Math.max(3, Math.sqrt(pyramidCount) * 0.5);
+            const plateColor = [0.25, 0.25, 0.35];
+            
+            // Einfache rechteckige Platte (2 Dreiecke)
+            const corners = [
+                [-plateSize, plateY, -plateSize],
+                [ plateSize, plateY, -plateSize],
+                [ plateSize, plateY,  plateSize],
+                [-plateSize, plateY,  plateSize]
+            ];
+            
+            const normal = [0, 1, 0]; // Nach oben zeigend
+            
+            // Dreieck 1
+            for (const v of [corners[0], corners[1], corners[2]]) {
+                data.push(v[0], v[1], v[2]);
+                data.push(normal[0], normal[1], normal[2]);
+                data.push(plateColor[0], plateColor[1], plateColor[2]);
+            }
+            
+            // Dreieck 2  
+            for (const v of [corners[0], corners[2], corners[3]]) {
+                data.push(v[0], v[1], v[2]);
+                data.push(normal[0], normal[1], normal[2]);
+                data.push(plateColor[0], plateColor[1], plateColor[2]);
+            }
+        }
+
+        // Referenzkugel als Wireframe-Vertices generieren
+        function createSphereWireframe(segments = 32, rings = 16) {
+            const vertices = [];
+            
+            // Längengrade
+            for (let i = 0; i < segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                for (let j = 0; j <= rings; j++) {
+                    const phi = (j / rings) * Math.PI;
+                    const x = Math.sin(phi) * Math.cos(theta);
+                    const y = Math.cos(phi);
+                    const z = Math.sin(phi) * Math.sin(theta);
+                    vertices.push(x, y, z);
+                    
+                    if (j < rings) {
+                        const phiNext = ((j + 1) / rings) * Math.PI;
+                        vertices.push(
+                            Math.sin(phiNext) * Math.cos(theta),
+                            Math.cos(phiNext),
+                            Math.sin(phiNext) * Math.sin(theta)
+                        );
+                    }
+                }
+            }
+            
+            // Breitengrade
+            for (let j = 1; j < rings; j++) {
+                const phi = (j / rings) * Math.PI;
+                for (let i = 0; i <= segments; i++) {
+                    const theta = (i / segments) * Math.PI * 2;
+                    vertices.push(
+                        Math.sin(phi) * Math.cos(theta),
+                        Math.cos(phi),
+                        Math.sin(phi) * Math.sin(theta)
+                    );
+                    
+                    if (i < segments) {
+                        const thetaNext = ((i + 1) / segments) * Math.PI * 2;
+                        vertices.push(
+                            Math.sin(phi) * Math.cos(thetaNext),
+                            Math.cos(phi),
+                            Math.sin(phi) * Math.sin(thetaNext)
+                        );
+                    }
+                }
+            }
+            
+            return new Float32Array(vertices);
+        }
+
+        // ============================================
+        // WEBGPU SHADER
+        // ============================================
+        
+        const meshShaderCode = `
+            struct Uniforms {
+                mvp: mat4x4f,
+                model: mat4x4f,
+                lightDir: vec3f,
+                viewPos: vec3f,
+            }
+            
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+            
+            struct VertexOutput {
+                @builtin(position) position: vec4f,
+                @location(0) worldPos: vec3f,
+                @location(1) normal: vec3f,
+                @location(2) color: vec3f,
+            }
+            
+            @vertex
+            fn vertexMain(
+                @location(0) position: vec3f,
+                @location(1) normal: vec3f,
+                @location(2) color: vec3f
+            ) -> VertexOutput {
+                var output: VertexOutput;
+                output.position = uniforms.mvp * vec4f(position, 1.0);
+                output.worldPos = (uniforms.model * vec4f(position, 1.0)).xyz;
+                output.normal = normalize((uniforms.model * vec4f(normal, 0.0)).xyz);
+                output.color = color;
+                return output;
+            }
+            
+            @fragment
+            fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+                let normal = normalize(input.normal);
+                let lightDir = normalize(uniforms.lightDir);
+                let viewDir = normalize(uniforms.viewPos - input.worldPos);
+                
+                // Basis-Farbe aus Vertex-Input verwenden
+                let baseColor = input.color;
+                
+                // Ambient (erhöht)
+                let ambient = baseColor * 0.35;
+                
+                // Erste Lichtquelle (vorne oben rechts)
+                let diff1 = max(dot(normal, lightDir), 0.0);
+                let diffuse1 = diff1 * baseColor * 1.0;
+                
+                // Zweite Lichtquelle (hinter der Kamera, oben rechts)
+                let light2Dir = normalize(vec3f(1.0, 1.0, -1.0));
+                let diff2 = max(dot(normal, light2Dir), 0.0);
+                let diffuse2 = diff2 * baseColor * 0.6;
+                
+                // Kombinierte Diffuse-Beleuchtung
+                let diffuse = diffuse1 + diffuse2;
+                
+                // Specular (Blinn-Phong)
+                let halfDir = normalize(lightDir + viewDir);
+                let spec = pow(max(dot(normal, halfDir), 0.0), 64.0);
+                let specular = spec * vec3f(1.0, 1.0, 1.0) * 0.3;
+                
+                // Rim Light für Tiefe
+                let rim = 1.0 - max(dot(viewDir, normal), 0.0);
+                let rimLight = pow(rim, 3.0) * baseColor * 0.2;
+                
+                let color = ambient + diffuse + specular + rimLight;
+                return vec4f(color, 1.0);
+            }
+        `;
+
+        const wireframeShaderCode = `
+            struct Uniforms {
+                mvp: mat4x4f,
+                model: mat4x4f,
+                lightDir: vec3f,
+                viewPos: vec3f,
+            }
+            
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+            
+            @vertex
+            fn vertexMain(@location(0) position: vec3f) -> @builtin(position) vec4f {
+                return uniforms.mvp * vec4f(position * 1.001, 1.0); // Leicht größer
+            }
+            
+            @fragment
+            fn fragmentMain() -> @location(0) vec4f {
+                return vec4f(0.4, 0.8, 0.9, 0.6); // Besser sichtbares Cyan
+            }
+        `;
+
+        // ============================================
+        // HAUPTPROGRAMM
+        // ============================================
+        
+        async function main() {
+            const canvas = document.getElementById('canvas');
+            const errorDiv = document.getElementById('error');
+            
+            // WebGPU initialisieren
+            if (!navigator.gpu) {
+                errorDiv.textContent = 'WebGPU wird von diesem Browser nicht unterstützt. Bitte Chrome 113+ oder Edge 113+ verwenden.';
+                errorDiv.style.display = 'block';
+                document.getElementById('controls').style.display = 'none';
+                return;
+            }
+            
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
+                errorDiv.textContent = 'Kein WebGPU-Adapter gefunden.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const device = await adapter.requestDevice();
+            const context = canvas.getContext('webgpu');
+            const format = navigator.gpu.getPreferredCanvasFormat();
+            
+            context.configure({
+                device,
+                format,
+                alphaMode: 'premultiplied'
+            });
+
+            // Canvas-Größe initial setzen
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.floor(canvas.clientWidth * dpr);
+            canvas.height = Math.floor(canvas.clientHeight * dpr);
+
+            // Depth Texture
+            let depthTexture = device.createTexture({
+                size: [canvas.width, canvas.height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+
+            // Shader Module
+            const meshShaderModule = device.createShaderModule({ code: meshShaderCode });
+            const wireframeShaderModule = device.createShaderModule({ code: wireframeShaderCode });
+
+            // Uniform Buffer
+            const uniformBuffer = device.createBuffer({
+                size: 256, // 2x mat4 + 2x vec3 + padding
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+
+            // Bind Group Layout
+            const bindGroupLayout = device.createBindGroupLayout({
+                entries: [{
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    buffer: { type: 'uniform' }
+                }]
+            });
+
+            const bindGroup = device.createBindGroup({
+                layout: bindGroupLayout,
+                entries: [{
+                    binding: 0,
+                    resource: { buffer: uniformBuffer }
+                }]
+            });
+
+            const pipelineLayout = device.createPipelineLayout({
+                bindGroupLayouts: [bindGroupLayout]
+            });
+
+            // Mesh Pipeline
+            const meshPipeline = device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: meshShaderModule,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 36, // 9 floats (3 position + 3 normal + 3 color)
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: 'float32x3' },   // position
+                            { shaderLocation: 1, offset: 12, format: 'float32x3' },  // normal
+                            { shaderLocation: 2, offset: 24, format: 'float32x3' }   // color
+                        ]
+                    }]
+                },
+                fragment: {
+                    module: meshShaderModule,
+                    entryPoint: 'fragmentMain',
+                    targets: [{ format }]
+                },
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'none' // Deaktiviert Backface Culling für konsistente Sichtbarkeit
+                },
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less'
+                }
+            });
+
+            // Wireframe Pipeline (mit Blending für Transparenz)
+            const wireframePipeline = device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: wireframeShaderModule,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 12,
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: 'float32x3' }
+                        ]
+                    }]
+                },
+                fragment: {
+                    module: wireframeShaderModule,
+                    entryPoint: 'fragmentMain',
+                    targets: [{
+                        format,
+                        blend: {
+                            color: {
+                                srcFactor: 'src-alpha',
+                                dstFactor: 'one-minus-src-alpha',
+                                operation: 'add'
+                            },
+                            alpha: {
+                                srcFactor: 'one',
+                                dstFactor: 'one-minus-src-alpha',
+                                operation: 'add'
+                            }
+                        }
+                    }]
+                },
+                primitive: {
+                    topology: 'line-list'
+                },
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: false,
+                    depthCompare: 'less'
+                }
+            });
+
+            // Referenzkugel-Buffer
+            const sphereData = createSphereWireframe();
+            const sphereBuffer = device.createBuffer({
+                size: sphereData.byteLength,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+            });
+            device.queue.writeBuffer(sphereBuffer, 0, sphereData);
+            const sphereVertexCount = sphereData.length / 3;
+
+            // State
+            let meshBuffer = null;
+            let meshVertexCount = 0;
+            let currentSubdivisions = -1;
+            let currentPolyhedron = 'dodecahedron';
+            let currentColorScheme = 'default';
+            let currentPyramidHeight = 0.0;
+            let currentShowPlate = false;
+
+            function updateMesh(subdivisions, polyhedron, pyramidHeight = 0.0, colorScheme = 'default', showPlate = false) {
+                if (subdivisions === currentSubdivisions && 
+                    polyhedron === currentPolyhedron && 
+                    colorScheme === currentColorScheme &&
+                    showPlate === currentShowPlate &&
+                    Math.abs(pyramidHeight - currentPyramidHeight) < 0.01) return;
+                
+                currentSubdivisions = subdivisions;
+                currentPolyhedron = polyhedron;
+                currentColorScheme = colorScheme;
+                currentPyramidHeight = pyramidHeight;
+                currentShowPlate = showPlate;
+
+                const mesh = generatePolyhedronSphere(polyhedron, subdivisions);
+                
+                let vertexData;
+                if (pyramidHeight > 0.01) {
+                    vertexData = meshToPyramidData(mesh, currentColorScheme, pyramidHeight, showPlate);
+                } else {
+                    vertexData = meshToVertexDataWithColors(mesh, currentColorScheme);
+                }
+
+                meshVertexCount = vertexData.length / 9; // 3 pos + 3 normal + 3 color
+
+                if (meshBuffer) meshBuffer.destroy();
+                meshBuffer = device.createBuffer({
+                    size: vertexData.byteLength,
+                    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+                });
+                device.queue.writeBuffer(meshBuffer, 0, vertexData);
+
+                // Stats aktualisieren
+                const polyhedronName = polyhedron === 'icosahedron' ? 'Ikosaeder' : 'Dodekaeder';
+                const mode = pyramidHeight > 0.01 ? 'Pyramiden' : 'Kugel';
+                document.getElementById('stats').textContent =
+                    `${mode} | Dreiecke: ${mesh.faces.length} | Vertices: ${mesh.vertices.length} | Subdivision: ${subdivisions} | ${polyhedronName}`;
+            }
+
+            // UI
+            const subdivSlider = document.getElementById('subdivisions');
+            const subdivValue = document.getElementById('subdivValue');
+            const showSphereCheckbox = document.getElementById('showSphere');
+            const showPlateCheckbox = document.getElementById('showPlate');
+            const autoRotateCheckbox = document.getElementById('autoRotate');
+            const colorSchemeSelect = document.getElementById('colorScheme');
+            const polyhedronRadios = document.querySelectorAll('input[name="polyhedron"]');
+            const pyramidSlider = document.getElementById('pyramidHeight');
+            const pyramidValue = document.getElementById('pyramidValue');
+
+            // Prüft ob Pyramiden-Animation erlaubt ist
+            function isPyramidAnimationAllowed() {
+                const subdivisions = parseInt(subdivSlider.value);
+                const polyhedron = document.querySelector('input[name="polyhedron"]:checked').value;
+                // Dodekaeder mit Subdivision 0 hat Pentagone, keine Dreiecke - Animation nicht sinnvoll
+                return !(polyhedron === 'dodecahedron' && subdivisions === 0);
+            }
+
+            // Aktualisiert den Pyramiden-Slider Status
+            function updatePyramidSliderState() {
+                const allowed = isPyramidAnimationAllowed();
+                pyramidSlider.disabled = !allowed;
+                
+                if (!allowed) {
+                    pyramidSlider.value = 0;
+                    pyramidValue.textContent = '0% (nicht verfügbar)';
+                    pyramidSlider.style.opacity = '0.4';
+                } else {
+                    pyramidSlider.style.opacity = '1';
+                    pyramidValue.textContent = pyramidSlider.value + '%';
+                }
+            }
+
+            function refreshMesh() {
+                const subdivisions = parseInt(subdivSlider.value);
+                const polyhedron = document.querySelector('input[name="polyhedron"]:checked').value;
+                
+                // Aktualisiere Slider-Status
+                updatePyramidSliderState();
+                
+                // Pyramiden-Animation nur wenn erlaubt
+                let pyramidHeight = 0;
+                if (isPyramidAnimationAllowed()) {
+                    pyramidHeight = parseFloat(pyramidSlider.value) / 100.0;
+                }
+                
+                const colorScheme = colorSchemeSelect.value;
+                const showPlate = showPlateCheckbox.checked;
+                updateMesh(subdivisions, polyhedron, pyramidHeight, colorScheme, showPlate);
+            }
+
+            subdivSlider.addEventListener('input', () => {
+                const val = parseInt(subdivSlider.value);
+                subdivValue.textContent = val;
+                updatePyramidSliderState();
+                refreshMesh();
+            });
+
+            pyramidSlider.addEventListener('input', () => {
+                const val = parseInt(pyramidSlider.value);
+                pyramidValue.textContent = val + '%';
+                refreshMesh();
+            });
+
+            // Polyeder-Auswahl Event Listeners
+            polyhedronRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    updatePyramidSliderState();
+                    refreshMesh();
+                });
+            });
+
+            // Farbschema-Auswahl Event Listener
+            colorSchemeSelect.addEventListener('change', refreshMesh);
+
+            // Basis-Ebene Checkbox Event Listener
+            showPlateCheckbox.addEventListener('change', refreshMesh);
+
+            // Drag-Rotation
+            let isDragging = false;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+            let dragRotationX = 0;  // Vertikale Rotation
+            let dragRotationY = 0;  // Horizontale Rotation
+            
+            // Zoom und Kamera-Offset
+            let cameraDistance = 3.5;
+            let cameraOffsetX = 0;
+            let cameraOffsetY = 0;
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+
+                dragRotationY += deltaX * 0.01;  // Horizontales Ziehen → Y-Rotation
+                dragRotationX += deltaY * 0.01;  // Vertikales Ziehen → X-Rotation
+
+                // X-Rotation begrenzen (nicht über Kopf drehen)
+                dragRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, dragRotationX));
+
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            // Touch-Support für mobile Geräte
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    lastMouseX = e.touches[0].clientX;
+                    lastMouseY = e.touches[0].clientY;
+                }
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                e.preventDefault();
+
+                const deltaX = e.touches[0].clientX - lastMouseX;
+                const deltaY = e.touches[0].clientY - lastMouseY;
+
+                dragRotationY += deltaX * 0.01;
+                dragRotationX += deltaY * 0.01;
+                dragRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, dragRotationX));
+
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            });
+
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            canvas.style.cursor = 'grab';
+
+            // Zoom mit Mausrad
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomSpeed = 0.001;
+                cameraDistance += e.deltaY * zoomSpeed * cameraDistance;
+                cameraDistance = Math.max(1.0, Math.min(40.0, cameraDistance)); // Begrenzung des Zooms
+            }, { passive: false });
+
+            // Pfeiltasten für kontinuierliche Bewegung
+            const keysPressed = new Set();
+            const moveSpeed = 0.05;
+
+            document.addEventListener('keydown', (e) => {
+                // Reset mit R-Taste
+                if (e.key === 'r' || e.key === 'R') {
+                    cameraDistance = 3.5;
+                    cameraOffsetX = 0;
+                    cameraOffsetY = 0;
+                    dragRotationX = 0;
+                    dragRotationY = 0;
+                    return;
+                }
+
+                // Pfeiltasten zur Liste hinzufügen
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                    keysPressed.add(e.key);
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                // Taste aus der Liste entfernen
+                keysPressed.delete(e.key);
+            });
+
+            // Kontinuierliche Bewegung basierend auf gedrückten Tasten
+            function updateCameraFromKeys() {
+                if (keysPressed.has('ArrowLeft')) {
+                    cameraOffsetX -= moveSpeed;
+                }
+                if (keysPressed.has('ArrowRight')) {
+                    cameraOffsetX += moveSpeed;
+                }
+                if (keysPressed.has('ArrowUp')) {
+                    cameraOffsetY += moveSpeed;
+                }
+                if (keysPressed.has('ArrowDown')) {
+                    cameraOffsetY -= moveSpeed;
+                }
+            }
+
+            // Initiales Mesh
+            refreshMesh();
+
+            // Resize Handler
+            function resize() {
+                const dpr = window.devicePixelRatio || 1;
+                const width = Math.floor(canvas.clientWidth * dpr);
+                const height = Math.floor(canvas.clientHeight * dpr);
+                
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    depthTexture.destroy();
+                    depthTexture = device.createTexture({
+                        size: [width, height],
+                        format: 'depth24plus',
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    });
+                }
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Render Loop
+            let time = 0;
+            
+            function frame() {
+                time += 0.016;
+
+                // Kontinuierliche Tastatur-Bewegung
+                updateCameraFromKeys();
+
+                // Kameraposition (dynamisch mit Zoom und Offset)
+                const aspect = canvas.width / canvas.height || 1;
+                const eye = [cameraOffsetX, cameraOffsetY, cameraDistance];
+                const center = [cameraOffsetX, cameraOffsetY, 0];
+                const up = [0, 1, 0];
+                
+                // Rotation
+                let rotationAngleY = dragRotationY;
+                if (autoRotateCheckbox.checked) {
+                    rotationAngleY += time * 0.5;
+                }
+
+                // Matrizen
+                const projection = mat4.perspective(Math.PI / 4, aspect, 0.1, 100);
+                const view = mat4.lookAt(eye, center, up);
+                // Erst Y-Rotation, dann X-Rotation (für intuitive Drag-Steuerung)
+                let model = mat4.rotateY(mat4.identity(), rotationAngleY);
+                model = mat4.rotateX(model, dragRotationX);
+                const mvp = mat4.multiply(mat4.multiply(projection, view), model);
+                
+                // Uniforms (40 floats = 160 bytes)
+                const uniformData = new Float32Array(40);
+                uniformData.set(mvp, 0);       // 0-15
+                uniformData.set(model, 16);    // 16-31
+                
+                // Light direction (von oben rechts) - ab Index 32
+                const lightDir = vec3.normalize([1, 1, 1]);
+                uniformData[32] = lightDir[0];
+                uniformData[33] = lightDir[1];
+                uniformData[34] = lightDir[2];
+                // padding at 35
+                
+                // View position - ab Index 36
+                uniformData[36] = eye[0];
+                uniformData[37] = eye[1];
+                uniformData[38] = eye[2];
+                
+                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+                // Render Pass
+                const commandEncoder = device.createCommandEncoder();
+                const passEncoder = commandEncoder.beginRenderPass({
+                    colorAttachments: [{
+                        view: context.getCurrentTexture().createView(),
+                        clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1 },
+                        loadOp: 'clear',
+                        storeOp: 'store'
+                    }],
+                    depthStencilAttachment: {
+                        view: depthTexture.createView(),
+                        depthClearValue: 1,
+                        depthLoadOp: 'clear',
+                        depthStoreOp: 'store'
+                    }
+                });
+
+                // Referenzkugel zuerst (wenn aktiviert)
+                if (showSphereCheckbox.checked) {
+                    passEncoder.setPipeline(wireframePipeline);
+                    passEncoder.setBindGroup(0, bindGroup);
+                    passEncoder.setVertexBuffer(0, sphereBuffer);
+                    passEncoder.draw(sphereVertexCount);
+                }
+
+                // Icosphere Mesh
+                if (meshBuffer) {
+                    passEncoder.setPipeline(meshPipeline);
+                    passEncoder.setBindGroup(0, bindGroup);
+                    passEncoder.setVertexBuffer(0, meshBuffer);
+                    passEncoder.draw(meshVertexCount);
+                }
+
+                passEncoder.end();
+                device.queue.submit([commandEncoder.finish()]);
+
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        main();
+    </script>
+</body>
+</html>
