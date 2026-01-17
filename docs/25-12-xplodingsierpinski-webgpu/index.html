@@ -374,7 +374,7 @@ async function main() {
             const dist = Math.hypot(dx, dy);
             if(touch.lastDist > 0) {
                 const scale = dist / touch.lastDist;
-                cam.zoom *= scale;
+                cam.zoom /= scale;  // Invertiert: Spreizen = reinzoomen
                 cam.zoom = Math.max(0.05, Math.min(5, cam.zoom));
             }
             touch.lastDist = dist;
