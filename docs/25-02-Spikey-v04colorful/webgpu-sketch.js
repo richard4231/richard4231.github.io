@@ -32,7 +32,7 @@ const params = {
   spikeHeight: 3.0,
   opacity: 0,
   rotationSpeed: 0.01,
-  metallic: 0.5,
+  shine: 0.5,
   autoRotate: true,
   lightRotation: true,
   background: '#585858'
@@ -67,7 +67,7 @@ struct Uniforms {
   lightPos1: vec3<f32>,
   lightPos2: vec3<f32>,
   cameraPos: vec3<f32>,
-  metallic: f32,
+  shine: f32,
   ambient: f32,
   opacity: f32,
 }
@@ -112,16 +112,16 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let lightDir1 = normalize(uniforms.lightPos1 - input.worldPos);
   let diff1 = max(dot(normal, lightDir1), 0.0);
   let halfwayDir1 = normalize(lightDir1 + viewDir);
-  let spec1 = pow(max(dot(normal, halfwayDir1), 0.0), 32.0 + uniforms.metallic * 96.0);
+  let spec1 = pow(max(dot(normal, halfwayDir1), 0.0), 32.0 + uniforms.shine * 96.0);
   
   // Light 2
   let lightDir2 = normalize(uniforms.lightPos2 - input.worldPos);
   let diff2 = max(dot(normal, lightDir2), 0.0);
   let halfwayDir2 = normalize(lightDir2 + viewDir);
-  let spec2 = pow(max(dot(normal, halfwayDir2), 0.0), 32.0 + uniforms.metallic * 96.0);
+  let spec2 = pow(max(dot(normal, halfwayDir2), 0.0), 32.0 + uniforms.shine * 96.0);
   
   let diffuse = input.color * (diff1 + diff2 * 0.8);
-  let specular = vec3<f32>(1.0) * (spec1 + spec2 * 0.8) * uniforms.metallic;
+  let specular = vec3<f32>(1.0) * (spec1 + spec2 * 0.8) * uniforms.shine;
   
   let finalColor = ambient + diffuse + specular;
   return vec4<f32>(finalColor, uniforms.opacity);
@@ -362,7 +362,7 @@ function setupGUI() {
   // Material Folder
   const matFolder = gui.addFolder('Material');
   matFolder.add(params, 'opacity', 0, 1, 0.01).name('Transparenz');
-  matFolder.add(params, 'metallic', 0, 1, 0.01).name('Metallisch');
+  matFolder.add(params, 'shine', 0, 1, 0.01).name('Glanz');
   matFolder.open();
   
   // Animation Folder
@@ -446,7 +446,7 @@ function render() {
   uniformData.set(lightPos1, 64);
   uniformData.set(lightPos2, 68);
   uniformData.set(camera.position, 72);
-  uniformData[75] = params.metallic;
+  uniformData[75] = params.shine;
   uniformData[76] = 0.31; // ambient
   uniformData[77] = 1.0 - params.opacity; // opacity (invertiert: 0=opak, 1=transparent)
   
