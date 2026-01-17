@@ -16,7 +16,11 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             max-height: calc(100vh - 40px); overflow-y: auto;
         }
-        #gui h2 { margin-bottom: 16px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; }
+        #gui h2 { margin-bottom: 16px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; cursor: pointer; user-select: none; }
+        #gui h2:hover { color: #7dd3fc; }
+        #gui.collapsed { padding-bottom: 0; }
+        #gui-content { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; }
+        #gui-content.collapsed { max-height: 0 !important; opacity: 0; }
         .row { margin-bottom: 12px; }
         .row label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #a0a0a0; }
         .row label span:last-child { color: #7dd3fc; }
@@ -28,8 +32,9 @@
 </head>
 <body>
     <canvas id="c"></canvas>
-    <div id="gui">
-        <h2>Regler</h2>
+    <div id="gui" class="collapsed">
+        <h2>Einstellungen</h2>
+        <div id="gui-content" class="collapsed">
         <div class="row">
             <label>Farbschema <span id="vScheme">Regenbogen</span></label>
             <select id="scheme">
@@ -55,10 +60,11 @@
         <div class="row"><label>Skalierung X <span id="vX">1.00</span></label><input type="range" id="sX" min="0" max="1.5" step="0.05" value="1"></div>
         <div class="row"><label>Skalierung Y <span id="vY">1.00</span></label><input type="range" id="sY" min="0" max="1.5" step="0.05" value="1"></div>
         <div class="row"><label>Skalierung Z <span id="vZ">1.00</span></label><input type="range" id="sZ" min="0" max="1.5" step="0.05" value="1"></div>
-        <div class="row"><label>Geschwindigkeit <span id="vSpeed">0.50</span></label><input type="range" id="speed" min="-2" max="2" step="0.1" value="0.5"></div>
-        <div class="row"><label>Potenz 2^n <span id="vPow">3</span></label><input type="range" id="pow" min="1" max="10" step="1" value="3"></div>
-        <div class="row"><label>Orbit <span id="vOrb">An</span></label><input type="range" id="orb" min="0" max="1" step="1" value="1"></div>
+        <div class="row"><label>Drehgeschwindigkeit <span id="vSpeed">0.50</span></label><input type="range" id="speed" min="-2" max="2" step="0.1" value="0.5"></div>
+        <div class="row"><label>Kantenlänge n (2^x) <span id="vPow">8</span></label><input type="range" id="pow" min="1" max="10" step="1" value="3"></div>
+        <div class="row"><label><input type="checkbox" id="orb" checked> Orbit an/aus</label></div>
         <div class="row"><label>Licht <span id="vLight">100</span></label><input type="range" id="light" min="0" max="150" step="5" value="100"></div>
+        </div>
     </div>
     <div id="status">Lade...</div>
     <div id="error"></div>
@@ -317,18 +323,77 @@ async function main() {
     addEventListener('resize', resize); 
     resize();
     
+    // Maus-Steuerung
     canvas.onmousedown = e => { if(S.orb){ cam.drag=true; cam.mx=e.clientX; cam.my=e.clientY; }};
     onmouseup = () => cam.drag = false;
     onmousemove = e => {
         if(cam.drag){
-            cam.ry += (e.clientX - cam.mx) * 0.005;
+            cam.ry -= (e.clientX - cam.mx) * 0.005;
             cam.rx += (e.clientY - cam.my) * 0.005;
             cam.rx = Math.max(-1.5, Math.min(1.5, cam.rx));
             cam.mx = e.clientX;
             cam.my = e.clientY;
         }
     };
-    canvas.onwheel = e => { e.preventDefault(); cam.zoom *= 1 - e.deltaY * 0.001; cam.zoom = Math.max(0.05, Math.min(5, cam.zoom)); }; // Zoombereich einstellen 0.2 bis 5 (ganz weg von Figur)
+    canvas.onwheel = e => { e.preventDefault(); cam.zoom *= 1 - e.deltaY * 0.001; cam.zoom = Math.max(0.02, Math.min(6, cam.zoom)); };
+    
+    // Touch-Steuerung für mobile Geräte
+    let touch = { active: false, lastX: 0, lastY: 0, lastDist: 0 };
+    
+    canvas.addEventListener('touchstart', e => {
+        if(!S.orb) return;
+        e.preventDefault();
+        if(e.touches.length === 1) {
+            touch.active = true;
+            touch.lastX = e.touches[0].clientX;
+            touch.lastY = e.touches[0].clientY;
+        } else if(e.touches.length === 2) {
+            const dx = e.touches[1].clientX - e.touches[0].clientX;
+            const dy = e.touches[1].clientY - e.touches[0].clientY;
+            touch.lastDist = Math.hypot(dx, dy);
+        }
+    }, { passive: false });
+    
+    canvas.addEventListener('touchmove', e => {
+        if(!S.orb) return;
+        e.preventDefault();
+        
+        if(e.touches.length === 1 && touch.active) {
+            // Ein Finger: Drehen
+            const dx = e.touches[0].clientX - touch.lastX;
+            const dy = e.touches[0].clientY - touch.lastY;
+            cam.ry -= dx * 0.005;
+            cam.rx += dy * 0.005;
+            cam.rx = Math.max(-1.5, Math.min(1.5, cam.rx));
+            touch.lastX = e.touches[0].clientX;
+            touch.lastY = e.touches[0].clientY;
+        } else if(e.touches.length === 2) {
+            // Zwei Finger: Zoomen
+            const dx = e.touches[1].clientX - e.touches[0].clientX;
+            const dy = e.touches[1].clientY - e.touches[0].clientY;
+            const dist = Math.hypot(dx, dy);
+            if(touch.lastDist > 0) {
+                const scale = dist / touch.lastDist;
+                cam.zoom *= scale;
+                cam.zoom = Math.max(0.05, Math.min(5, cam.zoom));
+            }
+            touch.lastDist = dist;
+            touch.active = false;
+        }
+    }, { passive: false });
+    
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        if(e.touches.length === 0) {
+            touch.active = false;
+            touch.lastDist = 0;
+        } else if(e.touches.length === 1) {
+            touch.active = true;
+            touch.lastX = e.touches[0].clientX;
+            touch.lastY = e.touches[0].clientY;
+            touch.lastDist = 0;
+        }
+    }, { passive: false });
     
     // GUI
     const bind = (id, key, valId, isToggle, decimals = 2) => {
@@ -341,11 +406,43 @@ async function main() {
     };  
 
     bind('sX','x','vX'); bind('sY','y','vY'); bind('sZ','z','vZ'); 
-    bind('speed','speed','vSpeed'); bind('pow','pow','vPow', 0); bind('orb','orb','vOrb',true);
+    bind('speed','speed','vSpeed');
+    
+    // Spezielle Behandlung für pow: zeige n (2^x) statt x
+    const powEl = $('pow');
+    const vPowEl = $('vPow');
+    powEl.oninput = () => {
+        S.pow = parseFloat(powEl.value);
+        vPowEl.textContent = (1 << S.pow).toString(); // 2^pow
+    };
+    
+    // Orbit Checkbox
+    const orbEl = $('orb');
+    orbEl.onchange = () => {
+        S.orb = orbEl.checked ? 1 : 0;
+    };
+    
     bind('light','light','vLight', 0);  
 
     $('scheme').onchange = () => { S.scheme = +$('scheme').value; $('vScheme').textContent = $('scheme').selectedOptions[0].text; };
     $('bg').onchange = () => { S.bg = +$('bg').value; $('vBg').textContent = BACKGROUNDS[S.bg].name; };
+    
+    // GUI minimieren/maximieren per Klick auf Titel
+    const gui = $('gui');
+    const guiTitle = document.querySelector('#gui h2');
+    const guiContent = $('gui-content');
+    let guiCollapsed = true;
+    
+    guiTitle.addEventListener('click', () => {
+        guiCollapsed = !guiCollapsed;
+        if(guiCollapsed) {
+            guiContent.classList.add('collapsed');
+            gui.classList.add('collapsed');
+        } else {
+            guiContent.classList.remove('collapsed');
+            gui.classList.remove('collapsed');
+        }
+    });
     
     const t0 = performance.now();
     status('Rendering...');
