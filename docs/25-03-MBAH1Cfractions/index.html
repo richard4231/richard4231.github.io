@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1.1 Brüche als Anteile darstellen</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- MathJax für LaTeX-Unterstützung -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['\\(','\\)']],
+        displayMath: [['\\[','\\]']],
+        processEscapes: true
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Färbe in jeder Abbildung \(\frac{1}{2}\) blau, \(\frac{1}{4}\) grün und \(\frac{1}{8}\) gelb. \(\frac{1}{8}\) bleibt jeweils weiss.</h1>
+  
+  <div class="figures-container" id="figures-container">
+    <!-- Figures will be inserted here by JavaScript -->
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
