@@ -23,6 +23,11 @@ const figures = [
     svgContent: createFigure1asvg,
   },
   {
+    id: 'grid1b',
+    name: 'Figur 1b',
+    svgContent: createFigure1bsvg,
+  },
+  {
     id: 'diagonal-square',
     name: 'Figur 2',
     svgContent: createFigure2Svg,
@@ -68,14 +73,14 @@ const figures = [
     svgContent: createFigure10Svg,  
   },
   {
-    id: 'figure10a',
-    name: 'Figur 10a',
-    svgContent: createFigure10aSvg,  
+    id: 'figure11',
+    name: 'Figur 11',
+    svgContent: createFigure11Svg,
   },
   {
-    id: 'figure10b',
-    name: 'Figur 10b',
-    svgContent: createFigure10bSvg,  
+    id: 'figure12',
+    name: 'Figur 12',
+    svgContent: createFigure12Svg,
   }
 ];
 
@@ -103,11 +108,11 @@ function createFigure1svg() {
   return svg;
 }
 
-// SVG Creation Functions 
-function createFigure1asvg() { 
+// SVG Creation Functions
+function createFigure1asvg() {
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
-  
+
   const segments = 8;
   // Innere Quadrate darüber zeichnen
   for (let i = 0; i < segments; i++) {
@@ -124,7 +129,65 @@ function createFigure1asvg() {
       svg.appendChild(rect);
     }
   }
-  
+
+  return svg;
+}
+
+function createFigure1bsvg() {
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "-1 -1 102 102");
+
+  const segments = 10;
+  // Innere Quadrate darüber zeichnen
+  for (let i = 0; i < segments; i++) {
+    for (let j = 0; j < segments; j++) {
+      let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", j * 100 / segments);
+      rect.setAttribute("y", i * 100 / segments);
+      rect.setAttribute("width", 100 / segments);
+      rect.setAttribute("height", 100 / segments);
+      rect.setAttribute("fill", COLORS.white);
+      rect.setAttribute("stroke", STROKE);
+      rect.setAttribute("class", "segment");
+      rect.setAttribute("data-area", "1");
+      svg.appendChild(rect);
+    }
+  }
+
+  // Mittellinien bei x = 45 und x = 55
+  let vLine1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  vLine1.setAttribute("x1", 45);
+  vLine1.setAttribute("y1", 0);
+  vLine1.setAttribute("x2", 45);
+  vLine1.setAttribute("y2", 100);
+  vLine1.setAttribute("stroke", STROKE);
+  svg.appendChild(vLine1);
+
+  let vLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  vLine2.setAttribute("x1", 55);
+  vLine2.setAttribute("y1", 0);
+  vLine2.setAttribute("x2", 55);
+  vLine2.setAttribute("y2", 100);
+  vLine2.setAttribute("stroke", STROKE);
+  svg.appendChild(vLine2);
+
+  // Mittellinien bei y = 45 und y = 55
+  let hLine1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  hLine1.setAttribute("x1", 0);
+  hLine1.setAttribute("y1", 45);
+  hLine1.setAttribute("x2", 100);
+  hLine1.setAttribute("y2", 45);
+  hLine1.setAttribute("stroke", STROKE);
+  svg.appendChild(hLine1);
+
+  let hLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  hLine2.setAttribute("x1", 0);
+  hLine2.setAttribute("y1", 55);
+  hLine2.setAttribute("x2", 100);
+  hLine2.setAttribute("y2", 55);
+  hLine2.setAttribute("stroke", STROKE);
+  svg.appendChild(hLine2);
+
   return svg;
 }
 
@@ -374,13 +437,14 @@ function createFigure6svg() {
 function createFigure7svg() {
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
-  
+
   const centerX = 50;
   const centerY = 50;
   const radius = 48;
-  const segments = 12;
-  const halves = 4; //Anzahl Segmente, die halbiert dargestelt werden
-  
+  const rotation = -Math.PI / 3; // Start bei -150° (statt -90°)
+  const twelfthSegments = 2; // 2 Zwölftel
+  const sixthSegments = 5; // 5 Sechstel
+
   // Circle outline
   let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   circle.setAttribute("cx", centerX);
@@ -388,62 +452,118 @@ function createFigure7svg() {
   circle.setAttribute("r", radius);
   circle.setAttribute("fill", "none");
   svg.appendChild(circle);
-  
-  // Create segments
-  for (let i = 0; i < segments - halves; i++) {
-    const startAngle = (i * 2 * Math.PI) / segments;
-    const endAngle = ((i + 1) * 2 * Math.PI) / segments;
-    
-    const startX = centerX + radius * Math.cos(startAngle - Math.PI/2);
-    const startY = centerY + radius * Math.sin(startAngle - Math.PI/2);
-    const endX = centerX + radius * Math.cos(endAngle - Math.PI/2);
-    const endY = centerY + radius * Math.sin(endAngle - Math.PI/2);
-    
-    // Line from center to edge
-    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", centerX);
-    line.setAttribute("y1", centerY);
-    line.setAttribute("x2", startX);
-    line.setAttribute("y2", startY);
-    svg.appendChild(line);
-    
-    // Segment path
-    let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 0,1 ${endX},${endY} Z`);
-    path.setAttribute("fill", COLORS.white);
-    path.setAttribute("stroke", STROKE);
-    path.setAttribute("class", "segment");
-    path.setAttribute("data-area", "1");
-    svg.appendChild(path);
+
+  // Create 2 Zwölftel segments
+  // Erstes Segment (i=0) OHNE Winkelhalbierende (Linie bei -135° entfernt)
+  // Zweites Segment (i=1) MIT Winkelhalbierende
+  for (let i = 0; i < twelfthSegments; i++) {
+    const segmentStart = -Math.PI/2 + rotation + (i * 2 * Math.PI) / 12;
+    const segmentEnd = -Math.PI/2 + rotation + ((i + 1) * 2 * Math.PI) / 12;
+    const middleAngle = (segmentStart + segmentEnd) / 2; // Winkelhalbierende
+
+    // Zeichne die äußeren Linien
+    const startX = centerX + radius * Math.cos(segmentStart);
+    const startY = centerY + radius * Math.sin(segmentStart);
+    const endX = centerX + radius * Math.cos(segmentEnd);
+    const endY = centerY + radius * Math.sin(segmentEnd);
+    const midX = centerX + radius * Math.cos(middleAngle);
+    const midY = centerY + radius * Math.sin(middleAngle);
+
+    // Line from center to start
+    let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line1.setAttribute("x1", centerX);
+    line1.setAttribute("y1", centerY);
+    line1.setAttribute("x2", startX);
+    line1.setAttribute("y2", startY);
+    svg.appendChild(line1);
+
+    if (i === 0) {
+      // Erstes Segment OHNE Winkelhalbierende (ganzes Segment)
+      let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 0,1 ${endX},${endY} Z`);
+      path.setAttribute("fill", COLORS.white);
+      path.setAttribute("stroke", STROKE);
+      path.setAttribute("class", "segment");
+      path.setAttribute("data-area", "1"); // 1/12 der Gesamtfläche
+      svg.appendChild(path);
+    } else {
+      // Andere Segmente MIT Winkelhalbierende
+      // Winkelhalbierende
+      let bisector = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      bisector.setAttribute("x1", centerX);
+      bisector.setAttribute("y1", centerY);
+      bisector.setAttribute("x2", midX);
+      bisector.setAttribute("y2", midY);
+      svg.appendChild(bisector);
+
+      // Erstes halbes Segment
+      let path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path1.setAttribute("d", `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 0,1 ${midX},${midY} Z`);
+      path1.setAttribute("fill", COLORS.white);
+      path1.setAttribute("stroke", STROKE);
+      path1.setAttribute("class", "segment");
+      path1.setAttribute("data-area", "0.5"); // 1/24 der Gesamtfläche
+      svg.appendChild(path1);
+
+      // Zweites halbes Segment
+      let path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path2.setAttribute("d", `M ${centerX},${centerY} L ${midX},${midY} A ${radius},${radius} 0 0,1 ${endX},${endY} Z`);
+      path2.setAttribute("fill", COLORS.white);
+      path2.setAttribute("stroke", STROKE);
+      path2.setAttribute("class", "segment");
+      path2.setAttribute("data-area", "0.5"); // 1/24 der Gesamtfläche
+      svg.appendChild(path2);
+    }
   }
 
-  for (let i = 0; i < halves * 2; i++) {
-    const startAngle = (i * 2 * Math.PI) / segments / 2 - Math.PI/2 + 2*Math.PI/segments*(segments-halves);
-    const endAngle = ((i + 1) * 2 * Math.PI) / segments / 2 - Math.PI/2 + 2*Math.PI/segments*(segments-halves);
-    
-    const startX = centerX + radius * Math.cos(startAngle);
-    const startY = centerY + radius * Math.sin(startAngle);
-    const endX = centerX + radius * Math.cos(endAngle);
-    const endY = centerY + radius * Math.sin(endAngle);
-    
-    // Line from center to edge
-    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", centerX);
-    line.setAttribute("y1", centerY);
-    line.setAttribute("x2", startX);
-    line.setAttribute("y2", startY);
-    svg.appendChild(line);
-    
-    // Segment path
-    let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 0,1 ${endX},${endY} Z`);
-    path.setAttribute("fill", COLORS.white);
-    path.setAttribute("stroke", STROKE);
-    path.setAttribute("class", "segment");
-    path.setAttribute("data-area", "0.5");
-    svg.appendChild(path);
+  // Create 5 Sechstel segments with Winkelhalbierende (each divided in half)
+  for (let i = 0; i < sixthSegments; i++) {
+    const segmentStart = -Math.PI/2 + rotation + (twelfthSegments * 2 * Math.PI) / 12 + (i * 2 * Math.PI) / 6;
+    const segmentEnd = -Math.PI/2 + rotation + (twelfthSegments * 2 * Math.PI) / 12 + ((i + 1) * 2 * Math.PI) / 6;
+    const middleAngle = (segmentStart + segmentEnd) / 2; // Winkelhalbierende
+
+    const startX = centerX + radius * Math.cos(segmentStart);
+    const startY = centerY + radius * Math.sin(segmentStart);
+    const endX = centerX + radius * Math.cos(segmentEnd);
+    const endY = centerY + radius * Math.sin(segmentEnd);
+    const midX = centerX + radius * Math.cos(middleAngle);
+    const midY = centerY + radius * Math.sin(middleAngle);
+
+    // Line from center to start
+    let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line1.setAttribute("x1", centerX);
+    line1.setAttribute("y1", centerY);
+    line1.setAttribute("x2", startX);
+    line1.setAttribute("y2", startY);
+    svg.appendChild(line1);
+
+    // Winkelhalbierende
+    let bisector = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    bisector.setAttribute("x1", centerX);
+    bisector.setAttribute("y1", centerY);
+    bisector.setAttribute("x2", midX);
+    bisector.setAttribute("y2", midY);
+    svg.appendChild(bisector);
+
+    // Erstes halbes Segment
+    let path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path1.setAttribute("d", `M ${centerX},${centerY} L ${startX},${startY} A ${radius},${radius} 0 0,1 ${midX},${midY} Z`);
+    path1.setAttribute("fill", COLORS.white);
+    path1.setAttribute("stroke", STROKE);
+    path1.setAttribute("class", "segment");
+    path1.setAttribute("data-area", "1"); // 1/12 der Gesamtfläche
+    svg.appendChild(path1);
+
+    // Zweites halbes Segment
+    let path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path2.setAttribute("d", `M ${centerX},${centerY} L ${midX},${midY} A ${radius},${radius} 0 0,1 ${endX},${endY} Z`);
+    path2.setAttribute("fill", COLORS.white);
+    path2.setAttribute("stroke", STROKE);
+    path2.setAttribute("class", "segment");
+    path2.setAttribute("data-area", "1"); // 1/12 der Gesamtfläche
+    svg.appendChild(path2);
   }
-  
+
   return svg;
 }
 
@@ -508,22 +628,23 @@ function createFigure10Svg() {
   // Oktagon
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
-  
+
   const centerX = 50;
   const centerY = 50;
   const radius = 45;
   const sides = 8;
-  
+  const rotation = -Math.PI / 4; // -45° Drehung
+
   // Calculate octagon points
   const points = [];
   for (let i = 0; i < sides; i++) {
-    const angle = (i * 2 * Math.PI) / sides - Math.PI / sides;
+    const angle = (i * 2 * Math.PI) / sides - Math.PI / sides + rotation;
     points.push({
       x: centerX + radius * Math.cos(angle),
       y: centerY + radius * Math.sin(angle)
     });
   }
-  
+
   // Draw octagon outline
   let octagon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
   let pointsStr = points.map(p => `${p.x},${p.y}`).join(" ");
@@ -533,11 +654,32 @@ function createFigure10Svg() {
   octagon.setAttribute("stroke-width", "1");
   octagon.setAttribute("stroke-linecap", "butt");
   svg.appendChild(octagon);
-  
-  // Draw triangles connecting center to each edge
+
+  // Combined shape 1: Dreiecke 7, 0, 1, 2
+  let combinedShape1 = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  combinedShape1.setAttribute("points", `${centerX},${centerY} ${points[7].x},${points[7].y} ${points[0].x},${points[0].y} ${points[1].x},${points[1].y} ${points[2].x},${points[2].y} ${points[3].x},${points[3].y}`);
+  combinedShape1.setAttribute("fill", COLORS.white);
+  combinedShape1.setAttribute("stroke", STROKE);
+  combinedShape1.setAttribute("class", "segment");
+  combinedShape1.setAttribute("data-area", "4"); // 4 Dreiecke zusammengefasst
+  svg.appendChild(combinedShape1);
+
+  // Combined shape 2: Dreiecke 5, 6 (Linie bei Punkt 6 = -112.5° = 247.5° entfernt)
+  let combinedShape2 = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  combinedShape2.setAttribute("points", `${centerX},${centerY} ${points[5].x},${points[5].y} ${points[6].x},${points[6].y} ${points[7].x},${points[7].y}`);
+  combinedShape2.setAttribute("fill", COLORS.white);
+  combinedShape2.setAttribute("stroke", STROKE);
+  combinedShape2.setAttribute("class", "segment");
+  combinedShape2.setAttribute("data-area", "2"); // 2 Dreiecke zusammengefasst
+  svg.appendChild(combinedShape2);
+
+  // Draw remaining individual triangles (skip indices 7, 0, 1, 2, 5, 6)
   for (let i = 0; i < sides; i++) {
+    // Skip the triangles that are now combined (7, 0, 1, 2, 5, 6)
+    if (i === 7 || i === 0 || i === 1 || i === 2 || i === 5 || i === 6) continue;
+
     const j = (i + 1) % sides;
-    
+
     let triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     triangle.setAttribute("points", `${centerX},${centerY} ${points[i].x},${points[i].y} ${points[j].x},${points[j].y}`);
     triangle.setAttribute("fill", COLORS.white);
@@ -546,21 +688,21 @@ function createFigure10Svg() {
     triangle.setAttribute("data-area", "1");
     svg.appendChild(triangle);
   }
-  
+
   return svg;
 }
 
-function createFigure10aSvg() {
-  // Oktagon
+function createFigure11Svg() {
+  // 16-seitiges Polygon
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
-  
+
   const centerX = 50;
   const centerY = 50;
   const radius = 45;
   const sides = 16;
-  
-  // Create clickable octagon triangles
+
+  // Create clickable triangles
   for (let i = 0; i < sides; i++) {
     const angle1 = ((i - 1) * 2 * Math.PI) / sides - Math.PI / sides;
     const angle2 = (i  * 2 * Math.PI) / sides - Math.PI / sides;
@@ -568,9 +710,9 @@ function createFigure10aSvg() {
     let y1 = centerY + radius * Math.sin(angle1);
     let x2 = centerX + radius * Math.cos(angle2);
     let y2 = centerY + radius * Math.sin(angle2);
-    
+
     let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  
+
     path.setAttribute("d", `M ${centerX},${centerY} L ${x1},${y1} L ${x2},${y2} Z`);
     path.setAttribute("fill", COLORS.white);
     path.setAttribute("stroke", STROKE);
@@ -579,40 +721,79 @@ function createFigure10aSvg() {
     svg.appendChild(path);
     }
 
-  // Draw figure
   return svg;
 }
 
-function createFigure10bSvg() {
-  // Oktagon
+function createFigure12Svg() {
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
-  
-  const centerX = 50;
-  const centerY = 50;
-  const radius = 45;
-  const sides = 7;
-  
-  // Create clickable octagon triangles
-  for (let i = 0; i < sides; i++) {
-    const angle1 = ((i - 1) * 2 * Math.PI) / sides - Math.PI / sides;
-    const angle2 = (i  * 2 * Math.PI) / sides - Math.PI / sides;
-    let x1 = centerX + radius * Math.cos(angle1);
-    let y1 = centerY + radius * Math.sin(angle1);
-    let x2 = centerX + radius * Math.cos(angle2);
-    let y2 = centerY + radius * Math.sin(angle2);
-    
-    let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  
-    path.setAttribute("d", `M ${centerX},${centerY} L ${x1},${y1} L ${x2},${y2} Z`);
-    path.setAttribute("fill", COLORS.white);
-    path.setAttribute("stroke", STROKE);
-    path.setAttribute("class", "segment");
-    path.setAttribute("data-area", "1");
-    svg.appendChild(path);
-    }
 
-  // Draw figure
+  // Rechtecke mit Diagonalen unterteilt
+  const rectangles = [
+    // Linke Hälfte: 1/2 → 4 Dreiecke à 1/8
+    { x1: 0, y1: 0, x2: 50, y2: 100, area: 1 },
+    // Rechte obere Hälfte: 1/4 → 4 Dreiecke à 1/16
+    { x1: 50, y1: 0, x2: 100, y2: 50, area: 0.5 },
+    // Rechte mittlere: 1/8 → 4 Dreiecke à 1/32
+    { x1: 50, y1: 50, x2: 100, y2: 75, area: 0.25 },
+    // Rechte untere: 1/8 → 4 Dreiecke à 1/32
+    { x1: 50, y1: 75, x2: 100, y2: 100, area: 0.25 }
+  ];
+
+  rectangles.forEach(rect => {
+    const cx = (rect.x1 + rect.x2) / 2;
+    const cy = (rect.y1 + rect.y2) / 2;
+
+    // Zeichne beide Diagonalen
+    let diag1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    diag1.setAttribute("x1", rect.x1);
+    diag1.setAttribute("y1", rect.y1);
+    diag1.setAttribute("x2", rect.x2);
+    diag1.setAttribute("y2", rect.y2);
+    diag1.setAttribute("stroke", STROKE);
+    svg.appendChild(diag1);
+
+    let diag2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    diag2.setAttribute("x1", rect.x2);
+    diag2.setAttribute("y1", rect.y1);
+    diag2.setAttribute("x2", rect.x1);
+    diag2.setAttribute("y2", rect.y2);
+    diag2.setAttribute("stroke", STROKE);
+    svg.appendChild(diag2);
+
+    // Zeichne Umriss
+    let outline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    outline.setAttribute("x", rect.x1);
+    outline.setAttribute("y", rect.y1);
+    outline.setAttribute("width", rect.x2 - rect.x1);
+    outline.setAttribute("height", rect.y2 - rect.y1);
+    outline.setAttribute("fill", "none");
+    outline.setAttribute("stroke", STROKE);
+    svg.appendChild(outline);
+
+    // 4 Dreiecke durch Diagonalen
+    const triangles = [
+      // Oben
+      { points: `${rect.x1},${rect.y1} ${rect.x2},${rect.y1} ${cx},${cy}` },
+      // Rechts
+      { points: `${rect.x2},${rect.y1} ${rect.x2},${rect.y2} ${cx},${cy}` },
+      // Unten
+      { points: `${rect.x2},${rect.y2} ${rect.x1},${rect.y2} ${cx},${cy}` },
+      // Links
+      { points: `${rect.x1},${rect.y2} ${rect.x1},${rect.y1} ${cx},${cy}` }
+    ];
+
+    triangles.forEach(triangle => {
+      let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      poly.setAttribute("points", triangle.points);
+      poly.setAttribute("fill", COLORS.white);
+      poly.setAttribute("stroke", STROKE);
+      poly.setAttribute("class", "segment");
+      poly.setAttribute("data-area", rect.area);
+      svg.appendChild(poly);
+    });
+  });
+
   return svg;
 }
 
