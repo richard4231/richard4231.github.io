@@ -219,9 +219,9 @@
         
         <div class="instructions">
             <strong>Steuerung:</strong><br>
-            • Klick: Flächeninhalt anzeigen (ungenau)<br>
-            • Ziehen: Objekt rotieren<br>
-            • Mausrad: Zoomen<br>
+            • Klick/Tap: Flächeninhalt anzeigen (ungenau)<br>
+            • Ziehen/Touch: Objekt rotieren<br>
+            • Mausrad/Pinch: Zoomen<br>
             • W/A/S/D: Kamera bewegen<br>
             • Pfeiltasten: Kamera hoch/runter
         </div>
@@ -903,6 +903,69 @@
             isDragging = false;
         });
 
+        canvas.addEventListener('mouseleave', (e) => {
+            isDragging = false;
+        });
+
+        // Touch events for mobile support
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let touchStartDistance = 0;
+        let initialZoom = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[1].clientX - e.touches[0].clientX;
+                const dy = e.touches[1].clientY - e.touches[0].clientY;
+                touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+                const direction = vec3.subtract(camera.target, camera.position);
+                initialZoom = vec3.length(direction);
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isDragging) {
+                const deltaX = e.touches[0].clientX - lastTouchX;
+                const deltaY = e.touches[0].clientY - lastTouchY;
+                rotation.y += deltaX * 0.005;
+                rotation.x += deltaY * 0.005;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+                hidePickInfo();
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[1].clientX - e.touches[0].clientX;
+                const dy = e.touches[1].clientY - e.touches[0].clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const scale = touchStartDistance / distance;
+                const direction = vec3.subtract(camera.target, camera.position);
+                vec3.normalize(direction, direction);
+                const newDistance = Math.max(100, Math.min(initialZoom * scale, 3000));
+                camera.position = vec3.subtract(camera.target, vec3.scale(direction, newDistance));
+                hidePickInfo();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 0) {
+                isDragging = false;
+            } else if (e.touches.length === 1) {
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchcancel', () => {
+            isDragging = false;
+        });
+
         // Pick info display
         const pickInfo = document.getElementById('pickInfo');
         let lastClickX = 0;
@@ -1133,6 +1196,28 @@
             }
         });
 
+        // Touch tap detection (separate from touchstart used for dragging)
+        let touchStartPos = { x: 0, y: 0 };
+        let touchStartTime = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                touchStartTime = Date.now();
+            }
+        }, { passive: true, capture: true });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1 && Date.now() - touchStartTime < 300) {
+                const touch = e.changedTouches[0];
+                const dx = touch.clientX - touchStartPos.x;
+                const dy = touch.clientY - touchStartPos.y;
+                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+                    performPicking(touch.clientX, touch.clientY);
+                }
+            }
+        }, { passive: true, capture: true });
+
         // Hide pick info when starting to drag
         canvas.addEventListener('mousemove', (e) => {
             if (isDragging) {
@@ -1152,7 +1237,7 @@
             const newDistance = Math.max(100, Math.min(distance + zoomDelta, 3000));
 
             camera.position = vec3.subtract(camera.target, vec3.scale(direction, newDistance));
-        });
+        }, { passive: false });
 
         // Keyboard controls with acceleration
         const keys = {};
