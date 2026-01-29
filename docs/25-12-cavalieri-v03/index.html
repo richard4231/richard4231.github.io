@@ -24,6 +24,7 @@
             display: block;
             width: calc(100vw - 20px);
             height: calc(100vh - 20px);
+            touch-action: none;
         }
         #pageTitle {
             position: absolute;
@@ -44,9 +45,11 @@
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 15px;
-            border-radius: 5px;
-            min-width: 250px;
+            border-radius: 8px;
+            min-width: 260px;
+            border: 2px solid #666;
             transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 100;
         }
         #controls.hidden {
             transform: translateX(-100%);
@@ -56,22 +59,34 @@
         #togglePanel {
             position: absolute;
             top: 15px;
-            left: 15px;
+            left: 285px; /* Adjusted to match panel width + margin */
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            border: 1px solid #666;
+            border: 2px solid #666;
             border-radius: 5px;
             padding: 8px 12px;
             cursor: pointer;
             font-size: 14px;
-            z-index: 100;
+            z-index: 1000;
             transition: left 0.3s ease;
         }
         #togglePanel:hover {
             background: rgba(50, 50, 50, 0.9);
         }
-        #togglePanel.panel-open {
-            left: 285px;
+        #togglePanel.panel-closed {
+            left: 15px;
+        }
+        #togglePanel .hamburger {
+            display: none;
+        }
+        #togglePanel .close {
+            display: inline;
+        }
+        #togglePanel.panel-closed .hamburger {
+            display: inline;
+        }
+        #togglePanel.panel-closed .close {
+            display: none;
         }
         .control-group {
             margin-bottom: 15px;
@@ -169,7 +184,7 @@
     <canvas id="canvas"></canvas>
     <h1 id="pageTitle">Herleitung Kugelvolumen</h1>
     <div id="pickInfo"></div>
-    <button id="togglePanel">☰</button>
+    <button id="togglePanel" class="panel-closed"><span class="hamburger">&#9776;</span><span class="close">&#10005;</span></button>
     <div id="controls" class="hidden">
         <h3 style="margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #555;">Steuerung</h3>
         <div class="control-group">
@@ -1205,7 +1220,7 @@
 
         togglePanelBtn.addEventListener('click', () => {
             controlsPanel.classList.toggle('hidden');
-            togglePanelBtn.classList.toggle('panel-open');
+            togglePanelBtn.classList.toggle('panel-closed');
         });
 
         // UI Controls

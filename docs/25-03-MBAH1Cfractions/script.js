@@ -137,15 +137,87 @@ function createFigure1bsvg() {
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "-1 -1 102 102");
 
-  const segments = 10;
-  // Innere Quadrate darüber zeichnen
-  for (let i = 0; i < segments; i++) {
-    for (let j = 0; j < segments; j++) {
+  // 1. Ecken: 10x10 Quadrate (4 Ecken)
+  const corners = [
+    { startX: 0, endX: 40, startY: 0, endY: 40 },     // Oben links
+    { startX: 60, endX: 100, startY: 0, endY: 40 },   // Oben rechts
+    { startX: 0, endX: 40, startY: 60, endY: 100 },   // Unten links
+    { startX: 60, endX: 100, startY: 60, endY: 100 }  // Unten rechts
+  ];
+
+  corners.forEach(corner => {
+    for (let i = corner.startY; i < corner.endY; i += 10) {
+      for (let j = corner.startX; j < corner.endX; j += 10) {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", j);
+        rect.setAttribute("y", i);
+        rect.setAttribute("width", 10);
+        rect.setAttribute("height", 10);
+        rect.setAttribute("fill", COLORS.white);
+        rect.setAttribute("stroke", STROKE);
+        rect.setAttribute("class", "segment");
+        rect.setAttribute("data-area", "1");
+        svg.appendChild(rect);
+      }
+    }
+  });
+
+  // 2. Horizontale Streifen: 10x5 Rechtecke (links und rechts)
+  const hStrips = [
+    { startX: 0, endX: 40 },    // Links
+    { startX: 60, endX: 100 }   // Rechts
+  ];
+  const yPositions = [40, 45, 50, 55];
+
+  hStrips.forEach(strip => {
+    for (let i = 0; i < yPositions.length; i++) {
+      for (let j = strip.startX; j < strip.endX; j += 10) {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", j);
+        rect.setAttribute("y", yPositions[i]);
+        rect.setAttribute("width", 10);
+        rect.setAttribute("height", 5);
+        rect.setAttribute("fill", COLORS.white);
+        rect.setAttribute("stroke", STROKE);
+        rect.setAttribute("class", "segment");
+        rect.setAttribute("data-area", "1");
+        svg.appendChild(rect);
+      }
+    }
+  });
+
+  // 3. Vertikale Streifen: 5x10 Rechtecke (oben und unten)
+  const vStrips = [
+    { startY: 0, endY: 40 },    // Oben
+    { startY: 60, endY: 100 }   // Unten
+  ];
+  const xPositions = [40, 45, 50, 55];
+
+  vStrips.forEach(strip => {
+    for (let i = 0; i < xPositions.length; i++) {
+      for (let j = strip.startY; j < strip.endY; j += 10) {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", xPositions[i]);
+        rect.setAttribute("y", j);
+        rect.setAttribute("width", 5);
+        rect.setAttribute("height", 10);
+        rect.setAttribute("fill", COLORS.white);
+        rect.setAttribute("stroke", STROKE);
+        rect.setAttribute("class", "segment");
+        rect.setAttribute("data-area", "1");
+        svg.appendChild(rect);
+      }
+    }
+  });
+
+  // 4. Mitte: 5x5 Quadrate (4x4 Raster)
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
       let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", j * 100 / segments);
-      rect.setAttribute("y", i * 100 / segments);
-      rect.setAttribute("width", 100 / segments);
-      rect.setAttribute("height", 100 / segments);
+      rect.setAttribute("x", 40 + j * 5);
+      rect.setAttribute("y", 40 + i * 5);
+      rect.setAttribute("width", 5);
+      rect.setAttribute("height", 5);
       rect.setAttribute("fill", COLORS.white);
       rect.setAttribute("stroke", STROKE);
       rect.setAttribute("class", "segment");
@@ -153,40 +225,6 @@ function createFigure1bsvg() {
       svg.appendChild(rect);
     }
   }
-
-  // Mittellinien bei x = 45 und x = 55
-  let vLine1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  vLine1.setAttribute("x1", 45);
-  vLine1.setAttribute("y1", 0);
-  vLine1.setAttribute("x2", 45);
-  vLine1.setAttribute("y2", 100);
-  vLine1.setAttribute("stroke", STROKE);
-  svg.appendChild(vLine1);
-
-  let vLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  vLine2.setAttribute("x1", 55);
-  vLine2.setAttribute("y1", 0);
-  vLine2.setAttribute("x2", 55);
-  vLine2.setAttribute("y2", 100);
-  vLine2.setAttribute("stroke", STROKE);
-  svg.appendChild(vLine2);
-
-  // Mittellinien bei y = 45 und y = 55
-  let hLine1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  hLine1.setAttribute("x1", 0);
-  hLine1.setAttribute("y1", 45);
-  hLine1.setAttribute("x2", 100);
-  hLine1.setAttribute("y2", 45);
-  hLine1.setAttribute("stroke", STROKE);
-  svg.appendChild(hLine1);
-
-  let hLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  hLine2.setAttribute("x1", 0);
-  hLine2.setAttribute("y1", 55);
-  hLine2.setAttribute("x2", 100);
-  hLine2.setAttribute("y2", 55);
-  hLine2.setAttribute("stroke", STROKE);
-  svg.appendChild(hLine2);
 
   return svg;
 }
