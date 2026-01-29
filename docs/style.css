@@ -94,8 +94,9 @@ body{
 .tab:nth-child(4){border-top-color:var(--color-main)}         /* 3D */
 .tab:nth-child(5){border-top-color:var(--color-main)}         /* Spikey */
 .tab:nth-child(6){border-top-color:var(--color-main)}         /* Math. Spielereien */
-.tab:nth-child(7){border-top-color:var(--color-further)}      /* Weitere Seiten */
-.tab:nth-child(8){border-top-color:var(--color-welcome)}     /* Impressum */
+.tab:nth-child(7){border-top-color:var(--color-further)}      /* Mathbuch */
+.tab:nth-child(8){border-top-color:var(--color-further)}      /* Weitere Seiten */
+.tab:nth-child(9){border-top-color:var(--color-welcome)}     /* Impressum */
 
 .tab:hover{
   transform:translateY(-2px);

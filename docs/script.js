@@ -36,22 +36,22 @@ function renderTabs(data){
       const welcome = document.createElement('div');
       welcome.className = 'welcome-section';
       welcome.innerHTML = `
-        <h2>Willkommen auf richard4231.github.io</h2>
-        <p>Diese Seite ist eine Sammlung von <strong>interaktiven mathematischen Simulationen und Experimenten</strong>, die ich für den Einsatz im Mathematikunterricht an Schweizer Schulen entwickelt habe.</p>
+        <h2>Willkommen auf richard4231.<wbr>github.io</h2>
+        <p>Diese Seite ist eine Sammlung von <strong>interaktiven mathematischen Simulationen und Experimenten</strong>, die ich für den Einsatz im Mathematikunterricht auf verschiedenen Stufen und für Entdeckungsreisen entwickelt habe.</p>
 
         <h3>Was findest du hier?</h3>
         <ul>
           <li><strong>Simulationen:</strong> Wahrscheinlichkeitsexperimente mit Gummibärchen, Schokolinsen und anderen spielerischen Zugängen</li>
           <li><strong>3D-Visualisierungen:</strong> Interaktive 3D-Modelle zu geometrischen Konzepten (Cavalieri-Prinzip, Wurzelschnecke, kubische Zahlen)</li>
           <li><strong>Mathematische Spielereien:</strong> Erkundungen zu Pi, Sonnenblumen, Pascal-Dreieck und Sierpinski-Mustern</li>
-          <li><strong>Mathbuch-Tools:</strong> Speziell entwickelte Werkzeuge für das Schweizer Mathbuch 21+</li>
+          <li><strong>Mathbuch:</strong> Ergänzende Apps zum Mathbuch</li>
         </ul>
 
         <h3>Technologie</h3>
-        <p>Die meisten Projekte nutzen <strong>p5.js</strong> für interaktive Grafiken. Neuere Visualisierungen setzen auf <strong>WebGPU</strong> für performante 3D-Darstellungen.</p>
+        <p>Die meisten Projekte nutzen <strong>p5.js</strong> oder <strong>WebGL</strong> für interaktive Grafiken. Neuere 3D Visualisierungen sind mit <strong>WebGPU</strong> umgesetzt. Auf älteren Browsern können diese nicht angezeigt werden.</p>
 
         <h3>Nutzung</h3>
-        <p>Klicke auf einen Tab oben, um eine Kategorie auszuwählen. Klicke dann auf ein Vorschaubild, um die Simulation in einem neuen Tab zu öffnen. Alle Projekte laufen direkt im Browser – keine Installation nötig.</p>
+        <p>Klicke auf einen Tab oben, um eine Kategorie auszuwählen. Klicke dann auf ein Vorschaubild, um die Simulation in einem neuen Tab zu öffnen.</p>
 
         <p style="margin-top:2rem; color:var(--muted); font-size:0.95rem;">Entwickelt von Andreas Richard für den Mathematikunterricht | <a href="https://github.com/richard4231" target="_blank" style="color:var(--color-active)">GitHub</a></p>
       `;
