@@ -126,6 +126,17 @@
     ]
   },
   {
+    "section": "Mathbuch",
+    "category": "further",
+    "items": [
+      {
+        "title": "MB1 C1 AH 1.1 Brüche als Anteile darstellen",
+        "url": "https://richard4231.github.io/25-03-MBAH1Cfractions/",
+        "img": "screenshots/25-03-MBAH1Cfractions.png"
+      }
+    ]
+  },
+  {
     "section": "Weitere Seiten",
     "category": "further",
     "items": [
