@@ -1,0 +1,12 @@
+# robots.txt für richard4231.github.io
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://richard4231.github.io/sitemap.xml
+
+# Ausschließen von Archiv-Ordnern und temporären Dateien
+Disallow: /*/Archiv/
+Disallow: /*/test/
+Disallow: /*Kopie.html

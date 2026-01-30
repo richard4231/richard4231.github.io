@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://richard4231.github.io/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Simulationen -->
+  <url>
+    <loc>https://richard4231.github.io/25-02-gummybears/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-03-chocolatebeans/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-11-greenhouse-gamble/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Muster erkunden -->
+  <url>
+    <loc>https://richard4231.github.io/21-04-pascaltriangleoptimized/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 3D -->
+  <url>
+    <loc>https://richard4231.github.io/25-02-xplodingsierpinski/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-12-xplodingsierpinski-webgpu/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-12-cavalieri-v03/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/26-01-Wurzelschnecke/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/24-11-exploding-cubes/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-12-spheres-n-lights-2/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/26-01-KugelvolumenPyramiden/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Spikey -->
+  <url>
+    <loc>https://richard4231.github.io/25-02-Spikey-v03/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-02-Spikey-v03b/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/25-02-Spikey-v04colorful/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Mathematische Spielereien -->
+  <url>
+    <loc>https://richard4231.github.io/22-09-tournesol/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/22-09-PiPaths-v02/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/22-09-PiPaths-v03-3D/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://richard4231.github.io/26-01-PiPaths-spheres-v05/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Mathbuch -->
+  <url>
+    <loc>https://richard4231.github.io/25-03-MBAH1Cfractions/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Weitere Seiten -->
+  <url>
+    <loc>https://richard4231.github.io/generative-art/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>
