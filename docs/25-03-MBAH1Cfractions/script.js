@@ -156,7 +156,7 @@ function createFigure1bsvg() {
         rect.setAttribute("fill", COLORS.white);
         rect.setAttribute("stroke", STROKE);
         rect.setAttribute("class", "segment");
-        rect.setAttribute("data-area", "1");
+        rect.setAttribute("data-area", "4"); // 10x10 = 100, 100/25 = 4
         svg.appendChild(rect);
       }
     }
@@ -180,7 +180,7 @@ function createFigure1bsvg() {
         rect.setAttribute("fill", COLORS.white);
         rect.setAttribute("stroke", STROKE);
         rect.setAttribute("class", "segment");
-        rect.setAttribute("data-area", "1");
+        rect.setAttribute("data-area", "2"); // 10x5 = 50, 50/25 = 2
         svg.appendChild(rect);
       }
     }
@@ -204,7 +204,7 @@ function createFigure1bsvg() {
         rect.setAttribute("fill", COLORS.white);
         rect.setAttribute("stroke", STROKE);
         rect.setAttribute("class", "segment");
-        rect.setAttribute("data-area", "1");
+        rect.setAttribute("data-area", "2"); // 5x10 = 50, 50/25 = 2
         svg.appendChild(rect);
       }
     }
@@ -221,7 +221,7 @@ function createFigure1bsvg() {
       rect.setAttribute("fill", COLORS.white);
       rect.setAttribute("stroke", STROKE);
       rect.setAttribute("class", "segment");
-      rect.setAttribute("data-area", "1");
+      rect.setAttribute("data-area", "1"); // 5x5 = 25, 25/25 = 1 (Basiseinheit)
       svg.appendChild(rect);
     }
   }
@@ -985,47 +985,48 @@ function checkFigure(figureId, figureBox) {
   const yellowProp = yellowArea / totalArea;
   const whiteProp = whiteArea / totalArea;
   
-  // Check if correct (allowing for small rounding errors)
-  const isCorrect = 
-    Math.abs(blueProp - 0.5) < 0.01 && 
-    Math.abs(greenProp - 0.25) < 0.01 && 
-    Math.abs(yellowProp - 0.125) < 0.01 && 
-    Math.abs(whiteProp - 0.125) < 0.01;
+  // Check if correct (tolerance must be smaller than 1/400 = 0.0025 for Figur 1b)
+  const tol = 0.001;
+  const isCorrect =
+    Math.abs(blueProp - 0.5) < tol &&
+    Math.abs(greenProp - 0.25) < tol &&
+    Math.abs(yellowProp - 0.125) < tol &&
+    Math.abs(whiteProp - 0.125) < tol;
 
-  const blueIncorrect = 
-    Math.abs(blueProp - 0.5) > 0.01 &&
-    Math.abs(greenProp - 0.25) < 0.01 &&
-    Math.abs(yellowProp - 0.125) < 0.01;
+  const blueIncorrect =
+    Math.abs(blueProp - 0.5) > tol &&
+    Math.abs(greenProp - 0.25) < tol &&
+    Math.abs(yellowProp - 0.125) < tol;
 
-  const greenIncorrect = 
-    Math.abs(blueProp - 0.5) < 0.01 &&
-    Math.abs(greenProp - 0.25) > 0.01 &&
-    Math.abs(yellowProp - 0.125) < 0.01;
+  const greenIncorrect =
+    Math.abs(blueProp - 0.5) < tol &&
+    Math.abs(greenProp - 0.25) > tol &&
+    Math.abs(yellowProp - 0.125) < tol;
 
-  const yellowIncorrect = 
-    Math.abs(blueProp - 0.5) < 0.01 &&
-    Math.abs(greenProp - 0.25) < 0.01 &&
-    Math.abs(yellowProp - 0.125) > 0.01;
+  const yellowIncorrect =
+    Math.abs(blueProp - 0.5) < tol &&
+    Math.abs(greenProp - 0.25) < tol &&
+    Math.abs(yellowProp - 0.125) > tol;
 
-  const bgIncorrect = 
-    Math.abs(blueProp - 0.5) > 0.01 &&
-    Math.abs(greenProp - 0.25) > 0.01 &&
-    Math.abs(yellowProp - 0.125) < 0.01;
+  const bgIncorrect =
+    Math.abs(blueProp - 0.5) > tol &&
+    Math.abs(greenProp - 0.25) > tol &&
+    Math.abs(yellowProp - 0.125) < tol;
 
-  const byIncorrect = 
-    Math.abs(blueProp - 0.5) > 0.01 &&
-    Math.abs(greenProp - 0.25) < 0.01 &&
-    Math.abs(yellowProp - 0.125) > 0.01;
+  const byIncorrect =
+    Math.abs(blueProp - 0.5) > tol &&
+    Math.abs(greenProp - 0.25) < tol &&
+    Math.abs(yellowProp - 0.125) > tol;
 
-  const gyIncorrect = 
-    Math.abs(blueProp - 0.5) < 0.01 &&
-    Math.abs(greenProp - 0.25) > 0.01 &&
-    Math.abs(yellowProp - 0.125) > 0.01;
+  const gyIncorrect =
+    Math.abs(blueProp - 0.5) < tol &&
+    Math.abs(greenProp - 0.25) > tol &&
+    Math.abs(yellowProp - 0.125) > tol;
 
-  const bgyIncorrect = 
-    Math.abs(blueProp - 0.5) > 0.01 &&
-    Math.abs(greenProp - 0.25) > 0.01 &&
-    Math.abs(yellowProp - 0.125) > 0.01 &&
+  const bgyIncorrect =
+    Math.abs(blueProp - 0.5) > tol &&
+    Math.abs(greenProp - 0.25) > tol &&
+    Math.abs(yellowProp - 0.125) > tol &&
     Math.abs(whiteProp) < 0.99;
   
   // Display result
@@ -1073,6 +1074,7 @@ function setupSegmentInteraction(figureId) {
   const container = document.getElementById(`figure-${figureId}`);
   const segments = container.querySelectorAll('.segment');
   let isDrawing = false;
+  let isErasing = false; // true when dragging should erase (set to white)
   let currentColor = 'blue'; // Default color
   let lastInteractedSegment = null; // Track last interacted segment
   
@@ -1096,25 +1098,33 @@ function setupSegmentInteraction(figureId) {
   function startDrawing(segment) {
     isDrawing = true;
     currentColor = getActiveColor();
+    // Determine mode: if segment already has current color, we erase; otherwise we paint
+    isErasing = (segment.dataset.colorCode === currentColor);
     toggleSegmentColor(segment, currentColor);
     lastInteractedSegment = segment;
   }
-  
+
   // Move over segments while drawing (used for both mouse and touch)
   function moveDrawing(x, y) {
     if (!isDrawing) return;
-    
+
     const segment = findSegmentAtPoint(x, y);
     if (segment && segment !== lastInteractedSegment) {
-      segment.setAttribute('fill', COLORS[currentColor]);
-      segment.dataset.colorCode = currentColor;
+      if (isErasing) {
+        segment.setAttribute('fill', COLORS.white);
+        segment.dataset.colorCode = '';
+      } else {
+        segment.setAttribute('fill', COLORS[currentColor]);
+        segment.dataset.colorCode = currentColor;
+      }
       lastInteractedSegment = segment;
     }
   }
-  
+
   // End drawing (used for both mouse and touch)
   function endDrawing() {
     isDrawing = false;
+    isErasing = false;
     lastInteractedSegment = null;
   }
   
@@ -1128,8 +1138,13 @@ function setupSegmentInteraction(figureId) {
     
     segment.addEventListener('mouseenter', () => {
       if (isDrawing) {
-        segment.setAttribute('fill', COLORS[currentColor]);
-        segment.dataset.colorCode = currentColor;
+        if (isErasing) {
+          segment.setAttribute('fill', COLORS.white);
+          segment.dataset.colorCode = '';
+        } else {
+          segment.setAttribute('fill', COLORS[currentColor]);
+          segment.dataset.colorCode = currentColor;
+        }
         lastInteractedSegment = segment;
       }
     });
