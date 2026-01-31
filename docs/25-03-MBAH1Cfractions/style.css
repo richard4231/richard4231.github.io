@@ -32,6 +32,28 @@ h3 {
   font-weight: normal;
 }
 
+/* Fraction styling */
+.fraction {
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.9em;
+  margin: 0 0.15em;
+}
+
+.numerator {
+  display: block;
+  border-bottom: 1px solid currentColor;
+  padding: 0 0.3em 0.1em;
+  line-height: 1;
+}
+
+.denominator {
+  display: block;
+  padding: 0.1em 0.3em 0;
+  line-height: 1;
+}
+
 .figures-container {
   display: flex;
   flex-wrap: wrap;

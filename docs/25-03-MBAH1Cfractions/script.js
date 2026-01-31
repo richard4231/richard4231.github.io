@@ -838,12 +838,7 @@ function createFigure12Svg() {
 // Initialize the application
 function init() {
   const container = document.getElementById('figures-container');
-  
-  // Render MathJax after initialization
-  setTimeout(() => {
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-  }, 1000);
-  
+
   figures.forEach(figure => {
     // Create figure container
     const figureBox = document.createElement('div');
