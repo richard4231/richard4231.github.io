@@ -230,11 +230,12 @@
         
         <div class="instructions">
             <strong>Steuerung:</strong><br>
-            • Klick/Tap: Flächeninhalt anzeigen (ungenau)<br>
             • Ziehen/Touch: Objekt rotieren<br>
             • Mausrad/Pinch: Zoomen<br>
             • W/A/S/D: Kamera bewegen<br>
-            • Pfeiltasten: Kamera hoch/runter
+            • Pfeiltasten: Kamera hoch/runter<br>
+            • Klick/Tap: Flächeninhalt anzeigen<br>
+              (Farbschema 4)
         </div>
     </div>
 
@@ -242,19 +243,21 @@
         import { mat4, vec3 } from 'https://wgpu-matrix.org/dist/2.x/wgpu-matrix.module.js';
 
         // Farbschemata
-        const colorSchemes = [
-            { name: 'Ocean', mode: 'segment', from: [135, 206, 250], to: [25, 25, 112] },
-            { name: 'Fire', mode: 'position', from: [255, 240, 120], to: [255, 140, 20] },
-            { name: 'Position', mode: 'position', from: [255, 100, 100], to: [100, 100, 255] },
-            { name: 'Faces', mode: 'faces',
-              colors: [
-                [255, 200, 100], // Top
-                [100, 200, 255], // Bottom
-                [100, 255, 150], // Outer
-                [255, 150, 200]  // Inner
-              ]
-            }
-        ];
+                const colorSchemes = [
+                        { name: 'Ocean', mode: 'segment', from: [135, 206, 250], to: [25, 25, 112] },
+                        { name: 'Fire', mode: 'position', from: [255, 240, 120], to: [255, 140, 20] },
+                        { name: 'Position', mode: 'position', from: [255, 100, 100], to: [100, 100, 255] },
+                        { name: 'Faces', mode: 'faces',
+                            // Wichtiger Hinweis: Das Picking verlässt sich auf die Reihenfolge der Face-IDs (Top/Bottom/Outer/Inner),
+                            // nicht auf die konkreten Farben. Farben können geändert werden, solange die Reihenfolge gleich bleibt.
+                            colors: [
+                                [255, 200, 100], // Top
+                                [100, 200, 255], // Bottom
+                                [100, 255, 150], // Outer
+                                [255, 150, 200]  // Inner
+                            ]
+                        }
+                ];
 
         let currentColorScheme = 0;
 
@@ -582,6 +585,7 @@
             ];
         }
 
+        // Face-IDs: 0=Top, 1=Bottom, 2=Outer, 3=Inner. Picking dekodiert daraus die Art der getroffenen Fläche.
         function generateRingGeometry(radius, height, innerRadius, offset, steps, colorScheme, objectIdBase, ringIndex, totalRings) {
             const vertices = [];
             const angle = 2 * Math.PI / steps;
@@ -617,7 +621,8 @@
                 const y0 = offset;
                 const y1 = offset + height;
 
-                const objectId = objectIdBase + i;
+                // Ein objectId pro Ring und Face-Typ. objectIdBase wird ringweise vergeben (base = ringId*4).
+                const baseId = objectIdBase;
 
                 // For 'faces' mode, calculate colors per face
                 if (colorScheme.mode === 'faces') {
@@ -626,49 +631,49 @@
                     const outerColor = [colorScheme.colors[2][0]/255, colorScheme.colors[2][1]/255, colorScheme.colors[2][2]/255, 1.0];
                     const innerColor = [colorScheme.colors[3][0]/255, colorScheme.colors[3][1]/255, colorScheme.colors[3][2]/255, 1.0];
 
-                    // Bottom face
+                    // Bottom face (faceId 1)
                     addQuad(vertices,
                         [x0, y0, z0], [x1, y0, z1], [x2, y0, z2], [x3, y0, z3],
-                        [0, -1, 0], bottomColor, objectId);
+                        [0, -1, 0], bottomColor, baseId + 1);
 
-                    // Outer side face
+                    // Outer side face (faceId 2, wird beim Picking ignoriert)
                     const outerNormal = vec3.normalize([x0, 0, z0]);
                     addQuad(vertices,
                         [x0, y0, z0], [x0, y1, z0], [x1, y1, z1], [x1, y0, z1],
-                        outerNormal, outerColor, objectId);
+                        outerNormal, outerColor, baseId + 2);
 
-                    // Top face
+                    // Top face (faceId 0)
                     addQuad(vertices,
                         [x0, y1, z0], [x1, y1, z1], [x2, y1, z2], [x3, y1, z3],
-                        [0, 1, 0], topColor, objectId);
+                        [0, 1, 0], topColor, baseId + 0);
 
-                    // Inner side face
+                    // Inner side face (faceId 3, wird beim Picking ignoriert)
                     const innerNormal = vec3.normalize([-x3, 0, -z3]);
                     addQuad(vertices,
                         [x3, y0, z3], [x2, y0, z2], [x2, y1, z2], [x3, y1, z3],
-                        innerNormal, innerColor, objectId);
+                        innerNormal, innerColor, baseId + 3);
                 } else {
-                    // Bottom face (outer to inner) - normal points down
+                    // Bottom face (faceId 1) - normal points down
                     addQuad(vertices,
                         [x0, y0, z0], [x1, y0, z1], [x2, y0, z2], [x3, y0, z3],
-                        [0, -1, 0], colorNorm, objectId);
+                        [0, -1, 0], colorNorm, baseId + 1);
 
-                    // Outer side face - normal points outward
+                    // Outer side face (faceId 2) - normal points outward
                     const outerNormal = vec3.normalize([x0, 0, z0]);
                     addQuad(vertices,
                         [x0, y0, z0], [x0, y1, z0], [x1, y1, z1], [x1, y0, z1],
-                        outerNormal, colorNorm, objectId);
+                        outerNormal, colorNorm, baseId + 2);
 
-                    // Top face - normal points up
+                    // Top face (faceId 0) - normal points up
                     addQuad(vertices,
                         [x0, y1, z0], [x1, y1, z1], [x2, y1, z2], [x3, y1, z3],
-                        [0, 1, 0], colorNorm, objectId);
+                        [0, 1, 0], colorNorm, baseId + 0);
 
-                    // Inner side face - normal points inward
+                    // Inner side face (faceId 3) - normal points inward
                     const innerNormal = vec3.normalize([-x3, 0, -z3]);
                     addQuad(vertices,
                         [x3, y0, z3], [x2, y0, z2], [x2, y1, z2], [x3, y1, z3],
-                        innerNormal, colorNorm, objectId);
+                        innerNormal, colorNorm, baseId + 3);
                 }
             }
 
@@ -737,7 +742,7 @@
                 const r2 = 0;
                 const h1 = radius / nsteps;
                 const voffset = (h1 + heightOffset) * j;
-                const ringVerts = generateRingGeometry(r1, h1, r2, voffset, segments, colorScheme, objectIdCounter, j, nsteps);
+                const ringVerts = generateRingGeometry(r1, h1, r2, voffset, segments, colorScheme, objectIdCounter * 4, j, nsteps);
 
                 // Shift left to center
                 for (let k = 0; k < ringVerts.length; k += 11) {
@@ -745,7 +750,7 @@
                 }
 
                 allVertices.push(...ringVerts);
-                objectIdCounter += segments;
+                objectIdCounter += 1; // ein ringId
             }
 
             // Tori (shifted right to center rotation) - stacking UP
@@ -754,7 +759,7 @@
                 const r2 = h2;
                 const h1 = radius / nsteps;
                 const voffset = (h1 + heightOffset) * j;
-                const ringVerts = generateRingGeometry(radius, h1, r2, voffset, segments, colorScheme, objectIdCounter, j, nsteps);
+                const ringVerts = generateRingGeometry(radius, h1, r2, voffset, segments, colorScheme, objectIdCounter * 4, j, nsteps);
 
                 // Shift right to center
                 for (let k = 0; k < ringVerts.length; k += 11) {
@@ -762,7 +767,7 @@
                 }
 
                 allVertices.push(...ringVerts);
-                objectIdCounter += segments;
+                objectIdCounter += 1; // ein ringId
             }
 
             // Table (anthracite colored box below both objects)
@@ -771,7 +776,8 @@
             const tableHeight = 40;          // Doubled
             const tableDepth = radius * 5;   // Doubled
             const tableY = -tableHeight - 10;  // Below the objects with small gap
-            const tableVerts = generateBoxGeometry(0, tableY, 0, tableWidth, tableHeight, tableDepth, anthracite, objectIdCounter);
+            // Tisch bekommt eigenes ID-Set hinter allen Ringen; wird beim Picking herausgefiltert
+            const tableVerts = generateBoxGeometry(0, tableY, 0, tableWidth, tableHeight, tableDepth, anthracite, objectIdCounter * 4);
             allVertices.push(...tableVerts);
 
             return new Float32Array(allVertices);
@@ -1031,6 +1037,13 @@
             pickingInProgress = true;
 
             try {
+                // Nur im Faces-Schema (Index 3) Anzeigen; sonst abbrechen
+                if (currentColorScheme !== 3) {
+                    hidePickInfo();
+                    pickingInProgress = false;
+                    return;
+                }
+
                 const currentDpr = window.devicePixelRatio || 1;
                 const width = canvas.width;
                 const height = canvas.height;
@@ -1093,11 +1106,12 @@
                 renderPass.draw(numVertices);
                 renderPass.end();
 
-                // Copy a 5x5 pixel area for more reliable picking
+                // Copy a small pixel area for reliable picking; Canvas-Koordinaten relativ zum Canvas
                 const sampleSize = 5;
                 const halfSize = Math.floor(sampleSize / 2);
-                const centerX = Math.floor(mouseX * currentDpr);
-                const centerY = Math.floor(mouseY * currentDpr);
+                const rect = canvas.getBoundingClientRect();
+                const centerX = Math.round((mouseX - rect.left) * currentDpr);
+                const centerY = Math.round((mouseY - rect.top) * currentDpr);
 
                 // Clamp to canvas bounds
                 const startX = Math.max(0, centerX - halfSize);
@@ -1128,7 +1142,7 @@
                 await stagingBuffer.mapAsync(GPUMapMode.READ);
                 const data = new Uint8Array(stagingBuffer.getMappedRange());
 
-                // Count occurrences of each ringIndex (not objectId, to group segments of same ring)
+                // Count occurrences of each ring (objectId = ringId*4 + faceId)
                 const ringCounts = new Map();
                 let totalValidPixels = 0;
                 const totalRings = currentSteps * 2;
@@ -1144,12 +1158,15 @@
                         if (a === 0) continue; // Skip background
 
                         const objectId = (r << 16) | (g << 8) | b;
-                        const ringIdx = Math.floor(objectId / currentSegments);
+                        const ringId = Math.floor(objectId / 4);
+                        const faceId = objectId % 4;
 
-                        if (ringIdx >= totalRings) continue; // Skip table
+                        // Nur Top (0) und Bottom (1) zulassen, Seitenflächen ignorieren
+                        if (faceId > 1) continue;
+                        if (ringId >= totalRings) continue; // Skip table
 
                         totalValidPixels++;
-                        ringCounts.set(ringIdx, (ringCounts.get(ringIdx) || 0) + 1);
+                        ringCounts.set(ringId, (ringCounts.get(ringId) || 0) + 1);
                     }
                 }
 
