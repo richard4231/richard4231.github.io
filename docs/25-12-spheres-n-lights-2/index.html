@@ -52,9 +52,64 @@
             z-index: 100;
             padding: 20px;
             pointer-events: none;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
         }
-        
+
+        #toggle-panel {
+            flex: none;
+            pointer-events: auto;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            color: var(--accent-cyan);
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.2s ease;
+        }
+
+        #toggle-panel:hover {
+            background: rgba(30, 30, 45, 0.9);
+        }
+
+        /* Closed: the panel slides out to the left and the button takes its place */
+        #ui-overlay.panel-hidden .panel {
+            transform: translateX(calc(-100% - 40px));
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #ui-overlay.panel-hidden #toggle-panel {
+            transform: translateX(var(--panel-shift, -300px));
+        }
+
+        #toggle-panel .icon-close {
+            display: inline;
+        }
+
+        #toggle-panel .icon-open,
+        #ui-overlay.panel-hidden #toggle-panel .icon-close {
+            display: none;
+        }
+
+        #ui-overlay.panel-hidden #toggle-panel .icon-open {
+            display: inline;
+        }
+
         .panel {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            /* On short screens the panel scrolls instead of running off the bottom.
+               The 40px are the padding of the overlay above and below. */
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-glow) transparent;
             background: var(--bg-panel);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-glow);
@@ -66,6 +121,23 @@
                 inset 0 0 20px rgba(0, 255, 213, 0.02);
         }
         
+        .panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel::-webkit-scrollbar-thumb {
+            background: var(--border-glow);
+            border-radius: 4px;
+        }
+
+        .panel::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
         h1 {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.4rem;
@@ -158,16 +230,25 @@
             transform: scale(1.2);
         }
         
+        /* Toggle rows put their label and buttons on one line, which keeps the panel short */
+        .control-group:has(.toggle-group) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
         .toggle-group {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex: 1;
         }
         
         .toggle-btn {
             flex: 1;
-            padding: 10px 12px;
+            padding: 6px 8px;
             font-family: inherit;
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
@@ -267,10 +348,18 @@
             <div class="controls">
                 <div class="control-group">
                     <div class="control-label">
+                        <span>Scene Size</span>
+                        <span class="control-value" id="scene-size-value">5</span>
+                    </div>
+                    <input type="range" id="scene-size-slider" min="1" max="12" value="5" step="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
                         <span>Light Count</span>
                         <span class="control-value" id="light-slider-value">1168</span>
                     </div>
-                    <input type="range" id="light-slider" min="16" max="2048" value="1168" step="16">
+                    <input type="range" id="light-slider" min="16" max="4096" value="1168" step="16">
                 </div>
                 
                 <div class="control-group">
@@ -289,6 +378,22 @@
                     <input type="range" id="radius-slider" min="1.0" max="15.0" value="1.5" step="0.5">
                 </div>
                 
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Extent</span>
+                        <span class="control-value" id="extent-slider-value">12</span>
+                    </div>
+                    <input type="range" id="extent-slider" min="4" max="40" value="12" step="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Sphere Speed</span>
+                        <span class="control-value" id="sphere-speed-value">0.6</span>
+                    </div>
+                    <input type="range" id="sphere-speed-slider" min="0.0" max="2.0" value="0.6" step="0.1">
+                </div>
+
                 <div class="control-group">
                     <div class="control-label">
                         <span>Sprite Size</span>
@@ -339,10 +444,14 @@
                 </div>
             </div>
         </div>
+
+        <button id="toggle-panel" title="Settings (H)" aria-label="Toggle settings">
+            <span class="icon-close">&#10005;</span><span class="icon-open">&#9776;</span>
+        </button>
     </div>
-    
+
     <div class="info-badge">
-        WebGPU <span>Clustered Shading</span> • WASD/Arrows: move • Space/Shift: up/down • Drag: rotate • Wheel: zoom
+        WebGPU <span>Clustered Shading</span> • WASD/Arrows: move • Space/Shift: up/down • Drag: rotate • Wheel: zoom • H: panel
     </div>
     
     <div id="error-message">

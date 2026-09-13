@@ -10,14 +10,25 @@ sprites more noise in theor movement (non linear)
 
 // --- Configuration ---
 const CONFIG = {
-    maxLights: 2048,
+    maxLights: 4096,
     clusterCountX: 16,
     clusterCountY: 9,
     clusterCountZ: 24,
-    maxLightsPerCluster: 100,
+    baseExtent: 12, // radius the scene is built for, the Extent slider scales it
     nearPlane: 0.1,
     farPlane: 100.0,
 };
+
+// Edge vectors of a cube, used as the random directions of the gradient noise
+const NOISE_GRADIENTS = [
+    [1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0],
+    [1, 0, 1], [-1, 0, 1], [1, 0, -1], [-1, 0, -1],
+    [0, 1, 1], [0, -1, 1], [0, 1, -1], [0, -1, -1],
+];
+
+// Average of the fractal noise, measured over the unit sphere. Terrain heights are taken
+// relative to it, so sea level sits at the middle of the color range for both styles.
+const NOISE_MEAN = { smooth: 0.51, ridged: 0.77 };
 
 // --- Shader Code ---
 const SHADERS = {
@@ -146,8 +157,6 @@ const SHADERS = {
         @group(0) @binding(5) var<storage, read_write> lightIndices: array<u32>;
         @group(0) @binding(6) var<storage, read_write> globalLightIndexCount: atomic<u32>;
         
-        const MAX_LIGHTS_PER_CLUSTER: u32 = 100u;
-        
         fn sphereIntersectsAABB(center: vec3f, radius: f32, aabbMin: vec3f, aabbMax: vec3f) -> bool {
             let closestPoint = clamp(center, aabbMin, aabbMax);
             let distSq = dot(center - closestPoint, center - closestPoint);
@@ -163,32 +172,32 @@ const SHADERS = {
             let clusterIndex = id.x + id.y * camera.clusterSize.x + id.z * camera.clusterSize.x * camera.clusterSize.y;
             let bounds = clusterBounds[clusterIndex];
             
+            // Pass 1: count all lights touching this cluster. There is no per-cluster cap:
+            // dropping lights in full clusters causes blocky brightness steps along cluster borders.
             var visibleLightCount = 0u;
-            var visibleLightIndices: array<u32, 100>;
-            
             for (var i = 0u; i < lightUniforms.lightCount; i++) {
                 let light = lights[i];
-                
-                // Transform light to view space
                 let lightPosView = (camera.viewMatrix * vec4f(light.position, 1.0)).xyz;
-                
                 if (sphereIntersectsAABB(lightPosView, light.radius, bounds.minBounds, bounds.maxBounds)) {
-                    if (visibleLightCount < MAX_LIGHTS_PER_CLUSTER) {
-                        visibleLightIndices[visibleLightCount] = i;
-                        visibleLightCount++;
-                    }
+                    visibleLightCount++;
                 }
             }
-            
-            // Allocate space in the global light index list
+
+            // Allocate space in the global light index list (sized for the worst case)
             let offset = atomicAdd(&globalLightIndexCount, visibleLightCount);
-            
+
             lightGrid[clusterIndex].offset = offset;
             lightGrid[clusterIndex].count = visibleLightCount;
-            
-            // Write light indices
-            for (var i = 0u; i < visibleLightCount; i++) {
-                lightIndices[offset + i] = visibleLightIndices[i];
+
+            // Pass 2: write light indices
+            var written = 0u;
+            for (var i = 0u; i < lightUniforms.lightCount && written < visibleLightCount; i++) {
+                let light = lights[i];
+                let lightPosView = (camera.viewMatrix * vec4f(light.position, 1.0)).xyz;
+                if (sphereIntersectsAABB(lightPosView, light.radius, bounds.minBounds, bounds.maxBounds)) {
+                    lightIndices[offset + written] = i;
+                    written++;
+                }
             }
         }
     `,
@@ -219,28 +228,35 @@ const SHADERS = {
         struct VertexInput {
             @location(0) position: vec3f,
             @location(1) normal: vec3f,
-            @location(2) color: vec2f,
+            @location(2) color: vec3f, // terrain color, or checkerboard uv for the room
+            @location(3) objectId: f32, // 0 = room, 1..n = spheres
         }
 
         struct VertexOutput {
             @builtin(position) clipPosition: vec4f,
             @location(0) worldPosition: vec3f,
             @location(1) normal: vec3f,
-            @location(2) color: vec2f,
+            @location(2) color: vec3f,
             @location(3) viewPosition: vec3f,
+            @location(4) @interpolate(flat) objectId: f32,
         }
         
         @group(0) @binding(0) var<uniform> camera: CameraUniforms;
-        
+        @group(0) @binding(1) var<storage, read> modelMatrices: array<mat4x4f>;
+
         @vertex
         fn main(input: VertexInput) -> VertexOutput {
             var output: VertexOutput;
 
-            output.worldPosition = input.position;
-            output.normal = input.normal;
-            output.color = input.color;
+            let model = modelMatrices[u32(input.objectId + 0.5)];
+            let worldPos = model * vec4f(input.position, 1.0);
 
-            let viewPos = camera.viewMatrix * vec4f(input.position, 1.0);
+            output.worldPosition = worldPos.xyz;
+            output.normal = (model * vec4f(input.normal, 0.0)).xyz;
+            output.color = input.color;
+            output.objectId = input.objectId;
+
+            let viewPos = camera.viewMatrix * worldPos;
             output.viewPosition = viewPos.xyz;
             output.clipPosition = camera.projMatrix * viewPos;
 
@@ -416,10 +432,11 @@ const SHADERS = {
             @builtin(position) clipPosition: vec4f,
             @location(0) worldPosition: vec3f,
             @location(1) normal: vec3f,
-            @location(2) color: vec2f,
+            @location(2) color: vec3f,
             @location(3) viewPosition: vec3f,
+            @location(4) @interpolate(flat) objectId: f32,
         }
-        
+
         fn getClusterIndex(fragCoord: vec2f, viewZ: f32) -> u32 {
             let x = u32(fragCoord.x / (camera.screenSize.x / f32(camera.clusterSize.x)));
             let y = u32(fragCoord.y / (camera.screenSize.y / f32(camera.clusterSize.y)));
@@ -493,20 +510,9 @@ const SHADERS = {
             let normal = normalize(input.normal);
             let viewDir = normalize(scene.cameraPosition - input.worldPosition);
 
-            // Base material color - use vertex color for spheres, checkerboard for room
-            var baseColor: vec3f;
+            // Terrain color straight from the vertex
+            let baseColor = input.color;
 
-            // Check if this is a colored sphere vertex (color.x or color.y > 0.6 indicates pastel)
-            if (input.color.x > 0.4 || input.color.y > 0.4) {
-                // Sphere with pastel color from vertex
-                baseColor = vec3f(input.color.x, input.color.y, input.color.x * 0.7 + input.color.y * 0.3);
-            } else {
-                // Room walls/floor with checkerboard pattern
-                let checker = floor(input.color.x * 4.0) + floor(input.color.y * 4.0);
-                let checkerMod = checker - floor(checker / 2.0) * 2.0;
-                baseColor = mix(vec3f(0.15, 0.15, 0.18), vec3f(0.25, 0.25, 0.28), checkerMod);
-            }
-            
             var totalLight = vec3f(0.02); // Ambient
             
             let clusterIndex = getClusterIndex(input.clipPosition.xy, input.viewPosition.z);
@@ -563,6 +569,9 @@ class ClusteredShadingApp {
             lightCount: 1168,
             lightIntensity: 1.0,
             lightRadius: 1.5,
+            extent: CONFIG.baseExtent, // radius of the ball the spheres and lights live in
+            sceneSize: 5, // clusters of spheres, drives light count and extent as well
+            sphereSpeed: 0.6, // how fast the spheres drift through the ball, 0 = standing still
             useClustered: true,
             debugMode: 0, // 0: normal, 1: clusters, 2: heat
             renderLightSprites: true,
@@ -717,9 +726,9 @@ class ClusteredShadingApp {
             usage: GPUBufferUsage.STORAGE,
         });
         
-        // Light indices buffer
+        // Light indices buffer (worst case: every cluster sees every light, ~28 MB)
         this.lightIndicesBuffer = this.device.createBuffer({
-            size: totalClusters * CONFIG.maxLightsPerCluster * 4,
+            size: totalClusters * CONFIG.maxLights * 4,
             usage: GPUBufferUsage.STORAGE,
         });
         
@@ -733,150 +742,145 @@ class ClusteredShadingApp {
         this.createSceneGeometry();
     }
     
-    // Simple noise function for organic surfaces
-    noise3D(x, y, z) {
-        // Simple pseudo-random noise based on position
-        const n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+    // Random value for one lattice point, stable for the same integer coordinates
+    hash3D(ix, iy, iz) {
+        const n = Math.sin(ix * 127.1 + iy * 311.7 + iz * 74.7) * 43758.5453;
         return n - Math.floor(n);
     }
 
-    smoothNoise(x, y, z) {
-        // Sample surrounding points for smoother noise
-        const corners = (
-            this.noise3D(x - 1, y - 1, z - 1) + this.noise3D(x + 1, y - 1, z - 1) +
-            this.noise3D(x - 1, y + 1, z - 1) + this.noise3D(x + 1, y + 1, z - 1) +
-            this.noise3D(x - 1, y - 1, z + 1) + this.noise3D(x + 1, y - 1, z + 1) +
-            this.noise3D(x - 1, y + 1, z + 1) + this.noise3D(x + 1, y + 1, z + 1)
-        ) / 16;
-        const sides = (
-            this.noise3D(x, y - 1, z - 1) + this.noise3D(x, y + 1, z - 1) +
-            this.noise3D(x - 1, y, z - 1) + this.noise3D(x + 1, y, z - 1) +
-            this.noise3D(x, y - 1, z + 1) + this.noise3D(x, y + 1, z + 1) +
-            this.noise3D(x - 1, y, z + 1) + this.noise3D(x + 1, y, z + 1) +
-            this.noise3D(x - 1, y - 1, z) + this.noise3D(x + 1, y - 1, z) +
-            this.noise3D(x - 1, y + 1, z) + this.noise3D(x + 1, y + 1, z)
-        ) / 12;
-        const center = this.noise3D(x, y, z) / 4;
-        return corners + sides + center;
+    // Gradient (Perlin) noise: every lattice point gets a random direction, and the value
+    // is interpolated between those slopes. Neighbouring positions therefore get similar
+    // heights, which is what turns random spikes into hills and valleys. Compared to plain
+    // value noise the shapes are rounder and show no grid pattern. Result is -1 to 1.
+    gradientNoise(x, y, z) {
+        const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+        const fx = x - ix, fy = y - iy, fz = z - iz;
+
+        // Quintic fade, so slopes and their curvature meet smoothly at the lattice points
+        const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+        const ux = fade(fx), uy = fade(fy), uz = fade(fz);
+
+        const mix = (a, b, t) => a + (b - a) * t;
+        const dot = (gx, gy, gz, dx, dy, dz) => {
+            const g = NOISE_GRADIENTS[Math.floor(this.hash3D(gx, gy, gz) * 12) % 12];
+            return g[0] * dx + g[1] * dy + g[2] * dz;
+        };
+        const face = (dz) => mix(
+            mix(dot(ix, iy, iz + dz, fx, fy, fz - dz), dot(ix + 1, iy, iz + dz, fx - 1, fy, fz - dz), ux),
+            mix(dot(ix, iy + 1, iz + dz, fx, fy - 1, fz - dz), dot(ix + 1, iy + 1, iz + dz, fx - 1, fy - 1, fz - dz), ux),
+            uy
+        );
+
+        return mix(face(0), face(1), uz);
     }
 
-    perlinNoise(x, y, z, octaves = 3) {
+    // Fractal sum: every octave adds finer detail at lower amplitude. lacunarity controls
+    // how much finer, gain how much weaker each octave gets. With ridged the noise is
+    // folded at zero, which produces sharp mountain ridges instead of round hills.
+    // Result is 0 to 1, averaging around NOISE_MEAN.smooth resp. NOISE_MEAN.ridged.
+    fbm(x, y, z, octaves = 4, lacunarity = 2.0, gain = 0.5, ridged = false) {
         let total = 0;
         let frequency = 1;
         let amplitude = 1;
         let maxValue = 0;
 
         for (let i = 0; i < octaves; i++) {
-            total += this.smoothNoise(x * frequency, y * frequency, z * frequency) * amplitude;
+            const noise = this.gradientNoise(x * frequency, y * frequency, z * frequency);
+            total += (ridged ? 1 - Math.abs(noise) : noise * 0.5 + 0.5) * amplitude;
             maxValue += amplitude;
-            amplitude *= 0.5;
-            frequency *= 2;
+            amplitude *= gain;
+            frequency *= lacunarity;
         }
 
         return total / maxValue;
     }
 
-    createSceneGeometry() {
-        // Create a room with floor, ceiling, and walls
-        const roomSize = 30; //Raumgrösse
-        const roomHeight = 12;
-        const halfSize = roomSize / 2;
+    // Unit icosphere: a subdivided icosahedron. Unlike a UV sphere it has evenly sized
+    // triangles and neither poles nor a seam, so displaced surfaces stay artifact free.
+    createIcosphere(subdivisions) {
+        const t = (1 + Math.sqrt(5)) / 2;
+        const directions = [
+            [-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0],
+            [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t],
+            [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1],
+        ].map(p => {
+            const len = Math.hypot(p[0], p[1], p[2]);
+            return [p[0] / len, p[1] / len, p[2] / len];
+        });
 
+        let faces = [
+            [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+            [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+            [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+            [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+        ];
+
+        // Split every triangle into four, sharing the new edge midpoints between neighbours
+        const midpointCache = new Map();
+        const midpoint = (a, b) => {
+            const key = a < b ? `${a}_${b}` : `${b}_${a}`;
+            let index = midpointCache.get(key);
+            if (index === undefined) {
+                const [ax, ay, az] = directions[a];
+                const [bx, by, bz] = directions[b];
+                const mx = (ax + bx) / 2, my = (ay + by) / 2, mz = (az + bz) / 2;
+                const len = Math.hypot(mx, my, mz);
+                index = directions.length;
+                directions.push([mx / len, my / len, mz / len]);
+                midpointCache.set(key, index);
+            }
+            return index;
+        };
+
+        for (let s = 0; s < subdivisions; s++) {
+            faces = faces.flatMap(([a, b, c]) => {
+                const ab = midpoint(a, b), bc = midpoint(b, c), ca = midpoint(c, a);
+                return [[a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]];
+            });
+        }
+
+        // Make sure every triangle faces outwards, so back-face culling keeps the outer side
+        const indices = [];
+        for (const [a, b, c] of faces) {
+            const [ax, ay, az] = directions[a];
+            const [bx, by, bz] = directions[b];
+            const [cx, cy, cz] = directions[c];
+            const ux = bx - ax, uy = by - ay, uz = bz - az;
+            const vx = cx - ax, vy = cy - ay, vz = cz - az;
+            const outward = (uy * vz - uz * vy) * ax + (uz * vx - ux * vz) * ay + (ux * vy - uy * vx) * az;
+            indices.push(a, ...(outward >= 0 ? [b, c] : [c, b]));
+        }
+
+        return { directions, indices };
+    }
+
+    createSceneGeometry() {
         const vertices = [];
         const indices = [];
         let vertexOffset = 0;
-        
-        const addQuad = (p1, p2, p3, p4, normal, uvScale = 1) => {
-            const baseIndex = vertexOffset;
 
-            // Calculate UV based on position for checkerboard
-            const uv1 = [(p1[0] + halfSize) / roomSize * uvScale, (p1[2] + halfSize) / roomSize * uvScale];
-            const uv2 = [(p2[0] + halfSize) / roomSize * uvScale, (p2[2] + halfSize) / roomSize * uvScale];
-            const uv3 = [(p3[0] + halfSize) / roomSize * uvScale, (p3[2] + halfSize) / roomSize * uvScale];
-            const uv4 = [(p4[0] + halfSize) / roomSize * uvScale, (p4[2] + halfSize) / roomSize * uvScale];
+        // The spheres float freely, there is no room around them. They are laid out inside
+        // a ball of this radius, and the Extent slider scales that layout at runtime.
+        const layoutRadius = CONFIG.baseExtent;
 
-            vertices.push(
-                ...p1, ...normal, uv1[0], uv1[1],
-                ...p2, ...normal, uv2[0], uv2[1],
-                ...p3, ...normal, uv3[0], uv3[1],
-                ...p4, ...normal, uv4[0], uv4[1]
-            );
-            
-            indices.push(
-                baseIndex, baseIndex + 1, baseIndex + 2,
-                baseIndex, baseIndex + 2, baseIndex + 3
-            );
-            
-            vertexOffset += 4;
-        };
-        
-        // Floor
-        addQuad(
-            [-halfSize, 0, -halfSize],
-            [halfSize, 0, -halfSize],
-            [halfSize, 0, halfSize],
-            [-halfSize, 0, halfSize],
-            [0, 1, 0], 4
-        );
-        
-        // Ceiling
-        addQuad(
-            [-halfSize, roomHeight, halfSize],
-            [halfSize, roomHeight, halfSize],
-            [halfSize, roomHeight, -halfSize],
-            [-halfSize, roomHeight, -halfSize],
-            [0, -1, 0], 4
-        );
-        
-        // Back wall
-        addQuad(
-            [-halfSize, 0, -halfSize],
-            [-halfSize, roomHeight, -halfSize],
-            [halfSize, roomHeight, -halfSize],
-            [halfSize, 0, -halfSize],
-            [0, 0, 1], 3
-        );
-        
-        // Front wall
-        addQuad(
-            [halfSize, 0, halfSize],
-            [halfSize, roomHeight, halfSize],
-            [-halfSize, roomHeight, halfSize],
-            [-halfSize, 0, halfSize],
-            [0, 0, -1], 3
-        );
-        
-        // Left wall
-        addQuad(
-            [-halfSize, 0, halfSize],
-            [-halfSize, roomHeight, halfSize],
-            [-halfSize, roomHeight, -halfSize],
-            [-halfSize, 0, -halfSize],
-            [1, 0, 0], 3
-        );
-        
-        // Right wall
-        addQuad(
-            [halfSize, 0, -halfSize],
-            [halfSize, roomHeight, -halfSize],
-            [halfSize, roomHeight, halfSize],
-            [halfSize, 0, halfSize],
-            [-1, 0, 0], 3
-        );
-        
         // Add clustered spheres
         const spheres = [];
-        const numClusters = 5; // Number of cluster centers
+        const numClusters = this.settings.sceneSize; // Number of cluster centers
         const spheresPerCluster = Math.floor(Math.random() * 3) + 3; // 3-5 spheres per cluster
         const minDistance = 2.5; // Minimum distance between sphere surfaces
 
-        // Generate cluster centers
+        // Generate cluster centers, spread through the ball
         const clusterCenters = [];
         for (let c = 0; c < numClusters; c++) {
+            const dirZ = Math.random() * 2 - 1;
+            const dirAngle = Math.random() * Math.PI * 2;
+            const dirR = Math.sqrt(1 - dirZ * dirZ);
+            // The cube root spreads the centers evenly instead of crowding the middle
+            const distance = layoutRadius * 0.65 * Math.cbrt(Math.random());
             clusterCenters.push([
-                (Math.random() - 0.5) * (roomSize * 0.6),
-                Math.random() * (roomHeight * 0.5) + 1,
-                (Math.random() - 0.5) * (roomSize * 0.6)
+                dirR * Math.cos(dirAngle) * distance,
+                dirZ * distance,
+                dirR * Math.sin(dirAngle) * distance,
             ]);
         }
 
@@ -900,10 +904,8 @@ class ClusteredShadingApp {
 
                     sphere = { x, y, z, radius };
 
-                    // Check if sphere is within room bounds
-                    if (Math.abs(x) > halfSize - radius ||
-                        y < radius || y > roomHeight - radius ||
-                        Math.abs(z) > halfSize - radius) {
+                    // Keep the sphere inside the layout ball
+                    if (Math.hypot(x, y, z) > layoutRadius - radius) {
                         attempts++;
                         continue;
                     }
@@ -927,143 +929,206 @@ class ClusteredShadingApp {
                 }
 
                 if (validPosition) {
+                    // Every sphere gets its own landscape: how many hills fit around it,
+                    // how detailed and how rugged they are, and how high the relief gets
+                    // A third of them get sharp mountain ridges instead of round hills. Ridges
+                    // add a lot of fine detail on their own, so they stay coarser and flatter.
+                    const ridged = Math.random() < 0.35;
+
+                    sphere.terrain = {
+                        ridged,
+                        featureScale: ridged ? 0.9 + Math.random() * 1.4 : 1.0 + Math.random() * 3.0, // few large continents ... many small islands
+                        octaves: 3 + Math.floor(Math.random() * 4), // 3-6 levels of detail
+                        lacunarity: 1.8 + Math.random() * 0.7,
+                        gain: ridged ? 0.3 + Math.random() * 0.15 : 0.35 + Math.random() * 0.3, // low = soft shapes, high = lots of fine detail
+                        relief: (0.08 + Math.random() * 0.22) * (ridged ? 0.6 : 1.0), // height of the terrain, relative to the radius
+                        warp: Math.random() * 0.8, // bends the shapes, so they are not round blobs
+                        regionScale: 0.5 + Math.random() * 1.2, // size of calm vs. mountainous regions
+                        climate: 0.7 + Math.random() * 0.6, // how far the colors spread from sea level
+                        // Every sphere samples its own patch of the noise, so no two look alike
+                        offset: [Math.random() * 100, Math.random() * 100, Math.random() * 100],
+                    };
+
+                    // Random rotation axis (uniform on the unit sphere) and a leisurely speed
+                    const axisZ = Math.random() * 2 - 1;
+                    const axisAngle = Math.random() * Math.PI * 2;
+                    const axisR = Math.sqrt(1 - axisZ * axisZ);
+                    sphere.rotationAxis = [axisR * Math.cos(axisAngle), axisR * Math.sin(axisAngle), axisZ];
+                    sphere.rotationSpeed = 0.12 + Math.random() * 0.18; // rad/s → one turn every ~20-50 s
+                    sphere.rotationAngle = Math.random() * Math.PI * 2;
+
+                    // Where the sphere currently is, and where it drifts. The vertices stay
+                    // at the original center, the model matrix moves the sphere from there.
+                    const spread = this.settings.extent / CONFIG.baseExtent;
+                    sphere.position = [sphere.x * spread, sphere.y * spread, sphere.z * spread];
+                    sphere.velocity = [
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8,
+                    ];
+                    sphere.hullRadius = 0; // grows to the highest peak while the mesh is built
+                    sphere.mass = sphere.radius ** 3; // big spheres are barely pushed by small ones
+
                     spheres.push(sphere);
                 }
             }
         }
 
         // Generate sphere geometry with noise and color variation
-        const sphereSegments = 48;
-        const sphereRings = 36;
+        const icosphere = this.createIcosphere(4); // 5120 triangles per sphere
 
-        for (const sphere of spheres) {
+        for (const [sphereIndex, sphere] of spheres.entries()) {
             const baseVertexOffset = vertexOffset;
+            const objectId = sphereIndex + 1;
 
             // Generate sphere vertices with noise displacement
-            for (let ring = 0; ring <= sphereRings; ring++) {
-                const phi = (ring / sphereRings) * Math.PI;
-                const sinPhi = Math.sin(phi);
-                const cosPhi = Math.cos(phi);
+            for (const [nx, ny, nz] of icosphere.directions) {
 
-                for (let seg = 0; seg <= sphereSegments; seg++) {
-                    const theta = (seg / sphereSegments) * Math.PI * 2;
-                    const sinTheta = Math.sin(theta);
-                    const cosTheta = Math.cos(theta);
+                const terrain = sphere.terrain;
+                const [ox, oy, oz] = terrain.offset;
+                const scale = terrain.featureScale;
 
-                    // Base normal
-                    const nx = cosTheta * sinPhi;
-                    const ny = cosPhi;
-                    const nz = sinTheta * sinPhi;
+                // Domain warp: sample the noise at a slightly bent position, which turns
+                // round blobs into drawn out ridges, bays and peninsulas
+                const wf = scale * 0.6;
+                const wx = this.fbm(nx * wf + ox, ny * wf + oy, nz * wf + oz, 2) - 0.5;
+                const wy = this.fbm(nx * wf + oy + 19.1, ny * wf + oz + 7.3, nz * wf + ox + 3.7, 2) - 0.5;
+                const wz = this.fbm(nx * wf + oz + 5.2, ny * wf + ox + 11.9, nz * wf + oy + 23.4, 2) - 0.5;
 
-                    // Apply multiple layers of noise for more organic, terrain-like displacement
-                    const noiseScale1 = 2.0;
-                    const noiseScale2 = 5.0;
-                    const noiseScale3 = 10.0;
+                // Terrain height, negative in valleys and positive on peaks. The noise stays
+                // close to its average, so stretch it to use the full range of the colors.
+                const height = (this.fbm(
+                    nx * scale + ox + wx * terrain.warp,
+                    ny * scale + oy + wy * terrain.warp,
+                    nz * scale + oz + wz * terrain.warp,
+                    terrain.octaves, terrain.lacunarity, terrain.gain, terrain.ridged
+                ) - (terrain.ridged ? NOISE_MEAN.ridged : NOISE_MEAN.smooth)) * 3.2;
 
-                    const noise1 = this.perlinNoise(
-                        nx * noiseScale1 + sphere.x * 0.1,
-                        ny * noiseScale1 + sphere.y * 0.1,
-                        nz * noiseScale1 + sphere.z * 0.1,
-                        3
-                    );
-                    const noise2 = this.perlinNoise(
-                        nx * noiseScale2 + sphere.x * 0.2,
-                        ny * noiseScale2 + sphere.y * 0.2,
-                        nz * noiseScale2 + sphere.z * 0.2,
-                        4
-                    );
-                    const noise3 = this.perlinNoise(
-                        nx * noiseScale3,
-                        ny * noiseScale3,
-                        nz * noiseScale3,
-                        2
-                    );
+                // Large calm regions and rugged ones on the same sphere: a very coarse
+                // noise decides how strong the relief is in this area
+                const region = this.fbm(
+                    nx * terrain.regionScale + ox * 0.5,
+                    ny * terrain.regionScale + oy * 0.5,
+                    nz * terrain.regionScale + oz * 0.5,
+                    2
+                );
 
-                    // Combine multiple noise layers for complex terrain
-                    const combinedNoise = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
+                const amplitude = terrain.relief * (0.3 + 1.2 * region);
+                const displacedRadius = sphere.radius * (1 + height * amplitude);
 
-                    // More dramatic displacement (up to 60% of radius)
-                    const displacement = (combinedNoise - 0.5) * sphere.radius * 0.6;
-                    const displacedRadius = sphere.radius + displacement;
+                // Remember the highest peak, that is the radius collisions have to use
+                sphere.hullRadius = Math.max(sphere.hullRadius, displacedRadius);
 
-                    // Position with noise displacement
-                    const px = sphere.x + nx * displacedRadius;
-                    const py = sphere.y + ny * displacedRadius;
-                    const pz = sphere.z + nz * displacedRadius;
+                // Position with noise displacement
+                const px = sphere.x + nx * displacedRadius;
+                const py = sphere.y + ny * displacedRadius;
+                const pz = sphere.z + nz * displacedRadius;
 
-                    // Calculate distance from sphere center for terrain-based coloring
-                    const distFromCenter = displacedRadius / sphere.radius;
+                // The colors follow their own, wider range than the geometry. Otherwise a
+                // sphere with gentle relief would be uniformly green, without water or peaks.
+                const distFromCenter = 1 + height * 0.35 * terrain.climate;
 
-                    // Terrain-based coloring: Ocean (blue) → Land (brown/green) → Mountain (gray) → Snow (white)
-                    let r, g, b;
+                // Terrain-based coloring: Ocean (blue) → Land (brown/green) → Mountain (gray) → Snow (white)
+                let r, g, b;
 
-                    if (distFromCenter < 0.75) {
-                        // Deep ocean - dark blue
-                        const t = distFromCenter / 0.75;
-                        r = 0.1 + t * 0.15;
-                        g = 0.2 + t * 0.25;
-                        b = 0.4 + t * 0.2;
-                    } else if (distFromCenter < 0.95) {
-                        // Shallow water to shore - lighter blue to sandy brown
-                        const t = (distFromCenter - 0.75) / 0.2;
-                        const waterR = 0.25, waterG = 0.45, waterB = 0.6;
-                        const sandR = 0.6, sandG = 0.5, sandB = 0.35;
-                        r = waterR + (sandR - waterR) * t;
-                        g = waterG + (sandG - waterG) * t;
-                        b = waterB + (sandB - waterB) * t;
-                    } else if (distFromCenter < 1.05) {
-                        // Land - brown and green
-                        const t = (distFromCenter - 0.95) / 0.1;
-                        const sandR = 0.6, sandG = 0.5, sandB = 0.35;
-                        const grassR = 0.35, grassG = 0.5, grassB = 0.3;
-                        r = sandR + (grassR - sandR) * t;
-                        g = sandG + (grassG - sandG) * t;
-                        b = sandB + (grassB - sandB) * t;
-                    } else if (distFromCenter < 1.2) {
-                        // Forest to mountain - green to gray
-                        const t = (distFromCenter - 1.05) / 0.15;
-                        const grassR = 0.35, grassG = 0.5, grassB = 0.3;
-                        const rockR = 0.45, rockG = 0.45, rockB = 0.48;
-                        r = grassR + (rockR - grassR) * t;
-                        g = grassG + (rockG - grassG) * t;
-                        b = grassB + (rockB - grassB) * t;
-                    } else if (distFromCenter < 1.35) {
-                        // Mountain - gray
-                        const t = (distFromCenter - 1.2) / 0.15;
-                        const rockR = 0.45, rockG = 0.45, rockB = 0.48;
-                        const snowR = 0.85, snowG = 0.85, snowB = 0.9;
-                        r = rockR + (snowR - rockR) * t;
-                        g = rockG + (snowG - rockG) * t;
-                        b = rockB + (snowB - rockB) * t;
-                    } else {
-                        // Snow peak - white
-                        const t = Math.min((distFromCenter - 1.35) / 0.15, 1.0);
-                        r = 0.85 + t * 0.12;
-                        g = 0.85 + t * 0.12;
-                        b = 0.9 + t * 0.08;
-                    }
+                if (distFromCenter < 0.75) {
+                    // Deep ocean - dark blue
+                    const t = distFromCenter / 0.75;
+                    r = 0.1 + t * 0.15;
+                    g = 0.2 + t * 0.25;
+                    b = 0.4 + t * 0.2;
+                } else if (distFromCenter < 0.95) {
+                    // Shallow water to shore - lighter blue to sandy brown
+                    const t = (distFromCenter - 0.75) / 0.2;
+                    const waterR = 0.25, waterG = 0.45, waterB = 0.6;
+                    const sandR = 0.6, sandG = 0.5, sandB = 0.35;
+                    r = waterR + (sandR - waterR) * t;
+                    g = waterG + (sandG - waterG) * t;
+                    b = waterB + (sandB - waterB) * t;
+                } else if (distFromCenter < 1.05) {
+                    // Land - brown and green
+                    const t = (distFromCenter - 0.95) / 0.1;
+                    const sandR = 0.6, sandG = 0.5, sandB = 0.35;
+                    const grassR = 0.35, grassG = 0.5, grassB = 0.3;
+                    r = sandR + (grassR - sandR) * t;
+                    g = sandG + (grassG - sandG) * t;
+                    b = sandB + (grassB - sandB) * t;
+                } else if (distFromCenter < 1.2) {
+                    // Forest to mountain - green to gray
+                    const t = (distFromCenter - 1.05) / 0.15;
+                    const grassR = 0.35, grassG = 0.5, grassB = 0.3;
+                    const rockR = 0.45, rockG = 0.45, rockB = 0.48;
+                    r = grassR + (rockR - grassR) * t;
+                    g = grassG + (rockG - grassG) * t;
+                    b = grassB + (rockB - grassB) * t;
+                } else if (distFromCenter < 1.35) {
+                    // Mountain - gray
+                    const t = (distFromCenter - 1.2) / 0.15;
+                    const rockR = 0.45, rockG = 0.45, rockB = 0.48;
+                    const snowR = 0.85, snowG = 0.85, snowB = 0.9;
+                    r = rockR + (snowR - rockR) * t;
+                    g = rockG + (snowG - rockG) * t;
+                    b = rockB + (snowB - rockB) * t;
+                } else {
+                    // Snow peak - white
+                    const t = Math.min((distFromCenter - 1.35) / 0.15, 1.0);
+                    r = 0.85 + t * 0.12;
+                    g = 0.85 + t * 0.12;
+                    b = 0.9 + t * 0.08;
+                }
 
-                    // Add subtle noise variation to colors for more natural look
-                    const colorNoise = noise3 * 0.08;
-                    r = Math.max(0, Math.min(1, r + colorNoise));
-                    g = Math.max(0, Math.min(1, g + colorNoise));
+                // Add subtle noise variation to colors for more natural look
+                const colorNoise = (this.fbm(nx * 12 + ox, ny * 12 + oy, nz * 12 + oz, 2) - 0.5) * 0.12;
+                r = Math.max(0, Math.min(1, r + colorNoise));
+                g = Math.max(0, Math.min(1, g + colorNoise));
+                b = Math.max(0, Math.min(1, b + colorNoise));
 
-                    vertices.push(px, py, pz, nx, ny, nz, r, g);
-                    vertexOffset++;
+                vertices.push(px, py, pz, nx, ny, nz, r, g, b, objectId);
+                vertexOffset++;
+            }
+
+            // Replace the ideal sphere normals with normals of the displaced surface,
+            // so the bumps catch the light (otherwise the rotation is barely visible).
+            // Each vertex averages the normals of the triangles it belongs to.
+            const stride = 10;
+            const normals = new Float32Array(icosphere.directions.length * 3);
+            for (let i = 0; i < icosphere.indices.length; i += 3) {
+                const ia = icosphere.indices[i], ib = icosphere.indices[i + 1], ic = icosphere.indices[i + 2];
+                const oa = (baseVertexOffset + ia) * stride;
+                const ob = (baseVertexOffset + ib) * stride;
+                const oc = (baseVertexOffset + ic) * stride;
+
+                const ux = vertices[ob] - vertices[oa];
+                const uy = vertices[ob + 1] - vertices[oa + 1];
+                const uz = vertices[ob + 2] - vertices[oa + 2];
+                const vx = vertices[oc] - vertices[oa];
+                const vy = vertices[oc + 1] - vertices[oa + 1];
+                const vz = vertices[oc + 2] - vertices[oa + 2];
+
+                // Triangle normal, its length is twice the area so bigger triangles weigh more
+                const fx = uy * vz - uz * vy;
+                const fy = uz * vx - ux * vz;
+                const fz = ux * vy - uy * vx;
+
+                for (const index of [ia, ib, ic]) {
+                    normals[index * 3] += fx;
+                    normals[index * 3 + 1] += fy;
+                    normals[index * 3 + 2] += fz;
                 }
             }
 
-            // Generate sphere indices
-            for (let ring = 0; ring < sphereRings; ring++) {
-                for (let seg = 0; seg < sphereSegments; seg++) {
-                    const current = baseVertexOffset + ring * (sphereSegments + 1) + seg;
-                    const next = current + sphereSegments + 1;
+            for (let i = 0; i < icosphere.directions.length; i++) {
+                const len = Math.hypot(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
+                if (len < 1e-8) continue; // keep the radial normal in degenerate spots
 
-                    indices.push(
-                        current, next, current + 1,
-                        current + 1, next, next + 1
-                    );
-                }
+                const o = (baseVertexOffset + i) * stride;
+                vertices[o + 3] = normals[i * 3] / len;
+                vertices[o + 4] = normals[i * 3 + 1] / len;
+                vertices[o + 5] = normals[i * 3 + 2] / len;
+            }
+
+            for (const index of icosphere.indices) {
+                indices.push(baseVertexOffset + index);
             }
         }
         
@@ -1080,6 +1145,171 @@ class ClusteredShadingApp {
         this.device.queue.writeBuffer(this.indexBuffer, 0, new Uint32Array(indices));
         
         this.indexCount = indices.length;
+
+        // Model matrices: index 0 = room (identity), 1..n = spheres
+        this.spheres = spheres;
+        this.modelMatrixData = new Float32Array((spheres.length + 1) * 16);
+        this.modelMatrixData.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 0);
+        this.modelMatrixBuffer = this.device.createBuffer({
+            size: this.modelMatrixData.byteLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    // Scale the ball everything lives in. The lights move along, so they keep their
+    // relative positions instead of clumping in the middle.
+    setExtent(extent) {
+        const scale = extent / this.settings.extent;
+        this.settings.extent = extent;
+
+        for (const light of this.lights) {
+            light.position[0] *= scale;
+            light.position[1] *= scale;
+            light.position[2] *= scale;
+        }
+
+        for (const sphere of this.spheres ?? []) {
+            sphere.position[0] *= scale;
+            sphere.position[1] *= scale;
+            sphere.position[2] *= scale;
+        }
+
+        document.getElementById('extent-slider').value = extent;
+        document.getElementById('extent-slider-value').textContent = extent;
+    }
+
+    setLightCount(count) {
+        this.settings.lightCount = count;
+        document.getElementById('light-slider').value = count;
+        document.getElementById('light-slider-value').textContent = count;
+        document.getElementById('light-count').textContent = count;
+    }
+
+    // Build the spheres again, for instance after the Scene Size slider changed their
+    // number. The old buffers are released and the bind group gets the new matrices.
+    rebuildScene() {
+        this.vertexBuffer.destroy();
+        this.indexBuffer.destroy();
+        this.modelMatrixBuffer.destroy();
+
+        this.createSceneGeometry();
+
+        this.sceneCameraBindGroup = this.device.createBindGroup({
+            layout: this.scenePipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: { buffer: this.cameraUniformBuffer } },
+                { binding: 1, resource: { buffer: this.modelMatrixBuffer } },
+            ],
+        });
+    }
+
+    // Let the spheres drift through the ball and bounce off each other. The meshes stay
+    // where they are, only the model matrix moves them, so this costs a handful of vector
+    // operations per sphere and pair - the geometry never has to be rebuilt for it.
+    moveSpheres(dt) {
+        const extent = this.settings.extent;
+        // Scale the speed with the ball, so the motion looks the same at every size
+        const speed = this.settings.sphereSpeed * (extent / CONFIG.baseExtent);
+
+        for (const sphere of this.spheres) {
+            sphere.position[0] += sphere.velocity[0] * dt * speed;
+            sphere.position[1] += sphere.velocity[1] * dt * speed;
+            sphere.position[2] += sphere.velocity[2] * dt * speed;
+
+            // Bounce off the shell, keeping the highest peak inside
+            const [px, py, pz] = sphere.position;
+            const distance = Math.hypot(px, py, pz);
+            const limit = Math.max(0, extent - sphere.hullRadius);
+
+            if (distance > limit && distance > 1e-6) {
+                const nx = px / distance, ny = py / distance, nz = pz / distance;
+                const along = sphere.velocity[0] * nx + sphere.velocity[1] * ny + sphere.velocity[2] * nz;
+
+                if (along > 0) {
+                    sphere.velocity[0] -= 2 * along * nx;
+                    sphere.velocity[1] -= 2 * along * ny;
+                    sphere.velocity[2] -= 2 * along * nz;
+                }
+
+                sphere.position[0] = nx * limit;
+                sphere.position[1] = ny * limit;
+                sphere.position[2] = nz * limit;
+            }
+        }
+
+        // Bounce the spheres off each other. Every pair is looked at once, which is a few
+        // hundred comparisons for a few dozen spheres.
+        for (let i = 0; i < this.spheres.length; i++) {
+            const a = this.spheres[i];
+
+            for (let j = i + 1; j < this.spheres.length; j++) {
+                const b = this.spheres[j];
+
+                const dx = b.position[0] - a.position[0];
+                const dy = b.position[1] - a.position[1];
+                const dz = b.position[2] - a.position[2];
+                const distance = Math.hypot(dx, dy, dz);
+                const touching = a.hullRadius + b.hullRadius;
+                if (distance >= touching || distance < 1e-6) continue;
+
+                const nx = dx / distance, ny = dy / distance, nz = dz / distance;
+                const total = a.mass + b.mass;
+
+                // Push both out of the overlap, the heavier one less
+                const overlap = touching - distance;
+                const aShare = overlap * (b.mass / total);
+                const bShare = overlap * (a.mass / total);
+                a.position[0] -= nx * aShare; a.position[1] -= ny * aShare; a.position[2] -= nz * aShare;
+                b.position[0] += nx * bShare; b.position[1] += ny * bShare; b.position[2] += nz * bShare;
+
+                // Elastic collision along the contact normal, mass grows with the volume
+                const aAlong = a.velocity[0] * nx + a.velocity[1] * ny + a.velocity[2] * nz;
+                const bAlong = b.velocity[0] * nx + b.velocity[1] * ny + b.velocity[2] * nz;
+                if (aAlong - bAlong <= 0) continue; // already drifting apart
+
+                const aAfter = (aAlong * (a.mass - b.mass) + 2 * b.mass * bAlong) / total;
+                const bAfter = (bAlong * (b.mass - a.mass) + 2 * a.mass * aAlong) / total;
+
+                a.velocity[0] += (aAfter - aAlong) * nx;
+                a.velocity[1] += (aAfter - aAlong) * ny;
+                a.velocity[2] += (aAfter - aAlong) * nz;
+                b.velocity[0] += (bAfter - bAlong) * nx;
+                b.velocity[1] += (bAfter - bAlong) * ny;
+                b.velocity[2] += (bAfter - bAlong) * nz;
+            }
+        }
+    }
+
+    updateSpheres(dt) {
+        this.moveSpheres(dt);
+
+        for (const [i, sphere] of this.spheres.entries()) {
+            sphere.rotationAngle += sphere.rotationSpeed * dt;
+
+            // Axis-angle rotation matrix R
+            const [x, y, z] = sphere.rotationAxis;
+            const c = Math.cos(sphere.rotationAngle);
+            const s = Math.sin(sphere.rotationAngle);
+            const t = 1 - c;
+            const r00 = c + x * x * t,     r01 = x * y * t - z * s, r02 = x * z * t + y * s;
+            const r10 = y * x * t + z * s, r11 = c + y * y * t,     r12 = y * z * t - x * s;
+            const r20 = z * x * t - y * s, r21 = z * y * t + x * s, r22 = c + z * z * t;
+
+            // Rotate around the sphere center, then put it where it has drifted to:
+            // M = T(position) * R * T(-center), column-major
+            const cx = sphere.x, cy = sphere.y, cz = sphere.z;
+            const [tx, ty, tz] = sphere.position;
+            this.modelMatrixData.set([
+                r00, r10, r20, 0,
+                r01, r11, r21, 0,
+                r02, r12, r22, 0,
+                tx - (r00 * cx + r01 * cy + r02 * cz),
+                ty - (r10 * cx + r11 * cy + r12 * cz),
+                tz - (r20 * cx + r21 * cy + r22 * cz),
+                1,
+            ], (i + 1) * 16);
+        }
+        this.device.queue.writeBuffer(this.modelMatrixBuffer, 0, this.modelMatrixData);
     }
     
     createPipelines() {
@@ -1143,11 +1373,12 @@ class ClusteredShadingApp {
                 module: sceneVertexModule,
                 entryPoint: 'main',
                 buffers: [{
-                    arrayStride: 32, // 3 pos + 3 normal + 2 uv
+                    arrayStride: 40, // 3 pos + 3 normal + 3 color + 1 objectId
                     attributes: [
                         { shaderLocation: 0, offset: 0, format: 'float32x3' },
                         { shaderLocation: 1, offset: 12, format: 'float32x3' },
-                        { shaderLocation: 2, offset: 24, format: 'float32x2' },
+                        { shaderLocation: 2, offset: 24, format: 'float32x3' },
+                        { shaderLocation: 3, offset: 36, format: 'float32' },
                     ],
                 }],
             },
@@ -1171,6 +1402,7 @@ class ClusteredShadingApp {
             layout: this.scenePipeline.getBindGroupLayout(0),
             entries: [
                 { binding: 0, resource: { buffer: this.cameraUniformBuffer } },
+                { binding: 1, resource: { buffer: this.modelMatrixBuffer } },
             ],
         });
         
@@ -1236,16 +1468,18 @@ class ClusteredShadingApp {
     initLights() {
         this.lights = [];
         this.lightVelocities = [];
-        
-        const roomSize = 28;
-        const roomHeight = 9;
-        
+
         for (let i = 0; i < CONFIG.maxLights; i++) {
-            // Random position in room
-            const x = (Math.random() - 0.5) * roomSize;
-            const y = Math.random() * roomHeight + 0.5;
-            const z = (Math.random() - 0.5) * roomSize;
-            
+            // Random position inside the ball, evenly spread (cube root of the random radius)
+            const dirZ = Math.random() * 2 - 1;
+            const dirAngle = Math.random() * Math.PI * 2;
+            const dirR = Math.sqrt(1 - dirZ * dirZ);
+            const distance = this.settings.extent * Math.cbrt(Math.random());
+
+            const x = dirR * Math.cos(dirAngle) * distance;
+            const y = dirZ * distance;
+            const z = dirR * Math.sin(dirAngle) * distance;
+
             // Pastel colors (closer to white, less saturated)
             const hue = Math.random();
             const saturation = 0.7 + Math.random() * 0.2; // 0.3-0.5 saturation for pastel
@@ -1277,9 +1511,7 @@ class ClusteredShadingApp {
     }
     
     updateLights(dt) {
-        const roomSize = 28;
-        const roomHeight = 9;
-        const halfSize = roomSize / 2;
+        const extent = this.settings.extent;
 
         for (let i = 0; i < this.settings.lightCount; i++) {
             const light = this.lights[i];
@@ -1289,21 +1521,27 @@ class ClusteredShadingApp {
             light.position[0] += vel[0] * dt * this.settings.spriteSpeed;
             light.position[1] += vel[1] * dt * this.settings.spriteSpeed;
             light.position[2] += vel[2] * dt * this.settings.spriteSpeed;
-            
-            // Bounce off walls
-            if (light.position[0] < -halfSize || light.position[0] > halfSize) {
-                vel[0] *= -1;
-                light.position[0] = Math.max(-halfSize, Math.min(halfSize, light.position[0]));
+
+            // Bounce off the invisible shell of the ball: mirror the velocity at the
+            // surface normal and put the light back onto the surface
+            const distance = Math.hypot(light.position[0], light.position[1], light.position[2]);
+            if (distance > extent) {
+                const nx = light.position[0] / distance;
+                const ny = light.position[1] / distance;
+                const nz = light.position[2] / distance;
+                const along = vel[0] * nx + vel[1] * ny + vel[2] * nz;
+
+                if (along > 0) {
+                    vel[0] -= 2 * along * nx;
+                    vel[1] -= 2 * along * ny;
+                    vel[2] -= 2 * along * nz;
+                }
+
+                light.position[0] = nx * extent;
+                light.position[1] = ny * extent;
+                light.position[2] = nz * extent;
             }
-            if (light.position[1] < 0.5 || light.position[1] > roomHeight) {
-                vel[1] *= -1;
-                light.position[1] = Math.max(0.5, Math.min(roomHeight, light.position[1]));
-            }
-            if (light.position[2] < -halfSize || light.position[2] > halfSize) {
-                vel[2] *= -1;
-                light.position[2] = Math.max(-halfSize, Math.min(halfSize, light.position[2]));
-            }
-            
+
             // Update intensity and radius from settings
             light.intensity = this.settings.lightIntensity;
             light.radius = this.settings.lightRadius;
@@ -1372,8 +1610,9 @@ class ClusteredShadingApp {
             this.camera.position[1] -= moveSpeed;
         }
 
-        // Clamp camera height
-        this.camera.position[1] = Math.max(0.5, Math.min(9.5, this.camera.position[1]));
+        // Clamp camera height, there is no floor any more so it may go below the scene
+        const heightLimit = this.settings.extent + 10;
+        this.camera.position[1] = Math.max(-heightLimit, Math.min(heightLimit, this.camera.position[1]));
         
         // Build matrices
         const aspect = this.canvas.width / this.canvas.height;
@@ -1503,9 +1742,24 @@ class ClusteredShadingApp {
         return inv;
     }
     
+    // Slide the settings panel out of the way. The button moves into its place, and how
+    // far it has to move is only known once the panel has been laid out.
+    togglePanel() {
+        const overlay = document.getElementById('ui-overlay');
+        const panel = overlay.querySelector('.panel');
+        const gap = parseFloat(getComputedStyle(overlay).gap) || 12;
+
+        overlay.style.setProperty('--panel-shift', `-${panel.offsetWidth + gap}px`);
+        overlay.classList.toggle('panel-hidden');
+    }
+
     setupEventListeners() {
+        // Panel toggle, by button or with the H key
+        document.getElementById('toggle-panel').addEventListener('click', () => this.togglePanel());
+
         // Keyboard
         window.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyH') this.togglePanel();
             this.keys[e.code] = true;
         });
         window.addEventListener('keyup', (e) => {
@@ -1557,9 +1811,7 @@ class ClusteredShadingApp {
         // UI Controls
         const lightSlider = document.getElementById('light-slider');
         lightSlider.addEventListener('input', (e) => {
-            this.settings.lightCount = parseInt(e.target.value);
-            document.getElementById('light-slider-value').textContent = this.settings.lightCount;
-            document.getElementById('light-count').textContent = this.settings.lightCount;
+            this.setLightCount(parseInt(e.target.value));
         });
         
         const intensitySlider = document.getElementById('intensity-slider');
@@ -1568,6 +1820,29 @@ class ClusteredShadingApp {
             document.getElementById('intensity-slider-value').textContent = this.settings.lightIntensity.toFixed(1);
         });
         
+        // Extent: scales the ball the spheres and lights live in
+        const extentSlider = document.getElementById('extent-slider');
+        extentSlider.addEventListener('input', (e) => {
+            this.setExtent(parseFloat(e.target.value));
+        });
+
+        // Scene Size: more spheres, more lights and a wider ball in one go. The extent grows
+        // with the cube root of the light count, so the lights stay equally dense.
+        const sceneSizeSlider = document.getElementById('scene-size-slider');
+        const applySceneSize = (size) => {
+            this.settings.sceneSize = size;
+            document.getElementById('scene-size-value').textContent = size;
+            this.setLightCount(Math.min(CONFIG.maxLights, Math.round(230 * size / 16) * 16));
+            this.setExtent(Math.round(CONFIG.baseExtent * Math.cbrt(size / 5)));
+        };
+
+        sceneSizeSlider.addEventListener('input', (e) => {
+            applySceneSize(parseInt(e.target.value));
+        });
+
+        // Rebuilding the spheres takes a moment, so only do it once the slider is released
+        sceneSizeSlider.addEventListener('change', () => this.rebuildScene());
+
         const radiusSlider = document.getElementById('radius-slider');
         radiusSlider.addEventListener('input', (e) => {
             this.settings.lightRadius = parseFloat(e.target.value);
@@ -1579,6 +1854,13 @@ class ClusteredShadingApp {
         spriteSizeSlider.addEventListener('input', (e) => {
             this.settings.spriteSize = parseFloat(e.target.value);
             document.getElementById('sprite-size-value').textContent = this.settings.spriteSize.toFixed(1);
+        });
+
+        // Sphere speed slider
+        const sphereSpeedSlider = document.getElementById('sphere-speed-slider');
+        sphereSpeedSlider.addEventListener('input', (e) => {
+            this.settings.sphereSpeed = parseFloat(e.target.value);
+            document.getElementById('sphere-speed-value').textContent = this.settings.sphereSpeed.toFixed(1);
         });
 
         // Sprite speed slider
@@ -1657,6 +1939,7 @@ class ClusteredShadingApp {
         
         // Update
         this.updateLights(dt);
+        this.updateSpheres(dt);
         this.updateCamera();
         
         // Get current texture
