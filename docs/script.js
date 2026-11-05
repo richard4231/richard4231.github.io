@@ -42,7 +42,7 @@ function renderTabs(data){
         <h3>Was findest du hier?</h3>
         <ul>
           <li><strong>Simulationen:</strong> Wahrscheinlichkeitsexperimente mit Gummibärchen, Schokolinsen und anderen spielerischen Zugängen</li>
-          <li><strong>3D-Visualisierungen:</strong> Interaktive 3D-Modelle zu geometrischen Konzepten (Cavalieri-Prinzip, Wurzelschnecke, kubische Zahlen)</li>
+          <li><strong>3D-Visualisierungen:</strong> Interaktive 3D-Modelle zu geometrischen Konzepten (Cavalieri-Prinzip, Wurzelschnecke, kubische Zahlen, Kugelstapel)</li>
           <li><strong>Mathematische Spielereien:</strong> Erkundungen zu Pi, Sonnenblumen, Pascal-Dreieck und Sierpinski-Mustern</li>
           <li><strong>Mathbuch:</strong> Ergänzende Apps zum Mathbuch</li>
         </ul>

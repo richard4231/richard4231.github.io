@@ -15,6 +15,7 @@
 - [Wurzelschnecke](https://richard4231.github.io/26-01-Wurzelschnecke/)
 - [Kubische Zahlen rekursiv](https://richard4231.github.io/24-11-exploding-cubes/)
 - [WebGPU Demo](https://richard4231.github.io/25-12-spheres-n-lights-2/)
+- [Kugeln stapeln](https://richard4231.github.io/26-11-Kugeln-stapeln/)
 
 ## Spikey
 - [Spikey](https://richard4231.github.io/25-02-Spikey-v03/)
