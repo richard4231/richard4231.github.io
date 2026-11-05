@@ -91,13 +91,34 @@ button.primary { background: var(--accent); color: var(--accent-ink); border-col
 button:disabled { opacity: 0.45; cursor: default; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; }
-.stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
-.stepper output { font-size: 20px; font-weight: 600; }
 .check { display: flex; gap: 10px; align-items: center; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 input[type="range"]:disabled { opacity: 0.45; cursor: default; }
-.readout { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+/* menu sections: "Aufbau" always open, "Darstellung" folds */
+.sec { display: flex; flex-direction: column; gap: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.sec-h { font-family: 'Source Serif 4', Georgia, serif; font-weight: 500; font-size: 20px; line-height: 1.2; margin: 0; }
+details.sec > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: '+'; font-family: 'Public Sans', Arial, sans-serif; font-size: 22px; color: var(--muted); }
+details.sec[open] > summary::after { content: '−'; }
+details.sec { display: block; }   /* a folded section takes no extra room */
+.sec-body { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
+.about summary { color: var(--muted); font-size: 15px; }
+.about .lead { margin-top: 8px; }
+.valrow { display: flex; justify-content: space-between; align-items: baseline; }
+.valrow output { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.slide { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; align-items: center; }
+.slide button { padding: 6px 0; }
+/* stacking controls: a bar at the bottom of the scene, reachable with the menu closed */
+.player {
+  position: absolute; bottom: var(--gap); left: 50%; transform: translateX(-50%); z-index: 6;
+  width: max-content; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+.player button { white-space: nowrap; }
+.player .short { display: none; }
 #sol { display: flex; flex-direction: column; gap: 12px; }
 .count { font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; line-height: 1.2; }
 .pair .count { font-size: 22px; }
@@ -120,8 +141,13 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
   /* on a phone the menu drops below the button and spans the width */
   :root { --pw: calc(100vw - 2 * var(--gap)); }
   .panel { top: calc(var(--gap) + 54px); max-height: calc(100% - 54px - 2 * var(--gap)); }
+  .panel { max-height: calc(100% - 54px - 3 * var(--gap) - 64px); }
   .menu-btn, .menu-btn[aria-expanded="false"] { left: var(--gap); }
-  .title { left: auto; right: var(--gap); transform: none; top: 24px; font-size: 20px; }
+  .title { display: none; }
+  .player { left: var(--gap) !important; right: var(--gap); width: auto; transform: none; max-width: none !important; flex-wrap: nowrap; gap: 6px; padding: 6px; }
+  .player button { flex: 1; padding: 10px 4px; font-size: 14px; }
+  .player .long { display: none; }
+  .player .short { display: inline; }
 }
 </style>
 </head>
@@ -134,82 +160,90 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
       <button type="button" role="tab" id="v1" aria-selected="true">Marktstapel</button>
       <button type="button" role="tab" id="v2" aria-selected="false">Kiste</button>
     </div>
-    <p class="lead" id="lead"></p>
+    <details class="about"><summary>Worum geht's?</summary><p class="lead" id="lead"></p></details>
 
-    <div class="group" data-view="1">
-      <span class="label" id="baseLabel">Grundfläche</span>
-      <div class="seg" role="group" aria-labelledby="baseLabel">
-        <button type="button" id="bSquare" aria-pressed="true">Quadrat</button>
-        <button type="button" id="bTri" aria-pressed="false">Dreieck</button>
+    <section class="sec" aria-labelledby="secBuild">
+      <h2 class="sec-h" id="secBuild">Aufbau</h2>
+      <div class="group" data-view="1">
+        <span class="label" id="baseLabel">Grundfläche</span>
+        <div class="seg" role="group" aria-labelledby="baseLabel">
+          <button type="button" id="bSquare" aria-pressed="true">Quadrat</button>
+          <button type="button" id="bTri" aria-pressed="false">Dreieck</button>
+        </div>
       </div>
-    </div>
 
-    <div class="group" data-view="1">
-      <span class="label" id="layLabel">Ebenen</span>
-      <div class="stepper" role="group" aria-labelledby="layLabel">
-        <button type="button" id="lessN" aria-label="Eine Ebene weniger">−</button>
-        <output id="nOut" aria-live="polite">4</output>
-        <button type="button" id="moreN" aria-label="Eine Ebene mehr">+</button>
+      <div class="group" data-view="1">
+        <div class="valrow"><label class="label" for="nRange">Ebenen</label><output id="nOut" for="nRange">4</output></div>
+        <div class="slide">
+          <button type="button" id="lessN" aria-label="Eine Ebene weniger">−</button>
+          <input type="range" id="nRange" min="2" max="24" step="1" value="4">
+          <button type="button" id="moreN" aria-label="Eine Ebene mehr">+</button>
+        </div>
       </div>
-    </div>
 
-    <div class="group" data-view="2" hidden>
-      <span class="label" id="boxLabel">Kugeln pro Kistenkante</span>
-      <div class="stepper" role="group" aria-labelledby="boxLabel">
-        <button type="button" id="lessM" aria-label="Kleinere Kiste">−</button>
-        <output id="mOut" aria-live="polite">4</output>
-        <button type="button" id="moreM" aria-label="Grössere Kiste">+</button>
+      <div class="group" data-view="2" hidden>
+        <div class="valrow"><label class="label" for="mRange">Kugeln pro Kistenkante</label><output id="mOut" for="mRange">4</output></div>
+        <div class="slide">
+          <button type="button" id="lessM" aria-label="Kleinere Kiste">−</button>
+          <input type="range" id="mRange" min="2" max="7" step="1" value="4">
+          <button type="button" id="moreM" aria-label="Grössere Kiste">+</button>
+        </div>
       </div>
-    </div>
 
-    <div class="group">
-      <span class="label" id="colLabel">Farbe der Kugeln</span>
-      <div class="seg three" role="group" aria-labelledby="colLabel">
-        <button type="button" id="cBunt" aria-pressed="true">Bunt</button>
-        <button type="button" id="cStahl" aria-pressed="false">Stahlblau</button>
-        <button type="button" id="cGrau" aria-pressed="false">Grau</button>
+      <label class="check"><input type="checkbox" id="keepFull"> Immer gefüllt zeigen</label>
+    </section>
+
+    <details class="sec" id="look">
+      <summary class="sec-h">Darstellung</summary>
+      <div class="sec-body">
+      <div class="group">
+        <span class="label" id="colLabel">Farbe der Kugeln</span>
+        <div class="seg three" role="group" aria-labelledby="colLabel">
+          <button type="button" id="cBunt" aria-pressed="true">Bunt</button>
+          <button type="button" id="cStahl" aria-pressed="false">Stahlblau</button>
+          <button type="button" id="cGrau" aria-pressed="false">Grau</button>
+        </div>
       </div>
-    </div>
-    <div class="group">
-      <label class="label" for="sat">Sättigung (Bunt)</label>
-      <input type="range" id="sat" min="0" max="1" step="0.01" value="0.5">
-      <div class="satScale" aria-hidden="true"><span>grau</span><span>pastell</span><span>kräftig</span></div>
-    </div>
-
-    <div class="group">
-      <button type="button" class="primary" id="next">Nächste Kugel</button>
-      <div class="row">
-        <button type="button" id="layer">Ganze Ebene</button>
-        <button type="button" id="play">Abspielen</button>
+      <div class="group" id="satGroup">
+        <label class="label" for="sat">Sättigung</label>
+        <input type="range" id="sat" min="0" max="1" step="0.01" value="0.5">
+        <div class="satScale" aria-hidden="true"><span>grau</span><span>pastell</span><span>kräftig</span></div>
       </div>
-      <div class="row">
-        <button type="button" id="skip">Überspringen</button>
-        <button type="button" id="reset">Neu beginnen</button>
+      <div class="group" data-view="1">
+        <label class="label" for="explode">Ebenen anheben</label>
+        <input type="range" id="explode" min="0" max="1" step="0.01" value="0">
       </div>
-    </div>
+      <div class="group">
+        <label class="label" for="transp">Transparenz der Kugeln</label>
+        <input type="range" id="transp" min="0" max="0.8" step="0.01" value="0.07">
+      </div>
+      <div class="group" data-view="2" hidden>
+        <label class="label" for="boxTransp">Transparenz der Kiste</label>
+        <input type="range" id="boxTransp" min="0" max="1" step="0.01" value="0.75">
+      </div>
+      </div>
+    </details>
 
-    <div class="group">
-      <label class="label" for="explode">Ebenen anheben</label>
-      <input type="range" id="explode" min="0" max="1" step="0.01" value="0">
-    </div>
-    <div class="group">
-      <label class="label" for="transp">Transparenz der Kugeln</label>
-      <input type="range" id="transp" min="0" max="0.8" step="0.01" value="0.07">
-    </div>
-    <div class="group" data-view="2" hidden>
-      <label class="label" for="boxTransp">Transparenz der Kiste</label>
-      <input type="range" id="boxTransp" min="0" max="1" step="0.01" value="0.75">
-    </div>
-
-    <div class="readout">
-      <label class="check"><input type="checkbox" id="showSol" checked> Anzahl und Formel zeigen</label>
-      <div id="sol" aria-live="polite"></div>
-      <details id="cmp" hidden><summary>Alle Kistengrössen im Vergleich</summary><div id="cmpBody"></div></details>
-      <p class="drop" id="drop"></p>
-    </div>
+    <details class="sec" id="readout">
+      <summary class="sec-h">Anzahl und Formel</summary>
+      <div class="sec-body">
+        <div id="sol" aria-live="polite"></div>
+        <details id="cmp" hidden><summary>Alle Kistengrössen im Vergleich</summary><div id="cmpBody"></div></details>
+        <p class="drop" id="drop"></p>
+      </div>
+    </details>
 
     <p class="hint">Ziehen dreht die Ansicht, Scrollen oder zwei Finger zoomen. Esc stapelt sofort fertig.</p>
   </aside>
+
+  <div class="player" id="player" role="toolbar" aria-label="Stapeln">
+    <button type="button" class="primary" id="next"><span class="long">Nächste Kugel</span><span class="short">Kugel</span></button>
+    <button type="button" id="layer"><span class="long">Ganze Ebene</span><span class="short">Ebene</span></button>
+    <button type="button" id="play"></button>
+    <button type="button" id="skip"><span class="long">Fertig stapeln</span><span class="short">Fertig</span></button>
+    <button type="button" id="reset"><span class="long">Neu beginnen</span><span class="short">Neu</span></button>
+  </div>
+
   <main class="stage" id="stage">
     <div class="tag" id="tagL" hidden>Kugel über Kugel</div>
     <div class="tag" id="tagR" hidden>In der Kuhle</div>
@@ -350,7 +384,9 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     }
     boxMat.opacity = 1 - boxTransp;
     boxMat.visible = boxTransp < 0.99;
-    edgeMat.opacity = 0.25 + 0.6 * (1 - boxTransp);
+    // the edges fade together with the walls and vanish with them
+    edgeMat.opacity = Math.min(1, 1.6 * (1 - boxTransp));
+    edgeMat.visible = edgeMat.opacity > 0.01;
   }
 
   // ---------- state ----------
@@ -457,7 +493,7 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     const edge = (x, y, z, rx, rz) => {
       const e = new THREE.Mesh(beam, edgeMat);
       e.position.set(x, y, z); e.rotation.set(rx, 0, rz);
-      e.renderOrder = 2;
+      e.renderOrder = 0.5;   // drawn before the walls: a wall in front of an edge covers it, the more the less transparent it is
       g.add(e);
     };
     for (const a of [-hs, hs]) for (const b of [-hs, hs]) {
@@ -482,7 +518,8 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
 
   function boxOffset() { return M * R + 1.6 * R; }
 
-  function rebuild() {
+  let keepFull = false;
+  function rebuild(fresh) {
     clearAll();
     playing = false; setPlayLabel();
     if (view === 1) {
@@ -493,6 +530,8 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
       boxes = [makeBox(-off, side), makeBox(off, side)];
     }
     stacks.forEach(st => { while (st.placed < st.targets.length && st.targets[st.placed].L === 0) { addSettled(st, st.placed); st.placed++; } });
+    // "Immer gefüllt zeigen": every change of size shows the finished stacks at once; "Neu beginnen" and "Abspielen" still start empty
+    if (keepFull && fresh !== true) stacks.forEach(st => { while (st.placed < st.targets.length) { addSettled(st, st.placed); st.placed++; } });
     fitCamera();
     updateReadout();
   }
@@ -511,7 +550,7 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
       camera.position.set(size * 0.12, size * 0.62, size * 1.18);
     }
     // a narrow free area (phone, or the menu taking room) moves the camera back, so the whole scene fits
-    const w = stage.clientWidth - 2 * targetShift(), h = stage.clientHeight;
+    const [fa, fb] = freeArea(), w = fb - fa, h = stage.clientHeight;
     const k = (w > 0 && h > 0) ? Math.max(1, (view === 1 ? 1.15 : 1.6) / (w / h)) : 1;
     const ty = targetY();
     camera.position.y = ty + (camera.position.y - ty) * k;
@@ -539,11 +578,9 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
       '<p class="note">Ab 6 Kugeln pro Kante fasst die Kiste mit Kuhlen immer mehr. Sie verliert an zwei Stellen: Jede zweite Schicht hat am Rand eine Reihe weniger, und oben bleibt Platz frei, weil ein Vielfaches von √2 r nie genau in der Kistenhöhe aufgeht. Mit wachsender Kiste nähert sich das Verhältnis √2 ≈ 1,41.</p>';
   }
   function updateReadout() {
-    const show = $('showSol').checked;
-    $('sol').hidden = !show;
-    $('cmp').hidden = !show || view !== 2;
-    $('nOut').textContent = N;
-    $('mOut').textContent = M;
+    $('cmp').hidden = view !== 2;
+    $('nOut').textContent = $('nRange').value = N;
+    $('mOut').textContent = $('mRange').value = M;
     if (view === 1) {
       const st = stacks[0], term = k => (base === 'square' ? k + '²' : String(k * (k + 1) / 2));
       // up to 7 layers every term is shown, beyond that the sum is shortened with an ellipsis
@@ -660,7 +697,10 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     updateReadout();
   }
 
-  function setPlayLabel() { $('play').textContent = playing ? 'Anhalten' : 'Abspielen'; }
+  function setPlayLabel() {
+    $('play').innerHTML = playing ? '<span class="long">Anhalten</span><span class="short">Stopp</span>'
+                                  : '<span class="long">Abspielen</span><span class="short">Abspielen</span>';
+  }
 
   // ---------- controls ----------
   $('next').addEventListener('click', () => stacks.forEach(st => { if (!st.current) launch(st); }));
@@ -673,7 +713,7 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     if (!st.current) launch(st);
   }));
   $('play').addEventListener('click', () => {
-    if (stacks.every(st => st.placed >= st.targets.length)) rebuild();
+    if (stacks.every(st => st.placed >= st.targets.length)) rebuild(true);
     playing = !playing; setPlayLabel();
     if (playing) stacks.forEach(st => { if (!st.current) launch(st); });
   });
@@ -688,9 +728,9 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
   }
   $('skip').addEventListener('click', skipAll);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') skipAll(); });
-  $('reset').addEventListener('click', rebuild);
+  $('reset').addEventListener('click', () => rebuild(true));
+  $('keepFull').addEventListener('change', e => { keepFull = e.target.checked; if (keepFull) skipAll(); });
 
-  $('showSol').addEventListener('change', updateReadout);
   $('explode').addEventListener('input', e => {
     explode = parseFloat(e.target.value);
     stacks.forEach(st => st.layers.forEach(im => { im.position.y = lift(im.userData.L); }));
@@ -711,14 +751,15 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     $('menuBtn').setAttribute('aria-label', open ? 'Menü schliessen' : 'Menü öffnen');
   }
   $('menuBtn').addEventListener('click', () => setMenu($('menuBtn').getAttribute('aria-expanded') !== 'true'));
-  setMenu(!window.matchMedia('(max-width: 780px)').matches);
+  const phone = window.matchMedia('(max-width: 780px)').matches;
+  setMenu(!phone);
 
   function setScheme(s) {
     scheme = s;
     $('cBunt').setAttribute('aria-pressed', s === 'bunt');
     $('cStahl').setAttribute('aria-pressed', s === 'stahl');
     $('cGrau').setAttribute('aria-pressed', s === 'grau');
-    $('sat').disabled = s !== 'bunt';
+    $('satGroup').hidden = s !== 'bunt';   // the saturation only applies to "Bunt"
     stacks.forEach(st => {
       st.layers.forEach(im => { im.material = matFor(im.userData.L, st.nLayers, false); });
       if (st.current) st.current.mesh.material = matFor(st.current.t.L, st.nLayers, true);
@@ -741,8 +782,7 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     document.querySelectorAll('[data-view]').forEach(el => { el.hidden = Number(el.dataset.view) !== v; });
     $('lead').textContent = LEAD[v];
     $('tagL').hidden = $('tagR').hidden = v !== 2;
-    // lifting layers is locked in the box view: the balls would rise out of the box
-    $('explode').disabled = v === 2;
+    // lifting layers is not offered in the box view (the balls would rise out of the box)
     if (v === 2) { $('explode').value = 0; explode = 0; }
     setScheme(v === 1 ? 'bunt' : 'grau');
     rebuild();
@@ -758,27 +798,47 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
   }
   $('bSquare').addEventListener('click', () => setBase('square'));
   $('bTri').addEventListener('click', () => setBase('tri'));
-  $('lessN').addEventListener('click', () => { if (N > 2) { N--; rebuild(); } });
-  $('moreN').addEventListener('click', () => { if (N < 24) { N++; rebuild(); } });
-  $('lessM').addEventListener('click', () => { if (M > 2) { M--; rebuild(); } });
-  $('moreM').addEventListener('click', () => { if (M < 7) { M++; rebuild(); } });
+  const setN = n => { n = Math.max(2, Math.min(24, n)); if (n !== N) { N = n; rebuild(); } };
+  const setM = m => { m = Math.max(2, Math.min(7, m)); if (m !== M) { M = m; rebuild(); } };
+  $('lessN').addEventListener('click', () => setN(N - 1));
+  $('moreN').addEventListener('click', () => setN(N + 1));
+  $('nRange').addEventListener('input', e => setN(parseInt(e.target.value, 10)));
+  $('lessM').addEventListener('click', () => setM(M - 1));
+  $('moreM').addEventListener('click', () => setM(M + 1));
+  $('mRange').addEventListener('input', e => setM(parseInt(e.target.value, 10)));
 
   applyTheme();
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
   new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   // ---------- loop ----------
-  // while the menu is open on a wide screen the scene is centred in the free area right of the menu
+  // on a wide screen the scene is centred in the free area right of the menu
   let shift = 0;
+  function freeArea() {
+    const w = stage.clientWidth;
+    if (window.matchMedia('(max-width: 780px)').matches) return [0, w];
+    const left = $('panel').classList.contains('closed') ? 0 : $('panel').offsetWidth + 32;
+    return [left, w];
+  }
   function targetShift() {
-    if ($('panel').classList.contains('closed') || window.matchMedia('(max-width: 780px)').matches) return 0;
-    return ($('panel').offsetWidth + 32) / 2;
+    const [a, b] = freeArea();
+    return (a + b) / 2 - stage.clientWidth / 2;
   }
   function applyShift() {
     const w = stage.clientWidth, h = stage.clientHeight;
     if (!w || !h) return;
     camera.setViewOffset(w, h, -shift, 0, w, h);
-    $('title').style.transform = shift ? 'translateX(calc(-50% + ' + shift + 'px))' : '';
+    placeOverlays();
+  }
+  // the title sits between the menu and the count card (hidden if it does not fit), the bar under the free area
+  function placeOverlays() {
+    const w = stage.clientWidth, [left, right] = freeArea();
+    const t = $('title');
+    t.style.left = (w / 2 + shift) + 'px';
+    t.style.visibility = (right - left) > t.offsetWidth + 24 ? 'visible' : 'hidden';
+    const p = $('player');
+    p.style.left = ((left + right) / 2) + 'px';
+    p.style.maxWidth = Math.max(200, right - left - 32) + 'px';
   }
   function resize() {
     const w = stage.clientWidth, h = stage.clientHeight;
@@ -812,6 +872,7 @@ input[type="range"]:disabled { opacity: 0.45; cursor: default; }
     });
     const ts = targetShift();
     if (Math.abs(ts - shift) > 0.5) { shift += (ts - shift) * Math.min(1, dt * 10); applyShift(); }
+    placeOverlays();
     controls.update();
     renderer.render(scene, camera);
     if (view === 2 && boxes.length === 2) { placeTag($('tagL'), boxes[0]); placeTag($('tagR'), boxes[1]); }
