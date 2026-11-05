@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kugeln stapeln – Marktstapel und Kiste in 3D</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,500&display=swap">
+<title>Kugeln stapeln – Pyramide und Würfel in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
 <style>
 :root {
   --bg: #ECEEEE; --panel: #F7F7F5; --ink: #1F252B; --muted: #57606A; --line: #D3D7D7;
@@ -34,7 +36,7 @@
 html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
 body {
   margin: 0; height: 100%; background: var(--bg); color: var(--ink);
-  font-family: 'Public Sans', Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5;
+  font-family: 'Roboto', Arial, sans-serif; font-size: 16px; line-height: 1.5;
 }
 /* the scene fills the window; all controls live in a floating menu that folds away (like the Wurzelschnecke) */
 .app { position: fixed; inset: 0; overflow: hidden; }
@@ -65,14 +67,14 @@ body {
 .menu-btn[aria-expanded="false"] .open { display: inline; }
 .menu-btn[aria-expanded="false"] .shut { display: none; }
 .views button[aria-selected="true"] { background: var(--ink); color: var(--panel); }
-h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 500; font-size: 24px; line-height: 1.15; margin: 0; }
+h1 { font-family: 'Roboto', Arial, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.15; margin: 0; }
 details summary { cursor: pointer; font-weight: 600; }
-.cmp { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; margin: 10px 0; }
-.cmp th, .cmp td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+#cmpBody { overflow-x: auto; }
+.cmp { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; margin: 10px 0; }
+.cmp th, .cmp td { text-align: right; padding: 4px 4px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .cmp th:first-child, .cmp td:first-child { text-align: left; }
 .cmp th { font-weight: 600; color: var(--muted); }
 .cmp tr.cur td { background: var(--soft); font-weight: 600; }
-.lead { margin: 0; color: var(--muted); }
 .group { display: flex; flex-direction: column; gap: 8px; }
 .group > .label { font-size: 14px; font-weight: 600; color: var(--muted); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -93,19 +95,18 @@ button:disabled { opacity: 0.45; cursor: default; }
 .row > * { flex: 1; }
 .check { display: flex; gap: 10px; align-items: center; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.check.off { opacity: 0.45; cursor: default; }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 input[type="range"]:disabled { opacity: 0.45; cursor: default; }
 /* menu sections: "Aufbau" always open, "Darstellung" folds */
 .sec { display: flex; flex-direction: column; gap: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
-.sec-h { font-family: 'Source Serif 4', Georgia, serif; font-weight: 500; font-size: 20px; line-height: 1.2; margin: 0; }
+.sec-h { font-family: 'Roboto', Arial, sans-serif; font-weight: 700; font-size: 20px; line-height: 1.2; margin: 0; }
 details.sec > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; }
 details.sec > summary::-webkit-details-marker { display: none; }
-details.sec > summary::after { content: '+'; font-family: 'Public Sans', Arial, sans-serif; font-size: 22px; color: var(--muted); }
+details.sec > summary::after { content: '+'; font-family: 'Roboto', Arial, sans-serif; font-size: 22px; color: var(--muted); }
 details.sec[open] > summary::after { content: '−'; }
 details.sec { display: block; }   /* a folded section takes no extra room */
 .sec-body { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
-.about summary { color: var(--muted); font-size: 15px; }
-.about .lead { margin-top: 8px; }
 .valrow { display: flex; justify-content: space-between; align-items: baseline; }
 .valrow output { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .slide { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; align-items: center; }
@@ -119,20 +120,18 @@ details.sec { display: block; }   /* a folded section takes no extra room */
 }
 .player button { white-space: nowrap; }
 .player .short { display: none; }
+.player button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 #sol { display: flex; flex-direction: column; gap: 12px; }
-.count { font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; line-height: 1.2; }
+.count { font-family: 'Roboto', Arial, sans-serif; font-weight: 500; font-size: 26px; line-height: 1.2; }
 .pair .count { font-size: 22px; }
 .pname { font-size: 14px; font-weight: 600; color: var(--muted); }
-.formula { font-variant-numeric: tabular-nums; overflow-x: auto; white-space: nowrap; }
+.formula { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .note { margin: 0; color: var(--muted); font-size: 14px; }
-.drop { margin: 0; }
-.drop b { color: var(--accent); }
-.hint { font-size: 14px; color: var(--muted); margin: auto 0 0; }
 .stage { position: absolute; inset: 0; overflow: hidden; }
 .satScale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
 .stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .tag {
-  position: absolute; left: 0; top: 0; transform: translate(-50%, -100%);
+  position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-100% - 10px));
   background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
   padding: 4px 12px; font-size: 14px; font-weight: 600; white-space: nowrap; pointer-events: none;
 }
@@ -157,10 +156,9 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   <button type="button" class="menu-btn" id="menuBtn" aria-controls="panel" aria-expanded="true" aria-label="Menü schliessen"><span class="shut" aria-hidden="true">✕</span><span class="open" aria-hidden="true">☰</span></button>
   <aside class="panel" id="panel" aria-label="Menü">
     <div class="seg views" role="tablist" aria-label="Ansicht">
-      <button type="button" role="tab" id="v1" aria-selected="true">Marktstapel</button>
-      <button type="button" role="tab" id="v2" aria-selected="false">Kiste</button>
+      <button type="button" role="tab" id="v1" aria-selected="true">Pyramide</button>
+      <button type="button" role="tab" id="v2" aria-selected="false">Würfel</button>
     </div>
-    <details class="about"><summary>Worum geht's?</summary><p class="lead" id="lead"></p></details>
 
     <section class="sec" aria-labelledby="secBuild">
       <h2 class="sec-h" id="secBuild">Aufbau</h2>
@@ -182,15 +180,14 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       </div>
 
       <div class="group" data-view="2" hidden>
-        <div class="valrow"><label class="label" for="mRange">Kugeln pro Kistenkante</label><output id="mOut" for="mRange">4</output></div>
+        <div class="valrow"><label class="label" for="mRange">Kugeln pro Würfelkante <i>n</i></label><output id="mOut" for="mRange">4</output></div>
         <div class="slide">
-          <button type="button" id="lessM" aria-label="Kleinere Kiste">−</button>
-          <input type="range" id="mRange" min="2" max="7" step="1" value="4">
-          <button type="button" id="moreM" aria-label="Grössere Kiste">+</button>
+          <button type="button" id="lessM" aria-label="Kleinerer Würfel">−</button>
+          <input type="range" id="mRange" min="2" max="10" step="1" value="4">
+          <button type="button" id="moreM" aria-label="Grösserer Würfel">+</button>
         </div>
       </div>
 
-      <label class="check"><input type="checkbox" id="keepFull"> Immer gefüllt zeigen</label>
     </section>
 
     <details class="sec" id="look">
@@ -198,10 +195,9 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       <div class="sec-body">
       <div class="group">
         <span class="label" id="colLabel">Farbe der Kugeln</span>
-        <div class="seg three" role="group" aria-labelledby="colLabel">
+        <div class="seg" role="group" aria-labelledby="colLabel">
           <button type="button" id="cBunt" aria-pressed="true">Bunt</button>
           <button type="button" id="cStahl" aria-pressed="false">Stahlblau</button>
-          <button type="button" id="cGrau" aria-pressed="false">Grau</button>
         </div>
       </div>
       <div class="group" id="satGroup">
@@ -218,35 +214,35 @@ details.sec { display: block; }   /* a folded section takes no extra room */
         <input type="range" id="transp" min="0" max="0.8" step="0.01" value="0.07">
       </div>
       <div class="group" data-view="2" hidden>
-        <label class="label" for="boxTransp">Transparenz der Kiste</label>
+        <label class="label" for="boxTransp">Transparenz der Würfelwände</label>
         <input type="range" id="boxTransp" min="0" max="1" step="0.01" value="0.75">
       </div>
+      <label class="check" id="holesLabel" data-view="2" hidden><input type="checkbox" id="holes"> Kugeln in den Zwischenräumen</label>
       </div>
     </details>
 
     <details class="sec" id="readout">
-      <summary class="sec-h">Anzahl und Formel</summary>
+      <summary class="sec-h">Anzahl</summary>
       <div class="sec-body">
         <div id="sol" aria-live="polite"></div>
-        <details id="cmp" hidden><summary>Alle Kistengrössen im Vergleich</summary><div id="cmpBody"></div></details>
-        <p class="drop" id="drop"></p>
+        <details id="cmp" hidden><summary>Alle Würfelgrössen im Vergleich</summary><div id="cmpBody"></div></details>
       </div>
     </details>
 
-    <p class="hint">Ziehen dreht die Ansicht, Scrollen oder zwei Finger zoomen. Esc stapelt sofort fertig.</p>
   </aside>
 
   <div class="player" id="player" role="toolbar" aria-label="Stapeln">
     <button type="button" class="primary" id="next"><span class="long">Nächste Kugel</span><span class="short">Kugel</span></button>
     <button type="button" id="layer"><span class="long">Ganze Ebene</span><span class="short">Ebene</span></button>
     <button type="button" id="play"></button>
-    <button type="button" id="skip"><span class="long">Fertig stapeln</span><span class="short">Fertig</span></button>
+    <button type="button" id="skip" aria-pressed="false"><span class="long">Aufgefüllt</span><span class="short">Voll</span></button>
     <button type="button" id="reset"><span class="long">Neu beginnen</span><span class="short">Neu</span></button>
   </div>
 
   <main class="stage" id="stage">
-    <div class="tag" id="tagL" hidden>Kugel über Kugel</div>
-    <div class="tag" id="tagR" hidden>In der Kuhle</div>
+    <div class="tag" id="tagL" hidden>Würfelgitter</div>
+    <div class="tag" id="tagM" hidden>Tetraedergitter</div>
+    <div class="tag" id="tagR" hidden>Zufällig</div>
     <div class="err" id="err">Die 3D-Ansicht konnte nicht geladen werden. Lade die Seite neu, sobald du wieder online bist.</div>
   </main>
 </div>
@@ -283,13 +279,23 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   controls.maxDistance = 120;
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f94, 0.75));
-  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
-  sun.position.set(-12, 26, 16);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });
-  sun.shadow.radius = 4;
-  scene.add(sun);
+  // two suns from the same direction share the light: sun A sees only the balls as shadow casters,
+  // sun B also the box walls. The more opaque the walls, the more light comes from B: the box shadow
+  // grows darker and the shadows of the balls inside it fade (see applyBoxTransp and renderShadows).
+  const SUN = 0.85;
+  const makeSun = () => {
+    const l = new THREE.DirectionalLight(0xffffff, SUN);
+    l.position.set(-12, 26, 16);
+    l.castShadow = true;
+    l.shadow.mapSize.set(2048, 2048);
+    Object.assign(l.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });
+    l.shadow.radius = 4;
+    l.shadow.autoUpdate = false;   // updated by hand in renderShadows
+    scene.add(l);
+    return l;
+  };
+  const sun = makeSun(), sunB = makeSun();
+  sunB.intensity = 0; sunB.castShadow = false;
   const fill = new THREE.DirectionalLight(0xffffff, 0.25);
   fill.position.set(12, 8, -10);
   scene.add(fill);
@@ -304,9 +310,36 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   const SUN_DIR = new THREE.Vector3(-12, 26, 16);
   function fitSun(size) {
     const k = Math.max(1, size / 16);
-    sun.position.copy(SUN_DIR).multiplyScalar(k);
-    Object.assign(sun.shadow.camera, { left: -24 * k, right: 24 * k, top: 24 * k, bottom: -24 * k, far: 90 * k });
-    sun.shadow.camera.updateProjectionMatrix();
+    [sun, sunB].forEach(l => {
+      l.position.copy(SUN_DIR).multiplyScalar(k);
+      Object.assign(l.shadow.camera, { left: -24 * k, right: 24 * k, top: 24 * k, bottom: -24 * k, far: 90 * k });
+      l.shadow.camera.updateProjectionMatrix();
+    });
+  }
+  // walls behind the balls (seen through the box: bottom, back) are drawn first, so the balls lie over them;
+  // walls in front are drawn last, so they lie over the balls. Independent of the transparency of the balls.
+  const wallTmp = new THREE.Vector3();
+  function orderWalls() {
+    boxes.forEach(b => {
+      const back = b.walls.map(w => {
+        wallTmp.copy(camera.position); wallTmp.x -= b.ox;
+        return wallTmp.sub(w.userData.p).dot(w.userData.n) > 0;
+      });
+      b.walls.forEach((w, i) => { w.renderOrder = back[i] ? -1 : 1; });
+      // an edge between back walls only lies behind the balls; all other edges in front of them
+      b.edges.forEach(e => { e.renderOrder = e.userData.on.every(i => back[i]) ? -0.5 : 0.5; });
+    });
+  }
+  const setWallShadows = on => boxes.forEach(b => b.walls.forEach(w => { w.castShadow = on; }));
+  // the two shadow maps are renewed in turns, one per frame: sun A's without the walls, sun B's with them
+  let shadowTurn = 0;
+  function renderShadows() {
+    shadowTurn ^= 1;
+    const doA = sun.castShadow && (shadowTurn === 0 || !sunB.castShadow);
+    const doB = sunB.castShadow && !doA;
+    setWallShadows(!doA);
+    sun.shadow.needsUpdate = doA;
+    sunB.shadow.needsUpdate = doB;
   }
 
   // sphere detail drops with the number of balls, so a stack of thousands stays fluid
@@ -316,19 +349,16 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     const key = d.join('x');
     return GEOS[key] || (GEOS[key] = new THREE.SphereGeometry(R, d[0], d[1]));
   }
-  const ghostGeo = new THREE.SphereGeometry(R, 48, 32);   // wireframe stays coarse so the lines remain readable
-  const ghostMat = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.35 });
   const boxMat = new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, transparent: true, side: THREE.DoubleSide, depthWrite: false });
   const edgeMat = new THREE.MeshBasicMaterial({ transparent: true });
 
   // ---------- colours ----------
   const NEUTRAL = {
-    stahl: { hex: '#5E7F9E', metal: 0.3, rough: 0.3 },
-    grau:  { hex: '#A2A8AE', metal: 0.25, rough: 0.42 }
+    stahl: { hex: '#5E7F9E', metal: 0.3, rough: 0.3 }     // steel stays glossy
   };
   const HUE_TOP = 0.78;     // "Bunt": the bottom layer is red (hue 0), the top layer violet (≈ 280°)
   let scheme = 'bunt';
-  let sat = 0.5;            // "Bunt" only: 0 = grey, 0.5 = pastel, 1 = vivid
+  let sat = 0.5;            // "Bunt" only: 0 = grey, 0.5 = pastel, 1 = vivid (also gives the grey balls of the box view)
   let transp = 0.07;        // balls: 0 = solid
   let boxTransp = 0.75;     // box walls: 1 = invisible
   const settledMats = new Map(), hotMats = new Map();
@@ -338,7 +368,8 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   // the saturation slider: from grey (0) over pastel (0.5) to a strong, slightly darker colour (1)
   function bunt(h) {
     const s = sat <= 0.5 ? 0.75 * sat / 0.5 : 0.75 + 0.2 * (sat - 0.5) / 0.5;
-    const l = sat <= 0.5 ? 0.78 : 0.78 - 0.26 * (sat - 0.5) / 0.5;
+    // lightness: towards grey the colour also gets darker, so saturation 0 gives mid-grey balls (not white ones)
+    const l = sat <= 0.5 ? 0.6 + 0.18 * sat / 0.5 : 0.78 - 0.26 * (sat - 0.5) / 0.5;
     return new THREE.Color().setHSL(h, s, l).convertSRGBToLinear();
   }
   function matFor(L, nLayers, hot) {
@@ -350,9 +381,9 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     const cache = hot ? hotMats : settledMats;
     if (!cache.has(key)) {
       const col = isBunt ? bunt(h) : new THREE.Color(hex).convertSRGBToLinear();
-      const s = isBunt ? { metal: 0, rough: 0.32 } : NEUTRAL[scheme];
+      const s = isBunt ? { metal: 0, rough: 0.58 } : NEUTRAL[scheme];
       const mat = hot
-        ? new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.25, roughness: 0.3, metalness: 0 })
+        ? new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.25, roughness: 0.55, metalness: 0 })
         : new THREE.MeshStandardMaterial({ color: col, roughness: s.rough, metalness: s.metal, transparent: true, opacity: 1 - transp, depthWrite: transp < 0.25 });
       mat.userData = { h, bunt: isBunt, hot };
       cache.set(key, mat);
@@ -371,7 +402,6 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     const col = n => new THREE.Color(cssVar(n));
     scene.background = col('--scene');
     floorMat.color = col('--floor');
-    ghostMat.color = col('--accent');
     boxMat.color = col('--box');
     edgeMat.color = col('--edge');
     applyBoxTransp();
@@ -387,10 +417,14 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     // the edges fade together with the walls and vanish with them
     edgeMat.opacity = Math.min(1, 1.6 * (1 - boxTransp));
     edgeMat.visible = edgeMat.opacity > 0.01;
+    // share of the light from sun B = opacity of the walls (no walls: all light from sun A)
+    const o = boxes.length && boxMat.visible ? 1 - boxTransp : 0;
+    sun.intensity = SUN * (1 - o); sunB.intensity = SUN * o;
+    sun.castShadow = o < 0.99; sunB.castShadow = o > 0.01;
   }
 
   // ---------- state ----------
-  let view = 1;                 // 1 = Marktstapel, 2 = Kiste
+  let view = 1;                 // 1 = Pyramide, 2 = Würfel
   let base = 'square', N = 4;   // view 1
   let M = 4;                    // view 2: balls per box edge
   let explode = 0;
@@ -399,6 +433,175 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   const lift = L => explode * L * 1.6 * R;
 
   const SQ_H = R * Math.SQRT2, TRI_H = 2 * R * Math.sqrt(2 / 3);
+
+  // ---------- random filling ----------
+  // Balls are dropped at random spots and settle under gravity: each step moves the ball down a little,
+  // then pushes it out of every ball it overlaps and back inside the walls (steepest descent with contacts).
+  // Balls already in the box stay put. A ball whose top would stick out over the rim is not placed;
+  // after 40 such misses in a row the box counts as full.
+  // `start`: balls already in the box (box coordinates); only the newly added balls are returned
+  function randomFill(m, withPath, start) {
+    const half = m * R, H = 2 * m * R, lim = half - R, nc = m, R2 = 4 * R * R, STEP = 0.03 * R;
+    const grid = Array.from({ length: nc * nc }, () => []);   // columns of width 2r, for the neighbour search
+    const cell = v => Math.max(0, Math.min(nc - 1, Math.floor((v + half) / (2 * R))));
+    (start || []).forEach(b => grid[cell(b.x) * nc + cell(b.z)].push(b));
+    const near = (x, z, f) => {
+      const ci = cell(x), cj = cell(z);
+      for (let i = Math.max(0, ci - 1); i <= Math.min(nc - 1, ci + 1); i++)
+        for (let j = Math.max(0, cj - 1); j <= Math.min(nc - 1, cj + 1); j++) grid[i * nc + j].forEach(f);
+    };
+    const project = q => {
+      for (let pass = 0; pass < 4; pass++) {
+        near(q.x, q.z, b => {
+          const dx = q.x - b.x, dy = q.y - b.y, dz = q.z - b.z, d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < R2 && d2 > 1e-12) { const k = (2 * R - Math.sqrt(d2)) / Math.sqrt(d2); q.x += dx * k; q.y += dy * k; q.z += dz * k; }
+        });
+        q.x = Math.max(-lim, Math.min(lim, q.x)); q.z = Math.max(-lim, Math.min(lim, q.z)); q.y = Math.max(R, q.y);
+      }
+    };
+    const drop = () => {
+      const q = { x: (Math.random() * 2 - 1) * lim, y: R, z: (Math.random() * 2 - 1) * lim };
+      // first contact when falling straight down
+      near(q.x, q.z, b => { const d2 = (b.x - q.x) ** 2 + (b.z - q.z) ** 2; if (d2 < R2) q.y = Math.max(q.y, b.y + Math.sqrt(R2 - d2)); });
+      const path = withPath ? [[q.x, q.y, q.z]] : null;
+      for (let it = 0, still = 0; it < 3000 && still < 5; it++) {
+        const ox = q.x, oy = q.y, oz = q.z;
+        q.y -= STEP;
+        project(q);
+        still = Math.hypot(q.x - ox, q.y - oy, q.z - oz) < 1e-4 * R ? still + 1 : 0;
+        if (withPath && it % 2) path.push([q.x, q.y, q.z]);
+      }
+      for (let k = 0; k < 6; k++) project(q);
+      if (withPath) path.push([q.x, q.y, q.z]);
+      return { q, path };
+    };
+    const out = [];
+    for (let misses = 0; misses < 40;) {
+      const r = drop();
+      if (r.q.y + R > H + 1e-3) { misses++; continue; }
+      misses = 0;
+      grid[cell(r.q.x) * nc + cell(r.q.z)].push(r.q);
+      out.push(r);
+    }
+    return out;
+  }
+
+  // ---------- shaking ----------
+  // All balls move at once. Each tap lifts the pile a little (the higher, the more) and jiggles every ball
+  // sideways; then gravity lets the whole pile settle again, pairs of overlapping balls are pushed apart
+  // (half each), walls and floor hold them in. At the end only overlaps are removed, without gravity,
+  // until no pair overlaps by more than 0.5 % of r: the pile must not be squeezed, or it would hold too many.
+  // `balls` are changed in place; step(n) does n iterations, true when done.
+  const TAPS = 6, SETTLE = 110, CLEAN = 30, FINAL_MAX = 3000, OVERLAP_OK = 0.005 * R;
+  function makeShaker(balls, m) {
+    const half = m * R, lim = half - R, nc = m, R2 = 4 * R * R, lid = 2 * m * R - R;   // the box is shaken with a lid on
+    const cell = v => Math.max(0, Math.min(nc - 1, Math.floor((v + half) / (2 * R))));
+    let taps = TAPS, phase = 'tap', it = 0;
+    // one pass over all pairs; returns the largest overlap it found
+    const relax = () => {
+      let worst = 0;
+      const grid = Array.from({ length: nc * nc }, () => []);
+      balls.forEach((b, i) => grid[cell(b.x) * nc + cell(b.z)].push(i));
+      balls.forEach((a, i) => {
+        const ci = cell(a.x), cj = cell(a.z);
+        for (let gi = Math.max(0, ci - 1); gi <= Math.min(nc - 1, ci + 1); gi++)
+          for (let gj = Math.max(0, cj - 1); gj <= Math.min(nc - 1, cj + 1); gj++)
+            grid[gi * nc + gj].forEach(j => {
+              if (j <= i) return;
+              const b = balls[j], dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z, d2 = dx * dx + dy * dy + dz * dz;
+              if (d2 >= R2 || d2 < 1e-12) return;
+              const d = Math.sqrt(d2), k = (2 * R - d) / d / 2;
+              if (2 * R - d > worst) worst = 2 * R - d;
+              a.x += dx * k; a.y += dy * k; a.z += dz * k;
+              b.x -= dx * k; b.y -= dy * k; b.z -= dz * k;
+            });
+      });
+      balls.forEach(b => { b.x = Math.max(-lim, Math.min(lim, b.x)); b.z = Math.max(-lim, Math.min(lim, b.z)); b.y = Math.max(R, Math.min(lid, b.y)); });
+      return worst;
+    };
+    const step = n => {
+      for (let k = 0; k < n; k++) {
+        if (phase === 'tap') {
+          if (taps === 0) { phase = 'final'; it = 0; continue; }
+          taps--;
+          balls.forEach(b => {
+            b.y += 0.06 * b.y + 0.25 * R * Math.random();
+            b.x += (Math.random() - 0.5) * 0.5 * R;
+            b.z += (Math.random() - 0.5) * 0.5 * R;
+          });
+          phase = 'settle'; it = 0;
+        } else if (phase === 'settle') {
+          const g = 0.045 * R * (1 - it / SETTLE);   // gravity step, fading out so the pile comes to rest
+          balls.forEach(b => { b.y -= g; });
+          relax(); relax(); relax();
+          if (++it >= SETTLE) { phase = 'clean'; it = 0; }
+        } else if (phase === 'clean') {
+          relax();
+          if (++it >= CLEAN) phase = 'tap';
+        } else {
+          if (relax() < OVERLAP_OK || ++it >= FINAL_MAX) return true;
+        }
+      }
+      return false;
+    };
+    step.isFinal = () => phase === 'final';   // only tiny corrections left: nothing to watch any more
+    return step;
+  }
+
+  // empirical count: many fillings per box size, run in small time slices in the background.
+  // Loose: poured once. Shaken: poured, then three times shaken and topped up.
+  const RUNS = 30, RUNS_S = 10, SHAKE_ROUNDS = 3, emp = {}, empS = {};
+  function* looseRun(m) { return randomFill(m, false).length; }
+  function* shakenRun(m) {
+    const balls = randomFill(m, false).map(r => r.q);
+    yield;
+    for (let round = 0; round < SHAKE_ROUNDS; round++) {
+      const step = makeShaker(balls, m);
+      while (!step(15)) yield;
+      for (let i = balls.length - 1; i >= 0; i--) if (balls[i].y + R > 2 * m * R + 1e-3) balls.splice(i, 1);   // fell out over the rim
+      const add = randomFill(m, false, balls).map(r => r.q);
+      balls.push(...add);
+      yield;
+    }
+    return balls.length;
+  }
+  let empBusy = false;
+  function runEmpirical() {
+    if (empBusy) return;
+    const m = M;
+    const jobs = [[emp, RUNS, looseRun], [empS, RUNS_S, shakenRun]];
+    const job = jobs.find(([store, runs]) => !(store[m] && store[m].n.length >= runs));
+    if (!job) return;
+    const [store, runs, make] = job, e = store[m] || (store[m] = { n: [] });
+    empBusy = true;
+    let gen = make(m);
+    const tick = () => {
+      const t0 = performance.now();
+      while (performance.now() - t0 < 20) {
+        const r = gen.next();
+        if (r.done) {
+          e.n.push(r.value);
+          if (view === 2) updateReadout();
+          if (e.n.length >= runs) break;
+          gen = make(m);
+        }
+      }
+      if (e.n.length < runs && m === M && view === 2) setTimeout(tick, 0);
+      else { empBusy = false; if (m === M && view === 2) runEmpirical(); }   // then the next job
+    };
+    setTimeout(tick, 30);
+  }
+
+  // targets of the random box: poured in portions of one layer (m · m balls); each portion is one "Ebene"
+  // and gets its own colour. `first` is the number of balls already in the box.
+  function randTargets(fill, ox, m, first) {
+    return fill.map((r, k) => {
+      const raw = r.path, n = raw.length, keep = Math.min(n, 40), path = [];
+      for (let s = 0; s < keep; s++) { const q = raw[Math.round(s * (n - 1) / Math.max(1, keep - 1))]; path.push(new THREE.Vector3(ox + q[0], q[1], q[2])); }
+      let len = 0; for (let s = 1; s < path.length; s++) len += path[s].distanceTo(path[s - 1]);
+      return { p: new THREE.Vector3(ox + r.q.x, r.q.y, r.q.z), L: Math.floor((first + k) / (m * m)), path, rollT: Math.min(1.2, 0.2 + 0.12 * len / R) };
+    });
+  }
 
   function computeTargets(st) {
     const T = [], ox = st.ox, m = st.m;
@@ -419,6 +622,8 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       for (let L = 0; L < m; L++)
         for (let j = 0; j < m; j++) for (let i = 0; i < m; i++)
           T.push({ p: new THREE.Vector3(ox + (-m + 1 + 2 * i) * R, R + 2 * R * L, (-m + 1 + 2 * j) * R), L });
+    } else if (st.kind === 'rand') {
+      randTargets(randomFill(m, true), ox, m, 0).forEach(t => T.push(t));
     } else { // 'fcc': square layers, every second layer shifted into the hollows
       const side = 2 * R * m;
       for (let L = 0; R + L * SQ_H + R <= side + 1e-9; L++) {
@@ -427,32 +632,25 @@ details.sec { display: block; }   /* a folded section takes no extra room */
           T.push({ p: new THREE.Vector3(ox + (s0 + 2 * i) * R, R + L * SQ_H, (s0 + 2 * j) * R), L });
       }
     }
-    // support: a ball of the layer below that the new ball touches (front-left one)
     const byLayer = [];
     T.forEach(t => (byLayer[t.L] || (byLayer[t.L] = [])).push(t));
-    T.forEach(t => {
-      t.s = null;
-      if (t.L === 0) return;
-      let best = null;
-      byLayer[t.L - 1].forEach(u => {
-        if (Math.abs(u.p.distanceTo(t.p) - 2 * R) > 1e-6) return;
-        if (!best || u.p.z > best.z + 1e-6 || (Math.abs(u.p.z - best.z) < 1e-6 && u.p.x < best.x)) best = u.p;
-      });
-      t.s = best;
-    });
     st.targets = T;
     st.nLayers = T.length ? T[T.length - 1].L + 1 : 0;
     st.layerSize = byLayer.map(a => a.length);
   }
 
   function makeStack(kind, m, ox, label) {
-    const st = { kind, m, ox, label, targets: [], layers: [], placed: 0, current: null, pending: 0, streak: 0,
-                 ghost: new THREE.Mesh(ghostGeo, ghostMat), ghostFade: 0 };
-    st.ghost.visible = false;
-    scene.add(st.ghost);
+    const st = { kind, m, ox, label, targets: [], layers: [], fades: [], placed: 0, current: null, pending: 0, streak: 0 };
     computeTargets(st);
+    createLayers(st);
+    return st;
+  }
+
+  // one instanced mesh per layer: a single draw call per layer, and lifting a layer moves the whole mesh
+  function createLayers(st) {
+    st.layers.forEach(im => { scene.remove(im); if (im.dispose) im.dispose(); });
+    st.layers = [];
     st.geo = ballGeo(st.targets.length);
-    // one instanced mesh per layer: a single draw call per layer, and lifting a layer moves the whole mesh
     st.layerSize.forEach((n, L) => {
       const im = new THREE.InstancedMesh(st.geo, matFor(L, st.nLayers, false), n);
       im.count = 0;
@@ -463,60 +661,121 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       scene.add(im);
       st.layers.push(im);
     });
-    return st;
   }
 
   const tmpM = new THREE.Matrix4();
   function addSettled(st, i) {
     const t = st.targets[i], im = st.layers[t.L];
+    t.slot = im.count;   // its place in the layer mesh, so shaking can move it later
     im.setMatrixAt(im.count++, tmpM.makeTranslation(t.p.x, t.p.y, t.p.z));
     im.instanceMatrix.needsUpdate = true;
   }
 
+  // ---------- shaking the random box ----------
+  const randStack = () => stacks.find(s => s.kind === 'rand');
+  function startShake() {
+    const st = randStack();
+    if (!st || st.shake || st.current || st.placed < st.targets.length) return;
+    flushFades(st);
+    playing = false; setPlayLabel();
+    const balls = st.targets.map(t => ({ x: t.p.x - st.ox, y: t.p.y, z: t.p.z }));
+    st.shake = { balls, step: makeShaker(balls, st.m) };
+    updateReadout();
+  }
+  // moves the balls of the mesh to where the shaking has put them
+  function syncShake(st) {
+    const b = st.shake.balls;
+    st.targets.forEach((t, i) => {
+      t.p.set(st.ox + b[i].x, b[i].y, b[i].z);
+      st.layers[t.L].setMatrixAt(t.slot, tmpM.makeTranslation(t.p.x, t.p.y, t.p.z));
+    });
+    st.layers.forEach(im => { im.instanceMatrix.needsUpdate = true; });
+  }
+  // a few shaking iterations per frame, so the settling can be watched; the final removal of tiny
+  // overlaps runs as fast as a frame allows; `all` finishes at once
+  function stepShake(st, all) {
+    const step = st.shake.step;
+    let done;
+    if (all) done = step(1e9);
+    else if (!step.isFinal()) done = step(6);
+    else { const t0 = performance.now(); do { done = step(5); } while (!done && performance.now() - t0 < 12); }
+    syncShake(st);
+    if (!done) return;
+    // safeguard: a ball sticking out over the rim would not count (with the lid on this does not happen)
+    const H = 2 * st.m * R;
+    st.targets = st.targets.filter(t => t.p.y + R <= H + 1e-3);
+    st.placed = st.targets.length;
+    // top up: new balls are poured onto the settled pile, until none fits under the rim
+    const before = st.targets.length, balls = st.targets.map(t => ({ x: t.p.x - st.ox, y: t.p.y, z: t.p.z }));
+    st.shake = null;
+    st.shakes = (st.shakes || 0) + 1;
+    randTargets(randomFill(st.m, true, balls), st.ox, st.m, before).forEach(t => st.targets.push(t));
+    const byLayer = [];
+    st.targets.forEach(t => { byLayer[t.L] = (byLayer[t.L] || 0) + 1; });
+    st.layerSize = Array.from(byLayer, n => n || 0);
+    st.nLayers = st.layerSize.length;
+    createLayers(st);
+    for (let i = 0; i < before; i++) addSettled(st, i);
+    // the topping up is always animated (also with "Aufgefüllt"): the new balls fall in highlighted and fade
+    // into the colour of the others; only finishing at once (Esc) places them directly
+    if (all) { while (st.placed < st.targets.length) { addSettled(st, st.placed); st.placed++; } }
+    else if (st.placed < st.targets.length) { st.pending = st.targets.length - st.placed; st.streak = 0; launch(st); }
+    updateReadout();
+  }
+
   function makeBox(ox, side) {
-    const g = new THREE.Group();
-    const wall = (w, h, pos, rot) => {
+    const g = new THREE.Group(), walls = [];
+    // n: normal pointing into the box; it tells whether the camera looks at the wall from outside (front)
+    // or through the box at it (back, bottom), see orderWalls
+    const wall = (w, h, pos, rot, n) => {
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), boxMat);
       mesh.position.copy(pos); mesh.rotation.set(rot[0], rot[1], rot[2]);
       mesh.receiveShadow = true;
-      mesh.renderOrder = 1;   // translucent walls are drawn after the balls, so they always lie over them
+      mesh.castShadow = true;
+      walls.push(mesh);
+      mesh.userData = { p: pos.clone(), n: new THREE.Vector3(n[0], n[1], n[2]) };
       g.add(mesh);
     };
     const s = side, hs = s / 2;
-    wall(s, s, new THREE.Vector3(0, 0.01, 0), [-Math.PI / 2, 0, 0]);   // bottom
-    wall(s, s, new THREE.Vector3(0, hs, -hs), [0, 0, 0]);               // back
-    wall(s, s, new THREE.Vector3(0, hs, hs), [0, 0, 0]);                // front
-    wall(s, s, new THREE.Vector3(-hs, hs, 0), [0, Math.PI / 2, 0]);     // left
-    wall(s, s, new THREE.Vector3(hs, hs, 0), [0, Math.PI / 2, 0]);      // right
+    wall(s, s, new THREE.Vector3(0, 0.01, 0), [-Math.PI / 2, 0, 0], [0, 1, 0]);   // bottom
+    wall(s, s, new THREE.Vector3(0, hs, -hs), [0, 0, 0], [0, 0, 1]);              // back
+    wall(s, s, new THREE.Vector3(0, hs, hs), [0, 0, 0], [0, 0, -1]);              // front
+    wall(s, s, new THREE.Vector3(-hs, hs, 0), [0, Math.PI / 2, 0], [1, 0, 0]);    // left
+    wall(s, s, new THREE.Vector3(hs, hs, 0), [0, Math.PI / 2, 0], [-1, 0, 0]);    // right
     // edges as thin round beams instead of 1-pixel lines, so they stay crisp at any zoom
     const er = 0.035 * R, beam = new THREE.CylinderGeometry(er, er, s + 2 * er, 24);
-    const edge = (x, y, z, rx, rz) => {
+    // `on`: the walls the edge belongs to (0 bottom, 1 back, 2 front, 3 left, 4 right; the top is open)
+    const edges = [];
+    const edge = (x, y, z, rx, rz, on) => {
       const e = new THREE.Mesh(beam, edgeMat);
       e.position.set(x, y, z); e.rotation.set(rx, 0, rz);
-      e.renderOrder = 0.5;   // drawn before the walls: a wall in front of an edge covers it, the more the less transparent it is
+      e.userData.on = on;
+      edges.push(e);
       g.add(e);
     };
+    const zWall = b => (b < 0 ? 1 : 2), xWall = a => (a < 0 ? 3 : 4);
     for (const a of [-hs, hs]) for (const b of [-hs, hs]) {
-      edge(a, hs, b, 0, 0);                 // vertical
-      edge(0, hs + a, b, 0, Math.PI / 2);   // along x
-      edge(a, hs + b, 0, Math.PI / 2, 0);   // along z
+      edge(a, hs, b, 0, 0, [xWall(a), zWall(b)]);                               // vertical
+      edge(0, hs + a, b, 0, Math.PI / 2, a < 0 ? [0, zWall(b)] : [zWall(b)]);   // along x (bottom or rim)
+      edge(a, hs + b, 0, Math.PI / 2, 0, b < 0 ? [0, xWall(a)] : [xWall(a)]);   // along z (bottom or rim)
     }
     g.position.x = ox;
     scene.add(g);
-    return { group: g, ox, side };
+    return { group: g, ox, side, walls, edges };
   }
 
   function clearAll() {
     stacks.forEach(st => {
       st.layers.forEach(im => { scene.remove(im); if (im.dispose) im.dispose(); });
       if (st.current) scene.remove(st.current.mesh);
-      scene.remove(st.ghost);
+      st.fades.forEach(f => { scene.remove(f.mesh); f.m.dispose(); });
+      removeHoles(st);
     });
     boxes.forEach(b => scene.remove(b.group));
     stacks = []; boxes = [];
   }
 
-  function boxOffset() { return M * R + 1.6 * R; }
+  function boxOffset() { return 2 * M * R + 3.2 * R; }   // distance between neighbouring box centres
 
   let keepFull = false;
   function rebuild(fresh) {
@@ -526,12 +785,14 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       stacks = [makeStack(base === 'square' ? 'pyrSq' : 'pyrTri', N, 0, null)];
     } else {
       const off = boxOffset(), side = 2 * M * R;
-      stacks = [makeStack('cubic', M, -off, 'Kugel über Kugel'), makeStack('fcc', M, off, 'In der Kuhle')];
-      boxes = [makeBox(-off, side), makeBox(off, side)];
+      stacks = [makeStack('cubic', M, -off, 'Würfelgitter'), makeStack('fcc', M, 0, 'Tetraedergitter'), makeStack('rand', M, off, 'Zufällig')];
+      boxes = [makeBox(-off, side), makeBox(0, side), makeBox(off, side)];
+      runEmpirical();
     }
     stacks.forEach(st => { while (st.placed < st.targets.length && st.targets[st.placed].L === 0) { addSettled(st, st.placed); st.placed++; } });
     // "Immer gefüllt zeigen": every change of size shows the finished stacks at once; "Neu beginnen" and "Abspielen" still start empty
     if (keepFull && fresh !== true) stacks.forEach(st => { while (st.placed < st.targets.length) { addSettled(st, st.placed); st.placed++; } });
+    applyBoxTransp();
     fitCamera();
     updateReadout();
   }
@@ -546,12 +807,12 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       size = N * 2 * R;
       camera.position.set(size * 0.95, size * 0.95 + 2, size * 1.35);
     } else {
-      size = 4 * M * R + 3.2 * R;
+      size = 6 * M * R + 6.4 * R;
       camera.position.set(size * 0.12, size * 0.62, size * 1.18);
     }
     // a narrow free area (phone, or the menu taking room) moves the camera back, so the whole scene fits
     const [fa, fb] = freeArea(), w = fb - fa, h = stage.clientHeight;
-    const k = (w > 0 && h > 0) ? Math.max(1, (view === 1 ? 1.15 : 1.6) / (w / h)) : 1;
+    const k = (w > 0 && h > 0) ? Math.max(1, (view === 1 ? 1.15 : 1.7) / (w / h)) : 1;
     const ty = targetY();
     camera.position.y = ty + (camera.position.y - ty) * k;
     camera.position.x *= k; camera.position.z *= k;
@@ -561,68 +822,272 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     controls.update();
   }
 
-  // ---------- readout ----------
-  function boxCount(m, kind) {
-    if (kind === 'cubic') return m * m * m;
-    let n = 0;
-    for (let L = 0; 2 * R + L * SQ_H <= 2 * m * R + 1e-9; L++) n += L % 2 ? (m - 1) * (m - 1) : m * m;
-    return n;
+  // ---------- balls in the gaps ----------
+  // For every gap between the balls (and the walls, floor and rim) the biggest ball that fits into it.
+  // A fine grid gives the distance to the nearest ball or wall; its local maxima are climbed to the exact
+  // centre of the gap; of several maxima in the same gap only the biggest one is kept.
+  function findHoles(balls, m, minR) {
+    const half = m * R, H = 2 * m * R, step = 0.25 * R, n = Math.round(H / step), CAP = 1.2 * R;
+    const idx = (i, j, k) => (i * n + j) * n + k, pos = i => -half + (i + 0.5) * step;
+    const D = new Float32Array(n * n * n);
+    // start with the distance to the walls, floor and lid
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) for (let k = 0; k < n; k++) {
+      const x = pos(i), y = pos(j) + half, z = pos(k);
+      D[idx(i, j, k)] = Math.min(CAP, x + half, half - x, z + half, half - z, y, H - y);
+    }
+    // every ball lowers the distance in its neighbourhood
+    const reach = Math.ceil((R + CAP) / step);
+    balls.forEach(b => {
+      const bi = Math.floor((b.x + half) / step), bj = Math.floor(b.y / step), bk = Math.floor((b.z + half) / step);
+      for (let i = Math.max(0, bi - reach); i <= Math.min(n - 1, bi + reach); i++)
+        for (let j = Math.max(0, bj - reach); j <= Math.min(n - 1, bj + reach); j++)
+          for (let k = Math.max(0, bk - reach); k <= Math.min(n - 1, bk + reach); k++) {
+            const d = Math.hypot(pos(i) - b.x, pos(j) + half - b.y, pos(k) - b.z) - R, q = idx(i, j, k);
+            if (d < D[q]) D[q] = d;
+          }
+    });
+    // exact distance to the nearest ball, wall, floor or lid (column grid for the balls)
+    const nc = m, cell = v => Math.max(0, Math.min(nc - 1, Math.floor((v + half) / (2 * R))));
+    const cols = Array.from({ length: nc * nc }, () => []);
+    balls.forEach(b => cols[cell(b.x) * nc + cell(b.z)].push(b));
+    const dist = (x, y, z) => {
+      let d = Math.min(x + half, half - x, z + half, half - z, y, H - y);
+      const ci = cell(x), cj = cell(z);
+      for (let a = Math.max(0, ci - 1); a <= Math.min(nc - 1, ci + 1); a++)
+        for (let c = Math.max(0, cj - 1); c <= Math.min(nc - 1, cj + 1); c++)
+          for (const b of cols[a * nc + c]) { const e = Math.hypot(x - b.x, y - b.y, z - b.z) - R; if (e < d) d = e; }
+      return d;
+    };
+    // local maxima of the grid, then climbed to the exact centre of the gap
+    const cand = [];
+    for (let i = 1; i < n - 1; i++) for (let j = 1; j < n - 1; j++) for (let k = 1; k < n - 1; k++) {
+      const v = D[idx(i, j, k)];
+      if (v < minR) continue;
+      let top = true;
+      for (let a = -1; a <= 1 && top; a++) for (let b = -1; b <= 1 && top; b++) for (let c = -1; c <= 1; c++) {
+        if ((a || b || c) && D[idx(i + a, j + b, k + c)] > v) { top = false; break; }
+      }
+      if (top) cand.push({ x: pos(i), y: pos(j) + half, z: pos(k), r: v });
+    }
+    // neighbouring grid maxima of the same gap: keep only the best one before the exact (slower) search
+    cand.sort((a, b) => b.r - a.r);
+    const pre = [], hash = new Map(), key = (x, y, z) => Math.floor(x) + ',' + Math.floor(y) + ',' + Math.floor(z);
+    for (const p of cand) {
+      let clash = false;
+      for (let a = -1; a <= 1 && !clash; a++) for (let b = -1; b <= 1 && !clash; b++) for (let c = -1; c <= 1 && !clash; c++)
+        for (const q of hash.get(key(p.x + a, p.y + b, p.z + c)) || []) if (Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z) < Math.max(p.r, q.r)) { clash = true; break; }
+      if (clash) continue;
+      pre.push(p);
+      const k = key(p.x, p.y, p.z); (hash.get(k) || hash.set(k, []).get(k)).push(p);
+    }
+    cand.length = 0; cand.push(...pre);
+    const DIRS = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1],[1,1,0],[1,-1,0],[-1,1,0],[-1,-1,0],[1,0,1],[1,0,-1],[-1,0,1],[-1,0,-1],[0,1,1],[0,1,-1],[0,-1,1],[0,-1,-1]];
+    cand.forEach(p => {
+      // only the balls close to this gap matter while climbing
+      const near = [], ci = cell(p.x), cj = cell(p.z);
+      for (let a = Math.max(0, ci - 1); a <= Math.min(nc - 1, ci + 1); a++)
+        for (let c = Math.max(0, cj - 1); c <= Math.min(nc - 1, cj + 1); c++)
+          for (const b of cols[a * nc + c]) if (Math.hypot(p.x - b.x, p.y - b.y, p.z - b.z) < 2.6 * R + p.r) near.push(b);
+      const f = (x, y, z) => {
+        let d = Math.min(x + half, half - x, z + half, half - z, y, H - y);
+        for (const b of near) { const e = Math.hypot(x - b.x, y - b.y, z - b.z) - R; if (e < d) d = e; }
+        return d;
+      };
+      let d = f(p.x, p.y, p.z);
+      for (let s = 0.12 * R; s > 0.002 * R; s *= 0.5) {
+        for (let moved = true, g = 0; moved && g < 20; g++) {
+          moved = false;
+          for (const [a, b, c] of DIRS) {
+            const e = f(p.x + a * s, p.y + b * s, p.z + c * s);
+            if (e > d + 1e-7) { d = e; p.x += a * s; p.y += b * s; p.z += c * s; moved = true; }
+          }
+        }
+      }
+      p.r = dist(p.x, p.y, p.z);   // exact check against all neighbours
+    });
+    // one sphere per gap: biggest first, a candidate inside an accepted sphere is dropped
+    cand.sort((a, b) => b.r - a.r);
+    const out = [], h2 = new Map();
+    for (const p of cand) {
+      if (p.r < minR) continue;
+      let clash = false;
+      for (let a = -1; a <= 1 && !clash; a++) for (let b = -1; b <= 1 && !clash; b++) for (let c = -1; c <= 1 && !clash; c++)
+        for (const q of h2.get(key(p.x + a, p.y + b, p.z + c)) || []) if (Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z) < Math.max(p.r, q.r)) { clash = true; break; }
+      if (clash) continue;
+      out.push(p);
+      const k = key(p.x, p.y, p.z); (h2.get(k) || h2.set(k, []).get(k)).push(p);
+    }
+    return out;
   }
+  let holesOn = false, holeTimer = 0;
+  const holeGeo = new THREE.SphereGeometry(1, 32, 20);
+  const holeMat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0 });
+  // colour by size: small gaps blue-green, big ones orange-red
+  const holeColor = (r, c) => c.setHSL(0.55 - 0.5 * Math.min(1, Math.max(0, (r / R - 0.15) / 0.6)), 0.75, 0.55).convertSRGBToLinear();
+  function removeHoles(st) { if (st.holeMesh) { scene.remove(st.holeMesh); if (st.holeMesh.dispose) st.holeMesh.dispose(); st.holeMesh = null; } }
+  function buildHoles(st) {
+    const holes = findHoles(st.targets.map(t => ({ x: t.p.x - st.ox, y: t.p.y, z: t.p.z })), st.m, 0.12 * R);
+    const im = new THREE.InstancedMesh(holeGeo, holeMat, Math.max(1, holes.length)), c = new THREE.Color();
+    im.count = holes.length;
+    holes.forEach((h, i) => { im.setMatrixAt(i, tmpM.makeScale(h.r, h.r, h.r).setPosition(st.ox + h.x, h.y, h.z)); im.setColorAt(i, holeColor(h.r, c)); });
+    im.castShadow = im.receiveShadow = true;
+    im.frustumCulled = false;
+    scene.add(im);
+    st.holeMesh = im;
+  }
+  // gap balls are shown for full boxes only; one box per step, so the page stays responsive
+  function updateHoles() {
+    stacks.forEach(st => { if (st.holeMesh && !(holesOn && view === 2 && isFull(st))) removeHoles(st); });
+    clearTimeout(holeTimer);
+    holeTimer = setTimeout(() => {
+      const st = stacks.find(x => holesOn && view === 2 && isFull(x) && !x.holeMesh);
+      if (st) { buildHoles(st); updateHoles(); }
+    }, 30);
+  }
+
+  // ---------- readout ----------
+  // The readout shows only what is already in the box: the count so far and how it is made up.
+  // How many balls fit is not given away; the comparison table fills in as boxes are filled completely.
+  const seen = {};   // per box size: counts of boxes that were filled completely
+  const seenAt = m => seen[m] || (seen[m] = {});
+  function isFull(st) { return st.placed >= st.targets.length && !st.current && !st.shake; }
+
+  // balls placed so far, per layer (for the random box: per portion)
+  function placedPer(st) {
+    const per = [];
+    for (let i = 0; i < st.placed; i++) { const L = st.targets[i].L; per[L] = (per[L] || 0) + 1; }
+    return Array.from(per, n => n || 0);
+  }
+  // the sum so far: complete layers, plus the layer that is being filled
+  function breakdown(st) {
+    const per = placedPer(st);
+    if (!per.length) return '0';
+    // a portion of the random box holds m · m balls; the last one may be cut short by the rim
+    const cap = L => (st.kind === 'rand' ? st.m * st.m : st.layerSize[L]);
+    const last = per.length - 1, open = per[last] < cap(last);
+    const full = open ? per.slice(0, last) : per;
+    let s = '';
+    if (full.length) {
+      if (st.kind === 'pyrSq') s = full.map(c => Math.round(Math.sqrt(c)) + '²').join(' + ');
+      else if (st.kind === 'pyrTri') s = full.join(' + ');
+      else if (st.kind === 'fcc' && full.length > 1) {
+        // layers alternate (a, b, a, b, …): pairs are grouped as c · (a + b), plus a if one is left
+        const pairs = Math.floor(full.length / 2), pair = '(' + full[0] + ' + ' + full[1] + ')';
+        s = (pairs > 1 ? pairs + ' · ' + pair : full[0] + ' + ' + full[1]) + (full.length % 2 ? ' + ' + full[0] : '');
+      } else s = full.length > 1 ? full.length + ' · ' + full[0] : String(full[0]);   // equal layers or portions
+    }
+    if (open) s = s ? s + ' + ' + per[last] : String(per[last]);
+    return s;
+  }
+
+  const avgOf = n => n.reduce((a, b) => a + b, 0) / n.length;
   function cmpTable() {
     const num = x => x.toLocaleString('de-CH');
-    const rows = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25].map(m => {
-      const c = boxCount(m, 'cubic'), f = boxCount(m, 'fcc');
-      return '<tr' + (m === M ? ' class="cur"' : '') + '><td>' + m + '</td><td>' + num(c) + '</td><td>' + num(f) + '</td><td>' + fmt(f / c) + '</td></tr>';
+    const rows = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(m => {
+      const k = seen[m] || {}, c = k.cubic, f = k.fcc;
+      // random box: the average of the poured fillings; once this size has been shaken, the shaken average
+      const loose = k.rand && emp[m] && emp[m].n.length >= RUNS ? fmt(avgOf(emp[m].n), 1) : '–';
+      const z = k.shaken && empS[m] && empS[m].n.length >= RUNS_S ? fmt(avgOf(empS[m].n), 1) : loose;
+      return '<tr' + (m === M ? ' class="cur"' : '') + '><td>' + m + '</td><td>' + (c ? num(c) : '–') + '</td><td>' + (f ? num(f) : '–') + '</td><td>' +
+        (c && f ? fmt(f / c) : '–') + '</td><td>' + z + '</td></tr>';
     }).join('');
-    return '<table class="cmp"><thead><tr><th>Kante</th><th>Über Kugel</th><th>Kuhle</th><th>Verhältnis</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<p class="note">Ab 6 Kugeln pro Kante fasst die Kiste mit Kuhlen immer mehr. Sie verliert an zwei Stellen: Jede zweite Schicht hat am Rand eine Reihe weniger, und oben bleibt Platz frei, weil ein Vielfaches von √2 r nie genau in der Kistenhöhe aufgeht. Mit wachsender Kiste nähert sich das Verhältnis √2 ≈ 1,41.</p>';
+    return '<table class="cmp"><thead><tr><th title="Kugeln pro Kante"><i>n</i></th><th title="Würfelgitter">Würfel</th><th title="Tetraedergitter">Tetraeder</th><th title="Tetraedergitter geteilt durch Würfelgitter">Verh.</th><th title="Zufällig, Mittelwert (nach dem Rütteln: gerüttelt und nachgefüllt)">Zufällig</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
+  // status of the random box while it is being shaken
+  function empText(st) {
+    return st.shake ? '<div class="note"><b>Wird gerüttelt …</b></div>' : '';
+  }
+  // "4 · 16 + 3 = 67"; a single number stays a single number
+  // long sums wrap onto several lines, but only after a "+" between the summands
+  const NB = '\u00a0';
+  const sum = st => {
+    const b = breakdown(st), n = st.placed.toLocaleString('de-CH');
+    if (b === String(st.placed)) return n;
+    const keep = b.replace(/\(([^)]*)\)/g, g => g.replace(/ /g, NB))   // "(16 + 9)" stays together
+                  .replace(/ · /g, NB + '·' + NB)                     // "2 · 16" stays together
+                  .replace(/ \+ /g, NB + '+ ');                       // the line may break after a "+"
+    return keep + NB + '=' + NB + n;
+  };
   function updateReadout() {
     $('cmp').hidden = view !== 2;
     $('nOut').textContent = $('nRange').value = N;
     $('mOut').textContent = $('mRange').value = M;
+    const count = n => n.toLocaleString('de-CH') + (n === 1 ? ' Kugel' : ' Kugeln');
     if (view === 1) {
-      const st = stacks[0], term = k => (base === 'square' ? k + '²' : String(k * (k + 1) / 2));
-      // up to 7 layers every term is shown, beyond that the sum is shortened with an ellipsis
-      const terms = N <= 7 ? Array.from({ length: N }, (_, i) => term(i + 1)) : [term(1), term(2), term(3), '…', term(N)];
+      const st = stacks[0];
       $('sol').innerHTML =
-        '<div class="count">' + st.placed.toLocaleString('de-CH') + ' von ' + st.targets.length.toLocaleString('de-CH') + ' Kugeln</div>' +
-        '<div class="formula">' + terms.join(' + ') + ' = ' + st.targets.length.toLocaleString('de-CH') + '</div>';
-      const sq = base === 'square', h = sq ? SQ_H : TRI_H;
-      $('drop').innerHTML = 'Abstand der Ebenen: <b>' + (sq ? '√2' : fmt(h)) + ' r</b> statt 2 r. In der Mulde liegt jede Kugel um ' + (sq ? '(2 − √2)' : fmt(2 * R - h)) + ' r tiefer.';
+        '<div class="count">' + count(st.placed) + '</div>' +
+        '<div class="formula">' + sum(st) + '</div>';
     } else {
-      const vol = Math.pow(2 * M * R, 3), ball = 4 / 3 * Math.PI * R * R * R;
-      $('sol').innerHTML = stacks.map(st => {
-        const per = [];
-        for (let L = 0; L < st.nLayers; L++) per.push(st.targets.filter(t => t.L === L).length);
-        let breakdown;
-        if (st.kind === 'cubic' || per.length < 2) breakdown = per.length + ' · ' + per[0];
-        else {
-          // Schichten wechseln ab (a, b, a, b, …): Paare zusammenfassen zu c · (a + b), ggf. + a
-          const pairs = Math.floor(per.length / 2), pair = '(' + per[0] + ' + ' + per[1] + ')';
-          breakdown = (pairs > 1 ? pairs + ' · ' + pair : per[0] + ' + ' + per[1]) + (per.length % 2 ? ' + ' + per[0] : '');
-        }
-        return '<div class="pair"><div class="pname">' + st.label + '</div>' +
-          '<div class="count">' + st.placed + ' von ' + st.targets.length + ' Kugeln</div>' +
-          '<div class="formula">' + breakdown + ' = ' + st.targets.length + ' · Füllgrad ' + fmt(100 * st.placed * ball / vol, 1) + ' %</div>' +
-          '<div class="note">Oben ungenutzt: ' + fmt(2 * M * R - (2 * R + (st.nLayers - 1) * (st.kind === 'cubic' ? 2 * R : SQ_H))) + ' r</div></div>';
-      }).join('') + '<p class="note">In sehr grossen Kisten geht der Füllgrad gegen 52,4 % (Kugel über Kugel) bzw. 74,0 % (in der Kuhle).</p>';
-      $('drop').innerHTML = 'Abstand der Ebenen: 2 r bei Kugel über Kugel, <b>√2 r</b> in der Kuhle.';
+      // remember the boxes that are full now, for the table
+      const k = seenAt(M);
+      stacks.forEach(st => {
+        if (!isFull(st)) return;
+        if (st.kind === 'cubic' || st.kind === 'fcc') k[st.kind] = st.placed;
+        if (st.kind === 'rand') { k.rand = true; if (st.shakes) k.shaken = true; }
+      });
+      $('sol').innerHTML = stacks.map(st =>
+        '<div class="pair"><div class="pname">' + st.label + '</div>' +
+          '<div class="count">' + count(st.placed) + '</div>' +
+          '<div class="formula">' + sum(st) + '</div>' +
+          (st.kind === 'rand' ? empText(st) : '') + '</div>'
+      ).join('');
       $('cmpBody').innerHTML = cmpTable();
     }
     const allDone = stacks.every(st => st.placed >= st.targets.length);
-    $('next').disabled = $('layer').disabled = $('skip').disabled = allDone;
+    $('next').disabled = $('layer').disabled = allDone;
+    $('skip').setAttribute('aria-pressed', keepFull);
+    // the balls in the gaps need full boxes: only available while "Aufgefüllt" is on
+    $('holes').disabled = !keepFull;
+    $('holesLabel').classList.toggle('off', !keepFull);
+    if (!keepFull && holesOn) setHoles(false);
+    // shaking needs a filled random box that is not moving
+    const rs = randStack();
+    rsShakeable = !!rs && isFull(rs);
+    updateHoles();
   }
 
   // ---------- animation ----------
-  const FALL = 0.55, PAUSE = 0.45, ROLL = 0.7, BASEFALL = 0.45;
-  const UP = new THREE.Vector3(0, 1, 0);
+  const BASEFALL = 0.45;
   // within a layer the balls get faster; big layers (more than 28 balls) may get faster still, so a layer lasts a few seconds
   const speedCap = st => {
     const t = st.targets[Math.min(st.placed, st.targets.length - 1)];
     return Math.max(7, (t ? st.layerSize[t.L] : 0) / 4);
   };
-  const speed = st => (reduceMotion ? 1.6 : 1) * Math.min(speedCap(st), Math.pow(1.3, st.streak));
+  const speed = st => {
+    const v = Math.min(speedCap(st), Math.pow(1.3, st.streak));
+    return (reduceMotion ? 1.6 : 1) * v;
+  };
+
+  // a landed ball keeps its highlight colour and fades into the colour of its layer; the next ball may already fall
+  const FADE = 0.8, MAX_FADES = 40;
+  const lerp = (a, b, e) => a + (b - a) * e;
+  function startFade(st, i, mesh) {
+    const from = mesh.material, to = matFor(st.targets[i].L, st.nLayers, false);
+    if (st.fades.length >= MAX_FADES) settleFade(st, st.fades.shift());   // very fast: the oldest one settles at once
+    const m = from.clone();
+    m.transparent = true;
+    mesh.material = m;
+    st.fades.push({ i, mesh, from, to, m, age: 0 });
+  }
+  function stepFades(st, dt) {
+    if (!st.fades.length) return;
+    st.fades = st.fades.filter(f => {
+      f.age += dt;
+      const u = Math.min(1, f.age / FADE), e = u * u * (3 - 2 * u), t = st.targets[f.i];
+      f.m.color.copy(f.from.color).lerp(f.to.color, e);
+      f.m.emissive.copy(f.from.emissive).lerp(f.to.emissive, e);   // the glow goes out
+      f.m.roughness = lerp(f.from.roughness, f.to.roughness, e);
+      f.m.metalness = lerp(f.from.metalness, f.to.metalness, e);
+      f.m.opacity = lerp(1, f.to.opacity, e);
+      f.mesh.position.copy(t.p); f.mesh.position.y += lift(t.L);
+      if (u < 1) return true;
+      settleFade(st, f);
+      return false;
+    });
+  }
+  function settleFade(st, f) { scene.remove(f.mesh); f.m.dispose(); addSettled(st, f.i); }
+  function flushFades(st) { st.fades.forEach(f => settleFade(st, f)); st.fades = []; }
 
   function launch(st) {
     if (st.current || st.placed >= st.targets.length) return false;
@@ -652,31 +1117,24 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   function stepBall(st, cur) {
     const { t, mesh, el } = cur;
     let done = false, dur;
-    if (!t.s) {
+    if (t.path) {
+      // random box: fall onto the first contact, then follow the simulated rolling path
+      const P = t.path, n = P.length - 1;
+      dur = BASEFALL + t.rollT;
+      if (el < BASEFALL) {
+        const u = el / BASEFALL;
+        mesh.position.copy(P[0]); mesh.position.y += 6 * (1 - u * u);
+      } else {
+        const u = Math.min(1, (el - BASEFALL) / t.rollT) * n, i = Math.min(Math.max(0, n - 1), Math.floor(u));
+        if (n === 0) mesh.position.copy(P[0]); else mesh.position.lerpVectors(P[i], P[i + 1], Math.min(1, u - i));
+        done = el >= dur;
+      }
+    } else {
+      // pyramid and regular boxes: the ball falls straight down to its place
       dur = BASEFALL;
       const u = Math.min(1, el / BASEFALL);
       mesh.position.set(t.p.x, t.p.y + 6 * (1 - u * u), t.p.z);
       done = u >= 1;
-    } else {
-      const top = t.s.clone().add(new THREE.Vector3(0, 2 * R, 0));
-      const direct = top.distanceTo(t.p) < 1e-6;      // ball over ball: it stays on top
-      dur = direct ? FALL : FALL + PAUSE + ROLL;
-      if (el < FALL) {
-        const u = el / FALL;
-        mesh.position.set(top.x, top.y + 6 * (1 - u * u), top.z);
-      } else if (direct) {
-        mesh.position.copy(top); done = true;
-      } else if (el < FALL + PAUSE) {
-        mesh.position.copy(top);
-        st.ghost.position.copy(top); st.ghost.position.y += lift(t.L - 1);
-        st.ghost.visible = true; st.ghostFade = 1.6;
-      } else {
-        const u = Math.min(1, (el - FALL - PAUSE) / ROLL), e = u * u;
-        const dir = t.p.clone().sub(t.s).normalize();
-        const v = UP.clone().lerp(dir, e).normalize();   // stays on the sphere of radius 2r around the support
-        mesh.position.copy(t.s).addScaledVector(v, 2 * R);
-        done = u >= 1;
-      }
     }
     mesh.position.y += lift(t.L);
     return done ? el - dur : -1;
@@ -684,8 +1142,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
 
   function finish(st) {
     const cur = st.current;
-    scene.remove(cur.mesh);
-    addSettled(st, cur.i);
+    startFade(st, cur.i, cur.mesh);
     st.placed++; st.current = null;
     if (st.pending > 0) st.pending--;
     if (st.pending > 0 || playing) {
@@ -713,33 +1170,113 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     if (!st.current) launch(st);
   }));
   $('play').addEventListener('click', () => {
-    if (stacks.every(st => st.placed >= st.targets.length)) rebuild(true);
+    if (stacks.every(st => st.placed >= st.targets.length)) { keepFull = false; rebuild(true); }
     playing = !playing; setPlayLabel();
     if (playing) stacks.forEach(st => { if (!st.current) launch(st); });
   });
   function skipAll() {
     playing = false; setPlayLabel();
     stacks.forEach(st => {
-      st.pending = 0; st.streak = 0; st.ghost.visible = false;
+      flushFades(st);
+      if (st.shake) stepShake(st, true);   // finish the shaking at once, then the topping up below
+      st.pending = 0; st.streak = 0;
       if (st.current) { scene.remove(st.current.mesh); st.current = null; }
       while (st.placed < st.targets.length) { addSettled(st, st.placed); st.placed++; }
     });
     updateReadout();
   }
-  $('skip').addEventListener('click', skipAll);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') skipAll(); });
-  $('reset').addEventListener('click', () => rebuild(true));
-  $('keepFull').addEventListener('change', e => { keepFull = e.target.checked; if (keepFull) skipAll(); });
+  // "Aufgefüllt": on, the boxes are filled at once and stay full when the size changes; off, it starts again
+  function setFull(on) {
+    keepFull = on;
+    if (on) skipAll(); else rebuild(true);
+  }
+  $('skip').addEventListener('click', () => setFull(!keepFull));
+
+  // a click (not a drag) on the full random box shakes it; the cursor shows when that is possible
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hitBox = new THREE.Box3();
+  let rsShakeable = false, downAt = null;
+  function overRandomBox(e) {
+    const st = randStack(), b = boxes[2];
+    if (!st || !b) return false;
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    hitBox.min.set(b.ox - b.side / 2, 0, -b.side / 2); hitBox.max.set(b.ox + b.side / 2, b.side, b.side / 2);
+    return ray.ray.intersectsBox(hitBox);
+  }
+  renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener('pointerup', e => {
+    const click = downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6;
+    downAt = null;
+    if (click && view === 2 && rsShakeable && overRandomBox(e)) startShake();
+  });
+  renderer.domElement.addEventListener('pointermove', e => {
+    if (e.buttons) return;
+    renderer.domElement.style.cursor = view === 2 && rsShakeable && overRandomBox(e) ? 'pointer' : '';
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !keepFull) setFull(true); });
+
+  // arrow keys, smooth while held: up/down move the camera and its target up or down (the height above
+  // the floor changes, the direction of view stays); with Shift up/down tilt; left/right turn around.
+  // A slider chosen with the Tab key keeps its own arrow keys; a slider moved with mouse or finger lets go
+  // of the focus again, so the arrow keys return to the camera.
+  const held = new Set(), keyVel = { lift: 0, tilt: 0, turn: 0 };
+  document.addEventListener('pointerup', e => { if (e.target.matches('input[type="range"]')) e.target.blur(); });
+  const orbit = new THREE.Spherical(), orbitOff = new THREE.Vector3();
+  document.addEventListener('keydown', e => {
+    if (!e.key.startsWith('Arrow') || e.target.matches('input[type="range"]')) return;
+    e.preventDefault();
+    held.add(e.key);
+  });
+  document.addEventListener('keyup', e => held.delete(e.key));
+  window.addEventListener('blur', () => held.clear());
+  document.addEventListener('keydown', e => { if (e.key === 'Shift') held.add('Shift'); });
+  document.addEventListener('keyup', e => { if (e.key === 'Shift') held.delete('Shift'); });
+  function stepKeys(dt) {
+    const ud = (held.has('ArrowUp') ? 1 : 0) - (held.has('ArrowDown') ? 1 : 0);
+    const lr = (held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0);
+    const shift = held.has('Shift');
+    // speeds ease in and out, so the motion starts and stops softly
+    const ease = Math.min(1, dt * 8);
+    keyVel.lift += ((shift ? 0 : ud) - keyVel.lift) * ease;
+    keyVel.tilt += ((shift ? ud : 0) - keyVel.tilt) * ease;
+    keyVel.turn += (lr - keyVel.turn) * ease;
+    if (Math.abs(keyVel.lift) + Math.abs(keyVel.tilt) + Math.abs(keyVel.turn) < 1e-3) return;
+    orbitOff.copy(camera.position).sub(controls.target);
+    // lift: 35 % of the viewing distance per second; the target stays on or above the floor
+    let dy = keyVel.lift * 0.35 * orbitOff.length() * dt;
+    dy = Math.max(dy, -controls.target.y, 0.5 * R - camera.position.y);
+    controls.target.y += dy; camera.position.y += dy;
+    // tilt and turn: 50 degrees per second
+    const a = 50 * Math.PI / 180 * dt;
+    orbit.setFromVector3(orbitOff);
+    orbit.phi = Math.max(0.05, Math.min(controls.maxPolarAngle, orbit.phi - keyVel.tilt * a));
+    orbit.theta += keyVel.turn * a;
+    camera.position.copy(controls.target).add(orbitOff.setFromSpherical(orbit));
+  }
+  $('reset').addEventListener('click', () => { keepFull = false; rebuild(true); });
 
   $('explode').addEventListener('input', e => {
     explode = parseFloat(e.target.value);
+    // the bottom layer stays where it is and the camera does not move: the layers rise from the floor upwards
     stacks.forEach(st => st.layers.forEach(im => { im.position.y = lift(im.userData.L); }));
-    controls.target.y = targetY();
   });
-  $('transp').addEventListener('input', e => {
-    transp = parseFloat(e.target.value);
+  function setTransp(v) {
+    transp = v;
+    $('transp').value = v;
     settledMats.forEach(m => { m.opacity = 1 - transp; m.depthWrite = transp < 0.25; });
-  });
+  }
+  let transpTween = null, transpBefore = transp;
+  $('transp').addEventListener('input', e => { transpTween = null; setTransp(parseFloat(e.target.value)); });
+  // gap balls: the big balls turn transparent (the slider moves along), and back when switched off
+  function setHoles(on) {
+    holesOn = on;
+    $('holes').checked = on;
+    if (on) { transpBefore = transp; transpTween = { from: transp, to: Math.max(transp, 0.8), t: 0 }; }
+    else transpTween = { from: transp, to: transpBefore, t: 0 };
+    updateHoles();
+  }
+  $('holes').addEventListener('change', e => setHoles(e.target.checked));
   $('boxTransp').addEventListener('input', e => { boxTransp = parseFloat(e.target.value); applyBoxTransp(); });
   $('sat').addEventListener('input', e => { sat = parseFloat(e.target.value); applySat(); });
 
@@ -758,33 +1295,32 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     scheme = s;
     $('cBunt').setAttribute('aria-pressed', s === 'bunt');
     $('cStahl').setAttribute('aria-pressed', s === 'stahl');
-    $('cGrau').setAttribute('aria-pressed', s === 'grau');
     $('satGroup').hidden = s !== 'bunt';   // the saturation only applies to "Bunt"
     stacks.forEach(st => {
+      flushFades(st);
       st.layers.forEach(im => { im.material = matFor(im.userData.L, st.nLayers, false); });
       if (st.current) st.current.mesh.material = matFor(st.current.t.L, st.nLayers, true);
     });
   }
   $('cBunt').addEventListener('click', () => setScheme('bunt'));
   $('cStahl').addEventListener('click', () => setScheme('stahl'));
-  $('cGrau').addEventListener('click', () => setScheme('grau'));
 
-  const LEAD = {
-    1: 'Jede neue Kugel landet zuerst auf einer Kugel darunter. Dort bleibt sie nicht liegen: Sie rollt in die Mulde und liegt tiefer, als wenn sie obendrauf geblieben wäre.',
-    2: 'Zwei gleich grosse Kisten. Links kommt jede Kugel senkrecht auf eine Kugel darunter. Rechts rastet sie in der Kuhle ein. Welche Kiste fasst mehr?'
-  };
   function setView(v) {
     view = v;
     $('v1').setAttribute('aria-selected', v === 1);
     $('v2').setAttribute('aria-selected', v === 2);
-    const hash = v === 1 ? 'marktstapel' : 'kiste';
+    const hash = v === 1 ? 'pyramide' : 'wuerfel';
     if (location.hash.slice(1) !== hash) history.replaceState(null, '', '#' + hash);
     document.querySelectorAll('[data-view]').forEach(el => { el.hidden = Number(el.dataset.view) !== v; });
-    $('lead').textContent = LEAD[v];
-    $('tagL').hidden = $('tagR').hidden = v !== 2;
+    $('tagL').hidden = $('tagM').hidden = $('tagR').hidden = v !== 2;
+    if (v === 1 && holesOn) setHoles(false);   // gap balls belong to the box view
     // lifting layers is not offered in the box view (the balls would rise out of the box)
     if (v === 2) { $('explode').value = 0; explode = 0; }
-    setScheme(v === 1 ? 'bunt' : 'grau');
+    // the pyramid starts in pastel colours, the boxes in steel blue
+    sat = 0.5;
+    $('sat').value = sat;
+    setScheme(v === 1 ? 'bunt' : 'stahl');
+    applySat();
     rebuild();
   }
   $('v1').addEventListener('click', () => setView(1));
@@ -799,7 +1335,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   $('bSquare').addEventListener('click', () => setBase('square'));
   $('bTri').addEventListener('click', () => setBase('tri'));
   const setN = n => { n = Math.max(2, Math.min(24, n)); if (n !== N) { N = n; rebuild(); } };
-  const setM = m => { m = Math.max(2, Math.min(7, m)); if (m !== M) { M = m; rebuild(); } };
+  const setM = m => { m = Math.max(2, Math.min(10, m)); if (m !== M) { M = m; rebuild(); } };
   $('lessN').addEventListener('click', () => setN(N - 1));
   $('moreN').addEventListener('click', () => setN(N + 1));
   $('nRange').addEventListener('input', e => setN(parseInt(e.target.value, 10)));
@@ -852,7 +1388,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
 
   const tmp = new THREE.Vector3();
   function placeTag(el, b) {
-    tmp.set(b.ox, b.side + 0.8 * R + lift(M), 0).project(camera);
+    tmp.set(b.ox, b.side + 0.6 * R + lift(M), -b.side / 2).project(camera);   // above the back top edge, the highest point of the box on screen
     const w = stage.clientWidth, h = stage.clientHeight;
     el.style.left = ((tmp.x + 1) / 2 * w) + 'px';
     el.style.top = ((1 - tmp.y) / 2 * h) + 'px';
@@ -860,25 +1396,30 @@ details.sec { display: block; }   /* a folded section takes no extra room */
 
   let last = performance.now();
   function frame(now) {
+    requestAnimationFrame(frame);   // first: an error in one frame must not stop the animation
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     stacks.forEach(st => {
+      if (st.shake) stepShake(st, false);
       stepStack(st, dt);
-      if (!st.ghost.visible) return;
-      const holding = st.current && st.current.el < FALL + PAUSE && st.current.el >= FALL;
-      if (holding) { ghostMat.opacity = 0.35; return; }
-      st.ghostFade -= dt * speed(st);
-      ghostMat.opacity = Math.max(0, Math.min(0.35, st.ghostFade * 0.35));
-      if (st.ghostFade <= 0) st.ghost.visible = false;
+      stepFades(st, dt);
     });
+    if (transpTween) {
+      const tw = transpTween;
+      tw.t = Math.min(1, tw.t + dt / 0.6);
+      setTransp(lerp(tw.from, tw.to, tw.t * tw.t * (3 - 2 * tw.t)));
+      if (tw.t >= 1) transpTween = null;
+    }
     const ts = targetShift();
     if (Math.abs(ts - shift) > 0.5) { shift += (ts - shift) * Math.min(1, dt * 10); applyShift(); }
     placeOverlays();
+    stepKeys(dt);
     controls.update();
+    renderShadows();
+    orderWalls();
     renderer.render(scene, camera);
-    if (view === 2 && boxes.length === 2) { placeTag($('tagL'), boxes[0]); placeTag($('tagR'), boxes[1]); }
-    requestAnimationFrame(frame);
+    if (view === 2 && boxes.length === 3) { placeTag($('tagL'), boxes[0]); placeTag($('tagM'), boxes[1]); placeTag($('tagR'), boxes[2]); }
   }
-  const viewFromHash = () => (location.hash === '#kiste' ? 2 : 1);
+  const viewFromHash = () => (location.hash === '#wuerfel' || location.hash === '#kiste' ? 2 : 1);   // #kiste: old links
   window.addEventListener('hashchange', () => { if (viewFromHash() !== view) setView(viewFromHash()); });
   resize(); setView(viewFromHash());
   requestAnimationFrame(frame);
