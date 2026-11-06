@@ -183,7 +183,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
         <div class="valrow"><label class="label" for="mRange">Kugeln pro Würfelkante <i>n</i></label><output id="mOut" for="mRange">4</output></div>
         <div class="slide">
           <button type="button" id="lessM" aria-label="Kleinerer Würfel">−</button>
-          <input type="range" id="mRange" min="2" max="10" step="1" value="4">
+          <input type="range" id="mRange" min="2" max="12" step="1" value="4">
           <button type="button" id="moreM" aria-label="Grösserer Würfel">+</button>
         </div>
       </div>
@@ -290,6 +290,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     l.shadow.mapSize.set(2048, 2048);
     Object.assign(l.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });
     l.shadow.radius = 4;
+    l.shadow.bias = -0.0005; l.shadow.normalBias = 0.03;   // no stripes from a surface shadowing itself
     l.shadow.autoUpdate = false;   // updated by hand in renderShadows
     scene.add(l);
     return l;
@@ -319,15 +320,28 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   // walls behind the balls (seen through the box: bottom, back) are drawn first, so the balls lie over them;
   // walls in front are drawn last, so they lie over the balls. Independent of the transparency of the balls.
   const wallTmp = new THREE.Vector3();
+  // The boxes themselves are drawn one after the other, the farthest first, each one complete
+  // (back walls, back edges, balls, front edges, front walls); so a box behind never paints over one in front.
   function orderWalls() {
-    boxes.forEach(b => {
+    const rank = boxes.map((b, i) => i)
+      .sort((i, j) => wallTmp.set(boxes[j].ox, boxes[j].side / 2, 0).distanceToSquared(camera.position)
+                    - wallTmp.set(boxes[i].ox, boxes[i].side / 2, 0).distanceToSquared(camera.position));
+    rank.forEach((bi, k) => {
+      const b = boxes[bi], base = 10 * k;
       const back = b.walls.map(w => {
         wallTmp.copy(camera.position); wallTmp.x -= b.ox;
         return wallTmp.sub(w.userData.p).dot(w.userData.n) > 0;
       });
-      b.walls.forEach((w, i) => { w.renderOrder = back[i] ? -1 : 1; });
+      b.walls.forEach((w, i) => { w.renderOrder = base + (back[i] ? 1 : 5); });
       // an edge between back walls only lies behind the balls; all other edges in front of them
-      b.edges.forEach(e => { e.renderOrder = e.userData.on.every(i => back[i]) ? -0.5 : 0.5; });
+      b.edges.forEach(e => { e.renderOrder = base + (e.userData.on.every(i => back[i]) ? 2 : 4); });
+      // the balls of the stack in this box (the stacks are in the same order as the boxes)
+      const st = stacks[bi];
+      if (st) {
+        if (st.sorted) st.sorted.renderOrder = base + 3;
+        st.fades.forEach(f => { f.mesh.renderOrder = base + 3; });
+        if (st.current) st.current.mesh.renderOrder = base + 3;
+      }
     });
   }
   const setWallShadows = on => boxes.forEach(b => b.walls.forEach(w => { w.castShadow = on; }));
@@ -349,7 +363,10 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     const key = d.join('x');
     return GEOS[key] || (GEOS[key] = new THREE.SphereGeometry(R, d[0], d[1]));
   }
-  const boxMat = new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+  // polygon offset: where a ball touches a wall, ball and wall lie at the same depth; the wall is moved a hair
+  // towards the viewer for the depth test, so the touching points do not shine through as a pattern of dots
+  const boxMat = new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, transparent: true, side: THREE.DoubleSide, depthWrite: false,
+                                                  polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 });
   const edgeMat = new THREE.MeshBasicMaterial({ transparent: true });
 
   // ---------- colours ----------
@@ -391,6 +408,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     return cache.get(key);
   }
   function applySat() {
+    colourVersion++;
     [settledMats, hotMats].forEach(cache => cache.forEach(m => {
       if (!m.userData.bunt) return;
       m.color.copy(bunt(m.userData.h));
@@ -548,49 +566,6 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     return step;
   }
 
-  // empirical count: many fillings per box size, run in small time slices in the background.
-  // Loose: poured once. Shaken: poured, then three times shaken and topped up.
-  const RUNS = 30, RUNS_S = 10, SHAKE_ROUNDS = 3, emp = {}, empS = {};
-  function* looseRun(m) { return randomFill(m, false).length; }
-  function* shakenRun(m) {
-    const balls = randomFill(m, false).map(r => r.q);
-    yield;
-    for (let round = 0; round < SHAKE_ROUNDS; round++) {
-      const step = makeShaker(balls, m);
-      while (!step(15)) yield;
-      for (let i = balls.length - 1; i >= 0; i--) if (balls[i].y + R > 2 * m * R + 1e-3) balls.splice(i, 1);   // fell out over the rim
-      const add = randomFill(m, false, balls).map(r => r.q);
-      balls.push(...add);
-      yield;
-    }
-    return balls.length;
-  }
-  let empBusy = false;
-  function runEmpirical() {
-    if (empBusy) return;
-    const m = M;
-    const jobs = [[emp, RUNS, looseRun], [empS, RUNS_S, shakenRun]];
-    const job = jobs.find(([store, runs]) => !(store[m] && store[m].n.length >= runs));
-    if (!job) return;
-    const [store, runs, make] = job, e = store[m] || (store[m] = { n: [] });
-    empBusy = true;
-    let gen = make(m);
-    const tick = () => {
-      const t0 = performance.now();
-      while (performance.now() - t0 < 20) {
-        const r = gen.next();
-        if (r.done) {
-          e.n.push(r.value);
-          if (view === 2) updateReadout();
-          if (e.n.length >= runs) break;
-          gen = make(m);
-        }
-      }
-      if (e.n.length < runs && m === M && view === 2) setTimeout(tick, 0);
-      else { empBusy = false; if (m === M && view === 2) runEmpirical(); }   // then the next job
-    };
-    setTimeout(tick, 30);
-  }
 
   // targets of the random box: poured in portions of one layer (m · m balls); each portion is one "Ebene"
   // and gets its own colour. `first` is the number of balls already in the box.
@@ -669,6 +644,55 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     t.slot = im.count;   // its place in the layer mesh, so shaking can move it later
     im.setMatrixAt(im.count++, tmpM.makeTranslation(t.p.x, t.p.y, t.p.z));
     im.instanceMatrix.needsUpdate = true;
+  }
+
+  // ---------- balls drawn back to front ----------
+  // All settled balls of a stack are drawn as one mesh, sorted by distance from the camera, the farthest first.
+  // This one way works for every transparency: opaque balls cover the ones behind them, transparent ones show
+  // them, without a jump in between. (The layer meshes only keep the bookkeeping and stay hidden.)
+  // Sorting happens only when the camera, the balls or the colours have changed.
+  const sortedMat = new THREE.MeshStandardMaterial({ transparent: true, depthWrite: false });
+  const sortTmp = new THREE.Vector3(), sortCol = new THREE.Color();
+  let colourVersion = 0;
+  function drawSorted() {
+    const cam = camera.position, ref = matFor(0, 1, false);
+    sortedMat.roughness = ref.roughness; sortedMat.metalness = ref.metalness;
+    sortedMat.opacity = 1 - transp;
+    stacks.forEach(st => {
+      st.layers.forEach(im => { im.visible = false; });
+      // the falling ball and the fading ones are part of the sorted mesh too (with their current colour),
+      // so they always sit at the right place in the order; their own meshes stay hidden
+      st.fades.forEach(f => { f.mesh.visible = false; });
+      if (st.current) st.current.mesh.visible = false;
+      const moving = st.shake || st.fades.length || st.current;
+      const key = [cam.x, cam.y, cam.z, explode, st.placed, st.targets.length, colourVersion, moving ? Math.random() : 0].join('|');
+      if (st.sorted && st.sortKey === key) return;
+      st.sortKey = key;
+      if (!st.sorted || st.sorted.userData.cap < st.targets.length + 1) {
+        if (st.sorted) { scene.remove(st.sorted); if (st.sorted.dispose) st.sorted.dispose(); }
+        st.sorted = new THREE.InstancedMesh(st.geo, sortedMat, st.targets.length + 1);
+        st.sorted.userData.cap = st.targets.length + 1;
+        st.sorted.castShadow = st.sorted.receiveShadow = true;
+        st.sorted.frustumCulled = false;
+        scene.add(st.sorted);
+      }
+      const fadeOf = new Map(st.fades.map(f => [f.i, f])), items = [];
+      const add = (x, y, z, col) => items.push({ x, y, z, col, d: sortTmp.set(x, y, z).distanceToSquared(cam) });
+      for (let i = 0; i < st.placed; i++) {
+        const t = st.targets[i], f = fadeOf.get(i);
+        add(t.p.x, t.p.y + lift(t.L), t.p.z, f ? f.m.color : matFor(t.L, st.nLayers, false).color);
+      }
+      if (st.current) { const p = st.current.mesh.position; add(p.x, p.y, p.z, st.current.mesh.material.color); }
+      items.sort((a, b) => b.d - a.d);   // far ones first
+      const im = st.sorted;
+      items.forEach((it, k) => {
+        im.setMatrixAt(k, tmpM.makeTranslation(it.x, it.y, it.z));
+        im.setColorAt(k, sortCol.copy(it.col));
+      });
+      im.count = items.length;
+      im.instanceMatrix.needsUpdate = true;
+      if (im.instanceColor) im.instanceColor.needsUpdate = true;
+    });
   }
 
   // ---------- shaking the random box ----------
@@ -770,6 +794,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       if (st.current) scene.remove(st.current.mesh);
       st.fades.forEach(f => { scene.remove(f.mesh); f.m.dispose(); });
       removeHoles(st);
+      if (st.sorted) { scene.remove(st.sorted); if (st.sorted.dispose) st.sorted.dispose(); }
     });
     boxes.forEach(b => scene.remove(b.group));
     stacks = []; boxes = [];
@@ -787,7 +812,6 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       const off = boxOffset(), side = 2 * M * R;
       stacks = [makeStack('cubic', M, -off, 'Würfelgitter'), makeStack('fcc', M, 0, 'Tetraedergitter'), makeStack('rand', M, off, 'Zufällig')];
       boxes = [makeBox(-off, side), makeBox(0, side), makeBox(off, side)];
-      runEmpirical();
     }
     stacks.forEach(st => { while (st.placed < st.targets.length && st.targets[st.placed].L === 0) { addSettled(st, st.placed); st.placed++; } });
     // "Immer gefüllt zeigen": every change of size shows the finished stacks at once; "Neu beginnen" and "Abspielen" still start empty
@@ -980,18 +1004,16 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     return s;
   }
 
-  const avgOf = n => n.reduce((a, b) => a + b, 0) / n.length;
   function cmpTable() {
     const num = x => x.toLocaleString('de-CH');
-    const rows = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(m => {
+    const rows = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => {
       const k = seen[m] || {}, c = k.cubic, f = k.fcc;
-      // random box: the average of the poured fillings; once this size has been shaken, the shaken average
-      const loose = k.rand && emp[m] && emp[m].n.length >= RUNS ? fmt(avgOf(emp[m].n), 1) : '–';
-      const z = k.shaken && empS[m] && empS[m].n.length >= RUNS_S ? fmt(avgOf(empS[m].n), 1) : loose;
+      // random box: the number of balls of the last full random box of this size (after shaking: the new number)
+      const z = k.rand ? num(k.rand) : '–';
       return '<tr' + (m === M ? ' class="cur"' : '') + '><td>' + m + '</td><td>' + (c ? num(c) : '–') + '</td><td>' + (f ? num(f) : '–') + '</td><td>' +
         (c && f ? fmt(f / c) : '–') + '</td><td>' + z + '</td></tr>';
     }).join('');
-    return '<table class="cmp"><thead><tr><th title="Kugeln pro Kante"><i>n</i></th><th title="Würfelgitter">Würfel</th><th title="Tetraedergitter">Tetraeder</th><th title="Tetraedergitter geteilt durch Würfelgitter">Verh.</th><th title="Zufällig, Mittelwert (nach dem Rütteln: gerüttelt und nachgefüllt)">Zufällig</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    return '<table class="cmp"><thead><tr><th title="Kugeln pro Kante"><i>n</i></th><th title="Würfelgitter">Würfel</th><th title="Tetraedergitter">Tetraeder</th><th title="Tetraedergitter geteilt durch Würfelgitter">Verh.</th><th title="Zufällig: Anzahl im zuletzt vollen Würfel dieser Grösse">Zufällig</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
   // status of the random box while it is being shaken
   function empText(st) {
@@ -1024,7 +1046,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
       stacks.forEach(st => {
         if (!isFull(st)) return;
         if (st.kind === 'cubic' || st.kind === 'fcc') k[st.kind] = st.placed;
-        if (st.kind === 'rand') { k.rand = true; if (st.shakes) k.shaken = true; }
+        if (st.kind === 'rand') k.rand = st.placed;
       });
       $('sol').innerHTML = stacks.map(st =>
         '<div class="pair"><div class="pname">' + st.label + '</div>' +
@@ -1292,6 +1314,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   setMenu(!phone);
 
   function setScheme(s) {
+    colourVersion++;
     scheme = s;
     $('cBunt').setAttribute('aria-pressed', s === 'bunt');
     $('cStahl').setAttribute('aria-pressed', s === 'stahl');
@@ -1335,7 +1358,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
   $('bSquare').addEventListener('click', () => setBase('square'));
   $('bTri').addEventListener('click', () => setBase('tri'));
   const setN = n => { n = Math.max(2, Math.min(24, n)); if (n !== N) { N = n; rebuild(); } };
-  const setM = m => { m = Math.max(2, Math.min(10, m)); if (m !== M) { M = m; rebuild(); } };
+  const setM = m => { m = Math.max(2, Math.min(12, m)); if (m !== M) { M = m; rebuild(); } };
   $('lessN').addEventListener('click', () => setN(N - 1));
   $('moreN').addEventListener('click', () => setN(N + 1));
   $('nRange').addEventListener('input', e => setN(parseInt(e.target.value, 10)));
@@ -1414,6 +1437,7 @@ details.sec { display: block; }   /* a folded section takes no extra room */
     placeOverlays();
     stepKeys(dt);
     controls.update();
+    drawSorted();
     renderShadows();
     orderWalls();
     renderer.render(scene, camera);
