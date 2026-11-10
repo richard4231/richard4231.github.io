@@ -33,6 +33,53 @@
   .swatch { display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }
   table.data td, table.data th { padding: 2px 6px; text-align: right; }
   table.data td:first-child, table.data th:first-child { text-align: left; }
+
+  /* --- Stadtpanorama --- */
+  #city svg { display: block; width: 100%; height: auto; }
+  @media (max-width: 640px) { #city svg { height: 190px; } }
+  .spin { animation: spin 3s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .spin.slow { animation-duration: 5s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .smoke { animation: smoke 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes smoke { 0% { transform: translate(0, 0) scale(.5); opacity: .0; } 15% { opacity: .85; } 100% { transform: translate(14px, -38px) scale(2.2); opacity: 0; } }
+  .steam { animation: steam 4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes steam { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(8px, -30px) scale(2.4); opacity: 0; } }
+  .drive { animation: drive linear infinite; }
+  @keyframes drive { from { transform: translateX(-120px); } to { transform: translateX(1120px); } }
+  .drive-back { animation: driveback linear infinite; }
+  @keyframes driveback { from { transform: translateX(1120px); } to { transform: translateX(-120px); } }
+  .cloud { animation: cloud linear infinite; }
+  @keyframes cloud { from { transform: translateX(-200px); } to { transform: translateX(1150px); } }
+  .wave { animation: wave 4s ease-in-out infinite alternate; }
+  @keyframes wave { to { transform: translateX(14px); } }
+  .swing { animation: swing 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 0% 50%; }
+  @keyframes swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+  .ghost { opacity: .45; }
+  .ghost * { stroke-dasharray: 3 2; }
+  .flicker { animation: flicker 1.3s steps(2) infinite; }
+  @keyframes flicker { 50% { opacity: .15; } }
+  .blackout { animation: blackout 2.2s ease-in-out 1; }
+  @keyframes blackout { 0%,100% { filter: none; } 15%,45% { filter: brightness(.25) saturate(.3); } 30%,60% { filter: brightness(.7); } }
+  .pop-in { animation: popin .6s cubic-bezier(.2,1.6,.4,1) 1; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes popin { from { transform: scale(.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* --- Ereigniskarte --- */
+  .flip { perspective: 900px; }
+  .flip-inner { display: grid; transition: transform .7s cubic-bezier(.3,.9,.3,1); transform-style: preserve-3d; }
+  .flip-inner > div { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flip-inner > .back { transform: rotateY(180deg); }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+
+  /* --- Zeitung --- */
+  .paper { background: #f4efe4; color: #1c1917; font-family: Georgia, 'Times New Roman', serif; }
+  .paper .masthead { font-family: 'Inter', sans-serif; letter-spacing: .18em; }
+  .bubble { position: relative; background: #fff; border: 1px solid #d6d3d1; }
+
+  .badge-locked { filter: grayscale(1); opacity: .35; }
+  @media (prefers-reduced-motion: reduce) {
+    .spin, .smoke, .steam, .drive, .drive-back, .cloud, .wave, .swing, .flicker, .blackout, .pop-in, .fade-in { animation: none !important; }
+    .flip-inner { transition: none; }
+  }
 </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col">
@@ -68,6 +115,16 @@
 </nav>
 
 <main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+  <!-- Stadtpanorama -->
+  <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
+    <div id="city" aria-label="Animierte Ansicht von Seestadt" role="img"></div>
+    <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
+      <span id="city-year" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg font-semibold text-slate-100">Seestadt 2026</span>
+      <span id="city-mood" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-slate-200"></span>
+    </div>
+    <div id="city-hint" class="hidden sm:block absolute top-2 right-2 bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] md:text-[11px] text-slate-300 pointer-events-none"></div>
+  </section>
 
   <!-- Linke Spalte -->
   <section class="lg:col-span-7 flex flex-col gap-4 min-w-0">
@@ -148,6 +205,8 @@
 </main>
 
 <footer class="text-center text-[11px] text-slate-500 pb-4 px-4">Stilisiertes Lernmodell mit plausiblen Grössenordnungen – keine Prognose. Details unter «Modell».</footer>
+
+<canvas id="confetti" class="fixed inset-0 pointer-events-none z-[60]" style="width:100vw;height:100vh;display:none"></canvas>
 
 <!-- Modal -->
 <div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
@@ -291,6 +350,32 @@ const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 const SHORT = { solar: 'Dach-Solar', agri: 'Agri-PV', wind: 'Wind', alpin: 'Alpin-Solar', kern: 'Kernstrom', gas: 'Reservekraftwerk', netz: 'Netzausbau',
   smartgrid: 'Batterien', pump: 'Pumpspeicher', stau: 'Staumauer', smartmeter: 'Smart Meter', wp: 'Wärmepumpen', daemm: 'Sanierung', fw: 'Geothermie',
   see: 'Seewasser', oev: 'ÖV', ev: 'E-Mobilität', velo: 'Velonetz', ind: 'Prozesswärme', h2: 'Wasserstoff', last: 'Lastmanagement', buerger: 'Beteiligung', bond: 'Green Bond' };
+// Zeitung: Unterzeile + Stimmen aus der Bevölkerung [pro, contra]
+const NEWS = {
+  solar: ['Solarpflicht beschlossen – Dachdecker:innen ausgebucht', ['Hausbesitzer, Seefeld', 'Mein Dach verdient jetzt Geld. Hätte ich früher machen sollen!'], ['Mieterin, Altstadt', 'Und wer zahlt es am Ende? Die Mieter:innen, wie immer.']],
+  agri: ['Strom vom Acker: Bauernhöfe werden zu Kraftwerken', ['Landwirt, Oberdorf', 'Unter den Modulen wachsen die Beeren sogar besser – weniger Hagelschaden.'], ['Landschaftsschützer', 'Erst Gewächshäuser, jetzt Solarfelder. Wo bleibt die Landschaft?']],
+  wind: ['Sechs Windräder für den Jura – Einsprachen angekündigt', ['Ingenieurin, Stadtwerk', 'Wind liefert genau dann, wenn wir ihn brauchen: im Winter.'], ['Anwohner, Jurahöhe', '200 Meter hoch, direkt vor meinem Stubenfenster? Sicher nicht!']],
+  alpin: ['Solarpanels über dem Nebelmeer', ['Bergführerin', 'Da oben scheint die Sonne, wenn unten alle im Grau sitzen.'], ['Alpenschutz-Verein', 'Industrieanlagen in unberührten Alpen – ein Tabubruch.']],
+  kern: ['Stadtwerk verlängert Kernstrom-Vertrag – Protest vor dem Stadthaus', ['Gewerbler', 'Endlich denkt jemand an die Versorgungssicherheit.'], ['Klimaaktivistin', 'Kernkraft ist keine Zukunft, sondern ein teurer Umweg.']],
+  gas: ['Reservekraftwerk: Versicherung gegen den Blackout', ['Spitaldirektorin', 'Unsere Intensivstation kann sich keinen Stromausfall leisten.'], ['Klimaaktivistin', 'Ein neues Gaskraftwerk – im Ernst? Jetzt noch?']],
+  netz: ['Grossbaustelle Stromnetz: Strassen monatelang offen', ['Netzingenieur', 'Ohne Leitungen nützt das schönste Windrad nichts.'], ['Velofahrerin', 'Seit Wochen Umleitung. Ich finde meinen Arbeitsweg nicht mehr.']],
+  smartgrid: ['Batterien im Quartier: Mittagssonne für den Abend', ['Quartierverein', 'Unser Solarstrom vom Mittag leuchtet jetzt am Abend.'], ['Skeptiker', 'Und wenn so ein Ding brennt?']],
+  pump: ['Seestadt kauft sich bei Pumpspeicherwerk ein', ['Ökonomin', 'Flexibilität ist das neue Gold im Strommarkt.'], ['Steuerzahler', 'Was hat Seestadt mit einem Stausee in den Alpen zu tun?']],
+  stau: ['Staumauer wird erhöht – Sommerwasser für den Winter', ['Ingenieurin', 'Wasser ist die beste Batterie, die wir haben.'], ['Fischer', 'Und die Fische? Und der Bach unterhalb?']],
+  smartmeter: ['Smart Meter für alle: Strom wird mittags billiger', ['Student', 'Die Waschmaschine läuft jetzt um zwölf – spart mir 10 Franken im Monat.'], ['Rentner', 'Der Zähler weiss mehr über mich als meine Frau.']],
+  wp: ['Ölheizungen müssen raus – Wärmepumpen-Boom', ['Installateur', 'Wir stellen drei Lernende ein. Das Telefon klingelt ununterbrochen.'], ['Hausbesitzerin', '35 000 Franken für eine neue Heizung? Meine alte läuft doch noch!']],
+  daemm: ['Gerüste überall: Seestadt saniert', ['Mieterin', 'Endlich zieht es nicht mehr durchs Fenster.'], ['Mieter', 'Sanierung heisst bei uns: Kündigung und teurere Miete.']],
+  fw: ['Bohrturm in der Innenstadt: Wärme aus 4 Kilometern Tiefe', ['Geologin', 'Unter uns liegt eine riesige Wärmequelle.'], ['Anwohner', 'Ich erinnere mich an Basel 2006. Mir ist mulmig.']],
+  see: ['Der See heizt die Stadt', ['Bademeisterin', 'Der See merkt davon kaum etwas – die Altstadt schon.'], ['Fischer', 'Ob das den Felchen gefällt?']],
+  oev: ['Neue Tramlinie: Im Takt durch Seestadt', ['Pendlerin', 'Alle 7,5 Minuten ein Tram – ich habe mein Auto verkauft.'], ['Ladenbesitzer', 'Jahre Baustelle vor meinem Laden. Wer kommt da noch einkaufen?']],
+  ev: ['Ladestationen an jeder Ecke', ['Taxifahrer', 'Mein E-Taxi lädt beim Warten – genial.'], ['Autofan', 'Ohne Motorengeräusch ist Autofahren nur halb so schön.']],
+  velo: ['Parkplätze weg, Velowege her', ['Velokurierin', 'Endlich kein Slalom mehr zwischen Lastwagen.'], ['Gewerbler', 'Ohne Parkplätze kommen meine Kund:innen nicht mehr.']],
+  ind: ['Industrie schaltet auf Strom um', ['Fabrikchefin', 'Elektrisch ist präziser – und unabhängig vom Ölpreis.'], ['Gewerkschafter', 'Hoffentlich bleiben die Jobs hier.']],
+  h2: ['Seestadt steigt ins Wasserstoff-Zeitalter ein', ['Chemiker', 'Sommerstrom in Tanks für den Winter – das ist die Zukunft.'], ['Ökonom', 'Teuer und verlustreich. Ein Prestigeprojekt.']],
+  last: ['Fabriken drosseln bei Strommangel – gegen Bezahlung', ['Netzbetreiberin', 'Das ist das günstigste Kraftwerk, das es gibt.'], ['Schichtarbeiter', 'Und wir sitzen dann herum?']],
+  buerger: ['Energiegenossenschaft: Ganz Seestadt wird Stromproduzentin', ['Rentnerin', 'Ich habe zehn Anteilscheine – mir gehört jetzt ein Stück Windrad!'], ['Skeptiker', 'Noch ein Verein mit Sitzungen bis Mitternacht.']],
+  bond: ['Klimaanleihe: Stadt macht Schulden fürs Klima', ['Finanzvorsteherin', 'Abwarten wäre am Ende teurer.'], ['Steuerzahlerbund', 'Unsere Kinder zahlen die Zeche.']]
+};
 
 // --- Zufall (reproduzierbar über Szenario-Code) ---
 function hashCode(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -308,10 +393,10 @@ const EVENTS = {
     R.budget -= b; R.pop -= p;
     return `Internationale Krise: Fossile Energie wird teuer. Je abhängiger die Stadt, desto härter der Schlag (Fossilanteil ${Math.round(f * 100)} %: −${b} Mio., −${p} Akzeptanz).`; } },
   foerderung: { title: 'Bundesförderprogramm Gebäude', icon: '🏛️', apply(S, m, R) {
-    R.budget += 20; S.discount = { cat: 'waerme', f: 0.7 };
+    R.budget += 20; S.discounts.push({ cat: 'waerme', f: 0.7 });
     return 'Der Bund stockt die Fördergelder auf: +20 Mio. und in der nächsten Legislatur 30 % Rabatt auf Wärme & Gebäude.'; } },
   pvpreis: { title: 'Preissturz bei Solarmodulen', icon: '📉', apply(S, m, R) {
-    S.discount = { cat: 'erneuerbar', f: 0.7 }; S.flags.pvBoom = true;
+    S.discounts.push({ cat: 'erneuerbar', f: 0.7 }); S.flags.pvBoom = true;
     return 'Modulpreise fallen stark: 30 % Rabatt auf Erneuerbare in der nächsten Legislatur, private Dächer werden schneller belegt.'; } },
   trockenheit: { title: 'Hitzesommer & Trockenheit', icon: '🌡️', apply(S, m, R) {
     S.temp.drought = true; R.pop -= 2;
@@ -338,15 +423,119 @@ const EVENTS = {
 };
 const EVENT_IDS = Object.keys(EVENTS);
 
+// Schlagzeilen: [gut, schlecht]
+const HEADLINES = {
+  dunkelflaute: ['Dunkelflaute? Seestadts Lichter bleiben an', 'Nebel, Flaute, Notstrom: Seestadt am Limit'],
+  preisschock: ['Ölpreis-Schock? Seestadt zuckt nur mit den Schultern', 'Heizöl so teuer wie nie – Haushalte ächzen'],
+  foerderung: ['Geldsegen aus Bern für Hausbesitzer:innen', 'Geldsegen aus Bern für Hausbesitzer:innen'],
+  pvpreis: ['Solarmodule zum Schnäppchenpreis', 'Solarmodule zum Schnäppchenpreis'],
+  trockenheit: ['Hitzesommer: Flüsse führen kaum Wasser', 'Hitzesommer: Flüsse führen kaum Wasser'],
+  initiative: ['«Hände weg von unserer Landschaft!» – Initiative eingereicht', '«Hände weg von unserer Landschaft!» – Initiative eingereicht'],
+  kosten: ['Bauindex steigt – Stadt kommt glimpflich davon', 'Baustellen-Kosten laufen aus dem Ruder'],
+  klimademo: ['Klimabewegung lobt Seestadt: «Weiter so!»', 'Zehntausende auf der Strasse: «Viel zu langsam!»'],
+  techsprung: ['Durchbruch: Wärmepumpen günstiger und leiser', 'Durchbruch: Wärmepumpen günstiger und leiser'],
+  revision: ['Kernkraftwerk vom Netz – Seestadt nicht betroffen', 'Kernkraftwerk vom Netz – Seestadt muss Strom zukaufen']
+};
+
+// Ratsentscheide zu Beginn jeder Legislatur
+const DILEMMAS = [
+  { id: 'rechenzentrum', icon: '🖥️', title: 'Ein Tech-Konzern will ein Rechenzentrum bauen',
+    text: 'Hunderte Arbeitsplätze und Steuern – aber Serverhallen fressen Strom, auch im Winter.',
+    options: [
+      { label: 'Ansiedeln', desc: '+25 Mio. Steuern, aber +60 GWh Strombedarf pro Jahr. Mit Seewasser-Netz wird die Abwärme genutzt.',
+        apply(S) { S.budget += 25; S.flags.extraLoad = (S.flags.extraLoad || 0) + 60;
+          if (S.active.has('see') || S.chosen.some(c => c.id === 'see')) { S.flags.heatExtra = (S.flags.heatExtra || 0) + 0.03; return 'Das Rechenzentrum kommt – und heizt über das Seewasser-Netz gleich ein Quartier mit.'; }
+          return 'Das Rechenzentrum kommt. Die Kasse klingelt, die Stromkurve steigt.'; } },
+      { label: 'Ablehnen', desc: '−3 Akzeptanz (Gewerbe ist enttäuscht).', apply(S) { S.pop -= 3; return 'Der Konzern zieht in die Nachbarstadt. Das Gewerbe murrt.'; } }
+    ] },
+  { id: 'schulen', icon: '🏫', title: 'Schüler:innen fordern Solardächer auf allen Schulhäusern',
+    text: 'Eine Petition mit 4000 Unterschriften liegt im Stadthaus. Die Jugendlichen stehen vor der Tür.',
+    options: [
+      { label: 'Ja, machen wir', desc: '−10 Mio., +25 GWh Solar, +5 Akzeptanz.', apply(S) { S.budget -= 10; S.flags.solarExtra = (S.flags.solarExtra || 0) + 25; S.pop += 5; return 'Jubel auf dem Schulhof: Bald glitzern Module auf allen Schulhäusern.'; } },
+      { label: 'Kein Geld dafür', desc: '−4 Akzeptanz.', apply(S) { S.pop -= 4; return 'Enttäuschte Gesichter. Auf Social Media trendet #SeestadtSchläft.'; } }
+    ] },
+  { id: 'bonus', icon: '💸', title: 'Die Opposition fordert einen Energiebonus',
+    text: 'Die Energiepreise drücken aufs Portemonnaie. Wie hilft die Stadt?',
+    options: [
+      { label: 'Bonus für alle', desc: '−15 Mio., +6 Akzeptanz.', apply(S) { S.budget -= 15; S.pop += 6; return 'Jeder Haushalt erhält einen Check. Beliebt – aber teuer.'; } },
+      { label: 'Gezielte Hilfe', desc: '−5 Mio., +2 Akzeptanz. Nur Haushalte mit wenig Einkommen.', apply(S) { S.budget -= 5; S.pop += 2; return 'Wer es nötig hat, bekommt Unterstützung. Weniger Applaus, aber solide.'; } }
+    ] },
+  { id: 'sonntag', icon: '🚗', title: 'Autofreie Sonntage?',
+    text: 'Ein Komitee will an vier Sonntagen im Jahr die Innenstadt für Autos sperren.',
+    options: [
+      { label: 'Einführen', desc: '−5 Akzeptanz jetzt, Verkehrsenergie −3 % dauerhaft (Gewohnheiten ändern sich).', apply(S) { S.pop -= 5; S.flags.verkehrF = (S.flags.verkehrF || 1) * 0.97; return 'Picknick auf der Hauptstrasse! Manche lieben es, andere schäumen.'; } },
+      { label: 'Ablehnen', desc: '+1 Akzeptanz.', apply(S) { S.pop += 1; return 'Alles bleibt, wie es ist. Die Autofahrer:innen atmen auf.'; } }
+    ] },
+  { id: 'biogas', icon: '🐄', title: 'Der Bauernverband will eine Biogas-Prämie',
+    text: 'Mit einer Prämie würden mehrere Höfe Gülle und Mist vergären.',
+    options: [
+      { label: 'Prämie zahlen', desc: '−8 Mio., +20 GWh steuerbares Biogas, +2 Akzeptanz.', apply(S) { S.budget -= 8; S.flags.bioExtra = (S.flags.bioExtra || 0) + 20; S.pop += 2; return 'Auf drei Höfen wachsen grüne Kuppeln. Es riecht nach Zukunft – und ein bisschen nach Stall.'; } },
+      { label: 'Ablehnen', desc: '−2 Akzeptanz.', apply(S) { S.pop -= 2; return 'Die Bauern ziehen verärgert mit Traktoren vors Stadthaus.'; } }
+    ] },
+  { id: 'nachbar', icon: '🤝', title: 'Die Nachbargemeinde bietet einen Wärmeverbund an',
+    text: 'Ihre Holzschnitzel-Heizzentrale hat noch Kapazität für Seestadts Westquartier.',
+    options: [
+      { label: 'Anschliessen', desc: '−12 Mio., fossile Wärme −4 Prozentpunkte.', apply(S) { S.budget -= 12; S.flags.heatExtra = (S.flags.heatExtra || 0) + 0.04; return 'Rohre werden verlegt – das Westquartier heizt bald mit Holz aus der Region.'; } },
+      { label: 'Ablehnen', desc: 'Keine Kosten, keine Wirkung.', apply(S) { return 'Man bleibt freundlich, aber getrennt.'; } }
+    ] },
+  { id: 'leuchtreklame', icon: '💡', title: 'Leuchtreklamen nachts abschalten?',
+    text: 'Zwischen 23 und 6 Uhr brennen in der Innenstadt hunderte Schaufenster und Reklamen.',
+    options: [
+      { label: 'Abschaltpflicht', desc: '−3 Akzeptanz (Gewerbe), Stromverbrauch −2 %.', apply(S) { S.pop -= 3; S.flags.stromF = (S.flags.stromF || 1) * 0.98; return 'Nachts wird es dunkel in der Altstadt – die Sterne sind wieder zu sehen.'; } },
+      { label: 'Freiwillige Kampagne', desc: '−1 Mio., Stromverbrauch −0,5 %.', apply(S) { S.budget -= 1; S.flags.stromF = (S.flags.stromF || 1) * 0.995; return 'Plakate bitten um Mithilfe. Ein paar Läden machen mit.'; } }
+    ] },
+  { id: 'pilot', icon: '🧪', title: 'Der Kanton bietet einen Pilotprojekt-Beitrag',
+    text: 'Er übernimmt diese Legislatur 40 % der Kosten – für genau ein Technologieprojekt.',
+    options: [
+      { label: 'Wasserstoff-Pilot', desc: '−40 % auf «Elektrolyse & grüner Wasserstoff» in dieser Legislatur.', apply(S) { S.discounts.push({ id: 'h2', f: 0.6 }); return 'Wasserstoff wird diese Legislatur deutlich günstiger.'; } },
+      { label: 'Speicher-Pilot', desc: '−40 % auf Quartierbatterien und Pumpspeicher in dieser Legislatur.', apply(S) { S.discounts.push({ id: 'smartgrid', f: 0.6 }, { id: 'pump', f: 0.6 }); return 'Speicher werden diese Legislatur deutlich günstiger.'; } }
+    ] },
+  { id: 'stadion', icon: '⚽', title: 'Der FC Seestadt baut ein neues Stadion',
+    text: 'Der Club fragt, ob die Stadt ein Solardach und eine Tramhaltestelle mitfinanziert.',
+    options: [
+      { label: 'Solardach mitfinanzieren', desc: '−8 Mio., +15 GWh Solar, +4 Akzeptanz.', apply(S) { S.budget -= 8; S.flags.solarExtra = (S.flags.solarExtra || 0) + 15; S.pop += 4; return 'Die Fans singen: «Mir sind de FC und mir hei Sunne!»'; } },
+      { label: 'Nur das Pflicht-Minimum', desc: 'Keine Kosten, −1 Akzeptanz.', apply(S) { S.pop -= 1; return 'Das Stadion bekommt ein graues Dach. Niemand ist begeistert.'; } }
+    ] }
+];
+const DIL = Object.fromEntries(DILEMMAS.map(d => [d.id, d]));
+
+function currentDilemma(S) { return S.over || S.dilemmaDone[S.round] ? null : DIL[S.dilemmas[S.round - 1]]; }
+function applyDilemma(S, idx) {
+  const d = currentDilemma(S); if (!d) return null;
+  const text = d.options[idx].apply(S);
+  S.pop = Math.round(clamp(S.pop, 0, 100));
+  S.dilemmaDone[S.round] = { id: d.id, idx };
+  return text;
+}
+
+// Abzeichen
+const SYNERGY_PAIRS = [['netz', 'wind'], ['netz', 'alpin'], ['wp', 'daemm'], ['gas', 'h2'], ['smartmeter', 'solar'], ['oev', 'velo'], ['buerger', 'wind'], ['buerger', 'stau'], ['smartgrid', 'solar']];
+const BADGES = [
+  { id: 'perfekt', icon: '🏆', name: 'Netto-Null-Stadt', desc: 'Alle vier Ziele erreicht', test: (S, ev) => ev.passed === 4 },
+  { id: 'winter', icon: '❄️', name: 'Winterheld:in', desc: 'Winter-Eigenversorgung ≥ 80 %', test: (S, ev) => ev.last.selfW >= 0.8 },
+  { id: 'waerme', icon: '🔥', name: 'Wärmewende', desc: 'Wärme-CO₂ unter 40 kt', test: (S, ev) => ev.last.co2.waerme < 40 },
+  { id: 'verkehr', icon: '🚋', name: 'Verkehrswende', desc: 'Verkehrs-CO₂ unter 40 kt', test: (S, ev) => ev.last.co2.verkehr < 40 },
+  { id: 'schnell', icon: '⚡', name: 'Schnellstart', desc: 'Schon 2032 auf dem Absenkpfad', test: (S) => S.history[0] && S.history[0].co2pct <= CFG.co2Path[1] },
+  { id: 'weitsicht', icon: '🔭', name: 'Weitsicht', desc: 'Staumauer oder Geothermie bis 2037 beschlossen', test: (S) => S.chosen.some(c => (c.id === 'stau' || c.id === 'fw') && c.round <= 2) },
+  { id: 'synergie', icon: '🧩', name: 'Synergie-Profi', desc: 'Mindestens drei Synergien genutzt', test: (S) => SYNERGY_PAIRS.filter(([a, b]) => S.active.has(a) && S.active.has(b)).length >= 3 },
+  { id: 'ohne', icon: '🌿', name: 'Ohne Atom und Gas', desc: 'Mindestens 3 Ziele ohne Kernstrom und Reservekraftwerk', test: (S, ev) => ev.passed >= 3 && !S.active.has('kern') && !S.active.has('gas') },
+  { id: 'mutig', icon: '🦁', name: 'Mutig', desc: 'Zwei Beschlüsse mit starkem Gegenwind (≤ −10) – und trotzdem nie abgewählt', test: (S) => !S.ousted && S.chosen.filter(c => c.pop <= -10).length >= 2 },
+  { id: 'volksnah', icon: '🤝', name: 'Volksnah', desc: 'Akzeptanz am Ende ≥ 60 %', test: (S) => !S.ousted && S.pop >= 60 },
+  { id: 'sparfuchs', icon: '🦊', name: 'Sparfuchs', desc: 'Endbudget ≥ 40 Mio.', test: (S) => S.budget >= 40 },
+  { id: 'punkt', icon: '🎯', name: 'Punktlandung', desc: 'Endbudget zwischen 0 und 5 Mio.', test: (S) => S.budget >= 0 && S.budget <= 5 }
+];
+
 function createState(code) {
   const rng = mulberry32(hashCode(code));
   const deck = [...EVENT_IDS];
   for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  const dil = DILEMMAS.map(d => d.id);
+  for (let i = dil.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [dil[i], dil[j]] = [dil[j], dil[i]]; }
   return {
-    code, rng, deck: deck.slice(0, 4), round: 1, over: false, ousted: false,
+    code, rng, deck: deck.slice(0, 4), dilemmas: dil.slice(0, 4), dilemmaDone: {}, round: 1, over: false, ousted: false,
     budget: CFG.startBudget, pop: CFG.startPop,
     active: new Set(), chosen: [], pipeline: [], flags: { fwFactor: 1 },
-    temp: {}, discount: null, protest: false, bondFrom: null,
+    temp: {}, discounts: [], protest: false, bondFrom: null,
     history: [], log: []
   };
 }
@@ -362,15 +551,15 @@ function computeMetrics(S, ti, opts = {}) {
   const flags = opts.flags || S.flags;
 
   // Nachfrage (GWh/Jahr)
-  const dStrom = 1000 * (1 - 0.025 * tr) * (A('smartmeter') ? 0.96 : 1);
+  const dStrom = 1000 * (1 - 0.025 * tr) * (A('smartmeter') ? 0.96 : 1) * (flags.stromF || 1);
   const dWaerme = 1600 * (1 - 0.025 * tr) * (A('daemm') ? 0.80 : 1);
-  const dVerkehr = 900 * (1 - 0.01 * tr) * (A('oev') ? 0.85 : 1) * (A('velo') ? 0.9 : 1);
+  const dVerkehr = 900 * (1 - 0.01 * tr) * (A('oev') ? 0.85 : 1) * (A('velo') ? 0.9 : 1) * (flags.verkehrF || 1);
   const dInd = 600;
 
   // Wärme: fossiler Anteil
   let [hp, fw, see] = fitShares(0.76,
     0.05 * tr * (flags.hpBoost ? 1.4 : 1) + (A('wp') ? 0.28 : 0),
-    A('fw') ? 0.22 * flags.fwFactor : 0,
+    (A('fw') ? 0.22 * flags.fwFactor : 0) + (flags.heatExtra || 0),
     A('see') ? 0.12 : 0);
   const fossW = 0.80 - hp - fw - see;
   const cop = A('daemm') ? 3.6 : 3.0;
@@ -388,18 +577,19 @@ function computeMetrics(S, ti, opts = {}) {
   const elH2 = dInd * ih * 1.6;
 
   // Stromnachfrage nach Saison
-  const wD = dStrom * 0.55 + elHeat * 0.72 + elTr * 0.52 + elInd * 0.5 + elH2 * 0.15;
-  const sD = dStrom * 0.45 + elHeat * 0.28 + elTr * 0.48 + elInd * 0.5 + elH2 * 0.85;
+  const extraLoad = flags.extraLoad || 0;
+  const wD = dStrom * 0.55 + elHeat * 0.72 + elTr * 0.52 + elInd * 0.5 + elH2 * 0.15 + extraLoad * 0.5;
+  const sD = dStrom * 0.45 + elHeat * 0.28 + elTr * 0.48 + elInd * 0.5 + elH2 * 0.85 + extraLoad * 0.5;
 
   // Erzeugung
   const kernActive = (ti <= CFG.kernEndsAfter || A('kern'));
   const kernW = kernActive && !temp.kernOut ? 150 : 0, kernS = kernActive ? 150 : 0;
   const shift = A('stau') ? 140 : 0;
   const hydroS = 300 * (temp.drought ? 0.75 : 1) - shift, hydroW = 200 + shift;
-  const solarAnnual = 60 + 40 * tr * (flags.pvBoom ? 1.4 : 1) + (A('solar') ? 200 : 0) + (A('agri') ? 60 : 0);
+  const solarAnnual = 60 + 40 * tr * (flags.pvBoom ? 1.4 : 1) + (A('solar') ? 200 : 0) + (A('agri') ? 60 : 0) + (flags.solarExtra || 0);
   const alpinAnnual = A('alpin') ? 130 * (A('netz') ? 1 : 0.6) : 0;
   const windAnnual = A('wind') ? 200 * (A('netz') ? 1 : 0.8) : 0;
-  const bio = A('agri') ? 40 : 0;
+  const bio = (A('agri') ? 40 : 0) + (flags.bioExtra || 0);
   const gen = {
     wasser: { s: hydroS, w: hydroW },
     kern: { s: kernS, w: kernW },
@@ -420,7 +610,7 @@ function computeMetrics(S, ti, opts = {}) {
   // Versorgungssicherheit
   const cover = (wG + backup + importCap) / wD;
   const adequacy = clamp((cover - 0.65) / 0.45);
-  let flex = 10 + (A('smartgrid') ? 25 : 0) + (A('pump') ? 30 : 0) + (A('last') ? 20 : 0) + (A('gas') ? 10 : 0) + (A('netz') ? 15 : 0) + (A('agri') ? 5 : 0);
+  let flex = 10 + (bio && !A('agri') ? 5 : 0) + (A('smartgrid') ? 25 : 0) + (A('pump') ? 30 : 0) + (A('last') ? 20 : 0) + (A('gas') ? 10 : 0) + (A('netz') ? 15 : 0) + (A('agri') ? 5 : 0);
   if (A('smartmeter')) flex += 15 + ((A('solar') || A('agri')) ? 10 : 0);
   const varAnnual = solarAnnual + alpinAnnual + windAnnual;
   const varShare = varAnnual / (wD + sD);
@@ -445,7 +635,7 @@ function computeMetrics(S, ti, opts = {}) {
     co2, co2Total, co2pct: Math.round(co2Total / BASE_CO2 * 100),
     sec, adequacy, stability, flex, flexNeed, varShare,
     wD, sD, wG, sG, gen, backup, backupUsed, importW, importS, exportS, importCap,
-    selfW: wG / wD, kernActive,
+    selfW: wG / wD, kernActive, fossW, fossV, fossI, solarLocal: solarAnnual,
     fossilShare: fossilEnergy / totalEnergy,
     demand: { strom: dStrom, waerme: dWaerme, verkehr: dVerkehr, industrie: dInd },
     elec: { heat: elHeat, tr: elTr, ind: elInd, h2: elH2 }
@@ -458,7 +648,7 @@ BASE_CO2 = baseMetrics().co2Total;
 function effectiveCost(S, id) {
   const m = M[id];
   if (m.cost < 0) return m.cost;
-  const f = S.discount && S.discount.cat === m.cat ? S.discount.f : 1;
+  const f = (S.discounts || []).reduce((a, d) => (d.cat === m.cat || d.id === id) ? a * d.f : a, 1);
   return Math.round(m.cost * f);
 }
 function popEffect(S, id, pickedNow = []) {
@@ -490,7 +680,7 @@ function playRound(S, picks) {
     R.picks.push({ id, cost, pop: p, ready: rr });
     if (rr > CFG.rounds) R.late.push(id);
   }
-  S.discount = null; S.protest = false; S.temp = {};
+  S.discounts = []; S.protest = false; S.temp = {};
 
   // 2. Fertigstellungen
   for (const p of S.pipeline) {
@@ -511,7 +701,9 @@ function playRound(S, picks) {
   const ER = { budget: 0, pop: 0 };
   const evText = EVENTS[evId].apply(S, m, ER);
   S.budget += ER.budget; S.pop += ER.pop;
-  R.event = { id: evId, title: EVENTS[evId].title, icon: EVENTS[evId].icon, text: evText };
+  const evOk = ER.pop >= 0 && ER.budget >= -5;
+  R.event = { id: evId, title: EVENTS[evId].title, icon: EVENTS[evId].icon, text: evText, ok: evOk,
+    headline: (HEADLINES[evId] || [EVENTS[evId].title, EVENTS[evId].title])[evOk ? 0 : 1] };
   m = computeMetrics(S, S.round, { temp: S.temp });
 
   // 4. Laufende Finanzen
@@ -592,14 +784,35 @@ function randomCode() {
   return 'SEE-' + L[Math.floor(Math.random() * L.length)] + Math.floor(100 + Math.random() * 900);
 }
 
-function startGame(code) {
+function startGame(code, withDilemma = true) {
   S = createState(code);
   selected = [];
+  prevKPI = {};
   activeCat = 'all';
   $('code-display').textContent = code;
   try { const u = new URL(location.href); u.searchParams.set('code', code); history.replaceState(null, '', u); } catch (e) {}
   addLog('🏙️', 'Start 2026', `Szenario ${code}. Ausgangslage: ${fmt(BASE_CO2)} kt CO₂/Jahr, Sicherheit ${current().sec}, Winter-Eigenversorgung ${Math.round(current().selfW * 100)} %.`);
   renderAll();
+  if (withDilemma) showDilemma();
+}
+
+// ---------- Ratsentscheid ----------
+let modalLocked = false;
+function showDilemma() {
+  const d = currentDilemma(S); if (!d) return;
+  const body = `<p class="text-center text-slate-300">${d.text}</p>
+    <div class="grid sm:grid-cols-2 gap-3 mt-3">${d.options.map((o, i) => `<button data-opt="${i}" class="dil-opt text-left bg-slate-900/70 hover:bg-slate-700 border border-slate-600 hover:border-emerald-400 rounded-xl p-4 transition">
+      <div class="font-semibold text-slate-100">${o.label}</div><div class="text-xs text-slate-400 mt-1 leading-snug">${o.desc}</div></button>`).join('')}</div>
+    <p class="text-[11px] text-slate-500 text-center">Ratsentscheid zu Beginn der Legislatur ${S.round} · zählt nicht als Beschluss</p>`;
+  showModal(d.icon, d.title, body, []);
+  modalLocked = true;
+  document.querySelectorAll('.dil-opt').forEach(b => b.onclick = () => {
+    const i = +b.dataset.opt;
+    const txt = applyDilemma(S, i);
+    addLog(d.icon, `Ratsentscheid: ${d.options[i].label}`, txt);
+    modalLocked = false;
+    showModal(d.icon, d.options[i].label, `<p class="text-center">${txt}</p>`, [{ label: 'An die Arbeit!', primary: true, fn: () => { closeModal(); renderAll(); } }]);
+  });
 }
 
 function current() { return S.history.length ? S.history[S.history.length - 1] : baseMetrics(); }
@@ -624,7 +837,7 @@ function marginal(id) {
 // ---------- Rendering ----------
 function renderAll() {
   renderHeader(); renderTimeline(); renderAlerts(); renderTabs(); renderMeasures();
-  renderSelection(); renderKPIs(); renderChart(); renderPipeline(); renderChronicle();
+  renderSelection(); renderKPIs(); renderChart(); renderPipeline(); renderChronicle(); renderCity();
 }
 
 function renderHeader() {
@@ -660,7 +873,7 @@ function renderAlerts() {
   if (S.over) { $('round-alerts').innerHTML = ''; return; }
   a.push(alertBox('fa-wallet', 'bg-slate-900/60 border-slate-700 text-slate-300', `Verfügbar: <strong class="${S.budget < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget)} Mio. CHF</strong> · Kreditlimit bis ${CFG.minBudget} Mio. (10 % Zins pro Legislatur) · Einnahmen +${CFG.income} Mio. pro Legislatur.`));
   if (S.round <= 2 && !S.chosen.some(c => c.id === 'kern')) a.push(alertBox('fa-atom', 'bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 läuft der Kernstrom-Liefervertrag aus: <strong>150 GWh Winterstrom</strong> fallen weg. Ersatz, Verlängerung oder Import?'));
-  if (S.discount) a.push(alertBox('fa-tags', 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200', `Rabatt diese Legislatur: <strong>${Math.round((1 - S.discount.f) * 100)} %</strong> auf «${catOf(S.discount.cat).label}».`));
+  if (S.discounts.length) a.push(alertBox('fa-tags', 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200', 'Rabatt diese Legislatur: ' + S.discounts.map(d => `<strong>${Math.round((1 - d.f) * 100)} %</strong> auf «${d.cat ? catOf(d.cat).label : M[d.id].title}»`).join(', ') + '.'));
   if (S.protest) a.push(alertBox('fa-bullhorn', 'bg-amber-500/10 border-amber-500/30 text-amber-200', 'Bürgerinitiative aktiv: Infrastrukturprojekte kosten diese Legislatur 50 % mehr Akzeptanz.'));
   if (S.pop < 47) a.push(alertBox('fa-check-to-slot', 'bg-amber-500/10 border-amber-500/30 text-amber-200', `Akzeptanz ${S.pop} %: Unter ${CFG.electionThreshold} % wird die Regierung am Ende der Legislatur abgewählt.`));
   if (S.round >= 3) a.push(alertBox('fa-hourglass-end', 'bg-slate-900/60 border-slate-700 text-slate-300', 'Projekte mit Bauzeit werden nur wirksam, wenn sie bis 2045 fertig sind.'));
@@ -771,7 +984,7 @@ function toggleSelect(id) {
   if (S.over) return;
   if (selected.includes(id)) selected = selected.filter(x => x !== id);
   else { if (cardBlockReason(id)) return; selected.push(id); }
-  renderTimeline(); renderMeasures(); renderSelection(); renderChart();
+  renderTimeline(); renderMeasures(); renderSelection(); renderChart(); renderCity();
 }
 
 function deltaCell(label, now, then, unit, goodIfUp, target) {
@@ -819,15 +1032,27 @@ function kpiTile(icon, iconCls, label, value, unit, target, ok, sub) {
     <div class="text-[10px] text-slate-500">${target}${sub ? ' · ' + sub : ''}</div></div>`;
 }
 
+let prevKPI = {};
+const cnt = (k, v) => { const from = prevKPI[k] ?? v; prevKPI[k] = v; return `<span class="count" data-from="${from}" data-to="${v}">${fmt(from)}</span>`; };
+function animateCounts(root, dur = 800) {
+  root.querySelectorAll('.count').forEach(el => {
+    const a = +el.dataset.from, b = +el.dataset.to;
+    if (a === b || REDUCED) { el.textContent = fmt(b); return; }
+    const t0 = performance.now();
+    const step = t => { const k = Math.min(1, (t - t0) / dur); const e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(a + (b - a) * e)); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
 function renderKPIs() {
   const m = current();
   $('kpi-year').textContent = `(${m.year})`;
   const bar = (v, max, cls) => `<div class="w-full bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden"><div class="${cls} h-full rounded-full transition-all duration-500" style="width:${clamp(v / max) * 100}%"></div></div>`;
   $('kpis').innerHTML =
-    kpiTile('fa-smog', 'text-rose-400', 'CO₂-Ausstoss', m.co2pct, ' %', `Ziel 2045 ≤ ${CFG.co2Target} %`, m.co2pct <= CFG.co2Target, `${fmt(m.co2Total)} kt`) +
-    kpiTile('fa-shield-halved', 'text-teal-400', 'Versorgungssicherheit', m.sec, '/100', `Ziel ≥ ${CFG.secTarget}`, m.sec >= CFG.secTarget) +
-    kpiTile('fa-wallet', 'text-amber-400', 'Budget', fmt(S.budget), ' Mio.', 'Ziel 2045 ≥ 0', S.budget >= 0) +
-    kpiTile('fa-users', 'text-sky-400', 'Akzeptanz', S.pop, ' %', `Wahlschwelle ${CFG.electionThreshold} %`, S.pop >= CFG.electionThreshold);
+    kpiTile('fa-smog', 'text-rose-400', 'CO₂-Ausstoss', cnt('co2', m.co2pct), ' %', `Ziel 2045 ≤ ${CFG.co2Target} %`, m.co2pct <= CFG.co2Target, `${fmt(m.co2Total)} kt`) +
+    kpiTile('fa-shield-halved', 'text-teal-400', 'Versorgungssicherheit', cnt('sec', m.sec), '/100', `Ziel ≥ ${CFG.secTarget}`, m.sec >= CFG.secTarget) +
+    kpiTile('fa-wallet', 'text-amber-400', 'Budget', cnt('budget', S.budget), ' Mio.', 'Ziel 2045 ≥ 0', S.budget >= 0) +
+    kpiTile('fa-users', 'text-sky-400', 'Akzeptanz', cnt('pop', S.pop), ' %', `Wahlschwelle ${CFG.electionThreshold} %`, S.pop >= CFG.electionThreshold);
+  animateCounts($('kpis'));
   const sub = (label, val, hint, title) => `<div class="bg-slate-900/40 rounded-lg p-2 border border-slate-700/60" title="${title}"><div class="text-slate-400">${label}</div><div class="font-semibold text-slate-200">${val}</div><div class="text-[10px] text-slate-500">${hint}</div></div>`;
   $('subkpis').innerHTML =
     sub('Winter-Eigenversorgung', Math.round(m.selfW * 100) + ' %', `Import ${fmt(m.importW)} GWh`, 'Anteil des Winterstrombedarfs, den eigene Anlagen decken') +
@@ -937,6 +1162,159 @@ function renderChronicle() {
   $('chronicle').innerHTML = S.log.map(l => `<div class="bg-slate-900/50 px-2.5 py-1.5 rounded border border-slate-700/60 fade-in"><div class="font-semibold text-slate-200">${l.icon} ${l.head}</div><div class="text-slate-400 leading-snug">${l.text}</div></div>`).join('');
 }
 
+// ---------- Stadtpanorama ----------
+const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+let justBuilt = new Set();
+function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+const rot = (dur, cx = 0, cy = 0, swing) => REDUCED ? '' : swing
+  ? `<animateTransform attributeName="transform" type="rotate" values="-8 ${cx} ${cy};8 ${cx} ${cy};-8 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`
+  : `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`;
+
+function renderCity() {
+  const m = current();
+  const act = S.active;
+  const ghost = new Set(S.over ? [] : selected.filter(id => !act.has(id)));
+  const pending = new Set(S.pipeline.filter(p => !act.has(p.id)).map(p => p.id));
+  const has = id => act.has(id) || ghost.has(id);
+  const cls = id => !act.has(id) && ghost.has(id) ? 'ghost' : justBuilt.has(id) ? 'pop-in' : '';
+  const dirt = clamp((m.co2pct - 30) / 70);
+  const dark = m.sec < 45;
+  const o = [];
+  const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
+
+  // Himmel, Sonne, Wolken
+  o.push(`<defs><linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mixHex('#3b9be0', '#7c7468', dirt)}"/><stop offset="1" stop-color="${mixHex('#d3f0ff', '#d8c9a8', dirt)}"/></linearGradient></defs>`);
+  o.push(`<rect width="1000" height="260" fill="url(#g-sky)"/>`);
+  o.push(`<circle cx="880" cy="46" r="22" fill="#fde047" opacity="${(1 - dirt * 0.65).toFixed(2)}"><title>Sonne</title></circle>`);
+  [[70, 20, 34], [95, 55, 58], [120, 80, 22]].forEach(([dur, del, y]) => o.push(`<g class="cloud" style="animation-duration:${dur}s;animation-delay:-${del}s"><g transform="translate(0,${y})" fill="${dirt > 0.5 ? '#d6d3d1' : '#ffffff'}" opacity=".85"><ellipse cx="0" cy="0" rx="30" ry="9"/><ellipse cx="14" cy="-7" rx="17" ry="10"/><ellipse cx="-12" cy="-3" rx="12" ry="7"/></g></g>`));
+
+  // Alpen mit Speichersee
+  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"/>`);
+  o.push(`<polygon points="120,52 165,112 140,112 125,80" fill="#64748b" opacity=".6"/><polygon points="205,72 250,128 228,128 212,96" fill="#64748b" opacity=".6"/>`);
+  o.push(`<g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/><polygon points="292,102 300,92 308,103 301,100"/></g>`);
+  const stauOn = has('stau');
+  o.push(`<ellipse cx="200" cy="133" rx="${stauOn ? 30 : 22}" ry="${stauOn ? 7 : 5}" fill="#38bdf8"><title>Speichersee</title></ellipse>`);
+  o.push(`<g class="${cls('stau')}"><polygon points="${stauOn ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"><title>${stauOn ? 'Erhöhte Staumauer' : 'Staumauer'}</title></polygon></g>`);
+  if (has('alpin')) {
+    const panels = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) panels.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`);
+    o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage${act.has('netz') ? '' : ' (ohne Netzausbau teilweise abgeregelt)'}</title>${panels.join('')}</g>`);
+  }
+  if (has('pump')) o.push(`<g class="${cls('pump')}"><title>Pumpspeicherwerk</title><path d="M178,136 Q215,160 252,182" stroke="#475569" stroke-width="2.5" fill="none"/><rect x="248" y="178" width="12" height="8" fill="#cbd5e1"/></g>`);
+
+  // Windräder (hinter den Hügeln, damit die Masten im Boden verschwinden)
+  if (has('wind')) {
+    const slow = !act.has('netz');
+    o.push(`<g class="${cls('wind')}"><title>Windpark Jurahöhen${slow ? ' (ohne Netzausbau gedrosselt)' : ''}</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) =>
+      `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><rect x="${x - 3}" y="${y - 2}" width="7" height="4" rx="1" fill="#e2e8f0"/>
+       <g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${rot(slow ? 4.5 : 2.6 + i * 0.3)}</g></g>`).join('') + `</g>`);
+  }
+  // Jura-Hügel
+  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"/><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  // Kernkraftwerk in der Ferne
+  o.push(`<g opacity="${m.kernActive ? 1 : 0.45}"><title>${m.kernActive ? 'Kernkraftwerk (Liefervertrag aktiv)' : 'Kernkraftwerk – Vertrag ausgelaufen'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${m.kernActive ? [0, 1.3, 2.6].map(d => puff(957, 100, '#ffffff', 6, 4, d, 'steam')).join('') : ''}</g>`);
+
+  // Strommasten
+  if (has('netz')) {
+    const xs = [300, 445, 590, 700];
+    const top = x => x === 700 ? 150 : 140;
+    o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},${top(x)} ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="${top(x) + 8}" x2="${x + 13}" y2="${top(x) + 8}" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 9}" y1="${top(x) + 20}" x2="${x + 9}" y2="${top(x) + 20}" stroke="#94a3b8" stroke-width="1.5"/>`).join('') +
+      xs.slice(0, -1).map((x, i) => { const x2 = xs[i + 1]; return [-13, 13].map(dx => `<path d="M${x + dx},${top(x) + 8} Q${(x + x2) / 2},${top(x) + 22} ${x2 + dx},${top(x2) + 8}" stroke="#64748b" stroke-width=".8" fill="none"/>`).join(''); }).join('') + `</g>`);
+  }
+
+  // Boden, See, Uferstrasse
+  o.push(`<rect x="0" y="198" width="1000" height="62" fill="#4d7c0f"/>`);
+  o.push(`<path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"><title>Der See</title></path>`);
+  o.push(`<g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
+  if (has('see')) o.push(`<g class="${cls('see')}"><title>Seewasser-Wärmepumpe</title><rect x="226" y="196" width="22" height="13" fill="#e2e8f0"/><polygon points="224,196 237,188 250,196" fill="#0369a1"/><path d="M228,206 Q205,214 185,222" stroke="#f97316" stroke-width="2" fill="none"/></g>`);
+
+  // Fernwärme / Geothermie
+  if (has('fw') || (S.flags.heatExtra || 0) > 0) {
+    const fwOn = has('fw');
+    o.push(`<g class="${fwOn ? cls('fw') : ''}"><title>Fernwärmenetz${fwOn ? ' mit Tiefengeothermie' : ''}</title><line x1="262" y1="230" x2="${fwOn ? 615 : 420}" y2="230" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/>${fwOn ? `<polygon points="606,232 616,186 626,232" fill="none" stroke="#ea580c" stroke-width="2"/><line x1="609" y1="216" x2="623" y2="216" stroke="#ea580c" stroke-width="1.5"/><line x1="612" y1="201" x2="620" y2="201" stroke="#ea580c" stroke-width="1.5"/>` : ''}</g>`);
+  }
+
+  // Gebäude
+  const B = [[262, 34, 52], [298, 28, 80], [328, 40, 42], [370, 30, 96], [402, 36, 62], [440, 26, 112], [468, 38, 72], [508, 30, 50], [540, 34, 88], [576, 26, 58]];
+  const smokeOrder = [3, 7, 1, 9, 5, 0, 8, 2, 6, 4];
+  const nSmoke = Math.round(clamp(m.fossW / 0.80) * 10);
+  const smoking = new Set(smokeOrder.slice(0, nSmoke));
+  const nSolarNow = Math.round(clamp((m.solarLocal - 60) / 260) * 10);
+  const solarGhost = ghost.has('solar');
+  const reno = has('daemm');
+  const nHP = Math.round(clamp((0.80 - m.fossW) / 0.70) * 10);
+  B.forEach(([x, w, h], i) => {
+    const top = 232 - h;
+    const facade = reno ? ['#f5f5f4', '#e7e5e4', '#fef3c7'][i % 3] : ['#9ca3af', '#a8a29e', '#94a3b8'][i % 3];
+    const wins = [];
+    for (let r = 0; r < Math.floor((h - 12) / 11); r++) for (let c = 0; c < Math.floor((w - 6) / 8); c++) {
+      const lit = !dark && (i * 7 + c * 3 + r * 5) % 4 !== 0;
+      const flick = dark && (i + c + r) % 5 === 0;
+      wins.push(`<rect x="${x + 4 + c * 8}" y="${top + 7 + r * 11}" width="4" height="5" fill="${lit ? '#fde68a' : '#334155'}" ${flick ? 'class="flicker"' : ''}/>`);
+    }
+    o.push(`<g class="${reno ? cls('daemm') : ''}"><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
+    o.push(`<rect x="${x + w - 8}" y="${top - 9}" width="4" height="9" fill="#78716c"/>`);
+    if (smoking.has(i)) o.push(puff(x + w - 6, top - 11, dirt > 0.5 ? '#57534e' : '#78716c', 3, 3.2, (i * 0.7) % 3.2) + puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7 + 1.6) % 3.2));
+    const solarHere = smokeOrder.indexOf(i) >= 10 - nSolarNow;
+    if (solarHere || solarGhost) o.push(`<g class="${solarHere ? (justBuilt.has('solar') ? 'pop-in' : '') : 'ghost'}"><polygon points="${x + 3},${top - 1} ${x + 6},${top - 5} ${x + w - 11},${top - 5} ${x + w - 14},${top - 1}" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/></g>`);
+    const hpHere = i < nHP, hpGhost = !hpHere && ghost.has('wp') && i < nHP + 4;
+    if (hpHere || hpGhost) o.push(`<g class="${hpGhost ? 'ghost' : justBuilt.has('wp') ? 'pop-in' : ''}"><title>Wärmepumpe</title><rect x="${x + 2}" y="226" width="9" height="6" fill="#f1f5f9" stroke="#64748b" stroke-width=".5"/><circle cx="${x + 6.5}" cy="229" r="2" fill="none" stroke="#64748b" stroke-width=".6"/></g>`);
+  });
+  o.push(`<g><title>Stadthaus</title><polygon points="440,${232 - 112} 453,${232 - 126} 466,${232 - 112}" fill="#b91c1c"/></g>`);
+
+  // Industrie
+  const indSmoke = Math.round(clamp(m.fossI / 0.70) * 3);
+  o.push(`<g><title>Industrie${has('ind') ? ' (elektrifiziert)' : ''}</title><rect x="700" y="168" width="7" height="40" fill="#57534e"/><rect x="722" y="176" width="7" height="32" fill="#57534e"/>
+    <path d="M645,232 L645,212 L660,204 L660,212 L675,204 L675,212 L690,204 L690,212 L705,204 L705,212 L720,204 L720,212 L735,204 L735,212 L750,204 L750,232 Z" fill="#78716c" stroke="#57534e" stroke-width=".6"/>
+    ${Array.from({ length: indSmoke }, (_, k) => puff(703, 166, '#44403c', 4, 3.6, k * 1.2) + puff(725, 174, '#57534e', 3.5, 3.6, k * 1.2 + 0.6)).join('')}
+    ${has('ind') ? `<text x="656" y="226" font-size="12" class="${cls('ind')}">⚡</text>` : ''}</g>`);
+  if (has('h2')) o.push(`<g class="${cls('h2')}"><title>Elektrolyseur & Wasserstofftank</title><line x1="769" y1="232" x2="771" y2="222" stroke="#64748b"/><line x1="781" y1="232" x2="779" y2="222" stroke="#64748b"/><circle cx="775" cy="218" r="11" fill="#e0f2fe" stroke="#38bdf8"/><text x="775" y="221" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">H₂</text></g>`);
+  if (has('gas')) {
+    const run = act.has('gas') && m.backupUsed > 5;
+    o.push(`<g class="${cls('gas')}"><title>Reservekraftwerk${run ? ` – läuft (${fmt(m.backupUsed)} GWh)` : ' – in Bereitschaft'}</title><rect x="795" y="210" width="34" height="22" fill="#a8a29e" stroke="#57534e" stroke-width=".6"/><rect x="820" y="182" width="6" height="28" fill="#78716c"/>${run ? [0, 1.1, 2.2].map(d => puff(823, 180, act.has('h2') ? '#ffffff' : '#6b7280', 4, 3.3, d, act.has('h2') ? 'steam' : 'smoke')).join('') : ''}</g>`);
+  }
+  if (has('smartgrid')) o.push(`<g class="${cls('smartgrid')}"><title>Quartierbatterien</title>${[0, 1, 2].map(k => `<rect x="${838 + k * 21}" y="220" width="18" height="12" rx="1" fill="#0f766e" stroke="#134e4a" stroke-width=".6"/><text x="${847 + k * 21}" y="229.5" text-anchor="middle" font-size="8" fill="#fef08a">⚡</text>`).join('')}</g>`);
+  if (has('agri') || (S.flags.bioExtra || 0) > 0) {
+    const ag = has('agri');
+    o.push(`<g class="${ag ? cls('agri') : ''}"><title>Landwirtschaft${ag ? ' mit Agri-PV' : ''} und Biogas</title><rect x="905" y="222" width="70" height="10" fill="#a3a635"/>${[0, 1, 2, 3].map(k => `<line x1="905" y1="${223.5 + k * 2.5}" x2="975" y2="${223.5 + k * 2.5}" stroke="#65a30d" stroke-width=".8"/>`).join('')}
+      ${ag ? [0, 1, 2].map(k => `<line x1="${912 + k * 22}" y1="222" x2="${912 + k * 22}" y2="212" stroke="#64748b"/><rect x="${905 + k * 22}" y="209" width="18" height="3" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".4"/>`).join('') : ''}
+      <path d="M977,232 A11,11 0 0 1 999,232 Z" fill="#84cc16" stroke="#3f6212" stroke-width=".6"/></g>`);
+  }
+
+  // Trottoir & Strasse
+  o.push(`<rect x="0" y="232" width="1000" height="3" fill="#a8a29e"/><rect x="0" y="235" width="1000" height="25" fill="#3f3f46"/><line x1="0" y1="247.5" x2="1000" y2="247.5" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="10 8"/>`);
+  if (has('oev')) o.push(`<g class="${cls('oev')}"><line x1="0" y1="215" x2="1000" y2="215" stroke="#334155" stroke-width=".8"/></g>`);
+
+  // Fahrzeuge
+  const slots = 7 - (has('oev') ? 2 : 0);
+  const nC = Math.min(slots, Math.round(clamp(m.fossV / 0.95) * 7));
+  const car = (col, ev) => `<rect x="0" y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><rect x="6" y="-9" width="6" height="3" fill="#bae6fd"/><circle cx="5" cy="0" r="2" fill="#111827"/><circle cx="15" cy="0" r="2" fill="#111827"/>${ev ? '<text x="10" y="-1.5" text-anchor="middle" font-size="5" fill="#fef08a">⚡</text>' : puff(-2, -3, '#57534e', 2, 1.4, 0)}`;
+  const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
+  for (let k = 0; k < slots; k++) {
+    const ev = k >= nC;
+    const back = k % 2 === 1;
+    const dur = 11 + (k * 3.7) % 8, delay = (k * 4.3) % dur;
+    const col = ev ? '#22c55e' : vcols[k % vcols.length];
+    o.push(`<g class="${back ? 'drive-back' : 'drive'}" style="animation-duration:${dur}s;animation-delay:-${delay}s"><g transform="translate(0,${back ? 254 : 242})${back ? ' scale(-1,1)' : ''}">${car(col, ev)}</g></g>`);
+  }
+  if (has('oev')) o.push(`<g class="drive ${ghost.has('oev') ? 'ghost' : ''}" style="animation-duration:20s;animation-delay:-6s"><g transform="translate(0,242)"><title>Tram</title><line x1="30" y1="-12" x2="36" y2="-27" stroke="#334155" stroke-width="1"/><rect x="0" y="-13" width="66" height="12" rx="3" fill="#2563eb"/><rect x="0" y="-7" width="66" height="2" fill="#ffffff"/>${[6, 18, 30, 42, 54].map(wx => `<rect x="${wx}" y="-11" width="7" height="3.5" fill="#bae6fd"/>`).join('')}<circle cx="10" cy="0" r="1.8" fill="#111827"/><circle cx="56" cy="0" r="1.8" fill="#111827"/></g></g>`);
+  if (has('velo')) for (let k = 0; k < 3; k++) o.push(`<g class="drive ${ghost.has('velo') ? 'ghost' : ''}" style="animation-duration:${34 + k * 6}s;animation-delay:-${k * 13}s"><g transform="translate(0,234)"><circle cx="0" cy="0" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><circle cx="8" cy="0" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><line x1="0" y1="0" x2="5" y2="-4" stroke="#111827" stroke-width=".8"/><line x1="5" y1="-4" x2="8" y2="0" stroke="#111827" stroke-width=".8"/><circle cx="5" cy="-8" r="2" fill="${['#ec4899', '#14b8a6', '#eab308'][k]}"/></g></g>`);
+
+  // Baukräne
+  const CRANES = { wind: [722, 150, 34], alpin: [112, 126, 24], netz: [520, 212, 46], gas: [840, 232, 44], stau: [244, 141, 24], pump: [266, 186, 22], fw: [636, 232, 54], see: [252, 210, 26], oev: [360, 234, 48], ind: [758, 210, 36], h2: [786, 232, 42] };
+  for (const id of pending) { const c = CRANES[id]; if (!c) continue; const [x, y, h] = c;
+    o.push(`<g><title>Baustelle: ${M[id].title}</title><line x1="${x}" y1="${y}" x2="${x}" y2="${y - h}" stroke="#f97316" stroke-width="2"/><g><line x1="${x - 6}" y1="${y - h}" x2="${x + 24}" y2="${y - h}" stroke="#f97316" stroke-width="2"/><line x1="${x + 18}" y1="${y - h}" x2="${x + 18}" y2="${y - h + 10}" stroke="#334155" stroke-width=".8"/><rect x="${x + 15.5}" y="${y - h + 10}" width="5" height="3" fill="#facc15"/>${rot(5, x, y - h, true)}</g></g>`); }
+
+  // Dunst
+  o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
+
+  $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  const mood = S.pop >= 60 ? '😀' : S.pop >= 50 ? '🙂' : S.pop >= 42 ? '😐' : '😠';
+  $('city-year').textContent = `Seestadt ${m.year}`;
+  $('city-mood').textContent = `${mood} Stimmung ${S.pop} % · ${m.co2pct <= 35 ? '🌤️ klare Luft' : m.co2pct <= 65 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${dark ? ' · 🕯️ Stromknappheit' : ''}`;
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: Maus über Anlagen halten';
+}
+
 // ---------- Ablauf ----------
 function confirmRound() {
   if (S.over) return;
@@ -948,6 +1326,7 @@ function confirmRound() {
   const R = playRound(S, [...selected]);
   selected = [];
   const m = R.metrics;
+  justBuilt = new Set(R.completed);
 
   const logStart = S.log.length;
   addLog('🗳️', `Legislatur ${roundNo} (${y[0]}–${y[1]})`, R.picks.length ? R.picks.map(p => M[p.id].title).join(' + ') + '.' : 'Kein neuer Beschluss.');
@@ -962,7 +1341,7 @@ function confirmRound() {
   const row = (label, a, b, unit, goodUp) => { const d = b - a; const good = goodUp ? d >= 0 : d <= 0;
     return `<tr class="border-t border-slate-700/60"><td class="py-1">${label}</td><td class="text-right">${fmt(a)}${unit}</td><td class="text-right font-semibold">${fmt(b)}${unit}</td><td class="text-right ${d === 0 ? 'text-slate-500' : good ? 'text-emerald-400' : 'text-rose-400'}">${sign(d)}</td></tr>`; };
 
-  const body = `
+  const body = newspaper(R, roundNo, y[1]) + `
     <div class="grid sm:grid-cols-2 gap-3">
       <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
         <div class="text-xs text-slate-400 mb-1">Beschlossen</div>
@@ -970,11 +1349,14 @@ function confirmRound() {
           <div class="text-[11px] text-slate-400 ml-5">${p.cost < 0 ? '+' + (-p.cost) : '−' + p.cost} Mio. · Akzeptanz ${sign(p.pop)} · ${p.ready > CFG.rounds ? '<span class="text-rose-300">fertig erst nach 2045</span>' : M[p.id].build ? 'fertig ' + CFG.years[p.ready - 1][1] : 'wirksam'}</div></div>`).join('')}
         ${R.completed.length ? `<div class="text-xs text-slate-400 mt-2 mb-1">In Betrieb genommen</div>${R.completed.map(id => `<div class="text-xs"><i class="fa-solid fa-check text-emerald-400 mr-1"></i>${M[id].title}</div>`).join('')}` : ''}
       </div>
-      <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/30">
-        <div class="text-xs text-amber-300 mb-1">Ereignis</div>
-        <div class="font-semibold text-slate-100">${R.event.icon} ${R.event.title}</div>
-        <p class="text-xs text-slate-300 mt-1">${R.event.text}</p>
-      </div>
+      <div class="flip cursor-pointer" id="event-flip" title="Karte umdrehen"><div class="flip-inner h-full">
+        <div class="front rounded-xl border border-amber-400/50 bg-gradient-to-br from-amber-500/30 via-rose-500/20 to-violet-500/30 grid place-items-center text-center p-3 min-h-[130px]">
+          <div><div class="text-4xl">🎴</div><div class="text-xs text-amber-200 mt-1 font-semibold tracking-wide">Ereigniskarte</div></div></div>
+        <div class="back bg-amber-500/10 p-3 rounded-xl border border-amber-500/30">
+          <div class="text-xs text-amber-300 mb-1">Ereignis</div>
+          <div class="font-semibold text-slate-100">${R.event.icon} ${R.event.title}</div>
+          <p class="text-xs text-slate-300 mt-1">${R.event.text}</p>
+        </div></div></div>
     </div>
     ${R.lines.length ? `<ul class="text-xs text-slate-300 space-y-1 list-disc pl-5">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
     <table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Kennzahl</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th></tr></thead><tbody>
@@ -988,8 +1370,41 @@ function confirmRound() {
     ${roundNo < CFG.rounds ? `<div class="text-center text-sm font-semibold ${S.ousted ? 'text-rose-400' : 'text-emerald-400'}">${S.ousted ? '🗳️ Wahl verloren – die neue Mehrheit stoppt das Programm.' : '🗳️ Wiedergewählt! Weiter geht’s.'}</div>` : ''}`;
 
   renderAll();
-  if (S.over) showModal(S.ousted ? '🗳️' : '📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: 'Zur Gesamtauswertung', primary: true, fn: showFinal }]);
-  else showModal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: `Weiter zur Legislatur ${S.round}`, primary: true, fn: closeModal }]);
+  justBuilt = new Set();
+  if (S.over) showModal(S.ousted ? '🗳️' : '📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: 'Zur Gesamtauswertung', primary: true, fn: showFinal }]);
+  else showModal('📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: `Weiter zur Legislatur ${S.round}`, primary: true, fn: () => { closeModal(); showDilemma(); } }]);
+  const fl = $('event-flip');
+  if (fl) { fl.onclick = () => fl.classList.toggle('flipped'); setTimeout(() => fl.classList.add('flipped'), REDUCED ? 0 : 900); }
+  if (R.event.id === 'dunkelflaute' && !R.event.ok) setTimeout(() => { const c = $('city'); c.classList.remove('blackout'); void c.offsetWidth; c.classList.add('blackout'); }, 1200);
+}
+
+function newspaper(R, roundNo, year) {
+  const main = [...R.picks].filter(p => p.id !== 'bond').sort((a, b) => Math.abs(M[b.id].cost) - Math.abs(M[a.id].cost))[0] || R.picks[0];
+  const head = S.ousted ? 'Machtwechsel im Stadthaus: Energieprogramm gestoppt' : R.event.headline;
+  const sub = main ? NEWS[main.id][0] : 'Stadtrat legt eine Denkpause ein – keine neuen Beschlüsse';
+  const quotes = R.picks.slice(0, 3).map(p => { const [who, text] = NEWS[p.id][p.pop >= 0 ? 1 : 2];
+    return `<div class="bubble rounded-lg p-2 text-xs leading-snug">«${text}»<div class="text-[10px] text-stone-500 mt-1" style="font-family:Inter,sans-serif">— ${who}</div></div>`; });
+  const cols = ['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3'][quotes.length];
+  return `<div class="paper rounded-xl p-4 shadow-inner">
+    <div class="masthead text-[10px] uppercase text-stone-500 flex justify-between border-b-2 border-stone-700 pb-1"><span>Seestadter Anzeiger</span><span>Ausgabe ${year}</span></div>
+    <h4 class="text-xl md:text-2xl font-bold leading-tight mt-2">${head}</h4>
+    <p class="text-sm italic text-stone-600 mt-1">Ausserdem: ${sub}</p>
+    ${quotes.length ? `<div class="grid ${cols} gap-2 mt-3">${quotes.join('')}</div>` : ''}
+  </div>`;
+}
+
+function confetti() {
+  if (REDUCED) return;
+  const c = $('confetti'); c.style.display = 'block'; c.width = innerWidth; c.height = innerHeight;
+  const g = c.getContext('2d');
+  const cols = ['#34d399', '#fbbf24', '#60a5fa', '#f472b6', '#a78bfa', '#f87171'];
+  const P = Array.from({ length: 180 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.6, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, r: 5 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - 0.5) * 0.3, col: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    g.clearRect(0, 0, c.width, c.height);
+    for (const p of P) { p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.a += p.va; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.col; g.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); g.restore(); }
+    if (t - t0 < 4500) requestAnimationFrame(frame); else { g.clearRect(0, 0, c.width, c.height); c.style.display = 'none'; }
+  })(t0);
 }
 
 function insights(S, ev) {
@@ -1021,6 +1436,16 @@ function showFinal() {
   const title = S.ousted ? 'Abgewählt – Transformation abgebrochen' : ev.passed === 4 ? 'Netto-Null-Pfad geschafft!' : ev.passed >= 3 ? 'Starker Pfad mit einer Lücke' : ev.passed >= 2 ? 'Teilerfolg mit Zielkonflikten' : 'Transformation gescheitert';
   const icon = S.ousted ? '🗳️' : ev.passed === 4 ? '🏆' : ev.passed >= 2 ? '⚖️' : '⚠️';
 
+  const earned = BADGES.filter(b => b.test(S, ev));
+  const owned = new Set(store('pfs-badges') || []);
+  const fresh = earned.filter(b => !owned.has(b.id));
+  earned.forEach(b => owned.add(b.id)); store('pfs-badges', [...owned]);
+  const badgeHtml = `<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+      <div class="text-xs font-semibold text-slate-200 mb-2 flex justify-between"><span>Abzeichen in diesem Lauf: ${earned.length}</span><span class="text-slate-400 font-normal">Sammlung ${owned.size}/${BADGES.length}</span></div>
+      <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">${BADGES.map(b => { const e = earned.includes(b), o = owned.has(b.id);
+        return `<div class="text-center p-1.5 rounded-lg border ${e ? 'border-amber-400/60 bg-amber-500/10' : 'border-slate-700'}" title="${b.name}: ${b.desc}">
+          <div class="text-2xl ${e || o ? '' : 'badge-locked'} ${fresh.includes(b) ? 'animate-bounce' : ''}">${b.icon}</div><div class="text-[9px] leading-tight text-slate-300 mt-0.5">${b.name}</div></div>`; }).join('')}</div>
+      <div class="text-[10px] text-slate-500 mt-2">Grau = noch nie erreicht. Fahre mit der Maus über ein Abzeichen für die Bedingung.</div></div>`;
   let best = store('pfs-best-' + S.code) || [];
   best.push({ score: ev.score, passed: ev.passed, d: new Date().toISOString().slice(0, 10) });
   best = best.sort((a, b) => b.score - a.score).slice(0, 5);
@@ -1029,7 +1454,7 @@ function showFinal() {
   const decisions = S.chosen.map(c => `<tr class="border-t border-slate-700/60"><td class="py-1">L${c.round}</td><td>${M[c.id].title}</td><td class="text-right">${c.cost}</td><td class="text-right">${sign(c.pop)}</td></tr>`).join('');
 
   const body = `
-    <div class="text-center"><div class="text-4xl font-bold text-emerald-300">${ev.score}<span class="text-base text-slate-400"> / 100 Punkte</span></div>
+    <div class="text-center"><div class="text-4xl font-bold text-emerald-300"><span class="count" data-from="0" data-to="${ev.score}">0</span><span class="text-base text-slate-400"> / 100 Punkte</span></div>
       <div class="text-xs text-slate-400">${ev.passed} von 4 Zielen erreicht · Szenario ${S.code}</div></div>
     <div class="grid grid-cols-2 gap-3">
       ${tile(ev.goals.co2, 'CO₂ 2045', `${m.co2pct} % von 2026 (${fmt(m.co2Total)} kt)`, `Ziel ≤ ${CFG.co2Target} % erreicht – Rest kompensierbar`, `Ziel ≤ ${CFG.co2Target} % verfehlt`)}
@@ -1037,6 +1462,7 @@ function showFinal() {
       ${tile(ev.goals.budget, 'Budget', `${fmt(S.budget)} Mio. CHF`, 'Solide Finanzen', 'Schulden hinterlassen')}
       ${tile(ev.goals.pop, 'Akzeptanz', `${S.pop} %`, 'Rückhalt in der Bevölkerung', S.ousted ? 'Abgewählt' : 'Knapp')}
     </div>
+    ${badgeHtml}
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
       <div class="text-xs font-semibold text-slate-200 mb-2">Was die Analyse zeigt</div>
       <ul class="space-y-1.5 text-xs">${insights(S, ev).map(t => `<li>${t}</li>`).join('')}</ul>
@@ -1055,6 +1481,8 @@ function showFinal() {
     { label: 'Gleiches Szenario nochmals', fn: () => { closeModal(); startGame(S.code); } },
     { label: 'Übersicht ansehen', primary: true, fn: closeModal }
   ]);
+  animateCounts($('modal-body'), 1400);
+  if (ev.passed === 4) setTimeout(confetti, 300);
 }
 
 function copyResult(ev) {
@@ -1080,7 +1508,8 @@ function showModal(icon, title, html, actions) {
     $('modal-actions').appendChild(b);
   }
   $('modal').classList.remove('hidden');
-  const first = $('modal-actions').querySelector('button:last-child'); if (first) first.focus();
+  $('modal').firstElementChild.scrollTop = 0;
+  const first = $('modal-actions').querySelector('button:last-child'); if (first) first.focus({ preventScroll: true });
 }
 function closeModal() { $('modal').classList.add('hidden'); }
 
@@ -1099,6 +1528,8 @@ function showIntro() {
       <li>4 Legislaturen, je <strong>bis zu ${CFG.maxPicks} Beschlüsse</strong> aus ${MEASURES.length} Massnahmen – das Budget reicht aber nicht für alles.</li>
       <li>Grossprojekte haben <strong>Bauzeiten</strong> – manche sind erst eine oder zwei Legislaturen später fertig.</li>
       <li>Massnahmen <strong>wirken zusammen</strong>: Wärmepumpen sparen CO₂, brauchen aber Winterstrom. Wind braucht Netze.</li>
+      <li>Zu Beginn jeder Legislatur wartet ein <strong>Ratsentscheid</strong> mit zwei Optionen, danach liest du im <strong>Seestadter Anzeiger</strong>, was die Leute von deinen Beschlüssen halten.</li>
+      <li>Oben siehst du deine Stadt: Rauch, Smog, Windräder, Tram – alles reagiert auf deine Politik. Sammle <strong>Abzeichen</strong> für besondere Pfade.</li>
       <li>Jede Legislatur bringt ein <strong>Ereignis</strong>. Der Szenario-Code legt die Ereignisse fest – so können Gruppen dasselbe Szenario vergleichen.</li>
     </ul>
     <label class="block text-xs text-slate-400">Szenario-Code
@@ -1136,9 +1567,9 @@ window.addEventListener('DOMContentLoaded', () => {
   $('expert-toggle').onchange = e => { expert = e.target.checked; store('pfs-expert', expert); renderMeasures(); renderSelection(); };
   expert = !!store('pfs-expert'); $('expert-toggle').checked = expert;
   $('code-pill').onclick = () => { try { navigator.clipboard.writeText(location.href); $('code-display').textContent = 'Link kopiert'; setTimeout(() => $('code-display').textContent = S.code, 1200); } catch (e) {} };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').classList.contains('hidden') && S) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalLocked && !$('modal').classList.contains('hidden') && S) closeModal(); });
   const urlCode = new URLSearchParams(location.search).get('code');
-  startGame(urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode) ? urlCode.toUpperCase() : randomCode());
+  startGame(urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode) ? urlCode.toUpperCase() : randomCode(), false);
   showIntro();
 });
 </script>
