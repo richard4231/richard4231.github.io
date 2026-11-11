@@ -374,9 +374,9 @@ const LV = {
   '-1': { t: 'rückläufig', bars: -1, cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' }
 };
 const GAUGES = [
-  { id: 'co2', icon: '🏭', label: 'CO₂ im Inland', sub: 'Heizen, Verkehr, Industrie, Landwirtschaft', ends: ['mehr CO₂', 'weniger'] },
-  { id: 'flug', icon: '✈️', label: 'CO₂ durchs Fliegen', sub: 'Flugreisen der Bevölkerung', ends: ['mehr CO₂', 'weniger'] },
-  { id: 'waren', icon: '📦', label: 'CO₂ aus Waren', sub: 'Im Ausland hergestellt und transportiert', ends: ['mehr CO₂', 'weniger'] },
+  { id: 'co2', icon: '🏭', label: 'CO₂ im Inland', sub: 'Heizen, Verkehr, Industrie, Landwirtschaft', ends: ['weniger', 'mehr CO₂'] },
+  { id: 'flug', icon: '✈️', label: 'CO₂ durchs Fliegen', sub: 'Flugreisen der Bevölkerung', ends: ['weniger', 'mehr CO₂'] },
+  { id: 'waren', icon: '📦', label: 'CO₂ aus Waren', sub: 'Im Ausland hergestellt und transportiert', ends: ['weniger', 'mehr CO₂'] },
   { id: 'strom', icon: '⚡', label: 'Stromversorgung', sub: 'Erneuerbar und sicher, vor allem im Winter', ends: ['knapp', 'sicher'] },
   { id: 'kreis', icon: '♻️', label: 'Kreislauf', sub: 'Recycling, Reparieren, Teilen', ends: ['Wegwerfen', 'Kreislauf'] },
   { id: 'acc', icon: '🗳️', label: 'Akzeptanz', sub: 'Rückhalt in der Bevölkerung', ends: ['tief', 'hoch'] }
@@ -405,8 +405,9 @@ function lvBadge(label, l) {
 function polar(r, deg) { const a = (deg - 180) * Math.PI / 180; return [60 + r * Math.cos(a), 62 + r * Math.sin(a)]; }
 function arc(r, d0, d1) { const [x0, y0] = polar(r, d0), [x1, y1] = polar(r, d1); return `M${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)}`; }
 function buildGauges() {
-  const segs = [[0, 0.34 * 180 - 1, 'var(--bad)'], [0.34 * 180 + 1, 0.67 * 180 - 1, 'var(--mid)'], [0.67 * 180 + 1, 180, 'var(--good)']];
-  $('gauges').innerHTML = GAUGES.map(g => `
+  const up = [[0, 0.34 * 180 - 1, 'var(--bad)'], [0.34 * 180 + 1, 0.67 * 180 - 1, 'var(--mid)'], [0.67 * 180 + 1, 180, 'var(--good)']];
+  const down = [[0, 0.33 * 180 - 1, 'var(--good)'], [0.33 * 180 + 1, 0.66 * 180 - 1, 'var(--mid)'], [0.66 * 180 + 1, 180, 'var(--bad)']];
+  $('gauges').innerHTML = GAUGES.map(g => { const segs = isCO2(g.id) ? down : up; return `
     <div class="bg-slate-900/60 rounded-xl border border-slate-700 p-2.5" id="gw-${g.id}">
       <div class="text-[11px] text-slate-300 font-semibold leading-tight"><span aria-hidden="true">${g.icon}</span> ${g.label}</div>
       <div class="text-[10px] text-slate-500 leading-tight min-h-[26px]">${g.sub}</div>
@@ -422,13 +423,14 @@ function buildGauges() {
         <span class="text-[11px] font-semibold" id="gz-${g.id}"></span>
       </div>
       <div class="text-[10px] text-slate-500 gauge-val" id="gd-${g.id}">&nbsp;</div>
-    </div>`).join('');
+    </div>`; }).join('');
 }
 function updateGauges() {
   const prev = S.history.length > 1 ? S.history[S.history.length - 2] : null;
   for (const g of GAUGES) {
     const v = S.g[g.id], z = ZONE[zone(v)];
-    $('nd-' + g.id).style.transform = `rotate(${-90 + v * 1.8}deg)`;
+    // CO₂-Anzeigen gespiegelt: links = weniger CO₂ (grün), rechts = mehr (rot)
+    $('nd-' + g.id).style.transform = `rotate(${-90 + (isCO2(g.id) ? 100 - v : v) * 1.8}deg)`;
     $('gv-' + g.id).textContent = gaugeText(g.id, v);
     $('gz-' + g.id).className = 'text-[11px] font-semibold ' + z.cls;
     $('gz-' + g.id).textContent = `${z.sym} ${z.t}`;
