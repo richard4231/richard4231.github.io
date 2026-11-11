@@ -1,9 +1,12 @@
 <!DOCTYPE html>
+<!--
+  Seestadt 2045 – Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.
+-->
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Postfossile Stadt · Einfach</title>
+<title>Seestadt 2045 · Einfach</title>
 <meta name="description" content="Einfache Version des Energiewende-Spiels: Massnahmen mit Wirkung in drei Stufen, Drehmeter für Inland, Strom, Fliegen, Waren und Kreislauf.">
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,7 +105,7 @@
   <div class="flex items-center gap-3">
     <div class="bg-emerald-500 text-slate-900 w-10 h-10 grid place-items-center rounded-xl text-xl shadow-lg" aria-hidden="true">🏙️</div>
     <div>
-      <h1 class="text-lg md:text-xl font-bold text-emerald-300">Postfossile Stadt <span class="text-xs align-middle ml-1 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-500/40 font-semibold">Einfache Version</span></h1>
+      <h1 class="text-lg md:text-xl font-bold text-emerald-300">Seestadt 2045 <span class="text-xs align-middle ml-1 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-500/40 font-semibold">Einfache Version</span></h1>
       <p class="text-xs text-slate-400">Gemeinde, Kanton und Bund · Seestadt zeigt die Wirkung vor Ort</p>
     </div>
   </div>
@@ -143,7 +146,7 @@
     </div>
 
     <div id="tabbar" class="flex flex-wrap gap-2 items-center justify-between">
-      <input id="search" type="search" autocomplete="off" placeholder="Suchen …" title="Schlagwörter, z. B. Auto, Heizung, Strom, Flug, Abgabe" aria-label="Massnahmen durchsuchen" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-3 py-1.5 text-slate-200 w-44 placeholder:text-slate-500 focus:border-emerald-500 outline-none">
+      <input id="search" type="search" autocomplete="off" placeholder="Suchen …" title="Schlagwörter, z. B. Auto, Heizung, Strom – oder Kartennummern wie «10 15 24» und Enter" aria-label="Massnahmen durchsuchen" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-3 py-1.5 text-slate-200 w-44 placeholder:text-slate-500 focus:border-emerald-500 outline-none">
       <div id="tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin min-w-0"></div>
       <select id="sort" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-2 py-1.5 text-slate-300" aria-label="Sortierung">
         <option value="default">Sortieren: Bereich</option>
@@ -607,11 +610,15 @@ function searchText(m) {
   if (!searchCache[m.id]) searchCache[m.id] = norm([m.title, m.desc || '', m.effect || '', m.why || '', m.tags.map(t => CATS.find(c => c.id === t).label).join(' '), LVL[m.lvl] ? LVL[m.lvl].t : '', KW[m.id] || ''].join(' '));
   return searchCache[m.id];
 }
-function matchesQuery(m) { const words = norm(query).split(/\s+/).filter(Boolean); return !words.length || words.every(w => searchText(m).includes(w)); }
+function matchesQuery(m) { const nums = numQuery(); if (nums) return nums.includes(NR[m.id]); const words = norm(query).split(/\s+/).filter(Boolean); return !words.length || words.every(w => searchText(m).includes(w)); }
 function setupSearch(rerender) {
   const inp = $('search');
   inp.addEventListener('input', () => { query = inp.value; if (query.trim()) setCatAll(); rerender(); });
-  inp.addEventListener('keydown', e => { if (e.key === 'Escape') { inp.value = ''; query = ''; rerender(); } });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { inp.value = ''; query = ''; rerender(); }
+    // Kartennummern + Enter: alle passenden Karten auswählen (Hybridspiel)
+    if (e.key === 'Enter' && numQuery()) { e.preventDefault(); if (selectByNumbers()) { inp.value = ''; query = ''; } renderHeader(); renderTray(); renderCity(); rerender(); }
+  });
 }
 function setCatAll() { cat = 'all'; }
 
@@ -747,7 +754,7 @@ function renderGrid() {
     c.innerHTML = `
       <div>
         <div class="flex justify-between items-center mb-1">
-          <span class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1.5"><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${m.tags.map(t => { const c = CATS.find(x => x.id === t); return `${c.icon} ${c.label}`; }).join(' · ')}</span>
+          <span class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1.5"><span class="font-mono text-slate-500" title="Kartennummer (Hybridspiel)">${nr2(m.id)}</span><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${m.tags.map(t => { const c = CATS.find(x => x.id === t); return `${c.icon} ${c.label}`; }).join(' · ')}</span>
           <span class="w-5 h-5 rounded-full grid place-items-center text-[11px] ${sel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}">${sel ? '✓' : '+'}</span>
         </div>
         <h4 class="font-semibold text-[14px] leading-tight flex gap-2"><span aria-hidden="true">${m.icon}</span><span>${m.title}</span></h4>
@@ -890,7 +897,7 @@ function start(code) { holdDash = false; pendingAfter = null; shownG = {}; tempS
 
 function intro() {
   const code = randomCode();
-  modal('🏙️', 'Postfossile Stadt – einfache Version', `
+  modal('🏙️', 'Seestadt 2045 – einfache Version', `
     <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
     <ul class="list-disc pl-5 text-xs space-y-1">
       <li>4 Legislaturen, je bis zu <strong>${CFG.picks} Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
@@ -899,8 +906,10 @@ function intro() {
       <li>Ende 2034 fällt ein Teil der Stromversorgung weg. Jede Legislatur bringt ein Ereignis.</li>
     </ul>
     <label class="block text-xs text-slate-400">Szenario-Code (gleicher Code = gleiche Ereignisse)
-      <input id="in-code" value="${code}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase"></label>`,
-    [{ label: 'Zur komplexen Version', fn: () => $('link-complex').click() },
+      <input id="in-code" value="${code}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase"></label>
+    <p class="text-[10px] text-slate-500 border-t border-slate-700 pt-2">Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.</p>`,
+    [{ label: '🖨 Karten (Hybrid)', fn: () => window.open('einfach.html?karten', '_blank') },
+     { label: 'Zur komplexen Version', fn: () => $('link-complex').click() },
      { label: 'Los geht’s', primary: true, fn: () => { const v = ($('in-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || code; close(); start(v); } }]);
 }
 
@@ -1106,8 +1115,105 @@ function fitCityViewBox() {
 }
 addEventListener('resize', () => fitCityViewBox());
 
+// ---------- Hybridspiel: Kartennummern & Druckansicht ----------
+const NR = Object.fromEntries(MEASURES.map((m, i) => [m.id, i + 1]));
+const nr2 = id => String(NR[id]).padStart(2, '0');
+const numQuery = () => /^[\d\s,;.]+$/.test(query.trim()) ? query.match(/\d+/g).map(Number) : null;
+// Spielleitung tippt die Nummern der abgegebenen Karten (z. B. «10 15 24») und drückt Enter
+function selectByNumbers() {
+  const nums = numQuery(); if (!nums || S.over) return false;
+  const ids = MEASURES.filter(m => nums.includes(NR[m.id]) && !has(S, m.id)).map(m => m.id).sort((a, b) => M[a].cost - M[b].cost);
+  for (const id of ids) if (!selected.includes(id) && !blockReason(id)) selected.push(id);
+  return ids.every(id => selected.includes(id));
+}
+// Fakten einer Karte für den Druck (dieselben Regeln wie im Spiel; hybrid/karten.py bildet sie nach)
+const SYN_TXT = { daemm: 'Gebäudesanierung', car: 'Solarstrom oder Batterien' };
+function cardFacts(m) {
+  const cl = climateLevel(m), pw = powerLevel(m);
+  const where = CLIMATE.filter(d => (m.fx[d] || 0) > 0).map(d => DIM_LABEL[d]);
+  const nrs = ids => 'Nr. ' + ids.map(x => NR[x]).join(', ');
+  const hints = [];
+  if (HEAT_E.includes(m.id)) hints.push(`🤝 Mit Sanierung (${nrs(['daemm'])}): kein Strom-Abzug.`);
+  if (CAR_E.includes(m.id)) hints.push(`🤝 Mit Solarstrom oder Batterien (${nrs(['solar', 'balkon', 'smartgrid'])}): kein Strom-Abzug.`);
+  if (m.id === 'daemm') hints.push(`🤝 ${nrs(HEAT_E)} brauchen dann keinen Zusatzstrom.`);
+  if (['solar', 'balkon', 'smartgrid'].includes(m.id)) hints.push(`🤝 ${nrs(CAR_E)} brauchen dann keinen Zusatzstrom.`);
+  const grp = OVERLAP.find(g => g.includes(m.id));
+  if (grp) hints.push(`⤵ Ersetzt dieselben ${grp === CAR_E ? 'Autos' : 'Ölheizungen'} wie ${nrs(grp.filter(x => x !== m.id))}: Die spätere Karte wirkt schwächer.`);
+  if (m.abgabe) hints.push(`💌 Mit Klimabonus (${nrs(['klimabonus'])}): kein Geld, dafür nicht mehr umstritten.`);
+  else if (m.acc < 0) hints.push(`🤝 Mit Mitsprache (${nrs(['buerger'])}): weniger Gegenwind.`);
+  return {
+    nr: nr2(m.id), lvl: LVL[m.lvl].t, tags: m.tags.map(t => CATS.find(c => c.id === t).label).join(' · '),
+    klima: { lv: cl.none ? 0 : cl.lv, text: cl.none ? '–' : LV[cl.lv].t, where: where.length ? 'weniger CO₂: ' + where.join(', ') : cl.none ? 'keine direkte Wirkung' : 'mehr CO₂ im Inland' },
+    strom: { lv: pw.none ? 0 : pw.lv, text: pw.none ? '–' : LV[pw.lv].t },
+    kreis: m.fx.kreis ? LV[m.fx.kreis].t : null,
+    cost: m.cost < 0 ? 'Einnahmen +' + '●'.repeat(-m.cost) : 'Kosten ' + '●'.repeat(m.cost),
+    acc: m.acc > 0 ? '👍 beliebt' : m.acc < 0 ? '👎 umstritten' : '😐 neutral', hints
+  };
+}
+const HYBRID_RULES = () => `
+  <h2>Seestadt 2045 – Hybridspiel mit Karten</h2>
+  <ol>
+    <li><b>Vorbereitung:</b> Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.</li>
+    <li><b>Vorschlagen:</b> Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.</li>
+    <li><b>Verhandeln:</b> Alle Beschlüsse zusammen dürfen das Budget (●, siehe Beamer) nicht übersteigen. Abgaben bringen Geld. Höchstens ${CFG.picks} Beschlüsse, bei Gegenwind ${CFG.picks - 1}. Tauschen und Passen sind erlaubt.</li>
+    <li><b>Beschliessen:</b> Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.</li>
+    <li><b>Auswerten:</b> Ereignis und Drehmeter gemeinsam anschauen. Beschlossene Karten offen in die Mitte legen.</li>
+  </ol>
+  <h3>Gut zu wissen</h3>
+  <ul>
+    <li>Ziel 2045: alle Drehmeter im grünen Bereich. Ungenutztes Budget bleibt für später.</li>
+    <li>Ende 2034 geht ein Kernkraftwerk vom Netz.</li>
+    <li>🤝 Manche Karten wirken zusammen besser, ⤵ andere ersetzen dasselbe.</li>
+    <li>Wirkung: ▮▮▮ gross · ▮▮ mittel · ▮ wenig · ▼ rückläufig. Wer entscheidet: Gemeinde, Kanton oder Bund.</li>
+  </ul>`;
+const CAT_COL = { energie: '#d97706', gebaeude: '#dc2626', mobil: '#0284c7', essen: '#65a30d', kreislauf: '#059669', regeln: '#be123c', politik: '#7c3aed' };
+const barTxt = lv => lv < 0 ? '▼' : lv ? '▮'.repeat(lv) + '<i>' + '▮'.repeat(3 - lv) + '</i>' : '';
+function renderPrintView() {
+  document.title = 'Aktionskarten – Seestadt 2045';
+  const store = (() => { try { return JSON.parse(localStorage.getItem('pfs-karten') || '{}'); } catch (e) { return {}; } })();
+  const ed = (key, html) => `<span contenteditable="true" data-k="${key}">${store[key] ?? html}</span>`;
+  const card = m => { const f = cardFacts(m), col = CAT_COL[m.cat];
+    return `<div class="pc" style="--c:${col}">
+      <div class="pc-h"><b>${f.nr}</b><span>${f.tags}</span><em>${f.lvl}</em></div>
+      <div class="pc-t">${m.icon} ${ed(m.id + '.t', m.title)}</div>
+      <div class="pc-fx"><span class="lv${f.klima.lv}">Klima ${barTxt(f.klima.lv)} <b>${f.klima.text}</b></span><span class="lv${f.strom.lv}">Strom ${barTxt(f.strom.lv)} <b>${f.strom.text}</b></span>${f.kreis ? `<span>♻️ Kreislauf <b>${f.kreis}</b></span>` : ''}</div>
+      <div class="pc-w">${f.klima.where}</div>
+      <div class="pc-why">${ed(m.id + '.w', m.why)}</div>
+      ${f.hints.length ? `<div class="pc-hint">${f.hints.map((h, i) => ed(m.id + '.h' + i, h)).join('<br>')}</div>` : ''}
+      <div class="pc-f"><b>${f.cost}</b><span>${f.acc}</span></div></div>`; };
+  const pages = []; for (let i = 0; i < MEASURES.length; i += 8) pages.push(MEASURES.slice(i, i + 8));
+  document.body.className = 'printview';
+  document.body.innerHTML = `<style>
+    body.printview{background:#e2e8f0;color:#0f172a;font-family:Inter,'Segoe UI',Arial,sans-serif;margin:0}
+    .bar{position:sticky;top:0;z-index:5;background:#0f172a;color:#e2e8f0;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px}
+    .bar button,.bar a{background:#10b981;color:#052e16;border:0;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;text-decoration:none;font-size:13px}
+    .bar .sec{background:#334155;color:#e2e8f0}
+    .sheet{width:210mm;height:297mm;box-sizing:border-box;padding:8mm;margin:12px auto;background:#fff;box-shadow:0 2px 12px #0003;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);overflow:hidden}
+    .rules{display:block;padding:18mm 20mm;font-size:12.5pt;line-height:1.45}
+    .rules h2{font-size:20pt;font-weight:800;margin:0 0 6mm}.rules h3{font-size:14pt;font-weight:700;margin:8mm 0 2mm}.rules li{margin:0 0 2.5mm}.rules ol{list-style:decimal;padding-left:6mm}.rules ul{list-style:disc;padding-left:6mm}
+    .pc{border:1px dashed #94a3b8;padding:3mm 3.5mm;display:flex;flex-direction:column;gap:1.3mm;overflow:hidden;font-size:8.6pt;line-height:1.26;border-top:2.2mm solid var(--c)}
+    .pc-h{display:flex;gap:2mm;align-items:baseline;color:#475569;font-size:7.5pt}.pc-h b{font-size:11pt;color:var(--c)}.pc-h span{flex:1}.pc-h em{font-style:normal;font-weight:700;border:1px solid #94a3b8;border-radius:3px;padding:0 1.2mm}
+    .pc-t{font-size:12pt;font-weight:800;line-height:1.15}
+    .pc-fx{display:flex;flex-wrap:wrap;gap:1.2mm}.pc-fx span{border:1px solid #cbd5e1;border-radius:3px;padding:.2mm 1.3mm;white-space:nowrap}.pc-fx i{font-style:normal;opacity:.2}
+    .lv3{background:#d1fae5}.lv2{background:#ecfccb}.lv-1{background:#ffe4e6}
+    .pc-w{color:#475569;font-size:8pt}.pc-why{flex:1}.pc-hint{color:#334155;font-size:7.4pt;background:#f1f5f9;border-radius:2px;padding:.8mm 1.2mm}
+    .pc-f{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:1mm;font-size:9.5pt}
+    [contenteditable]:hover{outline:1px dotted #10b981}[contenteditable]:focus{outline:1px solid #10b981;background:#ecfdf5}
+    @page{size:A4;margin:0}
+    @media print{body.printview{background:#fff}.bar{display:none}.sheet{margin:0;box-shadow:none;break-after:page}[contenteditable]{outline:none!important;background:none!important}
+      .pc,.pc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style>
+  <div class="bar"><b>🖨 Aktionskarten (${MEASURES.length})</b><span>Texte anklicken und ändern – sie bleiben in diesem Browser gespeichert.</span>
+    <button onclick="print()">Drucken</button><button class="sec" id="pv-reset">Texte zurücksetzen</button><a class="sec" href="hybrid/Aktionskarten.docx" download>Word-Datei</a><a class="sec" href="einfach.html">Zurück zum Spiel</a></div>
+  <div class="sheet rules">${HYBRID_RULES()}</div>
+  ${pages.map(p => `<div class="sheet">${p.map(card).join('')}</div>`).join('')}`;
+  document.body.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.k; if (!k) return; store[k] = e.target.innerHTML; try { localStorage.setItem('pfs-karten', JSON.stringify(store)); } catch (err) {} });
+  $('pv-reset').onclick = () => { try { localStorage.removeItem('pfs-karten'); } catch (e) {} location.reload(); };
+}
+
 // ---------- Start ----------
 window.addEventListener('DOMContentLoaded', () => {
+  if (new URLSearchParams(location.search).has('karten')) { renderPrintView(); return; }
   buildGauges(); renderLegend(); setupCityTips();
   setupSearch(() => { renderTabs(); renderGrid(); });
   $('sort').onchange = e => { sortMode = e.target.value; renderGrid(); };

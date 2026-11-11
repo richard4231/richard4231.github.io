@@ -1,9 +1,12 @@
 <!DOCTYPE html>
+<!--
+  Seestadt 2045 – Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.
+-->
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Postfossile Stadt</title>
+<title>Seestadt 2045</title>
 <meta name="description" content="Rundenbasiertes Strategiespiel zur Energiewende einer Stadt bis 2045: CO₂, Winterstrom, Budget und Akzeptanz im Zielkonflikt.">
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -135,7 +138,7 @@
   <div class="flex items-center gap-3">
     <div class="bg-emerald-500 text-slate-900 w-10 h-10 grid place-items-center rounded-xl font-bold text-lg shadow-lg"><i class="fa-solid fa-city"></i></div>
     <div>
-      <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Postfossile Stadt</h1>
+      <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Seestadt 2045</h1>
       <p class="text-xs text-slate-400">Seestadt · 180 000 Einwohner:innen · Netto-Null bis 2045?</p>
     </div>
   </div>
@@ -1797,7 +1800,7 @@ function showFinal() {
 
 function copyResult(ev) {
   const m = ev.last;
-  const txt = [`Postfossile Stadt – Szenario ${S.code}`, `Punkte: ${ev.score}/100 · Ziele: ${ev.passed}/4${S.ousted ? ' (abgewählt)' : ''}`,
+  const txt = [`Seestadt 2045 – Szenario ${S.code}`, `Punkte: ${ev.score}/100 · Ziele: ${ev.passed}/4${S.ousted ? ' (abgewählt)' : ''}`,
     `CO₂: ${m.co2pct} % · Sicherheit: ${m.sec} · Budget: ${S.budget} Mio. · Akzeptanz: ${S.pop} %`,
     ...S.chosen.map(c => `L${c.round}: ${M[c.id].title}`)].join('\n');
   const done = () => { const b = document.querySelector('#modal-actions button'); if (b) b.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Kopiert'; };
@@ -1850,8 +1853,9 @@ function showIntro() {
     </ul>
     <label class="block text-xs text-slate-400">Szenario-Code
       <input id="intro-code" value="${suggested}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase">
-    </label>`;
-  showModal('🏙️', 'Postfossile Stadt 2045', body, [
+    </label>
+    <p class="text-[10px] text-slate-500 border-t border-slate-700 pt-2">Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.</p>`;
+  showModal('🏙️', 'Seestadt 2045', body, [
     { label: 'Einfache Version', fn: () => $('link-simple').click() },
     { label: 'Modellannahmen', fn: () => showModelInfo(true) },
     { label: 'Los geht’s', primary: true, fn: () => {

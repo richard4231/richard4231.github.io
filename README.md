@@ -4,7 +4,7 @@
 - [Gummibärchen](https://richard4231.github.io/25-02-gummybears/)
 - [Schokolinsen](https://richard4231.github.io/25-03-chocolatebeans/)
 - [Greenhouse Gamble](https://richard4231.github.io/25-11-greenhouse-gamble/)
-- [Postfossile Stadt](https://richard4231.github.io/26-11-Postfossile-Stadt/)
+- [Seestadt 2045](https://richard4231.github.io/26-11-Postfossile-Stadt/) – inspiriert durch Postfossil Cities
 
 ## Muster erkunden
 - [Pascal meets Sierpinksi](https://richard4231.github.io/21-04-pascaltriangleoptimized/)
