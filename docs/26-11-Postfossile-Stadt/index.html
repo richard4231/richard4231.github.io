@@ -183,8 +183,8 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h2 id="phase-title" class="text-base font-semibold flex items-center gap-2"><i class="fa-solid fa-users-rectangle text-teal-400"></i><span>Wähle bis zu 3 Massnahmen für diese Legislatur</span></h2>
-          <p id="phase-desc" class="text-xs text-slate-400 mt-1">Die Verwaltung schafft höchstens drei Beschlüsse pro Legislatur – das Budget meist weniger. Achte auf Bauzeiten: Was erst nach 2045 fertig wird, zählt nicht.</p>
+          <h2 id="phase-title" class="text-base font-semibold flex items-center gap-2"><i class="fa-solid fa-users-rectangle text-teal-400"></i><span>Wählt bis zu 3 Massnahmen für diese Legislatur</span></h2>
+          <p id="phase-desc" class="text-xs text-slate-400 mt-1">Die Verwaltung schafft höchstens drei Beschlüsse pro Legislatur – das Budget meist weniger. Achtet auf Bauzeiten: Was erst nach 2045 fertig wird, zählt nicht.</p>
         </div>
         <div class="bg-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 border border-slate-600 shrink-0">Runde <span id="round-badge">1</span>/4</div>
       </div>
@@ -1019,7 +1019,7 @@ function isAvailable(id) { return !S.chosen.some(c => c.id === id); }
 function cardBlockReason(id) {
   if (S.over) return 'Spiel beendet';
   if (selected.includes(id)) return null;
-  if (selected.length >= CFG.maxPicks) return `Bereits ${CFG.maxPicks} Beschlüsse gewählt – entferne zuerst einen`;
+  if (selected.length >= CFG.maxPicks) return `Bereits ${CFG.maxPicks} Beschlüsse gewählt – entfernt zuerst einen`;
   const after = S.budget - selected.reduce((a, x) => a + effectiveCost(S, x, selected), 0) - effectiveCost(S, id, [...selected, id]);
   if (after < CFG.minBudget) return `Zu teuer: Kreditlimit (${CFG.minBudget} Mio.) würde überschritten`;
   return null;
@@ -1046,7 +1046,7 @@ function renderMeasures() {
   if (sortMode === 'pop') list.sort((a, b) => popEffect(S, b.id, selected) - popEffect(S, a.id, selected));
 
   grid.innerHTML = '';
-  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versuche ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
+  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versucht ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
 
   for (const m of list) {
     const isSel = selected.includes(m.id);
@@ -1074,7 +1074,7 @@ function renderMeasures() {
 
     const costHtml = m.abgabe && cost === 0 ? `<strong class="text-slate-300">→ Klimabonus</strong>` : m.cost < 0 ? `<strong class="text-emerald-400">+${-cost} M</strong>` : `<strong class="text-amber-300">${cost} M</strong>${cost !== m.cost ? `<s class="text-slate-500 ml-1">${m.cost}</s>` : ''}`;
     const fcst = expert ? '' : `<div class="mt-2 flex flex-wrap gap-1.5 text-[10px]">
-        <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose CO₂ 2045 (Prozentpunkte), inkl. Wechselwirkungen mit deiner Auswahl">CO₂ <strong class="${mg.co2 < 0 ? 'text-emerald-400' : mg.co2 > 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.co2)} Pp</strong></span>
+        <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose CO₂ 2045 (Prozentpunkte), inkl. Wechselwirkungen mit eurer Auswahl">CO₂ <strong class="${mg.co2 < 0 ? 'text-emerald-400' : mg.co2 > 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.co2)} Pp</strong></span>
         <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose Versorgungssicherheit 2045 (Punkte)">Sicherheit <strong class="${mg.sec > 0 ? 'text-emerald-400' : mg.sec < 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.sec)}</strong></span>
         <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose Winter-Eigenversorgung 2045 (Prozentpunkte)">Winter <strong class="${mg.self > 0 ? 'text-emerald-400' : mg.self < 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.self)} Pp</strong></span>
       </div>`;
@@ -1130,7 +1130,7 @@ function renderSelection() {
   $('selection-list').innerHTML = selected.length
     ? selected.map(id => `<span class="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 rounded-lg px-2 py-0.5 mr-1 mb-1 text-xs"><i class="fa-solid ${M[id].icon}"></i>${M[id].title}<button class="ml-1 text-emerald-300 hover:text-white" onclick="toggleSelect('${id}')" aria-label="entfernen">×</button></span>`).join('') +
       `<div class="text-xs text-slate-400 mt-1">Saldo: <strong class="${cost > 0 ? 'text-amber-300' : 'text-emerald-400'}">${sign(-cost)} Mio.</strong> → Budget danach <strong class="${S.budget - cost < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget - cost)} Mio.</strong></div>`
-    : '<span class="text-slate-500 text-xs">Klicke auf bis zu drei Karten. Ohne Auswahl wird die Legislatur übersprungen (Budget sparen).</span>';
+    : '<span class="text-slate-500 text-xs">Klickt auf bis zu drei Karten. Ohne Auswahl wird die Legislatur übersprungen (Budget sparen).</span>';
 
   const ok = selected.length > 0;
   btn.disabled = false;
@@ -1523,7 +1523,7 @@ function renderCity() {
   const mood = S.pop >= 60 ? '😀' : S.pop >= 50 ? '🙂' : S.pop >= 42 ? '😐' : '😠';
   $('city-year').textContent = `Seestadt ${m.year}`;
   $('city-mood').textContent = `${mood} Stimmung ${S.pop} % · ${m.co2pct <= 35 ? '🌤️ klare Luft' : m.co2pct <= 65 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${dark ? ' · 🕯️ Stromknappheit' : ''}`;
-  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: auf Anlagen zeigen oder tippen';
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = eure Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: auf Anlagen zeigen oder tippen';
 }
 
 
@@ -1754,7 +1754,7 @@ function showFinal() {
       <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">${BADGES.map(b => { const e = earned.includes(b), o = owned.has(b.id);
         return `<div class="text-center p-1.5 rounded-lg border ${e ? 'border-amber-400/60 bg-amber-500/10' : 'border-slate-700'}" title="${b.name}: ${b.desc}">
           <div class="text-2xl ${e || o ? '' : 'badge-locked'} ${fresh.includes(b) ? 'animate-bounce' : ''}">${b.icon}</div><div class="text-[9px] leading-tight text-slate-300 mt-0.5">${b.name}</div></div>`; }).join('')}</div>
-      <div class="text-[10px] text-slate-500 mt-2">Grau = noch nie erreicht. Fahre mit der Maus über ein Abzeichen für die Bedingung.</div></div>`;
+      <div class="text-[10px] text-slate-500 mt-2">Grau = noch nie erreicht. Fahrt mit der Maus über ein Abzeichen für die Bedingung.</div></div>`;
   let best = store('pfs-best-' + S.code) || [];
   best.push({ score: ev.score, passed: ev.passed, d: new Date().toISOString().slice(0, 10) });
   best = best.sort((a, b) => b.score - a.score).slice(0, 5);
@@ -1783,11 +1783,11 @@ function showFinal() {
     <details class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><summary class="font-semibold text-slate-200">Alle Beschlüsse</summary>
       <table class="w-full mt-2"><thead class="text-slate-400"><tr><th class="text-left">Leg.</th><th class="text-left">Massnahme</th><th class="text-right">Mio.</th><th class="text-right">Akz.</th></tr></thead><tbody>${decisions}</tbody></table></details>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs">
-      <div class="font-semibold text-slate-200 mb-1">Deine besten Läufe in Szenario ${S.code}</div>
+      <div class="font-semibold text-slate-200 mb-1">Eure besten Läufe in Szenario ${S.code}</div>
       ${best.map((b, i) => `<div class="flex justify-between"><span>${i + 1}. ${b.d}</span><span>${b.score} Punkte · ${b.passed}/4</span></div>`).join('')}
     </div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs text-slate-300">
-      <strong>Zum Nachdenken:</strong> Welche Entscheidung würdest du mit dem Wissen von heute früher treffen? Welche Massnahme hat mehr gekostet (Geld oder Akzeptanz), als sie gebracht hat? Vergleicht eure Pfade im gleichen Szenario-Code.
+      <strong>Zum Nachdenken:</strong> Welche Entscheidung würdet ihr mit dem Wissen von heute früher treffen? Welche Massnahme hat mehr gekostet (Geld oder Akzeptanz), als sie gebracht hat? Vergleicht eure Pfade im gleichen Szenario-Code.
     </div>`;
   showModal(icon, title, body, [
     { label: '<i class="fa-regular fa-copy mr-1"></i>Ergebnis kopieren', fn: () => copyResult(ev) },
@@ -1806,7 +1806,7 @@ function copyResult(ev) {
   const done = () => { const b = document.querySelector('#modal-actions button'); if (b) b.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Kopiert'; };
   const fallback = () => {
     if ($('copy-fallback')) return;
-    $('modal-body').insertAdjacentHTML('afterbegin', `<div><div class="text-xs text-slate-400 mb-1">Kopieren war nicht möglich – markiere den Text und kopiere ihn selbst:</div><textarea id="copy-fallback" rows="6" readonly class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-100">${txt}</textarea></div>`);
+    $('modal-body').insertAdjacentHTML('afterbegin', `<div><div class="text-xs text-slate-400 mb-1">Kopieren war nicht möglich – markiert den Text und kopiert ihn selbst:</div><textarea id="copy-fallback" rows="6" readonly class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-100">${txt}</textarea></div>`);
     $('modal').firstElementChild.scrollTop = 0; $('copy-fallback').select();
   };
   try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
@@ -1836,7 +1836,7 @@ function showIntro() {
   const suggested = (urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode)) ? urlCode.toUpperCase() : randomCode();
   const body = `
     <div class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-100 rounded-lg px-3 py-2">Dies ist die <strong>komplexe Version</strong> mit Energiemodell, Bauzeiten und Winterstrombilanz. Die <strong>einfache Version</strong> zeigt Wirkungen in drei Stufen und bezieht Ernährung, Konsum, Fliegen und Kreislauf mit ein.</div>
-    <p>Du entscheidest in <strong>Gemeinde, Kanton und Bund</strong> – <strong>Seestadt</strong> zeigt, was das vor Ort bedeutet. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
+    <p>Ihr entscheidet in <strong>Gemeinde, Kanton und Bund</strong> – <strong>Seestadt</strong> zeigt, was das vor Ort bedeutet. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
     <div class="grid sm:grid-cols-2 gap-2 text-xs">
       <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-smog text-rose-400 mr-1"></i><strong>CO₂ ≤ ${CFG.co2Target} %</strong> von heute (Rest wird kompensiert)</div>
       <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-shield-halved text-teal-400 mr-1"></i><strong>Versorgungssicherheit ≥ ${CFG.secTarget}</strong> – vor allem im Winter</div>
@@ -1847,8 +1847,8 @@ function showIntro() {
       <li>4 Legislaturen, je <strong>bis zu ${CFG.maxPicks} Beschlüsse</strong> aus ${MEASURES.length} Massnahmen – das Budget reicht aber nicht für alles.</li>
       <li>Grossprojekte haben <strong>Bauzeiten</strong> – manche sind erst eine oder zwei Legislaturen später fertig.</li>
       <li>Massnahmen <strong>wirken zusammen</strong>: Wärmepumpen sparen CO₂, brauchen aber Winterstrom. Wind braucht Netze.</li>
-      <li>Zu Beginn jeder Legislatur wartet ein <strong>Ratsentscheid</strong> mit zwei Optionen, danach liest du im <strong>Seestadter Anzeiger</strong>, was die Leute von deinen Beschlüssen halten.</li>
-      <li>Oben siehst du deine Stadt: Rauch, Smog, Windräder, Tram – alles reagiert auf deine Politik. Sammle <strong>Abzeichen</strong> für besondere Pfade.</li>
+      <li>Zu Beginn jeder Legislatur wartet ein <strong>Ratsentscheid</strong> mit zwei Optionen, danach lest ihr im <strong>Seestadter Anzeiger</strong>, was die Leute von euren Beschlüssen halten.</li>
+      <li>Oben seht ihr eure Stadt: Rauch, Smog, Windräder, Tram – alles reagiert auf eure Politik. Sammelt <strong>Abzeichen</strong> für besondere Pfade.</li>
       <li>Jede Legislatur bringt ein <strong>Ereignis</strong>. Der Szenario-Code legt die Ereignisse fest – so können Gruppen dasselbe Szenario vergleichen.</li>
     </ul>
     <label class="block text-xs text-slate-400">Szenario-Code
