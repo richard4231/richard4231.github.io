@@ -28,6 +28,11 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://richard4231.github.io/26-11-Postfossile-Stadt/einfach.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 
   <!-- Muster erkunden -->
   <url>
