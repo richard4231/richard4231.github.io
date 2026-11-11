@@ -75,6 +75,7 @@
 
   <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
     <div id="city" role="img" aria-label="Animierte Ansicht von Seestadt"></div>
+    <div id="city-tip" class="hidden absolute z-10 pointer-events-none bg-slate-900/95 text-slate-100 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 shadow-lg max-w-[240px]"></div>
     <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
       <span id="city-year" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg font-semibold">Seestadt 2026</span>
       <span id="city-mood" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-slate-200"></span>
@@ -124,7 +125,7 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3 flex justify-between items-center">
         <span>Dashboard <span id="dash-year" class="text-slate-400 font-normal">(2026)</span></span>
-        <span id="stars" class="text-amber-300 text-xs font-semibold" title="Grün = 2 Punkte, Gelb = 1 Punkt (ohne Akzeptanz)"></span>
+        <span id="stars" class="text-amber-300 text-xs font-semibold" title="Anzeigen 60 %, Erwärmung 40 %"></span>
       </h3>
       <div id="gauges" class="grid grid-cols-2 gap-3"></div>
       <p class="text-[11px] text-slate-500 mt-3">Ziel: weniger CO₂ – im Inland und im Ausland. Rund ⅔ unseres Fussabdrucks entstehen im Ausland (BAFU).</p>
@@ -369,7 +370,11 @@ function playRound(S, picks) {
 }
 
 const zone = v => v < CFG.zones[0] ? 0 : v < CFG.zones[1] ? 1 : 2;
-function score(S) { return DIMS.reduce((a, d) => a + zone(S.g[d]), 0); }
+// Sterne (0–10): 60 % Drehmeter (grün 2, gelb 1), 40 % Erwärmung 2100
+function score(S) {
+  const gauges = DIMS.reduce((a, d) => a + zone(S.g[d]), 0);
+  return Math.round(0.6 * gauges + 0.4 * 10 * warming(S.g).p);
+}
 
 // Erwärmung 2100 (°C über vorindustriell), falls weltweit alle so handeln wie Seestadt.
 // Didaktische Vereinfachung: heutige Politik ≈ +2,7 °C (UNEP/Climate Action Tracker), heute ≈ +1,3 °C.
@@ -673,7 +678,7 @@ function showFinal() {
     return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${gaugeText(g.id, v)} · ${z.sym} ${z.t}</div></div>`; }).join('');
   const body = `
     <div class="text-center"><div class="text-3xl text-amber-300 tracking-wider">${'★'.repeat(sc)}<span class="opacity-30">${'★'.repeat(10 - sc)}</span></div>
-      <div class="text-xs text-slate-400 mt-1">${sc} von 10 Punkten (grün = 2, gelb = 1, ohne Akzeptanz) · Szenario ${S.code}</div></div>
+      <div class="text-xs text-slate-400 mt-1">${sc} von 10 Sternen (Anzeigen 60 %, Erwärmung 40 %) · Szenario ${S.code}</div></div>
     <div class="flex flex-wrap justify-center gap-2 text-xs">${['G', 'K', 'B'].map(l => `<span class="px-2 py-0.5 rounded border ${LVL[l].cls}">${LVL[l].t}: ${S.chosen.filter(c => M[c.id].lvl === l).length} Beschlüsse</span>`).join('')}</div>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
@@ -753,11 +758,11 @@ function renderCity() {
   for (let k = 0; k < planes; k++) o.push(`<g class="cloud" style="animation-duration:${26 + k * 9}s;animation-delay:-${k * 11}s"><g transform="translate(0,${26 + k * 16})"><title>Flugverkehr</title><line x1="-90" y1="0" x2="-6" y2="0" stroke="#fff" stroke-width="1.5" opacity=".6"/><path d="M0,0 L-14,-2 L-18,-7 L-15,-7 L-9,-2 L-2,-2 L-6,-9 L-2,-9 L6,-2 L12,-1 L12,1 L6,2 L-2,9 L-6,9 L-2,2 L-9,2 L-15,7 L-18,7 L-14,2 Z" fill="#f8fafc" transform="scale(.9)"/></g></g>`);
 
   // Alpen, Speichersee
-  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"/><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
+  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
   o.push(`<ellipse cx="200" cy="133" rx="${on('stau') ? 30 : 22}" ry="${on('stau') ? 7 : 5}" fill="#38bdf8"/><g class="${cls('stau')}"><polygon points="${on('stau') ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/></g>`);
   if (on('alpin')) { const p = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) p.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`); o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage</title>${p.join('')}</g>`); }
   if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
-  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"/><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
   const kernOn = S.history.length <= 2 || has(S, 'kern');
   o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
   if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
@@ -782,7 +787,7 @@ function renderCity() {
       const lit = !dark && (i * 7 + c * 3 + r * 5) % 4 !== 0;
       wins.push(`<rect x="${x + 4 + c * 8}" y="${top + 7 + r * 11}" width="4" height="5" fill="${lit ? '#fde68a' : '#334155'}" ${dark && (i + c + r) % 5 === 0 ? 'class="flicker"' : ''}/>`);
     }
-    o.push(`<g class="${wood && i % 4 === 1 ? cls('holz') : reno ? cls('daemm') : ''}"><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
+    o.push(`<g class="${wood && i % 4 === 1 ? cls('holz') : reno ? cls('daemm') : ''}"><title>${wood && i % 4 === 1 ? 'Holzbau' : reno ? 'Saniertes Wohnhaus' : 'Wohnhaus'}${smoking.has(i) ? ' – heizt noch mit Öl oder Gas' : ''}</title><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
     o.push(`<rect x="${x + w - 8}" y="${top - 9}" width="4" height="9" fill="#78716c"/>`);
     if (smoking.has(i)) o.push(puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7) % 3.2) + puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7 + 1.6) % 3.2));
     if (order.indexOf(i) >= 10 - nSolar) o.push(`<g class="${cls('solar')}"><polygon points="${x + 3},${top - 1} ${x + 6},${top - 5} ${x + w - 11},${top - 5} ${x + w - 14},${top - 1}" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/></g>`);
@@ -809,21 +814,56 @@ function renderCity() {
   const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
   for (let k = 0; k < slots; k++) {
     const ev = k >= nC, back = k % 2 === 1, dur = 11 + (k * 3.7) % 8, col = ev ? '#22c55e' : vcols[k];
-    o.push(`<g class="${back ? 'drive-back' : 'drive'}" style="animation-duration:${dur}s;animation-delay:-${(k * 4.3) % dur}s"><g transform="translate(0,${back ? 254 : 242})${back ? ' scale(-1,1)' : ''}"><rect y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><circle cx="5" r="2" fill="#111827"/><circle cx="15" r="2" fill="#111827"/>${ev ? '' : puff(-2, -3, '#57534e', 2, 1.4, 0)}</g></g>`);
+    o.push(`<g class="${back ? 'drive-back' : 'drive'}" style="animation-duration:${dur}s;animation-delay:-${(k * 4.3) % dur}s"><g transform="translate(0,${back ? 254 : 242})${back ? ' scale(-1,1)' : ''}"><title>${ev ? 'E-Auto' : 'Benzin- oder Dieselauto'}</title><rect y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><circle cx="5" r="2" fill="#111827"/><circle cx="15" r="2" fill="#111827"/>${ev ? '' : puff(-2, -3, '#57534e', 2, 1.4, 0)}</g></g>`);
   }
   if (on('oev')) o.push(`<g class="drive ${ghost.has('oev') ? 'ghost' : ''}" style="animation-duration:20s;animation-delay:-6s"><g transform="translate(0,242)"><title>Tram</title><line x1="30" y1="-12" x2="36" y2="-27" stroke="#334155"/><rect y="-13" width="66" height="12" rx="3" fill="#2563eb"/><rect y="-7" width="66" height="2" fill="#fff"/><circle cx="10" r="1.8" fill="#111827"/><circle cx="56" r="1.8" fill="#111827"/></g></g>`);
   if (on('velo')) for (let k = 0; k < 3; k++) o.push(`<g class="drive ${ghost.has('velo') ? 'ghost' : ''}" style="animation-duration:${34 + k * 6}s;animation-delay:-${k * 13}s"><g transform="translate(0,234)"><circle r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><circle cx="8" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><line x2="5" y2="-4" stroke="#111827" stroke-width=".8"/><line x1="5" y1="-4" x2="8" stroke="#111827" stroke-width=".8"/><circle cx="5" cy="-8" r="2" fill="${['#ec4899', '#14b8a6', '#eab308'][k]}"/></g></g>`);
   o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
 
   $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  cityTitlesToTips();
   $('city-year').textContent = `Seestadt ${CFG.snapYears[S.history.length - 1]}`;
   $('city-mood').textContent = `${g.acc >= 60 ? '😀' : g.acc >= 45 ? '🙂' : g.acc >= 34 ? '😐' : '😠'} Stimmung ${g.acc} · ${dirt < 0.35 ? '🌤️ klare Luft' : dirt < 0.7 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${planes >= 3 ? ' · ✈️ viel Flugverkehr' : ''}`;
-  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl' : 'Tipp: Maus über Anlagen halten';
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl' : 'Tipp: auf Anlagen zeigen oder tippen';
+}
+
+
+// ---------- Tooltips im Stadtbild (eigene statt Browser-Tooltips: sofort, auch per Antippen) ----------
+function setupCityTips() {
+  const box = $('city'), tip = $('city-tip'), host = box.parentElement;
+  let hideT = null;
+  const hide = () => tip.classList.add('hidden');
+  const show = e => {
+    const el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (!el || !box.contains(el)) { if (e.pointerType !== 'touch') hide(); return; }
+    tip.textContent = el.getAttribute('data-tip');
+    tip.classList.remove('hidden');
+    const r = host.getBoundingClientRect();
+    const x = Math.max(4, Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 4));
+    const y = Math.max(4, Math.min(e.clientY - r.top + 14, r.height - tip.offsetHeight - 4));
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    clearTimeout(hideT);
+    if (e.pointerType === 'touch') hideT = setTimeout(hide, 2500);
+  };
+  box.addEventListener('pointermove', show);
+  box.addEventListener('pointerdown', show);
+  box.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') hide(); });
+}
+// <title>-Elemente in data-tip umwandeln, damit nur unser Tooltip erscheint
+function cityTitlesToTips() {
+  $('city').querySelectorAll('title').forEach(t => {
+    const el = t.parentNode;
+    el.setAttribute('data-tip', t.textContent); t.remove();
+    // dünne Anlagen (Windräder, Masten, Kräne) bekommen eine unsichtbare Trefferfläche
+    if (el.tagName === 'g') {
+      try { const bb = el.getBBox(); if (bb.width > 0 && bb.height > 0) el.insertAdjacentHTML('afterbegin', `<rect x="${bb.x}" y="${bb.y}" width="${bb.width}" height="${bb.height}" fill="transparent"/>`); } catch (e) {}
+    }
+  });
 }
 
 // ---------- Start ----------
 window.addEventListener('DOMContentLoaded', () => {
-  buildGauges(); renderLegend();
+  buildGauges(); renderLegend(); setupCityTips();
   $('sort').onchange = e => { sortMode = e.target.value; renderGrid(); };
   $('btn-confirm').onclick = confirmRound;
   $('btn-new').onclick = intro;

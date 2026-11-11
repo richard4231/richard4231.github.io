@@ -120,6 +120,7 @@
   <!-- Stadtpanorama -->
   <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
     <div id="city" aria-label="Animierte Ansicht von Seestadt" role="img"></div>
+    <div id="city-tip" class="hidden absolute z-10 pointer-events-none bg-slate-900/95 text-slate-100 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 shadow-lg max-w-[240px]"></div>
     <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
       <span id="city-year" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg font-semibold text-slate-100">Seestadt 2026</span>
       <span id="city-mood" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-slate-200"></span>
@@ -184,6 +185,7 @@
         <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="verlauf">Verlauf</button>
         <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="bilanz">Strombilanz</button>
         <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="sektoren">CO₂ nach Sektor</button>
+        <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="erwaermung">Erwärmung</button>
       </div>
       <div class="relative w-full h-56"><canvas id="mainChart"></canvas></div>
       <p id="chart-caption" class="text-[11px] text-slate-400 mt-2 leading-snug"></p>
@@ -244,6 +246,7 @@ const CATS = [
   { id: 'waerme', label: 'Wärme & Gebäude', cls: 'bg-orange-500/15 text-orange-300' },
   { id: 'mobil', label: 'Mobilität', cls: 'bg-violet-500/15 text-violet-300' },
   { id: 'industrie', label: 'Industrie', cls: 'bg-sky-500/15 text-sky-300' },
+  { id: 'regeln', label: 'Verbote & Abgaben', cls: 'bg-rose-500/15 text-rose-300' },
   { id: 'politik', label: 'Politik & Finanzen', cls: 'bg-pink-500/15 text-pink-300' }
 ];
 
@@ -345,12 +348,40 @@ const MEASURES = [
   { id: 'bond', cat: 'politik', icon: 'fa-hand-holding-dollar', title: 'Green Bond (Klimaanleihe)', cost: -50, build: 0, pop: -2,
     desc: 'Die Stadt leiht sich 50 Mio. CHF für Klimaprojekte.',
     effect: '+50 Mio. sofort, aber 6 Mio. Zins pro folgender Legislatur. Belegt einen Beschluss-Platz.', synergy: [],
-    fact: 'Kredite verschieben Kosten in die Zukunft. Lohnt sich, wenn frühe Investitionen später mehr sparen.' }
+    fact: 'Kredite verschieben Kosten in die Zukunft. Lohnt sich, wenn frühe Investitionen später mehr sparen.' },
+
+  { id: 'verbrenner', cat: 'regeln', icon: 'fa-ban', title: 'Verbot neuer Benzin- & Dieselautos', cost: 5, build: 1, pop: -16,
+    desc: 'Neue Autos müssen emissionsfrei sein. Wirkt mit dem Ersatz der Flotte.',
+    effect: 'Fossiler Verkehr −30 Prozentpunkte, mehr Strombedarf.', synergy: ['ev'],
+    fact: 'In Wirklichkeit entscheiden Bund und EU (EU: ab 2035 nur noch emissionsfreie Neuwagen).' },
+  { id: 'heizverbot', cat: 'regeln', icon: 'fa-fire-burner', title: 'Verbot neuer Öl- & Gasheizungen', cost: 5, build: 0, pop: -12,
+    desc: 'Beim Heizungsersatz muss erneuerbar geheizt werden.',
+    effect: 'Fossile Wärme −22 Prozentpunkte, mehr Winterstrom.', synergy: ['daemm'],
+    fact: 'Der Kanton Zürich verlangt das seit 2022. Ohne Winterstrom wird es eng.' },
+  { id: 'treibstoff', cat: 'regeln', icon: 'fa-gas-pump', title: 'Benzin & Diesel teurer (Lenkungsabgabe)', cost: -30, build: 0, pop: -12, abgabe: true,
+    desc: 'Aufschlag pro Liter Treibstoff.',
+    effect: '+30 Mio. Einnahmen, Verkehrsenergie −7 %, schnellerer Umstieg auf E-Autos.', synergy: ['klimabonus'],
+    fact: 'Preise lenken: weniger fahren, sparsamer fahren, umsteigen. Unbeliebt an der Zapfsäule.' },
+  { id: 'heizoel', cat: 'regeln', icon: 'fa-oil-can', title: 'Heizöl & Gas teurer (CO₂-Abgabe)', cost: -30, build: 0, pop: -12, abgabe: true,
+    desc: 'Höhere CO₂-Abgabe auf Brennstoffe.',
+    effect: '+30 Mio. Einnahmen, Wärmebedarf −5 %, schnellerer Heizungsersatz.', synergy: ['klimabonus'],
+    fact: 'Die Schweiz kennt eine CO₂-Abgabe auf Heizöl und Gas; rund zwei Drittel fliessen an die Bevölkerung zurück.' },
+  { id: 'klimabonus', cat: 'regeln', icon: 'fa-envelope-open-text', title: 'Klimabonus: Abgaben zurückverteilen', cost: 5, build: 0, pop: 6,
+    desc: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück.',
+    effect: 'Abgaben sind danach nicht mehr umstritten – bringen aber kein Geld mehr in die Kasse.', synergy: ['treibstoff', 'heizoel'],
+    fact: 'Wer wenig verbraucht, bekommt mehr zurück, als er bezahlt.' }
 ];
+// Wer entscheidet typischerweise? (vereinfacht)
+const LEVEL = { solar: 'K', agri: 'K', wind: 'K', alpin: 'B', kern: 'G', gas: 'B', netz: 'B', smartgrid: 'G', pump: 'G', stau: 'K', smartmeter: 'G',
+  wp: 'K', daemm: 'K', fw: 'G', see: 'G', oev: 'G', ev: 'G', velo: 'G', ind: 'B', h2: 'B', last: 'G', buerger: 'G', bond: 'G',
+  verbrenner: 'B', heizverbot: 'K', treibstoff: 'B', heizoel: 'B', klimabonus: 'B' };
+MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
+const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40' }, K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40' }, B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' } };
 const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 const SHORT = { solar: 'Dach-Solar', agri: 'Agri-PV', wind: 'Wind', alpin: 'Alpin-Solar', kern: 'Kernstrom', gas: 'Reservekraftwerk', netz: 'Netzausbau',
   smartgrid: 'Batterien', pump: 'Pumpspeicher', stau: 'Staumauer', smartmeter: 'Smart Meter', wp: 'Wärmepumpen', daemm: 'Sanierung', fw: 'Geothermie',
-  see: 'Seewasser', oev: 'ÖV', ev: 'E-Mobilität', velo: 'Velonetz', ind: 'Prozesswärme', h2: 'Wasserstoff', last: 'Lastmanagement', buerger: 'Beteiligung', bond: 'Green Bond' };
+  see: 'Seewasser', oev: 'ÖV', ev: 'E-Mobilität', velo: 'Velonetz', ind: 'Prozesswärme', h2: 'Wasserstoff', last: 'Lastmanagement', buerger: 'Beteiligung', bond: 'Green Bond',
+  verbrenner: 'Verbrenner-Verbot', heizverbot: 'Heizungsverbot', treibstoff: 'Treibstoff-Abgabe', heizoel: 'CO₂-Abgabe', klimabonus: 'Klimabonus' };
 // Zeitung: Unterzeile + Stimmen aus der Bevölkerung [pro, contra]
 const NEWS = {
   solar: ['Solarpflicht beschlossen – Dachdecker:innen ausgebucht', ['Hausbesitzer, Seefeld', 'Mein Dach verdient jetzt Geld. Hätte ich früher machen sollen!'], ['Mieterin, Altstadt', 'Und wer zahlt es am Ende? Die Mieter:innen, wie immer.']],
@@ -375,7 +406,12 @@ const NEWS = {
   h2: ['Seestadt steigt ins Wasserstoff-Zeitalter ein', ['Chemiker', 'Sommerstrom in Tanks für den Winter – das ist die Zukunft.'], ['Ökonom', 'Teuer und verlustreich. Ein Prestigeprojekt.']],
   last: ['Fabriken drosseln bei Strommangel – gegen Bezahlung', ['Netzbetreiberin', 'Das ist das günstigste Kraftwerk, das es gibt.'], ['Schichtarbeiter', 'Und wir sitzen dann herum?']],
   buerger: ['Energiegenossenschaft: Ganz Seestadt wird Stromproduzentin', ['Rentnerin', 'Ich habe zehn Anteilscheine – mir gehört jetzt ein Stück Windrad!'], ['Skeptiker', 'Noch ein Verein mit Sitzungen bis Mitternacht.']],
-  bond: ['Klimaanleihe: Stadt macht Schulden fürs Klima', ['Finanzvorsteherin', 'Abwarten wäre am Ende teurer.'], ['Steuerzahlerbund', 'Unsere Kinder zahlen die Zeche.']]
+  bond: ['Klimaanleihe: Stadt macht Schulden fürs Klima', ['Finanzvorsteherin', 'Abwarten wäre am Ende teurer.'], ['Steuerzahlerbund', 'Unsere Kinder zahlen die Zeche.']],
+  verbrenner: ['Aus für Benzin und Diesel bei Neuwagen', ['Klimaforscherin', 'Endlich Planungssicherheit für alle.'], ['Autohändler', 'Wer soll sich jetzt noch ein Auto leisten?']],
+  heizverbot: ['Neue Ölheizungen verboten', ['Heizungsinstallateur', 'Wir bauen nur noch Wärmepumpen ein – Auftragsbücher voll.'], ['Hausbesitzer', 'Bevormundung! Meine Heizung, meine Wahl.']],
+  treibstoff: ['Benzinpreis steigt um 20 Rappen', ['Velokurier', 'Wer Auto fährt, soll auch die Folgen bezahlen.'], ['Pendlerin vom Land', 'Ich habe keinen Bus – ich zahle einfach drauf.']],
+  heizoel: ['Heizöl wird teurer', ['Energieberaterin', 'Jetzt rechnet sich der Umstieg endlich.'], ['Rentner', 'Mein Haus ist alt, ich kann nicht einfach umbauen.']],
+  klimabonus: ['Klimabonus: Geld zurück für alle', ['Familienvater', 'Wir fahren wenig Auto – am Ende haben wir mehr im Portemonnaie.'], ['Ökonom', 'Bürokratie für ein Nullsummenspiel?']]
 };
 
 // --- Zufall (reproduzierbar über Szenario-Code) ---
@@ -553,13 +589,13 @@ function computeMetrics(S, ti, opts = {}) {
 
   // Nachfrage (GWh/Jahr)
   const dStrom = 1000 * (1 - 0.025 * tr) * (A('smartmeter') ? 0.96 : 1) * (flags.stromF || 1);
-  const dWaerme = 1600 * (1 - 0.025 * tr) * (A('daemm') ? 0.80 : 1);
-  const dVerkehr = 900 * (1 - 0.01 * tr) * (A('oev') ? 0.85 : 1) * (A('velo') ? 0.9 : 1) * (flags.verkehrF || 1);
+  const dWaerme = 1600 * (1 - 0.025 * tr) * (A('daemm') ? 0.80 : 1) * (A('heizoel') ? 0.95 : 1);
+  const dVerkehr = 900 * (1 - 0.01 * tr) * (A('oev') ? 0.85 : 1) * (A('velo') ? 0.9 : 1) * (A('treibstoff') ? 0.93 : 1) * (flags.verkehrF || 1);
   const dInd = 600;
 
   // Wärme: fossiler Anteil
   let [hp, fw, see] = fitShares(0.76,
-    0.05 * tr * (flags.hpBoost ? 1.4 : 1) + (A('wp') ? 0.28 : 0),
+    0.05 * tr * (flags.hpBoost ? 1.4 : 1) + (A('wp') ? 0.28 : 0) + (A('heizverbot') ? 0.22 : 0) + (A('heizoel') ? 0.05 : 0),
     (A('fw') ? 0.22 * flags.fwFactor : 0) + (flags.heatExtra || 0),
     A('see') ? 0.12 : 0);
   const fossW = 0.80 - hp - fw - see;
@@ -567,7 +603,7 @@ function computeMetrics(S, ti, opts = {}) {
   const elHeat = dWaerme * (hp / cop + see / 4 + fw * 0.08);
 
   // Verkehr
-  const ev = Math.min(0.9, 0.11 * tr + (A('ev') ? 0.35 : 0));
+  const ev = Math.min(0.9, 0.11 * tr + (A('ev') ? 0.35 : 0) + (A('verbrenner') ? 0.30 : 0) + (A('treibstoff') ? 0.05 : 0));
   const fossV = 0.95 - ev;
   const elTr = dVerkehr * ev * 0.33;
 
@@ -646,8 +682,10 @@ let BASE_CO2 = 1;
 const baseMetrics = () => computeMetrics({ active: new Set(), flags: { fwFactor: 1 } }, 0);
 BASE_CO2 = baseMetrics().co2Total;
 
-function effectiveCost(S, id) {
+const bonusOn = (S, now = []) => S.active.has('klimabonus') || S.chosen.some(c => c.id === 'klimabonus') || now.includes('klimabonus');
+function effectiveCost(S, id, now = []) {
   const m = M[id];
+  if (m.abgabe && bonusOn(S, now)) return 0;   // Einnahmen gehen an die Bevölkerung zurück
   if (m.cost < 0) return m.cost;
   const f = (S.discounts || []).reduce((a, d) => (d.cat === m.cat || d.id === id) ? a * d.f : a, 1);
   return Math.round(m.cost * f);
@@ -655,6 +693,7 @@ function effectiveCost(S, id) {
 function popEffect(S, id, pickedNow = []) {
   const m = M[id];
   let p = m.pop;
+  if (m.abgabe && bonusOn(S, pickedNow)) return 0;
   if (m.infra && p < 0) {
     const hasBuerger = S.active.has('buerger') || S.chosen.some(c => c.id === 'buerger') || pickedNow.includes('buerger');
     if (hasBuerger) p *= 0.5;
@@ -671,7 +710,7 @@ function playRound(S, picks) {
 
   // 1. Beschlüsse
   for (const id of picks) {
-    const cost = effectiveCost(S, id);
+    const cost = effectiveCost(S, id, picks);
     const p = popEffect(S, id, picks);
     S.budget -= cost; S.pop += p;
     S.chosen.push({ id, round: S.round, cost, pop: p });
@@ -896,7 +935,7 @@ function cardBlockReason(id) {
   if (S.over) return 'Spiel beendet';
   if (selected.includes(id)) return null;
   if (selected.length >= CFG.maxPicks) return `Bereits ${CFG.maxPicks} Beschlüsse gewählt – entferne zuerst einen`;
-  const after = S.budget - selected.reduce((a, x) => a + effectiveCost(S, x), 0) - effectiveCost(S, id);
+  const after = S.budget - selected.reduce((a, x) => a + effectiveCost(S, x, selected), 0) - effectiveCost(S, id, [...selected, id]);
   if (after < CFG.minBudget) return `Zu teuer: Kreditlimit (${CFG.minBudget} Mio.) würde überschritten`;
   return null;
 }
@@ -927,7 +966,7 @@ function renderMeasures() {
   for (const m of list) {
     const isSel = selected.includes(m.id);
     const block = cardBlockReason(m.id);
-    const cost = effectiveCost(S, m.id);
+    const cost = effectiveCost(S, m.id, selected);
     const pop = popEffect(S, m.id, selected);
     const rr = readyRound(S, m.id);
     const late = rr > CFG.rounds;
@@ -948,7 +987,7 @@ function renderMeasures() {
     card.onclick = e => { if (e.target.closest('details')) return; toggle(); };
     card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
 
-    const costHtml = m.cost < 0 ? `<strong class="text-emerald-400">+${-cost} M</strong>` : `<strong class="text-amber-300">${cost} M</strong>${cost !== m.cost ? `<s class="text-slate-500 ml-1">${m.cost}</s>` : ''}`;
+    const costHtml = m.abgabe && cost === 0 ? `<strong class="text-slate-300">→ Klimabonus</strong>` : m.cost < 0 ? `<strong class="text-emerald-400">+${-cost} M</strong>` : `<strong class="text-amber-300">${cost} M</strong>${cost !== m.cost ? `<s class="text-slate-500 ml-1">${m.cost}</s>` : ''}`;
     const fcst = expert ? '' : `<div class="mt-2 flex flex-wrap gap-1.5 text-[10px]">
         <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose CO₂ 2045 (Prozentpunkte), inkl. Wechselwirkungen mit deiner Auswahl">CO₂ <strong class="${mg.co2 < 0 ? 'text-emerald-400' : mg.co2 > 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.co2)} Pp</strong></span>
         <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose Versorgungssicherheit 2045 (Punkte)">Sicherheit <strong class="${mg.sec > 0 ? 'text-emerald-400' : mg.sec < 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.sec)}</strong></span>
@@ -958,7 +997,7 @@ function renderMeasures() {
     card.innerHTML = `
       <div>
         <div class="flex items-center justify-between mb-1.5 gap-2">
-          <span class="text-[10px] px-2 py-0.5 rounded font-medium ${cat.cls}">${cat.label}</span>
+          <span class="flex items-center gap-1.5"><span class="text-[10px] px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span><span class="text-[10px] px-2 py-0.5 rounded font-medium ${cat.cls}">${cat.label}</span></span>
           <div class="w-5 h-5 rounded-full grid place-items-center text-[10px] ${isSel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}"><i class="fa-solid ${isSel ? 'fa-check' : 'fa-plus'}"></i></div>
         </div>
         <h4 class="font-semibold text-slate-100 text-[13px] leading-tight flex gap-2"><i class="fa-solid ${m.icon} text-emerald-400 mt-0.5"></i><span>${m.title}</span></h4>
@@ -1002,7 +1041,7 @@ function renderSelection() {
   const btn = $('confirm-btn');
   if (S.over) { $('selection-panel').classList.add('hidden'); return; }
   $('selection-panel').classList.remove('hidden');
-  const cost = selected.reduce((a, id) => a + effectiveCost(S, id), 0);
+  const cost = selected.reduce((a, id) => a + effectiveCost(S, id, selected), 0);
   $('selection-list').innerHTML = selected.length
     ? selected.map(id => `<span class="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 rounded-lg px-2 py-0.5 mr-1 mb-1 text-xs"><i class="fa-solid ${M[id].icon}"></i>${M[id].title}<button class="ml-1 text-emerald-300 hover:text-white" onclick="toggleSelect('${id}')" aria-label="entfernen">×</button></span>`).join('') +
       `<div class="text-xs text-slate-400 mt-1">Saldo: <strong class="${cost > 0 ? 'text-amber-300' : 'text-emerald-400'}">${sign(-cost)} Mio.</strong> → Budget danach <strong class="${S.budget - cost < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget - cost)} Mio.</strong></div>`
@@ -1077,6 +1116,23 @@ function chartBase() {
   };
 }
 
+// Erwärmung 2100, wenn weltweit alle so handeln (didaktische Vereinfachung):
+// heutige Politik ≈ +2,7 °C, Ziel-Pfad (≤ 25 % CO₂ 2045) ≈ +1,5 °C, heute ≈ +1,3 °C
+const TEMP = { now: 1.3, nowYear: 2025, bau: 2.7, best: 1.5 };
+function warming2100() {
+  const bau = bauLine()[4];
+  const fin = S.over ? current().co2pct : projected([], 'final').co2pct;
+  const p = clamp((bau - fin) / (bau - 25));
+  return { p, t: TEMP.bau - (TEMP.bau - TEMP.best) * p };
+}
+function tempCurve(t2100, p, year) {
+  const t = (year - TEMP.nowYear) / (2100 - TEMP.nowYear);
+  const bau = TEMP.now + (TEMP.bau - TEMP.now) * t;
+  return Math.min(bau, TEMP.now + (t2100 - TEMP.now) * (1 - Math.pow(1 - t, 1 + 2.5 * p)));
+}
+const fmt1 = x => x.toFixed(1).replace('.', ',');
+const tempCol = t => t <= 1.8 ? '#34d399' : t <= 2.2 ? '#fbbf24' : '#f87171';
+
 function bauLine() {
   const empty = { active: new Set(), flags: { fwFactor: 1 } };
   return CFG.snapYears.map((_, i) => computeMetrics(empty, i).co2pct);
@@ -1146,6 +1202,24 @@ function renderChart() {
     table = [['Jahr', ...keys.map(k => k[0]), 'Total'], ...labels.map((l, i) => snaps[i] ? [l, ...keys.map(([, k]) => fmt(snaps[i].co2[k])), fmt(snaps[i].co2Total)] : [l, '–', '–', '–', '–', '–'])];
   }
 
+  if (chartTab === 'erwaermung') {
+    const w = warming2100();
+    const yrs = Array.from({ length: 16 }, (_, i) => TEMP.nowYear + i * 5);
+    const opts = chartBase();
+    opts.scales.y.min = 1.0; opts.scales.y.max = 3.0;
+    opts.scales.y.ticks.callback = v => fmt1(v) + '°';
+    opts.scales.y.title = { display: true, text: '°C über vorindustriell', color: '#94a3b8', font: { size: 10 } };
+    opts.scales.x.ticks.callback = function (v, i) { return yrs[i] % 25 === 0 ? yrs[i] : ''; };
+    opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: +${fmt1(c.raw)} °C` };
+    cfg = { type: 'line', data: { labels: yrs.map(String), datasets: [
+      { label: 'Wenn alle so handeln', data: yrs.map(y => +tempCurve(w.t, w.p, y).toFixed(2)), borderColor: tempCol(w.t), backgroundColor: tempCol(w.t), borderWidth: 3, pointRadius: 0, tension: 0.3 },
+      { label: 'Ohne Klimaschutz', data: yrs.map(y => +tempCurve(TEMP.bau, 0, y).toFixed(2)), borderColor: '#94a3b8', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
+      { label: 'Paris 1,5 °C', data: yrs.map(() => 1.5), borderColor: '#34d399', borderDash: [2, 3], borderWidth: 1, pointRadius: 0, backgroundColor: 'transparent' }
+    ] }, options: opts };
+    caption = `<strong style="color:${tempCol(w.t)}">+${fmt1(w.t)} °C</strong> statt +${fmt1(TEMP.bau)} °C bis 2100 – wenn alle so handeln${S.over ? '' : ' (mit allem, was beschlossen ist)'}.`;
+    table = [['Jahr', 'Wenn alle so handeln', 'Ohne Klimaschutz'], ...[2025, 2050, 2075, 2100].map(y => [y, '+' + fmt1(tempCurve(w.t, w.p, y)) + ' °C', '+' + fmt1(tempCurve(TEMP.bau, 0, y)) + ' °C'])];
+  }
+
   chart = new Chart(ctx, cfg);
   $('chart-caption').innerHTML = caption;
   $('chart-table').innerHTML = `<table class="data w-full text-[11px]"><thead class="text-slate-300">${'<tr>' + table[0].map(h => `<th>${h}</th>`).join('') + '</tr>'}</thead><tbody>${table.slice(1).map(r => '<tr class="border-t border-slate-700/60">' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('')}</tbody></table>`;
@@ -1191,7 +1265,7 @@ function renderCity() {
   [[70, 20, 34], [95, 55, 58], [120, 80, 22]].forEach(([dur, del, y]) => o.push(`<g class="cloud" style="animation-duration:${dur}s;animation-delay:-${del}s"><g transform="translate(0,${y})" fill="${dirt > 0.5 ? '#d6d3d1' : '#ffffff'}" opacity=".85"><ellipse cx="0" cy="0" rx="30" ry="9"/><ellipse cx="14" cy="-7" rx="17" ry="10"/><ellipse cx="-12" cy="-3" rx="12" ry="7"/></g></g>`));
 
   // Alpen mit Speichersee
-  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"/>`);
+  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon>`);
   o.push(`<polygon points="120,52 165,112 140,112 125,80" fill="#64748b" opacity=".6"/><polygon points="205,72 250,128 228,128 212,96" fill="#64748b" opacity=".6"/>`);
   o.push(`<g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/><polygon points="292,102 300,92 308,103 301,100"/></g>`);
   const stauOn = has('stau');
@@ -1212,7 +1286,7 @@ function renderCity() {
        <g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${rot(slow ? 4.5 : 2.6 + i * 0.3)}</g></g>`).join('') + `</g>`);
   }
   // Jura-Hügel
-  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"/><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
   // Kernkraftwerk in der Ferne
   o.push(`<g opacity="${m.kernActive ? 1 : 0.45}"><title>${m.kernActive ? 'Kernkraftwerk (Liefervertrag aktiv)' : 'Kernkraftwerk – Vertrag ausgelaufen'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${m.kernActive ? [0, 1.3, 2.6].map(d => puff(957, 100, '#ffffff', 6, 4, d, 'steam')).join('') : ''}</g>`);
 
@@ -1254,7 +1328,7 @@ function renderCity() {
       const flick = dark && (i + c + r) % 5 === 0;
       wins.push(`<rect x="${x + 4 + c * 8}" y="${top + 7 + r * 11}" width="4" height="5" fill="${lit ? '#fde68a' : '#334155'}" ${flick ? 'class="flicker"' : ''}/>`);
     }
-    o.push(`<g class="${reno ? cls('daemm') : ''}"><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
+    o.push(`<g class="${reno ? cls('daemm') : ''}"><title>${reno ? 'Saniertes Wohnhaus' : 'Wohnhaus'}${smoking.has(i) ? ' – heizt noch mit Öl oder Gas' : ''}</title><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
     o.push(`<rect x="${x + w - 8}" y="${top - 9}" width="4" height="9" fill="#78716c"/>`);
     if (smoking.has(i)) o.push(puff(x + w - 6, top - 11, dirt > 0.5 ? '#57534e' : '#78716c', 3, 3.2, (i * 0.7) % 3.2) + puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7 + 1.6) % 3.2));
     const solarHere = smokeOrder.indexOf(i) >= 10 - nSolarNow;
@@ -1290,7 +1364,7 @@ function renderCity() {
   // Fahrzeuge
   const slots = 7 - (has('oev') ? 2 : 0);
   const nC = Math.min(slots, Math.round(clamp(m.fossV / 0.95) * 7));
-  const car = (col, ev) => `<rect x="0" y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><rect x="6" y="-9" width="6" height="3" fill="#bae6fd"/><circle cx="5" cy="0" r="2" fill="#111827"/><circle cx="15" cy="0" r="2" fill="#111827"/>${ev ? '<text x="10" y="-1.5" text-anchor="middle" font-size="5" fill="#fef08a">⚡</text>' : puff(-2, -3, '#57534e', 2, 1.4, 0)}`;
+  const car = (col, ev) => `<title>${ev ? 'E-Auto' : 'Benzin- oder Dieselauto'}</title><rect x="0" y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><rect x="6" y="-9" width="6" height="3" fill="#bae6fd"/><circle cx="5" cy="0" r="2" fill="#111827"/><circle cx="15" cy="0" r="2" fill="#111827"/>${ev ? '<text x="10" y="-1.5" text-anchor="middle" font-size="5" fill="#fef08a">⚡</text>' : puff(-2, -3, '#57534e', 2, 1.4, 0)}`;
   const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
   for (let k = 0; k < slots; k++) {
     const ev = k >= nC;
@@ -1311,10 +1385,45 @@ function renderCity() {
   o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
 
   $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  cityTitlesToTips();
   const mood = S.pop >= 60 ? '😀' : S.pop >= 50 ? '🙂' : S.pop >= 42 ? '😐' : '😠';
   $('city-year').textContent = `Seestadt ${m.year}`;
   $('city-mood').textContent = `${mood} Stimmung ${S.pop} % · ${m.co2pct <= 35 ? '🌤️ klare Luft' : m.co2pct <= 65 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${dark ? ' · 🕯️ Stromknappheit' : ''}`;
-  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: Maus über Anlagen halten';
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: auf Anlagen zeigen oder tippen';
+}
+
+
+// ---------- Tooltips im Stadtbild (eigene statt Browser-Tooltips: sofort, auch per Antippen) ----------
+function setupCityTips() {
+  const box = $('city'), tip = $('city-tip'), host = box.parentElement;
+  let hideT = null;
+  const hide = () => tip.classList.add('hidden');
+  const show = e => {
+    const el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (!el || !box.contains(el)) { if (e.pointerType !== 'touch') hide(); return; }
+    tip.textContent = el.getAttribute('data-tip');
+    tip.classList.remove('hidden');
+    const r = host.getBoundingClientRect();
+    const x = Math.max(4, Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 4));
+    const y = Math.max(4, Math.min(e.clientY - r.top + 14, r.height - tip.offsetHeight - 4));
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    clearTimeout(hideT);
+    if (e.pointerType === 'touch') hideT = setTimeout(hide, 2500);
+  };
+  box.addEventListener('pointermove', show);
+  box.addEventListener('pointerdown', show);
+  box.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') hide(); });
+}
+// <title>-Elemente in data-tip umwandeln, damit nur unser Tooltip erscheint
+function cityTitlesToTips() {
+  $('city').querySelectorAll('title').forEach(t => {
+    const el = t.parentNode;
+    el.setAttribute('data-tip', t.textContent); t.remove();
+    // dünne Anlagen (Windräder, Masten, Kräne) bekommen eine unsichtbare Trefferfläche
+    if (el.tagName === 'g') {
+      try { const bb = el.getBBox(); if (bb.width > 0 && bb.height > 0) el.insertAdjacentHTML('afterbegin', `<rect x="${bb.x}" y="${bb.y}" width="${bb.width}" height="${bb.height}" fill="transparent"/>`); } catch (e) {}
+    }
+  });
 }
 
 // ---------- Ablauf ----------
@@ -1471,6 +1580,10 @@ function showFinal() {
       ${tile(ev.goals.budget, 'Budget', `${fmt(S.budget)} Mio. CHF`, 'Solide Finanzen', 'Schulden hinterlassen')}
       ${tile(ev.goals.pop, 'Akzeptanz', `${S.pop} %`, 'Rückhalt in der Bevölkerung', S.ousted ? 'Abgewählt' : 'Knapp')}
     </div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
+      <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
+      <div class="text-right"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${tempCol(warming2100().t)}">+${fmt1(warming2100().t)} °C</strong></div>
+    </div>
     ${badgeHtml}
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
       <div class="text-xs font-semibold text-slate-200 mb-2">Was die Analyse zeigt</div>
@@ -1532,7 +1645,7 @@ function showIntro() {
   const suggested = (urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode)) ? urlCode.toUpperCase() : randomCode();
   const body = `
     <div class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-100 rounded-lg px-3 py-2">Dies ist die <strong>komplexe Version</strong> mit Energiemodell, Bauzeiten und Winterstrombilanz. Die <strong>einfache Version</strong> zeigt Wirkungen in drei Stufen und bezieht Ernährung, Konsum, Fliegen und Kreislauf mit ein.</div>
-    <p>Du leitest die Energiepolitik von <strong>Seestadt</strong>. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
+    <p>Du entscheidest in <strong>Gemeinde, Kanton und Bund</strong> – <strong>Seestadt</strong> zeigt, was das vor Ort bedeutet. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
     <div class="grid sm:grid-cols-2 gap-2 text-xs">
       <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-smog text-rose-400 mr-1"></i><strong>CO₂ ≤ ${CFG.co2Target} %</strong> von heute (Rest wird kompensiert)</div>
       <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-shield-halved text-teal-400 mr-1"></i><strong>Versorgungssicherheit ≥ ${CFG.secTarget}</strong> – vor allem im Winter</div>
@@ -1579,6 +1692,7 @@ function showModelInfo(fromIntro) {
 // ---------- Init ----------
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.chart-tab').forEach(b => b.onclick = () => { chartTab = b.dataset.tab; renderChart(); });
+  setupCityTips();
   $('sort-select').onchange = e => { sortMode = e.target.value; renderMeasures(); };
   $('expert-toggle').onchange = e => { expert = e.target.checked; store('pfs-expert', expert); renderMeasures(); renderSelection(); };
   expert = !!store('pfs-expert'); $('expert-toggle').checked = expert;
