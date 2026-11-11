@@ -25,9 +25,14 @@
         "img": "screenshots/25-11-greenhouse-gamble.png"
       },
       {
-        "title": "Seestadt 2045",
+        "title": "Seestadt 2045 – einfache Version",
+        "url": "https://richard4231.github.io/26-11-Postfossile-Stadt/einfach.html",
+        "img": "screenshots/26-11-Seestadt-einfach.png"
+      },
+      {
+        "title": "Seestadt 2045 – komplexe Version",
         "url": "https://richard4231.github.io/26-11-Postfossile-Stadt/",
-        "img": "screenshots/26-11-Postfossile-Stadt.png"
+        "img": "screenshots/26-11-Seestadt-komplex.png"
       }
     ]
   },
