@@ -1244,6 +1244,14 @@ function tempCurve(t2100, p, year) {
   return Math.min(bau, TEMP.now + (t2100 - TEMP.now) * (1 - Math.pow(1 - t, 1 + 2.5 * p)));
 }
 const fmt1 = x => x.toFixed(1).replace('.', ',');
+// Unsicherheitsband (vereinfacht): wächst mit der Zeit und mit der zusätzlichen Erwärmung, nach oben breiter
+// (stärkere Erwärmung wahrscheinlicher als schwächere). Grössenordnung wie die IPCC-Spannen der Szenarien.
+function tempBand(T, year) {
+  const t = (year - TEMP.nowYear) / (2100 - TEMP.nowYear);
+  const hw = (0.1 + 0.3 * Math.max(0, T - TEMP.now)) * t;
+  return [T - 0.8 * hw, T + 1.2 * hw];
+}
+const rangeStr = T => { const [lo, hi] = tempBand(T, 2100); return `${fmt1(lo)}–${fmt1(hi)}`; };
 const tempCol = t => t <= 1.8 ? '#34d399' : t <= 2.2 ? '#fbbf24' : '#f87171';
 
 function bauLine() {
@@ -1320,17 +1328,22 @@ function renderChart() {
     const w = warming2100();
     const yrs = Array.from({ length: 16 }, (_, i) => TEMP.nowYear + i * 5);
     const opts = chartBase();
-    opts.scales.y.min = 1.0; opts.scales.y.max = 3.0;
+    opts.scales.y.min = 1.0; opts.scales.y.max = 3.5;
     opts.scales.y.ticks.callback = v => fmt1(v) + '°';
     opts.scales.y.title = { display: true, text: '°C über vorindustriell', color: '#94a3b8', font: { size: 10 } };
     opts.scales.x.ticks.callback = function (v, i) { return yrs[i] % 25 === 0 ? yrs[i] : ''; };
     opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: +${fmt1(c.raw)} °C` };
+    opts.plugins.tooltip.filter = c => !c.dataset.isBand;
+    opts.plugins.legend.labels.filter = l => l.text !== '_band_lo';
+    const curC = y => tempCurve(w.t, w.p, y);
     cfg = { type: 'line', data: { labels: yrs.map(String), datasets: [
+      { label: '_band_lo', isBand: true, data: yrs.map(y => +tempBand(curC(y), y)[0].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: 'transparent', tension: 0.3 },
+      { label: 'Wahrscheinlicher Bereich', isBand: true, data: yrs.map(y => +tempBand(curC(y), y)[1].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: tempCol(w.t) + '33', fill: '-1', tension: 0.3 },
       { label: 'Wenn alle so handeln', data: yrs.map(y => +tempCurve(w.t, w.p, y).toFixed(2)), borderColor: tempCol(w.t), backgroundColor: tempCol(w.t), borderWidth: 3, pointRadius: 0, tension: 0.3 },
       { label: 'Ohne Klimaschutz', data: yrs.map(y => +tempCurve(TEMP.bau, 0, y).toFixed(2)), borderColor: '#94a3b8', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
       { label: 'Paris 1,5 °C', data: yrs.map(() => 1.5), borderColor: '#34d399', borderDash: [2, 3], borderWidth: 1, pointRadius: 0, backgroundColor: 'transparent' }
     ] }, options: opts };
-    caption = `<strong style="color:${tempCol(w.t)}">+${fmt1(w.t)} °C</strong> statt +${fmt1(TEMP.bau)} °C bis 2100 – wenn alle so handeln${S.over ? '' : ' (mit allem, was beschlossen ist)'}.`;
+    caption = `<strong style="color:${tempCol(w.t)}">+${fmt1(w.t)} °C</strong> (wahrscheinlich ${rangeStr(w.t)} °C) statt +${fmt1(TEMP.bau)} °C bis 2100 – wenn alle so handeln${S.over ? '' : ' (mit allem, was beschlossen ist)'}.`;
     table = [['Jahr', 'Wenn alle so handeln', 'Ohne Klimaschutz'], ...[2025, 2050, 2075, 2100].map(y => [y, '+' + fmt1(tempCurve(w.t, w.p, y)) + ' °C', '+' + fmt1(tempCurve(TEMP.bau, 0, y)) + ' °C'])];
   }
 
@@ -1755,7 +1768,7 @@ function showFinal() {
     </div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
       <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
-      <div class="text-right"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${tempCol(warming2100().t)}">+${fmt1(warming2100().t)} °C</strong></div>
+      <div class="text-right"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${tempCol(warming2100().t)}">+${fmt1(warming2100().t)} °C</strong><div class="text-[10px] text-slate-400">wahrscheinlich ${rangeStr(warming2100().t)} °C</div></div>
     </div>
     ${badgeHtml}
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
