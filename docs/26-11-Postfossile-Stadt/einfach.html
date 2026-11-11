@@ -16,6 +16,7 @@
     --bad: #e66767; --mid: #c98500; --good: #199e70; --accent: #34d399;
   }
   body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  #grid { align-content: start; }
   .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
   .scroll-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
   .card { transition: border-color .15s, background-color .15s, transform .15s; }
@@ -56,7 +57,7 @@
     #city svg { height: clamp(110px, 21vh, 230px); }
     #left, #right { min-height: 0; }
     #left { gap: 10px; }
-    #grid { max-height: none; flex: 1 1 auto; min-height: 0; }
+    #grid { max-height: none; flex: 1 1 auto; min-height: 0; align-content: start; }
     #tray { flex: 0 0 auto; padding-top: 12px; padding-bottom: 12px; }
     #right { overflow-y: auto; padding-right: 4px; gap: 12px; }
     #gauges { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
