@@ -185,7 +185,8 @@ const CATS = [
   { id: 'mobil', label: 'Mobilität & Fliegen', icon: '🚋' },
   { id: 'essen', label: 'Ernährung & Landwirtschaft', icon: '🥕' },
   { id: 'kreislauf', label: 'Konsum & Kreislauf', icon: '♻️' },
-  { id: 'politik', label: 'Industrie & Politik', icon: '🏛️' }
+  { id: 'regeln', label: 'Verbote & Abgaben', icon: '⚖️' },
+  { id: 'politik', label: 'Industrie & Mitsprache', icon: '🏛️' }
 ];
 
 // fx: Wirkung pro Anzeige (3 gross, 2 mittel, 1 wenig, -1 rückläufig) · cost 1–3 · acc: 1 beliebt, 0 neutral, -1 umstritten
@@ -256,7 +257,20 @@ const MEASURES = [
   { id: 'bildung', cat: 'politik', icon: '🎓', title: 'Klimabildung & Energieberatung', cost: 1, acc: 1, fx: { flug: 1, waren: 1, co2: 1 },
     why: 'Wissen verändert Gewohnheiten – langsam und in kleinen Schritten, dafür überall ein wenig.' },
   { id: 'buerger', cat: 'politik', icon: '🤝', title: 'Energiegenossenschaft & Mitsprache', cost: 1, acc: 1, fx: {},
-    why: 'Wer mitbesitzt und mitredet, akzeptiert Anlagen eher: Umstrittene Massnahmen kosten danach nur noch halb so viel Akzeptanz.' }
+    why: 'Wer mitbesitzt und mitredet, akzeptiert Anlagen eher: Umstrittene Massnahmen kosten danach nur noch halb so viel Akzeptanz.' },
+
+  { id: 'verbrenner', cat: 'regeln', icon: '🚫', title: 'Verbot neuer Benzin- & Dieselautos', cost: 1, acc: -1, fx: { co2: 3, strom: -1 },
+    why: 'Wirkt stark, weil alle umsteigen müssen – E-Autos brauchen aber Strom. In Wirklichkeit entscheiden das Bund und EU (EU: ab 2035).' },
+  { id: 'heizverbot', cat: 'regeln', icon: '🛢️', title: 'Verbot neuer Öl- & Gasheizungen', cost: 1, acc: -1, fx: { co2: 3, strom: -1 },
+    why: 'Beim Ersatz muss erneuerbar geheizt werden – so wie im Kanton Zürich seit 2022. Mehr Wärmepumpen heisst mehr Winterstrom.' },
+  { id: 'treibstoff', cat: 'regeln', icon: '⛽', title: 'Benzin & Diesel teurer (Lenkungsabgabe)', cost: -2, acc: -1, abgabe: true, fx: { co2: 2 },
+    why: 'Höhere Preise lenken: weniger fahren, sparsamer fahren, umsteigen. Bringt Geld in die Kasse – und Ärger an der Zapfsäule.' },
+  { id: 'heizoel', cat: 'regeln', icon: '🔥', title: 'Heizöl & Gas teurer (CO₂-Abgabe)', cost: -2, acc: -1, abgabe: true, fx: { co2: 2 },
+    why: 'Die Schweiz kennt eine CO₂-Abgabe auf Heizöl und Gas. Sie macht den Umstieg auf erneuerbares Heizen attraktiver.' },
+  { id: 'flugabgabe', cat: 'regeln', icon: '🎫', title: 'Flugticket-Abgabe', cost: -1, acc: -1, abgabe: true, fx: { flug: 2 },
+    why: 'Fliegen wird teurer, Nachtzug und Ferien in der Nähe attraktiver. 2021 lehnte das Stimmvolk ein CO₂-Gesetz mit Flugticketabgabe ab.' },
+  { id: 'klimabonus', cat: 'regeln', icon: '💌', title: 'Klimabonus: Abgaben zurückverteilen', cost: 1, acc: 1, fx: {},
+    why: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück – wer wenig verbraucht, gewinnt. Danach bringen Abgaben der Stadt kein Geld mehr, sind aber nicht mehr umstritten.' }
 ];
 const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 
@@ -303,8 +317,12 @@ function climateLevel(m) {
   return pos.length ? { lv: Math.max(...pos) } : { lv: -1 };
 }
 function powerLevel(m) { return m.fx.strom === undefined ? { lv: 1, none: true } : { lv: m.fx.strom }; }
+const bonusOn = (S, now = []) => has(S, 'klimabonus') || now.includes('klimabonus');
+// Mit Klimabonus fliessen Abgaben an die Bevölkerung zurück: kein Geld für die Stadt, aber nicht mehr umstritten
+function costOf(S, id, now = []) { return M[id].abgabe && bonusOn(S, now) ? 0 : M[id].cost; }
 function accEffect(S, id, now = []) {
   const a = M[id].acc;
+  if (M[id].abgabe && bonusOn(S, now)) return 0;
   if (a < 0 && (has(S, 'buerger') || now.includes('buerger'))) return CFG.accBuerger;
   return CFG.acc[a];
 }
@@ -315,7 +333,7 @@ function playRound(S, picks) {
   const before = { ...S.g }, R = { picks: [...picks], lines: [] };
   for (const id of picks) {
     const m = M[id];
-    S.coins -= m.cost;
+    S.coins -= costOf(S, id, picks);
     for (const d of DIMS) if (m.fx[d] !== undefined) S.g[d] += CFG.pts[m.fx[d]];
     S.g.acc += accEffect(S, id, picks);
     S.chosen.push({ id, round: S.round });
@@ -479,7 +497,7 @@ function renderHeader() {
   $('round-display').textContent = S.over ? 'Beendet · 2045' : `Legislatur ${S.round} · ${y[0]}–${y[1]}`;
   $('dash-year').textContent = `(${CFG.snapYears[S.history.length - 1]})`;
   $('phase-title').textContent = S.over ? 'Spiel beendet' : `Legislatur ${S.round}: Wähle bis zu ${S.picks} Massnahmen`;
-  const left = S.coins - selected.reduce((a, id) => a + M[id].cost, 0);
+  const left = S.coins - selected.reduce((a, id) => a + costOf(S, id, selected), 0);
   $('coins').textContent = coinStr(left);
   $('coins').title = `${left} Budgetpunkte übrig`;
 }
@@ -505,8 +523,8 @@ function renderTabs() {
 function blockReason(id) {
   if (selected.includes(id)) return null;
   if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt – entferne zuerst eine`;
-  const left = S.coins - selected.reduce((a, x) => a + M[x].cost, 0);
-  if (M[id].cost > left) return `Budget reicht nicht: braucht ${'●'.repeat(M[id].cost)}, übrig ${left > 0 ? '●'.repeat(left) : 'nichts'}`;
+  const left = S.coins - selected.reduce((a, x) => a + costOf(S, x, selected), 0);
+  if (costOf(S, id, selected) > left) return `Budget reicht nicht: braucht ${'●'.repeat(M[id].cost)}, übrig ${left > 0 ? '●'.repeat(left) : 'nichts'}`;
   return null;
 }
 
@@ -531,7 +549,8 @@ function renderGrid() {
     const sel = selected.includes(m.id), block = blockReason(m.id);
     const cl = climateLevel(m), pw = powerLevel(m);
     const where = CLIMATE.filter(d => (m.fx[d] || 0) > 0).map(d => DIM_LABEL[d]);
-    const acc = m.acc > 0 ? ['👍 beliebt', 'text-emerald-300'] : m.acc < 0 ? [accEffect(S, m.id, selected) === CFG.accBuerger ? '👎 umstritten (gedämpft)' : '👎 umstritten', 'text-rose-300'] : ['😐 neutral', 'text-slate-300'];
+    const ae = accEffect(S, m.id, selected);
+    const acc = m.acc > 0 ? ['👍 beliebt', 'text-emerald-300'] : m.acc < 0 && ae === 0 ? ['😐 neutral dank Klimabonus', 'text-slate-300'] : m.acc < 0 ? [ae === CFG.accBuerger ? '👎 umstritten (gedämpft)' : '👎 umstritten', 'text-rose-300'] : ['😐 neutral', 'text-slate-300'];
     const c = document.createElement('div');
     c.className = 'card rounded-xl p-3.5 border flex flex-col justify-between ' + (sel ? 'bg-slate-800/90 border-emerald-500 ring-2 ring-emerald-500/30' : block ? 'bg-slate-800/30 border-slate-800 opacity-75' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer');
     c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-pressed', sel);
@@ -554,7 +573,7 @@ function renderGrid() {
       </div>
       ${block ? `<div class="mt-2 text-[10px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5">🔒 ${block}</div>` : ''}
       <div class="mt-3 pt-2 border-t border-slate-700/60 flex justify-between text-[11px]">
-        <span title="Kosten in Budgetpunkten">Kosten <strong class="text-amber-300 tracking-wide">${'●'.repeat(m.cost)}</strong></span>
+        ${m.abgabe && costOf(S, m.id, selected) === 0 ? `<span title="Geht an die Bevölkerung zurück">Einnahmen <strong class="text-slate-300">→ Klimabonus</strong></span>` : m.cost < 0 ? `<span title="Einnahmen in Budgetpunkten">Einnahmen <strong class="text-emerald-300 tracking-wide">+${'●'.repeat(-m.cost)}</strong></span>` : `<span title="Kosten in Budgetpunkten">Kosten <strong class="text-amber-300 tracking-wide">${'●'.repeat(m.cost)}</strong></span>`}
         <span class="${acc[1]}">${acc[0]}</span>
       </div>
       <details class="mt-2 text-[11px] text-slate-400"><summary class="hover:text-slate-200">💡 Warum?</summary><p class="mt-1 leading-snug">${m.why}</p></details>`;
@@ -625,6 +644,7 @@ function insights() {
   if (zone(g.co2) === 0) out.push('🏭 <strong>Inland:</strong> Heizen und Verkehr sind die grössten Brocken. Ohne Wärmepumpen, Fernwärme oder ÖV bleibt die Anzeige rot.');
   if (has(S, 'regional') && !has(S, 'vegi')) out.push('🧺 <strong>Regional ist gut, aber:</strong> Was auf dem Teller liegt, zählt mehr als der Transportweg. Weniger Fleisch wirkt stärker als regional einkaufen.');
   if (has(S, 'balkon') && !has(S, 'wind') && !has(S, 'alpin') && !has(S, 'stau')) out.push('🪴 <strong>Balkonkraftwerke</strong> sind ein guter Einstieg, liefern aber wenig – besonders im Winter.');
+  if (['treibstoff', 'heizoel', 'flugabgabe'].some(id => has(S, id)) && !has(S, 'klimabonus') && g.acc < 50) out.push('💌 <strong>Abgaben ohne Rückverteilung</strong> füllen die Kasse, kosten aber Rückhalt. Ein Klimabonus macht sie fairer.');
   if (has(S, 'gas')) out.push('🔥 <strong>Gas-Reserve:</strong> Sicherheit gewonnen, aber Emissionen im Inland in Kauf genommen. Ein klassischer Zielkonflikt.');
   if (g.acc < CFG.zones[0]) out.push('🗳️ <strong>Akzeptanz:</strong> Ohne Rückhalt bremst das Parlament. Beliebte Massnahmen und Mitsprache gehören zur Strategie.');
   if (!out.length) out.push('🌱 Ausgewogen: Inland, Strom, Konsum und Kreislauf wurden zusammen gedacht.');
@@ -704,7 +724,7 @@ function renderCity() {
   const cls = id => !act.has(id) && ghost.has(id) ? 'ghost' : justBuilt.has(id) ? 'pop-in' : '';
   const climate = g.co2 * 0.6 + g.waren * 0.2 + g.flug * 0.2;
   const dirt = clamp(1 - climate / 75);
-  const fossW = 0.8 * clamp(1 - g.co2 / 85), fossV = 0.95 * clamp(1 - g.co2 / 85 - (on('ev') ? 0.25 : 0));
+  const fossW = 0.8 * clamp(1 - g.co2 / 85 - (on('heizverbot') ? 0.2 : 0)), fossV = 0.95 * clamp(1 - g.co2 / 85 - (on('ev') ? 0.25 : 0) - (on('verbrenner') ? 0.35 : 0));
   const dark = g.strom < 30;
   const o = [];
   const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
