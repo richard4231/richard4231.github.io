@@ -466,7 +466,6 @@ function buildGauges() {
       </svg>
       <div class="flex items-baseline justify-between mt-0.5">
         <span class="gauge-val text-lg font-bold" id="gv-${g.id}">–</span>
-        <span class="text-[11px] font-semibold" id="gz-${g.id}"></span>
       </div>
       <div class="text-[10px] text-slate-500 gauge-val" id="gd-${g.id}">&nbsp;</div>
     </div>`; }).join('');
@@ -478,8 +477,6 @@ function updateGauges() {
     // CO₂-Anzeigen gespiegelt: links = weniger CO₂ (grün), rechts = mehr (rot)
     $('nd-' + g.id).style.transform = `rotate(${-90 + (isCO2(g.id) ? 100 - v : v) * 1.8}deg)`;
     $('gv-' + g.id).textContent = gaugeText(g.id, v);
-    $('gz-' + g.id).className = 'text-[11px] font-semibold ' + z.cls;
-    $('gz-' + g.id).textContent = `${z.sym} ${z.t}`;
     $('gw-' + g.id).setAttribute('aria-label', `${g.label}: ${isCO2(g.id) ? gaugeText(g.id, v) + ' gegenüber 2026' : v + ' von 100'}, ${z.t}`);
     $('gd-' + g.id).innerHTML = [isCO2(g.id) ? 'seit 2026' : '', prev && prev[g.id] !== v ? `letzte Leg. ${deltaHtml(g.id, prev[g.id], v)}` : ''].filter(Boolean).join(' · ') || '&nbsp;';
   }
@@ -647,7 +644,7 @@ function addLog(icon, head, text) { S.log.unshift([icon, head, text]); }
 function renderLegend() {
   $('legend').innerHTML = [3, 2, 1, -1].map(l => `<div class="flex items-center gap-2"><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${LV[l].cls}">${bars(LV[l])} ${LV[l].t}</span><span class="text-slate-400">${{ 3: 'starker Effekt', 2: 'spürbarer Effekt', 1: 'kleiner oder kaum Effekt', '-1': 'macht es schlechter' }[l]}</span></div>`).join('') +
     `<div class="col-span-2 flex flex-wrap items-center gap-1.5 mt-1"><span class="text-slate-400">Wer entscheidet:</span>${['G', 'K', 'B'].map(l => `<span class="px-1.5 py-px rounded border font-semibold ${LVL[l].cls}">${LVL[l].t}</span>`).join('')}</div>` +
-    `<div class="col-span-2 text-slate-400 mt-1">Die Drehmeter zeigen von <span class="text-rose-300">✗ schlecht</span> über <span class="text-amber-300">~ mittel</span> bis <span class="text-emerald-300">✓ gut</span>. Ziel 2045: möglichst viele im grünen Bereich.</div>`;
+    `<div class="col-span-2 text-slate-400 mt-1">Ziel 2045: alle Drehmeter im <span class="text-emerald-300">grünen</span> Bereich.</div>`;
 }
 
 // ---------- Ablauf ----------
@@ -665,14 +662,14 @@ function confirmRound() {
   renderAll();
   justBuilt = new Set();
   const rows = GAUGES.map(g => { const a = R.before[g.id], b = R.after[g.id], z = ZONE[zone(b)];
-    return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${gaugeText(g.id, a)}</td><td class="text-right gauge-val font-semibold">${gaugeText(g.id, b)}</td><td class="text-right gauge-val">${deltaHtml(g.id, a, b)}</td><td class="text-right text-[11px] ${z.cls}">${z.sym} ${z.t}</td></tr>`; }).join('');
+    return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${gaugeText(g.id, a)}</td><td class="text-right gauge-val font-semibold ${z.cls}">${gaugeText(g.id, b)}</td><td class="text-right gauge-val">${deltaHtml(g.id, a, b)}</td></tr>`; }).join('');
   const body = `
     <div class="grid sm:grid-cols-2 gap-3">
       <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs text-slate-400 mb-1">Beschlossen</div>${R.picks.length ? R.picks.map(id => `<div class="text-sm">${M[id].icon} ${M[id].title}</div>`).join('') : '<div class="text-xs text-slate-500">Kein neuer Beschluss.</div>'}</div>
       <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/30"><div class="text-xs text-amber-300 mb-1">Ereignis</div><div class="font-semibold">${R.event.icon} ${R.event.title}</div><p class="text-xs text-slate-300 mt-1">${R.event.text}</p></div>
     </div>
     ${R.lines.length ? `<ul class="text-xs list-disc pl-5 space-y-1">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
-    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Anzeige</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th><th class="text-right">Bereich</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Anzeige</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="text-[11px] text-slate-500">CO₂-Werte: Veränderung gegenüber 2026. Auch ohne Massnahmen: Heizungen werden ersetzt, der Strombedarf wächst, es wird mehr geflogen.</p>`;
   modal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: S.over ? 'Zur Auswertung' : `Weiter zur Legislatur ${S.round}`, primary: true, fn: S.over ? showFinal : close }]);
 }
@@ -696,7 +693,7 @@ function showFinal() {
   const sc = score(S);
   const title = sc >= 9 ? 'Vorbild-Stadt 2045!' : sc >= 7 ? 'Auf gutem Weg' : sc >= 5 ? 'Gemischte Bilanz' : 'Noch weit vom Ziel';
   const tiles = GAUGES.map(g => { const v = S.g[g.id], z = ZONE[zone(v)];
-    return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${gaugeText(g.id, v)} · ${z.sym} ${z.t}</div></div>`; }).join('');
+    return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${gaugeText(g.id, v)}</div></div>`; }).join('');
   const body = `
     <div class="text-center"><div class="text-3xl text-amber-300 tracking-wider">${'★'.repeat(sc)}<span class="opacity-30">${'★'.repeat(10 - sc)}</span></div>
       <div class="text-xs text-slate-400 mt-1">${sc} von 10 Sternen (Anzeigen 60 %, Erwärmung 40 %) · Szenario ${S.code}</div></div>
