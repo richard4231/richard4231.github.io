@@ -21,6 +21,7 @@
     --c-waerme: #d95926; --c-verkehr: #9085e9; --c-strom: #c98500; --c-industrie: #3987e5;
   }
   body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; }
+  #measures-grid { align-content: start; }
   .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
   .scroll-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
   .card-measure { transition: border-color .15s, background-color .15s, transform .15s; }
@@ -90,7 +91,7 @@
     #tabbar { flex-wrap: nowrap; }
     #cat-tabs { flex: 1 1 auto; }
     #sort-select, #search { flex: 0 0 auto; }
-    #measures-grid { max-height: none; flex: 1 1 auto; min-height: 0; }
+    #measures-grid { max-height: none; flex: 1 1 auto; min-height: 0; align-content: start; }
     #selection-panel { flex: 0 0 auto; padding-top: 12px; padding-bottom: 12px; }
     #right { overflow-y: auto; padding-right: 4px; gap: 12px; }
     #footer { display: none; }
