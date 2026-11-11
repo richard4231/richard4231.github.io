@@ -1316,9 +1316,16 @@ function renderCity() {
 }
 
 // ---------- Ablauf ----------
+let skipArmed = false;
 function confirmRound() {
   if (S.over) return;
-  if (!selected.length && !confirm('Diese Legislatur ohne neuen Beschluss abschliessen?')) return;
+  if (!selected.length && !skipArmed) {
+    skipArmed = true;
+    $('confirm-text').textContent = 'Wirklich ohne Beschluss? Nochmals klicken';
+    setTimeout(() => { skipArmed = false; if (S && !S.over) renderSelection(); }, 4000);
+    return;
+  }
+  skipArmed = false;
   const before = current();
   const pop0 = S.pop, bud0 = S.budget;
   const roundNo = S.round;
@@ -1491,7 +1498,12 @@ function copyResult(ev) {
     `CO₂: ${m.co2pct} % · Sicherheit: ${m.sec} · Budget: ${S.budget} Mio. · Akzeptanz: ${S.pop} %`,
     ...S.chosen.map(c => `L${c.round}: ${M[c.id].title}`)].join('\n');
   const done = () => { const b = document.querySelector('#modal-actions button'); if (b) b.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Kopiert'; };
-  try { navigator.clipboard.writeText(txt).then(done, () => prompt('Ergebnis kopieren:', txt)); } catch (e) { prompt('Ergebnis kopieren:', txt); }
+  const fallback = () => {
+    if ($('copy-fallback')) return;
+    $('modal-body').insertAdjacentHTML('afterbegin', `<div><div class="text-xs text-slate-400 mb-1">Kopieren war nicht möglich – markiere den Text und kopiere ihn selbst:</div><textarea id="copy-fallback" rows="6" readonly class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-100">${txt}</textarea></div>`);
+    $('modal').firstElementChild.scrollTop = 0; $('copy-fallback').select();
+  };
+  try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
 }
 
 // ---------- Modals ----------
