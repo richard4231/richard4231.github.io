@@ -267,7 +267,7 @@ const MEASURES = [
 
   { id: 'oev', cat: 'mobil', icon: '🚋', title: 'ÖV-Ausbau & dichter Takt', cost: 3, acc: 1, fx: { co2: 2, strom: 1 },
     why: 'Ein Tram braucht pro Person nur einen Bruchteil der Energie eines Autos.' },
-  { id: 'ev', cat: 'mobil', icon: '🔌', title: 'Ladestationen & E-Busse', cost: 1, acc: 0, fx: { co2: 2, strom: -1 },
+  { id: 'ev', cat: 'mobil', icon: '🔌', title: 'Ladestationen & E-Busse', cost: 1, acc: 0, fx: { co2: 3, strom: -1 },
     why: 'E-Autos sind viel effizienter als Verbrenner – brauchen aber zusätzlichen Strom. Mit eigenem Solarstrom und Batterien wird tagsüber geladen.' },
   { id: 'velo', cat: 'mobil', icon: '🚲', title: 'Velonetz statt Parkplätze', cost: 1, acc: -1, fx: { co2: 2 },
     why: 'Günstig und wirksam, aber Autofahrende protestieren gegen weniger Parkplätze.' },
@@ -387,8 +387,8 @@ function createState(code) {
 }
 
 // Klimastufe einer Massnahme (beste positive Wirkung auf Inland, Fliegen oder Waren)
-function climateLevel(m) {
-  const v = CLIMATE.map(d => m.fx[d]).filter(x => x !== undefined);
+function climateLevel(m, fx = m.fx) {
+  const v = CLIMATE.map(d => fx[d]).filter(x => x !== undefined);
   if (!v.length) return { lv: 1, none: true };
   const pos = v.filter(x => x > 0);
   return pos.length ? { lv: Math.max(...pos) } : { lv: -1 };
@@ -399,7 +399,23 @@ const HEAT_E = ['wp', 'heizverbot', 'heizoel'], CAR_E = ['ev', 'verbrenner', 'tr
 const STROM_SYN = Object.fromEntries([...HEAT_E.map(id => [id, ['daemm']]), ...CAR_E.map(id => [id, ['solar', 'balkon', 'smartgrid']])]);
 const SYN_LABEL = { daemm: 'Sanierung', solar: 'Solarstrom', balkon: 'Solarstrom', smartgrid: 'Batterien' };
 function synOn(S, id, now = []) { return (STROM_SYN[id] || []).find(x => has(S, x) || now.includes(x)) || null; }
-function powerLevel(m) { return m.fx.strom === undefined ? { lv: 1, none: true } : { lv: m.fx.strom }; }
+function powerLevel(m, fx = m.fx) { return fx.strom === undefined ? { lv: 1, none: true } : { lv: fx.strom }; }
+// Überschneidung: Massnahmen, die dieselben Autos bzw. Ölheizungen ersetzen. Die erste wirkt voll,
+// jede weitere eine Stufe schwächer und ohne zusätzlichen Strombedarf.
+const OVERLAP = [CAR_E, HEAT_E];
+function overlapWith(S, id, now = []) {
+  const grp = OVERLAP.find(g => g.includes(id)); if (!grp) return null;
+  const i = now.indexOf(id);
+  const before = [...S.chosen.map(c => c.id), ...(i >= 0 ? now.slice(0, i) : now)];
+  return before.find(x => x !== id && grp.includes(x)) || null;
+}
+function effFx(S, id, now = []) {
+  const m = M[id], ov = overlapWith(S, id, now);
+  if (!ov) return { fx: m.fx, ov: null };
+  const fx = {};
+  for (const d in m.fx) { const l = m.fx[d]; if (d === 'strom' && l < 0) continue; fx[d] = l > 1 ? l - 1 : l; }
+  return { fx, ov };
+}
 const bonusOn = (S, now = []) => has(S, 'klimabonus') || now.includes('klimabonus');
 // Mit Klimabonus fliessen Abgaben an die Bevölkerung zurück: kein Geld für die Stadt, aber nicht mehr umstritten
 function costOf(S, id, now = []) { return M[id].abgabe && bonusOn(S, now) ? 0 : M[id].cost; }
@@ -415,15 +431,15 @@ function clampG(S) { for (const k in S.g) S.g[k] = Math.round(clamp(S.g[k], 0, 1
 function playRound(S, picks) {
   const before = { ...S.g }, R = { picks: [...picks], lines: [] };
   for (const id of picks) {
-    const m = M[id];
+    const m = M[id], fx = effFx(S, id, picks).fx;
     S.coins -= costOf(S, id, picks);
     for (const d of DIMS) {
-      if (m.fx[d] === undefined) continue;
-      if (d === 'strom' && m.fx.strom < 0) {
+      if (fx[d] === undefined) continue;
+      if (d === 'strom' && fx.strom < 0) {
         if (synOn(S, id, picks)) continue;              // Kombination aktiv: kein Abzug
         S.penalized = (S.penalized || []).concat(id);
       }
-      S.g[d] += CFG.pts[m.fx[d]];
+      S.g[d] += CFG.pts[fx[d]];
     }
     // Neue Vorsorge-Massnahme hebt frühere Abzüge auf
     for (const pid of [...(S.penalized || [])]) if ((STROM_SYN[pid] || []).includes(id)) { S.g.strom -= CFG.pts['-1']; S.penalized = S.penalized.filter(x => x !== pid); R.lines.push(`${M[id].title}: Der Strom-Abzug von «${M[pid].title}» entfällt.`); }
@@ -604,17 +620,27 @@ function renderAll() { renderHeader(); renderAlerts(); renderTabs(); renderGrid(
 
 // ---------- Temperatur-Diagramm ----------
 const fmt1 = x => x.toFixed(1).replace('.', ',');
+// Unsicherheitsband (vereinfacht): wächst mit der Zeit und mit der zusätzlichen Erwärmung, nach oben breiter
+// (stärkere Erwärmung wahrscheinlicher als schwächere). Grössenordnung wie die IPCC-Spannen der Szenarien.
+function tempBand(T, year) {
+  const t = (year - TEMP.nowYear) / (2100 - TEMP.nowYear);
+  const hw = (0.1 + 0.3 * Math.max(0, T - TEMP.now)) * t;
+  return [T - 0.8 * hw, T + 1.2 * hw];
+}
+const rangeStr = T => { const [lo, hi] = tempBand(T, 2100); return `${fmt1(lo)}–${fmt1(hi)}`; };
 function renderTemp(g = S.g) {
   if (holdDash) return;
   tempShown = { ...g };
   const w = warming(g);
   const W = 320, H = 150, L = 30, Rr = 70, T = 8, B = 22;
   const x = y => L + (y - TEMP.nowYear) / (2100 - TEMP.nowYear) * (W - L - Rr);
-  const y = v => T + (3.0 - v) / (3.0 - 1.0) * (H - T - B);
+  const y = v => T + (3.5 - v) / (3.5 - 1.0) * (H - T - B);
   const years = Array.from({ length: 16 }, (_, i) => TEMP.nowYear + i * 5);
   const path = f => years.map((yr, i) => `${i ? 'L' : 'M'}${x(yr).toFixed(1)},${y(f(yr)).toFixed(1)}`).join(' ');
   const col = w.t2100 <= 1.8 ? '#34d399' : w.t2100 <= 2.2 ? '#fbbf24' : '#f87171';
   const yEnd = y(w.t2100), yBau = y(TEMP.bau);
+  const cur = yr => tempCurve(w.t2100, w.p, yr);
+  const band = years.map(yr => `${x(yr).toFixed(1)},${y(tempBand(cur(yr), yr)[1]).toFixed(1)}`).concat([...years].reverse().map(yr => `${x(yr).toFixed(1)},${y(tempBand(cur(yr), yr)[0]).toFixed(1)}`));
   // Endbeschriftungen ohne Überlappung: nach Höhe sortieren und mit Mindestabstand auseinanderschieben
   const lx = W - Rr + 6, GAP = 10;
   const labels = [
@@ -630,18 +656,20 @@ function renderTemp(g = S.g) {
   for (let i = labels.length - 2; i >= 0; i--) labels[i].ty = Math.min(labels[i].ty, labels[i + 1].ty - GAP);
   const labelSvg = labels.map(l => `<text x="${lx}" y="${l.ty + 3}" font-size="8" font-weight="${l.weight}" fill="${l.fill}">${l.text}</text>`).join('');
   $('temp-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="Erwärmung bis 2100: ohne Klimaschutz +${fmt1(TEMP.bau)} Grad, wenn alle so handeln +${fmt1(w.t2100)} Grad">
-    ${[1.5, 2.0, 2.5, 3.0].map(v => `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#334155" stroke-width="${v === 1.5 ? 0 : 0.6}"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end" font-size="8" fill="#94a3b8">${fmt1(v)}°</text>`).join('')}
+    ${[1.5, 2.0, 2.5, 3.0, 3.5].map(v => `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#334155" stroke-width="${v === 1.5 ? 0 : 0.6}"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end" font-size="8" fill="#94a3b8">${fmt1(v)}°</text>`).join('')}
     ${[2025, 2050, 2075, 2100].map(yr => `<text x="${x(yr)}" y="${H - 6}" text-anchor="middle" font-size="8" fill="#94a3b8">${yr}</text>`).join('')}
     <line x1="${L}" x2="${W - Rr}" y1="${y(1.5)}" y2="${y(1.5)}" stroke="#34d399" stroke-width="1" stroke-dasharray="2 3"/>
     <path d="${path(yr => tempCurve(TEMP.bau, 0, yr))}" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <polygon points="${band.join(' ')}" fill="${col}" opacity=".18"><title>Wahrscheinlicher Bereich</title></polygon>
     <path d="${path(yr => tempCurve(w.t2100, w.p, yr))}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="${L + 4}" y="${T + 7}" font-size="7" fill="#94a3b8">Band: wahrscheinlicher Bereich</text>
     <circle cx="${x(2100)}" cy="${yEnd}" r="3.5" fill="${col}" stroke="#1e293b" stroke-width="1.5"/>
     ${labelSvg}
     <circle cx="${x(TEMP.nowYear)}" cy="${y(TEMP.now)}" r="2.5" fill="#f1f5f9"/>
     <text x="${x(TEMP.nowYear) + 5}" y="${y(TEMP.now) + 10}" font-size="8" fill="#94a3b8">heute</text>
   </svg>`;
   const big = $('temp-big');
-  big.textContent = `+${fmt1(w.t2100)} °C`;
+  big.innerHTML = `+${fmt1(w.t2100)} °C <span class="text-xs font-normal text-slate-400">(${rangeStr(w.t2100)})</span>`;
   big.style.color = col;
 }
 
@@ -693,8 +721,9 @@ function renderGrid() {
   }
   const list = MEASURES.filter(m => !has(S, m.id) && (cat === 'all' || m.tags.includes(cat)) && matchesQuery(m));
   const key = (m, l) => (l.none ? 0.5 : l.lv);
-  const climSum = m => CLIMATE.reduce((a, d) => a + (m.fx[d] ? CFG.pts[m.fx[d]] : 0), 0);
-  if (sortMode === 'klima') list.sort((a, b) => key(b, climateLevel(b)) - key(a, climateLevel(a)) || climSum(b) - climSum(a));
+  const efx = m => effFx(S, m.id, selected).fx;
+  const climSum = m => CLIMATE.reduce((a, d) => a + (efx(m)[d] ? CFG.pts[efx(m)[d]] : 0), 0);
+  if (sortMode === 'klima') list.sort((a, b) => key(b, climateLevel(b, efx(b))) - key(a, climateLevel(a, efx(a))) || climSum(b) - climSum(a));
   if (sortMode === 'strom') list.sort((a, b) => key(b, powerLevel(b)) - key(a, powerLevel(a)) || a.cost - b.cost);
   if (sortMode === 'kosten') list.sort((a, b) => a.cost - b.cost);
   if (sortMode === 'ebene') list.sort((a, b) => LVL[a.lvl].order - LVL[b.lvl].order);
@@ -702,8 +731,9 @@ function renderGrid() {
   if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versuche ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
   for (const m of list) {
     const sel = selected.includes(m.id), block = blockReason(m.id);
-    const cl = climateLevel(m), syn = m.fx.strom < 0 ? synOn(S, m.id, selected) : null, pw = syn ? { lv: 1, none: true } : powerLevel(m);
-    const where = CLIMATE.filter(d => (m.fx[d] || 0) > 0).map(d => DIM_LABEL[d]);
+    const ef = effFx(S, m.id, selected), fxE = ef.fx;
+    const cl = climateLevel(m, fxE), syn = fxE.strom < 0 ? synOn(S, m.id, selected) : null, pw = syn ? { lv: 1, none: true } : powerLevel(m, fxE);
+    const where = CLIMATE.filter(d => (fxE[d] || 0) > 0).map(d => DIM_LABEL[d]);
     const ae = accEffect(S, m.id, selected);
     const acc = m.acc > 0 ? ['👍 beliebt', 'text-emerald-300'] : m.acc < 0 && ae === 0 ? ['😐 neutral dank Klimabonus', 'text-slate-300'] : m.acc < 0 ? [ae === CFG.accBuerger ? '👎 umstritten (gedämpft)' : '👎 umstritten', 'text-rose-300'] : ['😐 neutral', 'text-slate-300'];
     const c = document.createElement('div');
@@ -725,7 +755,8 @@ function renderGrid() {
           ${lvBadge('Strom', pw)}
         </div>
         <div class="mt-1.5 text-[10px] text-slate-400">${where.length ? 'Weniger CO₂: ' + where.join(', ') : cl.lv < 0 ? 'Mehr CO₂ im Inland' : 'Keine direkte Klimawirkung'}${m.fx.kreis ? ' · ♻️ Kreislauf ' + LV[m.fx.kreis].t : ''}</div>
-        ${STROM_SYN[m.id] ? `<div class="mt-1 text-[10px] ${syn ? 'text-emerald-300' : 'text-slate-400'}">${syn ? `✓ Kein Strom-Abzug dank ${SYN_LABEL[syn]}` : `🤝 Mit ${HEAT_E.includes(m.id) ? 'Gebäudesanierung' : 'Solarstrom oder Batterien'} kein Strom-Abzug`}</div>` : ''}
+        ${ef.ov ? `<div class="mt-1 text-[10px] text-amber-300">⤵ Überschneidung mit «${M[ef.ov].title}»: wirkt schwächer, kein Zusatzstrom</div>` : ''}
+        ${STROM_SYN[m.id] && !ef.ov ? `<div class="mt-1 text-[10px] ${syn ? 'text-emerald-300' : 'text-slate-400'}">${syn ? `✓ Kein Strom-Abzug dank ${SYN_LABEL[syn]}` : `🤝 Mit ${HEAT_E.includes(m.id) ? 'Gebäudesanierung' : 'Solarstrom oder Batterien'} kein Strom-Abzug`}</div>` : ''}
         ${m.id === 'daemm' ? '<div class="mt-1 text-[10px] text-slate-400">🤝 Wärmepumpen & Co. ohne Strom-Abzug</div>' : ['solar', 'balkon', 'smartgrid'].includes(m.id) ? '<div class="mt-1 text-[10px] text-slate-400">🤝 E-Autos & Co. ohne Strom-Abzug</div>' : ''}
       </div>
       ${block ? `<div class="mt-2 text-[10px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5">🔒 ${block}</div>` : ''}
@@ -822,7 +853,7 @@ function showFinal() {
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
       <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
-      <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong></div>
+      <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong><div class="text-[10px] text-slate-400">wahrscheinlich ${rangeStr(warming(S.g).t2100)} °C</div></div>
     </div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs font-semibold text-slate-200 mb-2">Was die Bilanz zeigt</div><ul class="space-y-1.5 text-xs">${insights().map(t => `<li>${t}</li>`).join('')}</ul></div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat dich überrascht – weil sie mehr oder weniger bewirkt hat, als du dachtest? Was hätte deine Gemeinde allein geschafft – und wofür braucht es Kanton und Bund?</div>`;
