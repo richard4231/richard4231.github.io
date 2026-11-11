@@ -61,7 +61,7 @@
     <div class="bg-emerald-500 text-slate-900 w-10 h-10 grid place-items-center rounded-xl text-xl shadow-lg" aria-hidden="true">🏙️</div>
     <div>
       <h1 class="text-lg md:text-xl font-bold text-emerald-300">Postfossile Stadt <span class="text-xs align-middle ml-1 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-500/40 font-semibold">Einfache Version</span></h1>
-      <p class="text-xs text-slate-400">Seestadt bis 2045 · Inland, Strom, Fliegen, Waren und Kreislauf im Blick</p>
+      <p class="text-xs text-slate-400">Gemeinde, Kanton und Bund · Seestadt zeigt die Wirkung vor Ort</p>
     </div>
   </div>
   <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -105,6 +105,7 @@
         <option value="klima">Klimawirkung ▼</option>
         <option value="strom">Stromwirkung ▼</option>
         <option value="kosten">Kosten ▲</option>
+        <option value="ebene">Ebene: Gemeinde → Bund</option>
       </select>
     </div>
     <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[640px] overflow-y-auto pr-1 scroll-thin"></div>
@@ -205,8 +206,8 @@ const MEASURES = [
     why: 'Batterien gleichen Tag und Nacht aus und stabilisieren das Netz – für die Winterlücke reichen sie nicht.' },
   { id: 'netz', cat: 'energie', icon: '🗼', title: 'Stromnetz ausbauen', cost: 2, acc: -1, fx: { strom: 2 },
     why: 'Ohne Leitungen kommt der Strom nicht dorthin, wo er gebraucht wird. Baustellen nerven.' },
-  { id: 'kern', cat: 'energie', icon: '⚛️', title: 'Kernstrom-Vertrag verlängern', cost: 1, acc: -1, fx: { strom: 3 },
-    why: 'Der Vertrag läuft Ende 2034 aus. Eine Verlängerung sichert Winterstrom, ist aber stark umstritten.' },
+  { id: 'kern', cat: 'energie', icon: '⚛️', title: 'Kernkraftwerk länger laufen lassen', cost: 1, acc: -1, fx: { strom: 3 },
+    why: 'Ende 2034 soll ein Kernkraftwerk vom Netz gehen. Ein Weiterbetrieb sichert Winterstrom, ist aber stark umstritten.' },
   { id: 'gas', cat: 'energie', icon: '🔥', title: 'Gas-Reservekraftwerk', cost: 2, acc: -1, fx: { strom: 3, co2: -1 },
     why: 'Eine Versicherung gegen Blackouts. Läuft es, verbrennt es Gas – die Emissionen im Inland steigen.' },
 
@@ -226,7 +227,7 @@ const MEASURES = [
   { id: 'velo', cat: 'mobil', icon: '🚲', title: 'Velonetz statt Parkplätze', cost: 1, acc: -1, fx: { co2: 2 },
     why: 'Günstig und wirksam, aber Autofahrende protestieren gegen weniger Parkplätze.' },
   { id: 'nachtzug', cat: 'mobil', icon: '🚆', title: 'Nachtzüge & Bahnferien fördern', cost: 1, acc: 1, fx: { flug: 2 },
-    why: 'Wer mit dem Nachtzug nach Wien, Berlin oder Rom fährt, spart den Flug. Die Stadt kann Angebote bewerben und mitfinanzieren.' },
+    why: 'Wer mit dem Nachtzug nach Wien, Berlin oder Rom fährt, spart den Flug. Der Bund kann Nachtzüge mitfinanzieren.' },
   { id: 'flugv', cat: 'mobil', icon: '🛬', title: 'Verwaltung: Bahn statt Flug', cost: 1, acc: 0, fx: { flug: 1 },
     why: 'Ein gutes Vorbild – aber die Dienstreisen der Verwaltung sind nur ein kleiner Teil aller Flüge.' },
 
@@ -247,8 +248,8 @@ const MEASURES = [
     why: 'Ein reparierter Laptop spart fast alle Emissionen eines neuen – die entstehen bei der Herstellung im Ausland.' },
   { id: 'sharing', cat: 'kreislauf', icon: '📚', title: 'Bibliothek der Dinge & Sharing', cost: 1, acc: 1, fx: { kreis: 2, waren: 1 },
     why: 'Eine Bohrmaschine wird im Schnitt nur wenige Minuten im Jahr gebraucht. Teilen statt besitzen.' },
-  { id: 'beschaffung', cat: 'kreislauf', icon: '🏷️', title: 'Kreislauf-Einkauf der Stadt', cost: 2, acc: 0, fx: { waren: 2, kreis: 2 },
-    why: 'Die Stadt kauft langlebig, gebraucht und in Mehrweg ein – Schulmöbel, Computer, Fahrzeuge.' },
+  { id: 'beschaffung', cat: 'kreislauf', icon: '🏷️', title: 'Kreislauf-Einkauf der Verwaltung', cost: 2, acc: 0, fx: { waren: 2, kreis: 2 },
+    why: 'Die Verwaltung kauft langlebig, gebraucht und in Mehrweg ein – Schulmöbel, Computer, Fahrzeuge.' },
   { id: 'mehrweg', cat: 'kreislauf', icon: '🥤', title: 'Mehrweg statt Einweg', cost: 1, acc: 0, fx: { kreis: 1, waren: 1 },
     why: 'Mehrweggeschirr bei Take-away und Festen spart Abfall – die Klimawirkung ist eher klein.' },
 
@@ -270,30 +271,42 @@ const MEASURES = [
   { id: 'flugabgabe', cat: 'regeln', icon: '🎫', title: 'Flugticket-Abgabe', cost: -1, acc: -1, abgabe: true, fx: { flug: 2 },
     why: 'Fliegen wird teurer, Nachtzug und Ferien in der Nähe attraktiver. 2021 lehnte das Stimmvolk ein CO₂-Gesetz mit Flugticketabgabe ab.' },
   { id: 'klimabonus', cat: 'regeln', icon: '💌', title: 'Klimabonus: Abgaben zurückverteilen', cost: 1, acc: 1, fx: {},
-    why: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück – wer wenig verbraucht, gewinnt. Danach bringen Abgaben der Stadt kein Geld mehr, sind aber nicht mehr umstritten.' }
+    why: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück – wer wenig verbraucht, gewinnt. Danach bringen Abgaben kein Geld mehr in die Kasse, sind aber nicht mehr umstritten.' }
 ];
+// Wer entscheidet in der Schweiz typischerweise? G = Gemeinde, K = Kanton, B = Bund (vereinfacht)
+const LEVEL = {
+  balkon: 'G', smartgrid: 'G', fw: 'G', holz: 'G', oev: 'G', ev: 'G', velo: 'G', flugv: 'G', vegi: 'G', regional: 'G',
+  recycling: 'G', repair: 'G', sharing: 'G', beschaffung: 'G', mehrweg: 'G', buerger: 'G',
+  solar: 'K', wind: 'K', stau: 'K', wp: 'K', daemm: 'K', agri: 'K', humus: 'K', bildung: 'K', heizverbot: 'K',
+  alpin: 'B', netz: 'B', kern: 'B', gas: 'B', nachtzug: 'B', foodwaste: 'B', ind: 'B',
+  verbrenner: 'B', treibstoff: 'B', heizoel: 'B', flugabgabe: 'B', klimabonus: 'B'
+};
+MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
+const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40', order: 0 },
+              K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40', order: 1 },
+              B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40', order: 2 } };
 const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 
 const EVENTS = {
   dunkelflaute: { icon: '🌫️', title: 'Dunkelflaute im Januar', run(S) {
-    if (S.g.strom < 40) { S.g.acc -= 8; return 'Zwei Wochen Nebel und Windstille. Die Stadt muss zum Stromsparen aufrufen (Akzeptanz −8).'; }
+    if (S.g.strom < 40) { S.g.acc -= 8; return 'Zwei Wochen Nebel und Windstille. Der Bundesrat ruft zum Stromsparen auf (Akzeptanz −8).'; }
     S.g.acc += 3; return 'Zwei Wochen Nebel und Windstille – die Versorgung hält (Akzeptanz +3).'; } },
   billigflug: { icon: '✈️', title: 'Billig-Airline eröffnet Basis in der Nähe', run(S) {
     const d = has(S, 'nachtzug') ? 3 : 6; S.g.flug -= d;
     return `Wochenendtrips für 29 Franken. Fliegen −${d}${d === 3 ? ' (Nachtzüge bremsen den Effekt)' : ''}.`; } },
   rohstoff: { icon: '📦', title: 'Rohstoffe werden knapp und teuer', run(S) {
     if (S.g.kreis >= 60) { S.coins += 2; return 'Lieferketten stocken. Seestadt profitiert von ihrer Kreislaufwirtschaft (+2 Budget).'; }
-    S.coins -= 1; return 'Lieferketten stocken, Material wird teurer (−1 Budget). Mit mehr Kreislauf wäre die Stadt robuster.'; } },
+    S.coins -= 1; return 'Lieferketten stocken, Material wird teurer (−1 Budget). Mit mehr Kreislauf wäre die Wirtschaft robuster.'; } },
   hitze: { icon: '🌡️', title: 'Hitzesommer & Trockenheit', run(S) { S.g.strom -= 5; S.g.acc -= 2; return 'Flüsse führen wenig Wasser, die Wasserkraft liefert weniger (Strom −5, Akzeptanz −2).'; } },
   klimademo: { icon: '🪧', title: 'Grosse Klimademonstration', run(S) {
     const avg = (S.g.co2 + S.g.flug + S.g.waren) / 3;
     if (avg < 30 + S.round * 6) { S.g.acc -= 6; return 'Tausende fordern mehr Tempo beim Klimaschutz (Akzeptanz −6).'; }
-    S.g.acc += 4; return 'Die Klimabewegung lobt den Kurs der Stadt (Akzeptanz +4).'; } },
+    S.g.acc += 4; return 'Die Klimabewegung lobt den eingeschlagenen Kurs (Akzeptanz +4).'; } },
   bund: { icon: '🏛️', title: 'Förderprogramm vom Bund', run(S) { S.coins += 2; return 'Bern stockt die Fördergelder auf: +2 Budget.'; } },
   solarboom: { icon: '📉', title: 'Solarmodule werden billig', run(S) { S.g.strom += 5; return 'Private belegen ihre Dächer schneller als geplant (Strom +5).'; } },
   foodskandal: { icon: '🗑️', title: 'Reportage: Tonnenweise Brot im Container', run(S) {
-    if (has(S, 'foodwaste')) { S.g.acc += 4; return 'Seestadt wird als Vorbild gezeigt – die Stadt hat vorgesorgt (Akzeptanz +4).'; }
-    S.g.acc -= 3; return 'Die Bilder empören. Warum tut die Stadt nichts? (Akzeptanz −3)'; } }
+    if (has(S, 'foodwaste')) { S.g.acc += 4; return 'Seestadt wird als Vorbild gezeigt – hier wurde vorgesorgt (Akzeptanz +4).'; }
+    S.g.acc -= 3; return 'Die Bilder empören. Warum tut niemand etwas? (Akzeptanz −3)'; } }
 };
 
 function hashCode(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -339,7 +352,7 @@ function playRound(S, picks) {
     S.chosen.push({ id, round: S.round });
   }
   for (const d of DIMS) S.g[d] += CFG.trend[d];
-  if (S.round === 2) { S.g.strom -= CFG.kernDrop; R.lines.push(`Ende 2034 ist der Kernstrom-Vertrag ausgelaufen: Strom −${CFG.kernDrop}.`); }
+  if (S.round === 2) { S.g.strom -= CFG.kernDrop; R.lines.push(`Ende 2034 ist ein Kernkraftwerk vom Netz gegangen: Stromversorgung −${CFG.kernDrop}.`); }
   clampG(S);
   const ev = EVENTS[S.deck[S.round - 1]];
   R.event = { icon: ev.icon, title: ev.title, text: ev.run(S) };
@@ -507,7 +520,7 @@ function renderAlerts() {
   const a = [];
   if (!S.over) {
     a.push(alertBox('bg-slate-900/60 border-slate-700 text-slate-300', `Budget: <strong class="text-amber-300">${S.coins} Punkte</strong> (● = 1 Punkt). Jede Legislatur kommen ${CFG.coinsPerRound} dazu, Unverbrauchtes bleibt.`));
-    if (S.round <= 2 && !has(S, 'kern')) a.push(alertBox('bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 läuft der Kernstrom-Vertrag aus: Die Anzeige «Strom aus dem Inland» fällt dann um ' + CFG.kernDrop + ' Punkte.'));
+    if (S.round <= 2 && !has(S, 'kern')) a.push(alertBox('bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 geht ein Kernkraftwerk vom Netz: Die Stromversorgung fällt dann um ' + CFG.kernDrop + ' Punkte.'));
     if (S.picks < CFG.picks) a.push(alertBox('bg-amber-500/10 border-amber-500/30 text-amber-200', 'Gegenwind im Parlament: Diese Legislatur sind nur 2 Beschlüsse möglich. Beliebte Massnahmen helfen.'));
   }
   $('alerts').innerHTML = a.join('');
@@ -544,6 +557,7 @@ function renderGrid() {
   if (sortMode === 'klima') list.sort((a, b) => key(b, climateLevel(b)) - key(a, climateLevel(a)) || climSum(b) - climSum(a));
   if (sortMode === 'strom') list.sort((a, b) => key(b, powerLevel(b)) - key(a, powerLevel(a)) || a.cost - b.cost);
   if (sortMode === 'kosten') list.sort((a, b) => a.cost - b.cost);
+  if (sortMode === 'ebene') list.sort((a, b) => LVL[a.lvl].order - LVL[b.lvl].order);
   grid.innerHTML = '';
   for (const m of list) {
     const sel = selected.includes(m.id), block = blockReason(m.id);
@@ -561,7 +575,7 @@ function renderGrid() {
     c.innerHTML = `
       <div>
         <div class="flex justify-between items-center mb-1">
-          <span class="text-[10px] text-slate-400">${catInfo.icon} ${catInfo.label}</span>
+          <span class="text-[10px] text-slate-400 flex items-center gap-1.5"><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${catInfo.icon} ${catInfo.label}</span>
           <span class="w-5 h-5 rounded-full grid place-items-center text-[11px] ${sel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}">${sel ? '✓' : '+'}</span>
         </div>
         <h4 class="font-semibold text-[14px] leading-tight flex gap-2"><span aria-hidden="true">${m.icon}</span><span>${m.title}</span></h4>
@@ -606,6 +620,7 @@ function addLog(icon, head, text) { S.log.unshift([icon, head, text]); }
 
 function renderLegend() {
   $('legend').innerHTML = [3, 2, 1, -1].map(l => `<div class="flex items-center gap-2"><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${LV[l].cls}">${bars(LV[l])} ${LV[l].t}</span><span class="text-slate-400">${{ 3: 'starker Effekt', 2: 'spürbarer Effekt', 1: 'kleiner oder kaum Effekt', '-1': 'macht es schlechter' }[l]}</span></div>`).join('') +
+    `<div class="col-span-2 flex flex-wrap items-center gap-1.5 mt-1"><span class="text-slate-400">Wer entscheidet:</span>${['G', 'K', 'B'].map(l => `<span class="px-1.5 py-px rounded border font-semibold ${LVL[l].cls}">${LVL[l].t}</span>`).join('')}</div>` +
     `<div class="col-span-2 text-slate-400 mt-1">Die Drehmeter zeigen von <span class="text-rose-300">✗ schlecht</span> über <span class="text-amber-300">~ mittel</span> bis <span class="text-emerald-300">✓ gut</span>. Ziel 2045: möglichst viele im grünen Bereich.</div>`;
 }
 
@@ -638,7 +653,7 @@ function confirmRound() {
 
 function insights() {
   const out = [], g = S.g;
-  if (zone(g.flug) < 2) out.push('✈️ <strong>Fliegen:</strong> Hier hat eine Stadt nur wenige Hebel. Flugpreise und Angebote werden in Bern, Brüssel und bei jeder einzelnen Reiseentscheidung bestimmt.');
+  if (zone(g.flug) < 2) out.push('✈️ <strong>Fliegen:</strong> Die schwierigste Anzeige. Abgaben und Nachtzüge helfen, am Ende entscheidet aber jede einzelne Reise.');
   if (zone(g.waren) === 0) out.push('📦 <strong>Graue Emissionen übersehen:</strong> Wer nur im Inland handelt, sieht etwa ein Drittel des Fussabdrucks. Ernährung, Reparieren und Teilen wirken auf den Rest.');
   if (zone(g.strom) === 0) out.push('⚡ <strong>Winterlücke:</strong> Wärmepumpen, E-Autos und Industrie brauchen mehr Strom. Ohne zusätzlichen Winterstrom wird die Versorgung knapp.');
   if (zone(g.co2) === 0) out.push('🏭 <strong>Inland:</strong> Heizen und Verkehr sind die grössten Brocken. Ohne Wärmepumpen, Fernwärme oder ÖV bleibt die Anzeige rot.');
@@ -659,13 +674,14 @@ function showFinal() {
   const body = `
     <div class="text-center"><div class="text-3xl text-amber-300 tracking-wider">${'★'.repeat(sc)}<span class="opacity-30">${'★'.repeat(10 - sc)}</span></div>
       <div class="text-xs text-slate-400 mt-1">${sc} von 10 Punkten (grün = 2, gelb = 1, ohne Akzeptanz) · Szenario ${S.code}</div></div>
+    <div class="flex flex-wrap justify-center gap-2 text-xs">${['G', 'K', 'B'].map(l => `<span class="px-2 py-0.5 rounded border ${LVL[l].cls}">${LVL[l].t}: ${S.chosen.filter(c => M[c.id].lvl === l).length} Beschlüsse</span>`).join('')}</div>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
       <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
       <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong></div>
     </div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs font-semibold text-slate-200 mb-2">Was die Bilanz zeigt</div><ul class="space-y-1.5 text-xs">${insights().map(t => `<li>${t}</li>`).join('')}</ul></div>
-    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat dich überrascht – weil sie mehr oder weniger bewirkt hat, als du dachtest? Welche Anzeige kann eine Stadt allein kaum auf Grün bringen?</div>`;
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat dich überrascht – weil sie mehr oder weniger bewirkt hat, als du dachtest? Was hätte deine Gemeinde allein geschafft – und wofür braucht es Kanton und Bund?</div>`;
   modal(sc >= 9 ? '🏆' : sc >= 7 ? '🌿' : '⚖️', title, body, [
     { label: 'Gleiches Szenario nochmals', fn: () => { close(); start(S.code); } },
     { label: 'Übersicht ansehen', primary: true, fn: close }
@@ -699,7 +715,7 @@ function start(code) { S = createState(code); selected = []; cat = 'all'; skipAr
 function intro() {
   const code = randomCode();
   modal('🏙️', 'Postfossile Stadt – einfache Version', `
-    <p>Du leitest die Klimapolitik von <strong>Seestadt</strong>. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
+    <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
     <ul class="list-disc pl-5 text-xs space-y-1">
       <li>4 Legislaturen, je bis zu <strong>3 Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
       <li>Jede Massnahme zeigt ihre Wirkung auf <strong>Klima</strong> und <strong>Strom</strong> in drei Stufen: gross, mittel, wenig – manchmal sogar rückläufig.</li>
@@ -743,7 +759,7 @@ function renderCity() {
   if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
   o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"/><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
   const kernOn = S.history.length <= 2 || has(S, 'kern');
-  o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(Vertrag aktiv)' : '(Vertrag ausgelaufen)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
+  o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
   if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
 
   // Nachtzug im Hintergrund
