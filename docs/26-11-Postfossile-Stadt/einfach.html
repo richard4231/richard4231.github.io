@@ -37,11 +37,11 @@
   .steam { animation: steam 4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
   @keyframes steam { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(8px, -30px) scale(2.4); opacity: 0; } }
   .drive { animation: drive linear infinite; }
-  @keyframes drive { from { transform: translateX(-140px); } to { transform: translateX(1140px); } }
+  @keyframes drive { from { transform: translateX(var(--x0, -140px)); } to { transform: translateX(var(--x1, 1140px)); } }
   .drive-back { animation: driveback linear infinite; }
-  @keyframes driveback { from { transform: translateX(1140px); } to { transform: translateX(-140px); } }
+  @keyframes driveback { from { transform: translateX(var(--x1, 1140px)); } to { transform: translateX(var(--x0, -140px)); } }
   .cloud { animation: cloud linear infinite; }
-  @keyframes cloud { from { transform: translateX(-200px); } to { transform: translateX(1150px); } }
+  @keyframes cloud { from { transform: translateX(var(--cx0, -200px)); } to { transform: translateX(var(--cx1, 1150px)); } }
   .wave { animation: wave 4s ease-in-out infinite alternate; }
   @keyframes wave { to { transform: translateX(14px); } }
   .ghost { opacity: .45; }
@@ -845,26 +845,26 @@ function renderCity() {
   const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
 
   o.push(`<defs><linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mixHex('#3b9be0', '#7c7468', dirt)}"/><stop offset="1" stop-color="${mixHex('#d3f0ff', '#d8c9a8', dirt)}"/></linearGradient></defs>`);
-  o.push(`<rect width="1000" height="260" fill="url(#g-sky)"/><circle cx="880" cy="46" r="22" fill="#fde047" opacity="${(1 - dirt * 0.65).toFixed(2)}"/>`);
+  o.push(`<rect x="-1100" width="3200" height="260" fill="url(#g-sky)"/><circle cx="880" cy="46" r="22" fill="#fde047" opacity="${(1 - dirt * 0.65).toFixed(2)}"/>`);
   [[70, 20, 34], [95, 55, 58]].forEach(([d, del, y]) => o.push(`<g class="cloud" style="animation-duration:${d}s;animation-delay:-${del}s"><g transform="translate(0,${y})" fill="${dirt > 0.5 ? '#d6d3d1' : '#fff'}" opacity=".85"><ellipse rx="30" ry="9"/><ellipse cx="14" cy="-7" rx="17" ry="10"/><ellipse cx="-12" cy="-3" rx="12" ry="7"/></g></g>`));
   // Flugzeuge: je schlechter die Anzeige, desto mehr Verkehr am Himmel
   const planes = 3 - zone(g.flug);
   for (let k = 0; k < planes; k++) o.push(`<g class="cloud" style="animation-duration:${26 + k * 9}s;animation-delay:-${k * 11}s"><g transform="translate(0,${26 + k * 16})"><title>Flugverkehr</title><line x1="-90" y1="0" x2="-6" y2="0" stroke="#fff" stroke-width="1.5" opacity=".6"/><path d="M0,0 L-14,-2 L-18,-7 L-15,-7 L-9,-2 L-2,-2 L-6,-9 L-2,-9 L6,-2 L12,-1 L12,1 L6,2 L-2,9 L-6,9 L-2,2 L-9,2 L-15,7 L-18,7 L-14,2 Z" fill="#f8fafc" transform="scale(.9)"/></g></g>`);
 
   // Alpen, Speichersee
-  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
+  o.push(`<polygon points="-1100,175 -1060,128 -1000,148 -930,96 -870,134 -800,122 -800,175" fill="#7b8aa0"/><g fill="#f8fafc"><polygon points="-940,110 -930,96 -919,111 -927,107"/></g><polygon points="-800,175 -760,122 -705,140 -640,84 -585,128 -520,102 -462,146 -400,96 -342,124 -280,68 -222,116 -160,90 -100,134 -40,104 30,175" fill="#7b8aa0"/><polygon points="-640,84 -585,128 -610,128 -632,104" fill="#64748b" opacity=".6"/><polygon points="-280,68 -222,116 -250,116 -272,92" fill="#64748b" opacity=".6"/><g fill="#f8fafc"><polygon points="-651,100 -640,84 -628,101 -636,96 -644,102"/><polygon points="-292,86 -280,68 -267,88 -276,82 -284,89"/><polygon points="-410,108 -400,96 -390,109 -399,105"/></g><polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
   o.push(`<ellipse cx="200" cy="133" rx="${on('stau') ? 30 : 22}" ry="${on('stau') ? 7 : 5}" fill="#38bdf8"/><g class="${cls('stau')}"><polygon points="${on('stau') ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/></g>`);
   if (on('alpin')) { const p = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) p.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`); o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage</title>${p.join('')}</g>`); }
   if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
-  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L1000,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L1000,210 Z" fill="#4d7c0f"/>`);
   const kernOn = S.history.length <= 2 || has(S, 'kern');
   o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
   if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
 
   // Nachtzug im Hintergrund
-  o.push(`<rect x="0" y="198" width="1000" height="62" fill="#4d7c0f"/>`);
-  if (on('nachtzug')) o.push(`<line x1="0" y1="203" x2="1000" y2="203" stroke="#57534e" stroke-width="1.5"/><g class="drive ${ghost.has('nachtzug') ? 'ghost' : ''}" style="animation-duration:26s;animation-delay:-8s"><g transform="translate(0,202)"><title>Nachtzug</title>${[0, 34, 68, 102].map(x => `<rect x="${x}" y="-10" width="32" height="9" rx="2" fill="#1e3a8a"/><rect x="${x + 3}" y="-8" width="26" height="2.5" fill="#fde68a" opacity=".8"/>`).join('')}<text x="64" y="-12" font-size="7" fill="#fde68a">★ ☾</text></g></g>`);
-  o.push(`<path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
+  o.push(`<rect x="-1100" y="198" width="3200" height="62" fill="#4d7c0f"/><g><rect x="1058.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1060" cy="156" r="8" fill="#3f6212"/></g><g><rect x="1083.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1085" cy="162" r="6" fill="#3f6212"/></g><g><rect x="1178.5" y="158" width="3" height="9" fill="#78350f"/><circle cx="1180" cy="154" r="9" fill="#3f6212"/></g><g><rect x="1298.5" y="156" width="3" height="9" fill="#78350f"/><circle cx="1300" cy="152" r="8" fill="#3f6212"/></g><g><rect x="1328.5" y="163" width="3" height="9" fill="#78350f"/><circle cx="1330" cy="159" r="6" fill="#3f6212"/></g><g><rect x="1458.5" y="162" width="3" height="9" fill="#78350f"/><circle cx="1460" cy="158" r="8" fill="#3f6212"/></g><g><rect x="1558.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1560" cy="162" r="7" fill="#3f6212"/></g><g><rect x="1698.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1700" cy="156" r="9" fill="#3f6212"/></g><g><rect x="-61.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-60" cy="185" r="7" fill="#3f6212"/></g><g><rect x="-171.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-170" cy="185" r="6" fill="#3f6212"/></g>`);
+  if (on('nachtzug')) o.push(`<line x1="-1100" y1="203" x2="2100" y2="203" stroke="#57534e" stroke-width="1.5"/><g class="drive ${ghost.has('nachtzug') ? 'ghost' : ''}" style="animation-duration:26s;animation-delay:-8s"><g transform="translate(0,202)"><title>Nachtzug</title>${[0, 34, 68, 102].map(x => `<rect x="${x}" y="-10" width="32" height="9" rx="2" fill="#1e3a8a"/><rect x="${x + 3}" y="-8" width="26" height="2.5" fill="#fde68a" opacity=".8"/>`).join('')}<text x="64" y="-12" font-size="7" fill="#fde68a">★ ☾</text></g></g>`);
+  o.push(`<path d="M-1100,204 L6,204 L6,233 L-1100,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8"><line x1="-760" y1="216" x2="-746" y2="216"/><line x1="-640" y1="226" x2="-626" y2="226"/><line x1="-520" y1="214" x2="-506" y2="214"/><line x1="-400" y1="222" x2="-386" y2="222"/><line x1="-280" y1="216" x2="-266" y2="216"/><line x1="-170" y1="228" x2="-156" y2="228"/><line x1="-60" y1="218" x2="-46" y2="218"/></g><path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
   if (on('fw')) o.push(`<g class="${cls('fw')}"><title>Fernwärme mit Seewasser</title><rect x="226" y="196" width="22" height="13" fill="#e2e8f0"/><polygon points="224,196 237,188 250,196" fill="#0369a1"/><path d="M228,206 Q205,214 185,222" stroke="#f97316" stroke-width="2" fill="none"/><line x1="262" y1="230" x2="604" y2="230" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/></g>`);
 
   // Gebäude
@@ -902,8 +902,8 @@ function renderCity() {
   if (on('agri') || on('humus')) o.push(`<g class="${cls(on('agri') ? 'agri' : 'humus')}"><title>Bauernhof</title><rect x="905" y="222" width="70" height="10" fill="${on('humus') ? '#4d7c0f' : '#a3a635'}"/>${on('agri') ? [0, 1, 2].map(k => `<line x1="${912 + k * 22}" y1="222" x2="${912 + k * 22}" y2="212" stroke="#64748b"/><rect x="${905 + k * 22}" y="209" width="18" height="3" fill="#1e3a8a"/>`).join('') + '<path d="M977,232 A11,11 0 0 1 999,232 Z" fill="#84cc16"/>' : ''}</g>`);
 
   // Strasse & Fahrzeuge
-  o.push(`<rect x="0" y="232" width="1000" height="3" fill="#a8a29e"/><rect x="0" y="235" width="1000" height="25" fill="#3f3f46"/><line x1="0" y1="247.5" x2="1000" y2="247.5" stroke="#e5e7eb" stroke-dasharray="10 8"/>`);
-  if (on('oev')) o.push(`<line x1="0" y1="215" x2="1000" y2="215" stroke="#334155" stroke-width=".8" class="${cls('oev')}"/>`);
+  o.push(`<rect x="-1100" y="232" width="3200" height="3" fill="#a8a29e"/><rect x="-1100" y="235" width="3200" height="25" fill="#3f3f46"/><line x1="-1100" y1="247.5" x2="2100" y2="247.5" stroke="#e5e7eb" stroke-dasharray="10 8"/>`);
+  if (on('oev')) o.push(`<line x1="-1100" y1="215" x2="2100" y2="215" stroke="#334155" stroke-width=".8" class="${cls('oev')}"/>`);
   const slots = 7 - (on('oev') ? 2 : 0), nC = Math.min(slots, Math.round(clamp(fossV / 0.95) * 7));
   const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
   for (let k = 0; k < slots; k++) {
@@ -912,10 +912,11 @@ function renderCity() {
   }
   if (on('oev')) o.push(`<g class="drive ${ghost.has('oev') ? 'ghost' : ''}" style="animation-duration:20s;animation-delay:-6s"><g transform="translate(0,242)"><title>Tram</title><line x1="30" y1="-12" x2="36" y2="-27" stroke="#334155"/><rect y="-13" width="66" height="12" rx="3" fill="#2563eb"/><rect y="-7" width="66" height="2" fill="#fff"/><circle cx="10" r="1.8" fill="#111827"/><circle cx="56" r="1.8" fill="#111827"/></g></g>`);
   if (on('velo')) for (let k = 0; k < 3; k++) o.push(`<g class="drive ${ghost.has('velo') ? 'ghost' : ''}" style="animation-duration:${34 + k * 6}s;animation-delay:-${k * 13}s"><g transform="translate(0,234)"><circle r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><circle cx="8" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><line x2="5" y2="-4" stroke="#111827" stroke-width=".8"/><line x1="5" y1="-4" x2="8" stroke="#111827" stroke-width=".8"/><circle cx="5" cy="-8" r="2" fill="${['#ec4899', '#14b8a6', '#eab308'][k]}"/></g></g>`);
-  o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
+  o.push(`<rect x="-1100" width="3200" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
 
   $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
   cityTitlesToTips();
+  fitCityViewBox();
   $('city-year').textContent = `Seestadt ${CFG.snapYears[S.history.length - 1]}`;
   $('city-mood').textContent = `${g.acc >= 60 ? '😀' : g.acc >= 45 ? '🙂' : g.acc >= 34 ? '😐' : '😠'} Stimmung ${g.acc} · ${dirt < 0.35 ? '🌤️ klare Luft' : dirt < 0.7 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${planes >= 3 ? ' · ✈️ viel Flugverkehr' : ''}`;
   $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl' : 'Tipp: auf Anlagen zeigen oder tippen';
@@ -973,6 +974,7 @@ function updateLayoutMode() {
     root.style.setProperty('--by', ((H - STAGE.h * s) / 2) + 'px');
   }
   if (typeof chart !== 'undefined' && chart) chart.resize();
+  if (typeof fitCityViewBox === 'function') fitCityViewBox();
 }
 function toggleBeamer(on = !beamer) {
   beamer = on;
@@ -986,6 +988,29 @@ function toggleBeamer(on = !beamer) {
 addEventListener('resize', updateLayoutMode);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && beamer) toggleBeamer(false); });
 updateLayoutMode();
+
+
+// Stadtbild an breite Streifen anpassen: Szene seitlich weiterzeigen statt oben abschneiden
+function fitCityViewBox() {
+  const svg = $('city') && $('city').querySelector('svg'); if (!svg) return;
+  const w = svg.clientWidth, h = svg.clientHeight; if (!w || !h) return;
+  const a = w / h, base = 1000 / 242;
+  let x = 0, vw = 1000;
+  if (a > base + 0.01) { vw = Math.min(3200, 242 * a); x = 500 - vw / 2; svg.setAttribute('preserveAspectRatio', 'xMidYMax meet'); }
+  else svg.setAttribute('preserveAspectRatio', 'xMidYMax slice');
+  svg.setAttribute('viewBox', `${x.toFixed(1)} 18 ${vw.toFixed(1)} 242`);
+  svg.style.setProperty('--x0', (x - 140) + 'px'); svg.style.setProperty('--x1', (x + vw + 140) + 'px');
+  svg.style.setProperty('--cx0', (x - 200) + 'px'); svg.style.setProperty('--cx1', (x + vw + 150) + 'px');
+  // gleiche Geschwindigkeit wie im Standardbild: Dauer proportional zur Strecke
+  const spd = (vw + 280) / 1280, cspd = (vw + 350) / 1350;
+  svg.querySelectorAll('.drive, .drive-back, .cloud').forEach(el => {
+    if (!el.dataset.d) { el.dataset.d = parseFloat(el.style.animationDuration) || 12; el.dataset.dl = parseFloat(el.style.animationDelay) || 0; }
+    const f = el.classList.contains('cloud') ? cspd : spd;
+    el.style.animationDuration = (el.dataset.d * f).toFixed(2) + 's';
+    el.style.animationDelay = (el.dataset.dl * f).toFixed(2) + 's';
+  });
+}
+addEventListener('resize', () => fitCityViewBox());
 
 // ---------- Start ----------
 window.addEventListener('DOMContentLoaded', () => {
