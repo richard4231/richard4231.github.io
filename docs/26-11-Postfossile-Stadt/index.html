@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postfossile Stadt</title>
+<meta name="description" content="Rundenbasiertes Strategiespiel zur Energiewende einer Stadt bis 2045: CO₂, Winterstrom, Budget und Akzeptanz im Zielkonflikt.">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    /* Quellen (validierte Reihenfolge, dunkler Modus) */
+    --c-wasser: #3987e5; --c-kern: #d95926; --c-wind: #199e70; --c-solar: #c98500;
+    --c-gas: #d55181; --c-bio: #008300; --c-import: #9085e9;
+    /* Sektoren */
+    --c-waerme: #d95926; --c-verkehr: #9085e9; --c-strom: #c98500; --c-industrie: #3987e5;
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  .card-measure { transition: border-color .15s, background-color .15s, transform .15s; }
+  .card-measure:not([aria-disabled="true"]):hover { transform: translateY(-1px); }
+  .card-measure:focus-visible { outline: 2px solid #34d399; outline-offset: 2px; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .fade-in { animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+  .swatch { display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }
+  table.data td, table.data th { padding: 2px 6px; text-align: right; }
+  table.data td:first-child, table.data th:first-child { text-align: left; }
+
+  /* --- Stadtpanorama --- */
+  #city svg { display: block; width: 100%; height: auto; }
+  @media (max-width: 640px) { #city svg { height: 190px; } }
+  .spin { animation: spin 3s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .spin.slow { animation-duration: 5s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .smoke { animation: smoke 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes smoke { 0% { transform: translate(0, 0) scale(.5); opacity: .0; } 15% { opacity: .85; } 100% { transform: translate(14px, -38px) scale(2.2); opacity: 0; } }
+  .steam { animation: steam 4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes steam { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(8px, -30px) scale(2.4); opacity: 0; } }
+  .drive { animation: drive linear infinite; }
+  @keyframes drive { from { transform: translateX(-120px); } to { transform: translateX(1120px); } }
+  .drive-back { animation: driveback linear infinite; }
+  @keyframes driveback { from { transform: translateX(1120px); } to { transform: translateX(-120px); } }
+  .cloud { animation: cloud linear infinite; }
+  @keyframes cloud { from { transform: translateX(-200px); } to { transform: translateX(1150px); } }
+  .wave { animation: wave 4s ease-in-out infinite alternate; }
+  @keyframes wave { to { transform: translateX(14px); } }
+  .swing { animation: swing 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 0% 50%; }
+  @keyframes swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+  .ghost { opacity: .45; }
+  .ghost * { stroke-dasharray: 3 2; }
+  .flicker { animation: flicker 1.3s steps(2) infinite; }
+  @keyframes flicker { 50% { opacity: .15; } }
+  .blackout { animation: blackout 2.2s ease-in-out 1; }
+  @keyframes blackout { 0%,100% { filter: none; } 15%,45% { filter: brightness(.25) saturate(.3); } 30%,60% { filter: brightness(.7); } }
+  .pop-in { animation: popin .6s cubic-bezier(.2,1.6,.4,1) 1; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes popin { from { transform: scale(.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* --- Ereigniskarte --- */
+  .flip { perspective: 900px; }
+  .flip-inner { display: grid; transition: transform .7s cubic-bezier(.3,.9,.3,1); transform-style: preserve-3d; }
+  .flip-inner > div { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flip-inner > .back { transform: rotateY(180deg); }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+
+  /* --- Zeitung --- */
+  .paper { background: #f4efe4; color: #1c1917; font-family: Georgia, 'Times New Roman', serif; }
+  .paper .masthead { font-family: 'Inter', sans-serif; letter-spacing: .18em; }
+  .bubble { position: relative; background: #fff; border: 1px solid #d6d3d1; }
+
+  .badge-locked { filter: grayscale(1); opacity: .35; }
+  @media (prefers-reduced-motion: reduce) {
+    .spin, .smoke, .steam, .drive, .drive-back, .cloud, .wave, .swing, .flicker, .blackout, .pop-in, .fade-in { animation: none !important; }
+    .flip-inner { transition: none; }
+  }
+</style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="bg-slate-800 border-b border-slate-700 px-4 md:px-6 py-3 flex flex-wrap gap-3 justify-between items-center shadow-md">
+  <div class="flex items-center gap-3">
+    <div class="bg-emerald-500 text-slate-900 w-10 h-10 grid place-items-center rounded-xl font-bold text-lg shadow-lg"><i class="fa-solid fa-city"></i></div>
+    <div>
+      <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Postfossile Stadt</h1>
+      <p class="text-xs text-slate-400">Seestadt · 180 000 Einwohner:innen · Netto-Null bis 2045?</p>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2 text-sm">
+    <div class="bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 flex items-center gap-2">
+      <i class="fa-solid fa-landmark text-emerald-400"></i>
+      <span id="round-display" class="font-semibold text-emerald-300">Legislatur 1 · 2028–2032</span>
+    </div>
+    <button id="code-pill" class="bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-600" title="Szenario-Code: gleiche Ereignisse für alle Gruppen. Klicken zum Kopieren des Links.">
+      <i class="fa-solid fa-dice text-amber-400 mr-1"></i><span id="code-display">—</span>
+    </button>
+    <label class="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer" title="Im Expertenmodus sind die Wirkungsprognosen auf den Karten ausgeblendet.">
+      <input type="checkbox" id="expert-toggle" class="accent-emerald-500"> Expertenmodus
+    </label>
+    <a id="link-simple" href="einfach.html" class="bg-sky-500/15 hover:bg-sky-500/25 px-3 py-1.5 rounded-lg border border-sky-500/40 text-sky-200">Einfache Version</a>
+    <button onclick="showModelInfo()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200"><i class="fa-solid fa-circle-info mr-1"></i>Modell</button>
+    <button onclick="showIntro()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200"><i class="fa-solid fa-rotate-right mr-1"></i>Neu</button>
+  </div>
+</header>
+
+<!-- Zeitleiste -->
+<nav class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2 overflow-x-auto scroll-thin">
+  <ol id="timeline" class="flex items-center gap-2 text-xs min-w-max max-w-7xl mx-auto"></ol>
+</nav>
+
+<main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+  <!-- Stadtpanorama -->
+  <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
+    <div id="city" aria-label="Animierte Ansicht von Seestadt" role="img"></div>
+    <div id="city-tip" class="hidden absolute z-10 pointer-events-none bg-slate-900/95 text-slate-100 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 shadow-lg max-w-[240px]"></div>
+    <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
+      <span id="city-year" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg font-semibold text-slate-100">Seestadt 2026</span>
+      <span id="city-mood" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-slate-200"></span>
+    </div>
+    <div id="city-hint" class="hidden sm:block absolute top-2 right-2 bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] md:text-[11px] text-slate-300 pointer-events-none"></div>
+  </section>
+
+  <!-- Linke Spalte -->
+  <section class="lg:col-span-7 flex flex-col gap-4 min-w-0">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 id="phase-title" class="text-base font-semibold flex items-center gap-2"><i class="fa-solid fa-users-rectangle text-teal-400"></i><span>Wähle bis zu 3 Massnahmen für diese Legislatur</span></h2>
+          <p id="phase-desc" class="text-xs text-slate-400 mt-1">Die Verwaltung schafft höchstens drei Beschlüsse pro Legislatur – das Budget meist weniger. Achte auf Bauzeiten: Was erst nach 2045 fertig wird, zählt nicht.</p>
+        </div>
+        <div class="bg-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 border border-slate-600 shrink-0">Runde <span id="round-badge">1</span>/4</div>
+      </div>
+      <div id="round-alerts" class="mt-3 space-y-2"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 items-center justify-between">
+      <div id="cat-tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin"></div>
+      <select id="sort-select" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-2 py-1.5 text-slate-300">
+        <option value="default">Sortierung: Kategorie</option>
+        <option value="cost">Kosten aufsteigend</option>
+        <option value="co2">Grösste CO₂-Wirkung</option>
+        <option value="sec">Grösste Sicherheitswirkung</option>
+        <option value="pop">Beliebteste zuerst</option>
+      </select>
+    </div>
+
+    <div id="measures-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[620px] overflow-y-auto pr-1 scroll-thin"></div>
+
+    <!-- Auswahl & Prognose -->
+    <div id="selection-panel" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-xs text-slate-400">Auswahl für diese Legislatur</div>
+          <div id="selection-list" class="text-sm text-slate-200 mt-1">Noch nichts gewählt.</div>
+        </div>
+        <button id="confirm-btn" onclick="confirmRound()" disabled class="px-5 py-3 rounded-xl font-semibold text-sm transition shadow-lg flex items-center gap-2 bg-slate-700 text-slate-400 cursor-not-allowed">
+          <span id="confirm-text">Beschliessen</span><i class="fa-solid fa-gavel"></i>
+        </button>
+      </div>
+      <div id="forecast" class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs"></div>
+    </div>
+  </section>
+
+  <!-- Rechte Spalte -->
+  <section class="lg:col-span-5 flex flex-col gap-4 min-w-0">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3 flex items-center justify-between">
+        <span><i class="fa-solid fa-gauge-high text-emerald-400 mr-2"></i>Lage der Stadt <span id="kpi-year" class="text-slate-400 font-normal">(2026)</span></span>
+        <span id="status-badge" class="text-[11px] px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Start</span>
+      </h3>
+      <div id="kpis" class="grid grid-cols-2 gap-3"></div>
+      <div id="subkpis" class="grid grid-cols-3 gap-2 mt-3 text-[11px]"></div>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <div class="flex gap-1 mb-3 text-xs" role="tablist">
+        <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="verlauf">Verlauf</button>
+        <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="bilanz">Strombilanz</button>
+        <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="sektoren">CO₂ nach Sektor</button>
+        <button class="chart-tab px-3 py-1.5 rounded-lg" data-tab="erwaermung">Erwärmung</button>
+      </div>
+      <div class="relative w-full h-56"><canvas id="mainChart"></canvas></div>
+      <p id="chart-caption" class="text-[11px] text-slate-400 mt-2 leading-snug"></p>
+      <details class="mt-2 text-[11px] text-slate-400">
+        <summary class="hover:text-slate-200"><i class="fa-solid fa-table mr-1"></i>Daten als Tabelle</summary>
+        <div id="chart-table" class="mt-2 overflow-x-auto scroll-thin"></div>
+      </details>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <h3 class="text-sm font-semibold text-slate-200 mb-2"><i class="fa-solid fa-person-digging text-amber-400 mr-2"></i>Baustellen</h3>
+      <div id="pipeline" class="space-y-1.5 text-xs"></div>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <h3 class="text-sm font-semibold text-slate-200 mb-2"><i class="fa-solid fa-book-open text-teal-400 mr-2"></i>Chronik</h3>
+      <div id="chronicle" class="space-y-1.5 text-xs max-h-64 overflow-y-auto scroll-thin pr-1"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="text-center text-[11px] text-slate-500 pb-4 px-4">Stilisiertes Lernmodell mit plausiblen Grössenordnungen – keine Prognose. Details unter «Modell».</footer>
+
+<canvas id="confetti" class="fixed inset-0 pointer-events-none z-[60]" style="width:100vw;height:100vh;display:none"></canvas>
+
+<!-- Modal -->
+<div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[92vh] overflow-y-auto scroll-thin fade-in">
+    <div id="modal-icon" class="text-4xl mb-2 text-center"></div>
+    <h3 id="modal-title" class="text-xl font-bold text-center mb-3"></h3>
+    <div id="modal-body" class="text-slate-300 text-sm leading-relaxed space-y-3"></div>
+    <div id="modal-actions" class="flex flex-wrap justify-center gap-3 mt-6"></div>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// MODEL-START  (reine Logik, ohne DOM – auch für Tests nutzbar)
+// ===================================================================
+const CFG = {
+  rounds: 4,
+  years: [[2028, 2032], [2033, 2037], [2038, 2042], [2043, 2045]],
+  snapYears: [2026, 2032, 2037, 2042, 2045],
+  trendT: [0, 1, 2, 3, 3.6],          // Legislaturen seit Start (letzte ist kürzer)
+  maxPicks: 3,
+  startBudget: 130, income: 50, minBudget: -40, interest: 0.10,
+  startPop: 60, popAnchor: 57, electionThreshold: 38,
+  co2Target: 30, secTarget: 70,
+  co2Path: [100, 82, 64, 46, 30],
+  kernEndsAfter: 1,                   // Liefervertrag deckt nur Snapshot 2032 ab (Ende 2034)
+  ef: { waerme: 0.24, verkehr: 0.26, industrie: 0.22, importW: 0.30, importS: 0.12, gas: 0.40, gasH2: 0.08 },
+  tradePrice: 0.03                     // Mio. CHF pro GWh und Legislatur (Saldo Import/Export)
+};
+
+const CATS = [
+  { id: 'erneuerbar', label: 'Erneuerbare', cls: 'bg-amber-500/15 text-amber-300' },
+  { id: 'versorgung', label: 'Versorgung & Speicher', cls: 'bg-teal-500/15 text-teal-300' },
+  { id: 'waerme', label: 'Wärme & Gebäude', cls: 'bg-orange-500/15 text-orange-300' },
+  { id: 'mobil', label: 'Mobilität', cls: 'bg-violet-500/15 text-violet-300' },
+  { id: 'industrie', label: 'Industrie', cls: 'bg-sky-500/15 text-sky-300' },
+  { id: 'regeln', label: 'Verbote & Abgaben', cls: 'bg-rose-500/15 text-rose-300' },
+  { id: 'politik', label: 'Politik & Finanzen', cls: 'bg-pink-500/15 text-pink-300' }
+];
+
+// cost: Mio. CHF · build: Legislaturen Bauzeit (0 = wirkt Ende dieser Legislatur) · pop: Akzeptanz-Effekt
+const MEASURES = [
+  { id: 'solar', cat: 'erneuerbar', icon: 'fa-solar-panel', title: 'Solaroffensive Dächer & Fassaden', cost: 25, build: 0, pop: 6,
+    desc: 'Solarpflicht bei Neubau und Sanierung, Förderbeitrag für Bestandsdächer.',
+    effect: '+200 GWh Solarstrom/Jahr – davon nur ¼ im Winter.', synergy: ['smartmeter', 'smartgrid'],
+    fact: 'Photovoltaik im Mittelland liefert rund drei Viertel ihres Jahresertrags im Sommerhalbjahr. Viel Solarstrom löst daher das Winterproblem nur teilweise.' },
+  { id: 'agri', cat: 'erneuerbar', icon: 'fa-wheat-awn', title: 'Agri-PV & Biogas', cost: 25, build: 0, pop: 4,
+    desc: 'Solarmodule über Kulturen plus Vergärung von Hofdünger und Grüngut.',
+    effect: '+60 GWh Solar, +40 GWh steuerbares Biogas (vor allem im Winter).', synergy: [],
+    fact: 'Biogas ist speicherbar und kann gezielt dann verstromt werden, wenn Sonne und Wind fehlen – mengenmässig aber begrenzt.' },
+  { id: 'wind', cat: 'erneuerbar', icon: 'fa-wind', title: 'Windpark auf den Jurahöhen', cost: 30, build: 1, pop: -15, infra: true,
+    desc: 'Beteiligung an sechs Grossanlagen. Hoher Ertrag, aber Einsprachen wegen Landschaft und Vogelschutz.',
+    effect: '+200 GWh, knapp ⅔ im Winter. Ohne Netzausbau nur 80 % nutzbar.', synergy: ['netz', 'buerger'],
+    fact: 'Wind weht in der Schweiz im Winterhalbjahr deutlich stärker – Windkraft ergänzt Solarstrom saisonal gut.' },
+  { id: 'alpin', cat: 'erneuerbar', icon: 'fa-mountain-sun', title: 'Alpine Solaranlage', cost: 35, build: 1, pop: -6, infra: true,
+    desc: 'Beteiligung an einer hochalpinen Freiflächenanlage über dem Nebel.',
+    effect: '+130 GWh, gut die Hälfte im Winter. Ohne Netzausbau nur 60 % nutzbar.', synergy: ['netz', 'buerger'],
+    fact: 'Über der Nebeldecke, mit Schneereflexion und tiefen Temperaturen liefern alpine Anlagen deutlich mehr Winterstrom als im Mittelland.' },
+
+  { id: 'kern', cat: 'versorgung', icon: 'fa-atom', title: 'Kernstrom-Liefervertrag verlängern', cost: 15, build: 0, pop: -20,
+    desc: 'Der Liefervertrag des Stadtwerks (300 GWh/Jahr) läuft Ende 2034 aus. Verlängerung bis 2045.',
+    effect: 'Sichert 150 GWh Winterstrom, CO₂-arm. Gesellschaftlich stark umstritten.', synergy: [],
+    fact: 'Kernkraftwerke liefern gleichmässig über das Jahr – das hilft im Winter. Strittig sind Risiken, Abfälle und die langfristige Abhängigkeit.' },
+  { id: 'gas', cat: 'versorgung', icon: 'fa-fire-flame-curved', title: 'Reservekraftwerk (H₂-ready)', cost: 30, build: 1, pop: -10, infra: true,
+    desc: 'Gaskraftwerk, das nur bei Engpässen läuft. Später auf Wasserstoff umrüstbar.',
+    effect: 'Bis 200 GWh Winterreserve. Läuft es, entsteht CO₂ – ausser mit eigenem Wasserstoff. Bereitschaft kostet 4 Mio./Leg.', synergy: ['h2'],
+    fact: 'Reservekraftwerke sind eine Versicherung: Sie kosten auch, wenn sie nicht laufen, und emittieren, wenn sie laufen.' },
+  { id: 'netz', cat: 'versorgung', icon: 'fa-tower-broadcast', title: 'Netzausbau & Verkabelung', cost: 40, build: 1, pop: -8, infra: true,
+    desc: 'Verstärkte Leitungen, neue Unterwerke, Anschluss an das Übertragungsnetz.',
+    effect: 'Wind & Alpin-Solar voll nutzbar, +70 GWh Importkapazität im Winter, +15 Flexibilität.', synergy: ['wind', 'alpin'],
+    fact: 'Ohne Netze kein Ausbau: Neue Anlagen werden sonst bei Spitzen abgeregelt, und Import im Notfall ist begrenzt.' },
+  { id: 'smartgrid', cat: 'versorgung', icon: 'fa-car-battery', title: 'Quartierbatterien & Smart Grid', cost: 30, build: 0, pop: 4,
+    desc: 'Batteriespeicher in Quartieren, digitale Netzsteuerung.',
+    effect: '+25 Flexibilität (Tag-Nacht-Ausgleich). Kein Winterstrom!', synergy: ['solar'],
+    fact: 'Batterien verschieben Strom über Stunden, nicht über Monate. Für die Netzstabilität wichtig, für die Winterlücke kaum.' },
+  { id: 'pump', cat: 'versorgung', icon: 'fa-water', title: 'Beteiligung Pumpspeicherwerk', cost: 35, build: 1, pop: 0,
+    desc: 'Anteil an einem Pumpspeicherkraftwerk in den Alpen.',
+    effect: '+30 Flexibilität: gleicht Tages- und Wochenschwankungen aus.', synergy: [],
+    fact: 'Pumpspeicher sind Kurzzeitspeicher (Stunden bis Tage). Saisonal wirkt vor allem das Zurückhalten von Wasser in Speicherseen.' },
+  { id: 'stau', cat: 'versorgung', icon: 'fa-dam', title: 'Staumauer-Erhöhung (Winterreserve)', cost: 45, build: 2, pop: -6, infra: true,
+    desc: 'Höhere Staumauer: Sommerwasser wird für den Winter zurückgehalten.',
+    effect: 'Verschiebt 140 GWh vom Sommer in den Winter. Lange Bauzeit!', synergy: ['buerger'],
+    fact: 'Speicherseen sind der grösste saisonale Stromspeicher der Schweiz. Eine Erhöhung bringt keinen zusätzlichen Strom, aber Strom zur richtigen Zeit.' },
+  { id: 'smartmeter', cat: 'versorgung', icon: 'fa-gauge', title: 'Smart Meter & dynamische Tarife', cost: 12, build: 0, pop: -8,
+    desc: 'Intelligente Zähler für alle, günstiger Strom bei Überschuss.',
+    effect: '−4 % Stromverbrauch, +15 Flexibilität (+10 mit viel Solar).', synergy: ['solar', 'agri'],
+    fact: 'Wer den Verbrauch in sonnige Mittagsstunden verschiebt, entlastet das Netz – Datenschutzbedenken bremsen die Akzeptanz.' },
+
+  { id: 'wp', cat: 'waerme', icon: 'fa-temperature-arrow-up', title: 'Wärmepumpen-Offensive', cost: 35, build: 0, pop: -4,
+    desc: 'Ersatzpflicht für fossile Heizungen mit Förderbeiträgen.',
+    effect: 'Fossile Wärme −25 Prozentpunkte – aber mehr Strombedarf im Winter.', synergy: ['daemm'],
+    fact: 'Eine Wärmepumpe macht aus 1 kWh Strom etwa 3 kWh Wärme. Sie spart viel CO₂, erhöht aber genau dann den Stromverbrauch, wenn er knapp ist.' },
+  { id: 'daemm', cat: 'waerme', icon: 'fa-house-chimney', title: 'Gebäudesanierungs-Programm', cost: 40, build: 0, pop: -4,
+    desc: 'Dämmung, Fensterersatz, energetische Sanierung von Altbauten.',
+    effect: 'Wärmebedarf −18 %. Wärmepumpen laufen effizienter (Faktor 3,6 statt 3).', synergy: ['wp'],
+    fact: 'Die beste Kilowattstunde ist die, die nicht gebraucht wird. Gedämmte Häuser brauchen tiefere Vorlauftemperaturen – ideal für Wärmepumpen.' },
+  { id: 'fw', cat: 'waerme', icon: 'fa-volcano', title: 'Fernwärme mit Tiefengeothermie', cost: 50, build: 2, pop: 5,
+    desc: 'Bohrung auf 4 km Tiefe und neues Fernwärmenetz in der Innenstadt.',
+    effect: 'Fossile Wärme −22 Prozentpunkte, kaum Strombedarf. Fündigkeitsrisiko!', synergy: [],
+    fact: 'Tiefengeothermie ist riskant: In Basel (2006) und St. Gallen (2013) lösten Projekte spürbare Erdbeben aus und wurden abgebrochen.' },
+  { id: 'see', cat: 'waerme', icon: 'fa-water-ladder', title: 'Seewasser- & Abwärmenutzung', cost: 30, build: 1, pop: 8,
+    desc: 'Grosswärmepumpen am See und Abwärme aus Kläranlage und Rechenzentren.',
+    effect: 'Fossile Wärme −12 Prozentpunkte, effizient (Faktor 4).', synergy: [],
+    fact: 'Seen speichern viel Wärme. Grosswärmepumpen sind effizienter als viele Einzelanlagen.' },
+
+  { id: 'oev', cat: 'mobil', icon: 'fa-train-tram', title: 'ÖV-Ausbau & Taktverdichtung', cost: 35, build: 1, pop: 10,
+    desc: 'Neue Tramlinie, 7,5-Minuten-Takt, günstigeres Abo.',
+    effect: 'Verkehrsenergie −15 %.', synergy: ['velo'],
+    fact: 'Ein Tram braucht pro Personenkilometer nur einen Bruchteil der Energie eines Autos.' },
+  { id: 'ev', cat: 'mobil', icon: 'fa-charging-station', title: 'Ladeinfrastruktur & E-Busse', cost: 20, build: 0, pop: 3,
+    desc: 'Ladestationen in Quartieren, Umstellung der Busflotte.',
+    effect: 'Fossiler Verkehr −35 Prozentpunkte, dafür mehr Strombedarf.', synergy: [],
+    fact: 'Elektroautos brauchen etwa ein Drittel der Energie eines Verbrenners – aber eben Strom.' },
+  { id: 'velo', cat: 'mobil', icon: 'fa-bicycle', title: 'Velonetz & Parkraumbewirtschaftung', cost: 10, build: 0, pop: -14,
+    desc: 'Durchgehende Velorouten, weniger und teurere Parkplätze.',
+    effect: 'Verkehrsenergie −10 %. Günstig, aber unpopulär bei Autofahrenden.', synergy: ['oev'],
+    fact: 'Push- und Pull-Massnahmen wirken zusammen am stärksten: attraktiver ÖV plus weniger Parkraum.' },
+
+  { id: 'ind', cat: 'industrie', icon: 'fa-industry', title: 'Prozesswärme elektrifizieren', cost: 40, build: 1, pop: 2,
+    desc: 'Förderprogramm für Industrie-Wärmepumpen und Elektrokessel.',
+    effect: 'Fossile Industrieenergie −30 Prozentpunkte, mehr Strombedarf.', synergy: [],
+    fact: 'Bis etwa 150 °C lässt sich Prozesswärme gut elektrifizieren, darüber wird es schwierig.' },
+  { id: 'h2', cat: 'industrie', icon: 'fa-flask', title: 'Elektrolyse & grüner Wasserstoff', cost: 40, build: 1, pop: 0,
+    desc: 'Elektrolyseur, der vor allem mit Sommerüberschuss läuft.',
+    effect: 'Fossile Industrieenergie −15 Pp. für Hochtemperatur. Reservekraftwerk läuft dann fast CO₂-frei.', synergy: ['gas', 'solar'],
+    fact: 'Wasserstoff ist ein saisonaler Speicher mit hohen Verlusten: Von 1 kWh Strom bleiben nach Rückverstromung nur etwa 0,35 kWh.' },
+  { id: 'last', cat: 'industrie', icon: 'fa-plug-circle-minus', title: 'Lastmanagement-Verträge', cost: 10, build: 0, pop: 0,
+    desc: 'Industrie drosselt bei Engpässen gegen Entschädigung.',
+    effect: '+20 Flexibilität. Günstige Netzstabilisierung.', synergy: [],
+    fact: 'Flexibler Verbrauch ist oft billiger als zusätzliche Kraftwerke.' },
+
+  { id: 'buerger', cat: 'politik', icon: 'fa-people-roof', title: 'Energiegenossenschaft & Beteiligung', cost: 8, build: 0, pop: 8,
+    desc: 'Bürger:innen können sich finanziell an Anlagen beteiligen und mitreden.',
+    effect: 'Halbiert den Akzeptanzverlust aller Infrastrukturprojekte ab jetzt.', synergy: ['wind', 'alpin', 'stau'],
+    fact: 'Studien zeigen: Wer mitbesitzt und mitentscheidet, akzeptiert Anlagen in der Nachbarschaft eher.' },
+  { id: 'bond', cat: 'politik', icon: 'fa-hand-holding-dollar', title: 'Green Bond (Klimaanleihe)', cost: -50, build: 0, pop: -2,
+    desc: 'Die Stadt leiht sich 50 Mio. CHF für Klimaprojekte.',
+    effect: '+50 Mio. sofort, aber 6 Mio. Zins pro folgender Legislatur. Belegt einen Beschluss-Platz.', synergy: [],
+    fact: 'Kredite verschieben Kosten in die Zukunft. Lohnt sich, wenn frühe Investitionen später mehr sparen.' },
+
+  { id: 'verbrenner', cat: 'regeln', icon: 'fa-ban', title: 'Verbot neuer Benzin- & Dieselautos', cost: 5, build: 1, pop: -16,
+    desc: 'Neue Autos müssen emissionsfrei sein. Wirkt mit dem Ersatz der Flotte.',
+    effect: 'Fossiler Verkehr −30 Prozentpunkte, mehr Strombedarf.', synergy: ['ev'],
+    fact: 'In Wirklichkeit entscheiden Bund und EU (EU: ab 2035 nur noch emissionsfreie Neuwagen).' },
+  { id: 'heizverbot', cat: 'regeln', icon: 'fa-fire-burner', title: 'Verbot neuer Öl- & Gasheizungen', cost: 5, build: 0, pop: -12,
+    desc: 'Beim Heizungsersatz muss erneuerbar geheizt werden.',
+    effect: 'Fossile Wärme −22 Prozentpunkte, mehr Winterstrom.', synergy: ['daemm'],
+    fact: 'Der Kanton Zürich verlangt das seit 2022. Ohne Winterstrom wird es eng.' },
+  { id: 'treibstoff', cat: 'regeln', icon: 'fa-gas-pump', title: 'Benzin & Diesel teurer (Lenkungsabgabe)', cost: -30, build: 0, pop: -12, abgabe: true,
+    desc: 'Aufschlag pro Liter Treibstoff.',
+    effect: '+30 Mio. Einnahmen, Verkehrsenergie −7 %, schnellerer Umstieg auf E-Autos.', synergy: ['klimabonus'],
+    fact: 'Preise lenken: weniger fahren, sparsamer fahren, umsteigen. Unbeliebt an der Zapfsäule.' },
+  { id: 'heizoel', cat: 'regeln', icon: 'fa-oil-can', title: 'Heizöl & Gas teurer (CO₂-Abgabe)', cost: -30, build: 0, pop: -12, abgabe: true,
+    desc: 'Höhere CO₂-Abgabe auf Brennstoffe.',
+    effect: '+30 Mio. Einnahmen, Wärmebedarf −5 %, schnellerer Heizungsersatz.', synergy: ['klimabonus'],
+    fact: 'Die Schweiz kennt eine CO₂-Abgabe auf Heizöl und Gas; rund zwei Drittel fliessen an die Bevölkerung zurück.' },
+  { id: 'klimabonus', cat: 'regeln', icon: 'fa-envelope-open-text', title: 'Klimabonus: Abgaben zurückverteilen', cost: 5, build: 0, pop: 6,
+    desc: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück.',
+    effect: 'Abgaben sind danach nicht mehr umstritten – bringen aber kein Geld mehr in die Kasse.', synergy: ['treibstoff', 'heizoel'],
+    fact: 'Wer wenig verbraucht, bekommt mehr zurück, als er bezahlt.' }
+];
+// Wer entscheidet typischerweise? (vereinfacht)
+const LEVEL = { solar: 'K', agri: 'K', wind: 'K', alpin: 'B', kern: 'G', gas: 'B', netz: 'B', smartgrid: 'G', pump: 'G', stau: 'K', smartmeter: 'G',
+  wp: 'K', daemm: 'K', fw: 'G', see: 'G', oev: 'G', ev: 'G', velo: 'G', ind: 'B', h2: 'B', last: 'G', buerger: 'G', bond: 'G',
+  verbrenner: 'B', heizverbot: 'K', treibstoff: 'B', heizoel: 'B', klimabonus: 'B' };
+MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
+const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40' }, K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40' }, B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' } };
+const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
+const SHORT = { solar: 'Dach-Solar', agri: 'Agri-PV', wind: 'Wind', alpin: 'Alpin-Solar', kern: 'Kernstrom', gas: 'Reservekraftwerk', netz: 'Netzausbau',
+  smartgrid: 'Batterien', pump: 'Pumpspeicher', stau: 'Staumauer', smartmeter: 'Smart Meter', wp: 'Wärmepumpen', daemm: 'Sanierung', fw: 'Geothermie',
+  see: 'Seewasser', oev: 'ÖV', ev: 'E-Mobilität', velo: 'Velonetz', ind: 'Prozesswärme', h2: 'Wasserstoff', last: 'Lastmanagement', buerger: 'Beteiligung', bond: 'Green Bond',
+  verbrenner: 'Verbrenner-Verbot', heizverbot: 'Heizungsverbot', treibstoff: 'Treibstoff-Abgabe', heizoel: 'CO₂-Abgabe', klimabonus: 'Klimabonus' };
+// Zeitung: Unterzeile + Stimmen aus der Bevölkerung [pro, contra]
+const NEWS = {
+  solar: ['Solarpflicht beschlossen – Dachdecker:innen ausgebucht', ['Hausbesitzer, Seefeld', 'Mein Dach verdient jetzt Geld. Hätte ich früher machen sollen!'], ['Mieterin, Altstadt', 'Und wer zahlt es am Ende? Die Mieter:innen, wie immer.']],
+  agri: ['Strom vom Acker: Bauernhöfe werden zu Kraftwerken', ['Landwirt, Oberdorf', 'Unter den Modulen wachsen die Beeren sogar besser – weniger Hagelschaden.'], ['Landschaftsschützer', 'Erst Gewächshäuser, jetzt Solarfelder. Wo bleibt die Landschaft?']],
+  wind: ['Sechs Windräder für den Jura – Einsprachen angekündigt', ['Ingenieurin, Stadtwerk', 'Wind liefert genau dann, wenn wir ihn brauchen: im Winter.'], ['Anwohner, Jurahöhe', '200 Meter hoch, direkt vor meinem Stubenfenster? Sicher nicht!']],
+  alpin: ['Solarpanels über dem Nebelmeer', ['Bergführerin', 'Da oben scheint die Sonne, wenn unten alle im Grau sitzen.'], ['Alpenschutz-Verein', 'Industrieanlagen in unberührten Alpen – ein Tabubruch.']],
+  kern: ['Stadtwerk verlängert Kernstrom-Vertrag – Protest vor dem Stadthaus', ['Gewerbler', 'Endlich denkt jemand an die Versorgungssicherheit.'], ['Klimaaktivistin', 'Kernkraft ist keine Zukunft, sondern ein teurer Umweg.']],
+  gas: ['Reservekraftwerk: Versicherung gegen den Blackout', ['Spitaldirektorin', 'Unsere Intensivstation kann sich keinen Stromausfall leisten.'], ['Klimaaktivistin', 'Ein neues Gaskraftwerk – im Ernst? Jetzt noch?']],
+  netz: ['Grossbaustelle Stromnetz: Strassen monatelang offen', ['Netzingenieur', 'Ohne Leitungen nützt das schönste Windrad nichts.'], ['Velofahrerin', 'Seit Wochen Umleitung. Ich finde meinen Arbeitsweg nicht mehr.']],
+  smartgrid: ['Batterien im Quartier: Mittagssonne für den Abend', ['Quartierverein', 'Unser Solarstrom vom Mittag leuchtet jetzt am Abend.'], ['Skeptiker', 'Und wenn so ein Ding brennt?']],
+  pump: ['Seestadt kauft sich bei Pumpspeicherwerk ein', ['Ökonomin', 'Flexibilität ist das neue Gold im Strommarkt.'], ['Steuerzahler', 'Was hat Seestadt mit einem Stausee in den Alpen zu tun?']],
+  stau: ['Staumauer wird erhöht – Sommerwasser für den Winter', ['Ingenieurin', 'Wasser ist die beste Batterie, die wir haben.'], ['Fischer', 'Und die Fische? Und der Bach unterhalb?']],
+  smartmeter: ['Smart Meter für alle: Strom wird mittags billiger', ['Student', 'Die Waschmaschine läuft jetzt um zwölf – spart mir 10 Franken im Monat.'], ['Rentner', 'Der Zähler weiss mehr über mich als meine Frau.']],
+  wp: ['Ölheizungen müssen raus – Wärmepumpen-Boom', ['Installateur', 'Wir stellen drei Lernende ein. Das Telefon klingelt ununterbrochen.'], ['Hausbesitzerin', '35 000 Franken für eine neue Heizung? Meine alte läuft doch noch!']],
+  daemm: ['Gerüste überall: Seestadt saniert', ['Mieterin', 'Endlich zieht es nicht mehr durchs Fenster.'], ['Mieter', 'Sanierung heisst bei uns: Kündigung und teurere Miete.']],
+  fw: ['Bohrturm in der Innenstadt: Wärme aus 4 Kilometern Tiefe', ['Geologin', 'Unter uns liegt eine riesige Wärmequelle.'], ['Anwohner', 'Ich erinnere mich an Basel 2006. Mir ist mulmig.']],
+  see: ['Der See heizt die Stadt', ['Bademeisterin', 'Der See merkt davon kaum etwas – die Altstadt schon.'], ['Fischer', 'Ob das den Felchen gefällt?']],
+  oev: ['Neue Tramlinie: Im Takt durch Seestadt', ['Pendlerin', 'Alle 7,5 Minuten ein Tram – ich habe mein Auto verkauft.'], ['Ladenbesitzer', 'Jahre Baustelle vor meinem Laden. Wer kommt da noch einkaufen?']],
+  ev: ['Ladestationen an jeder Ecke', ['Taxifahrer', 'Mein E-Taxi lädt beim Warten – genial.'], ['Autofan', 'Ohne Motorengeräusch ist Autofahren nur halb so schön.']],
+  velo: ['Parkplätze weg, Velowege her', ['Velokurierin', 'Endlich kein Slalom mehr zwischen Lastwagen.'], ['Gewerbler', 'Ohne Parkplätze kommen meine Kund:innen nicht mehr.']],
+  ind: ['Industrie schaltet auf Strom um', ['Fabrikchefin', 'Elektrisch ist präziser – und unabhängig vom Ölpreis.'], ['Gewerkschafter', 'Hoffentlich bleiben die Jobs hier.']],
+  h2: ['Seestadt steigt ins Wasserstoff-Zeitalter ein', ['Chemiker', 'Sommerstrom in Tanks für den Winter – das ist die Zukunft.'], ['Ökonom', 'Teuer und verlustreich. Ein Prestigeprojekt.']],
+  last: ['Fabriken drosseln bei Strommangel – gegen Bezahlung', ['Netzbetreiberin', 'Das ist das günstigste Kraftwerk, das es gibt.'], ['Schichtarbeiter', 'Und wir sitzen dann herum?']],
+  buerger: ['Energiegenossenschaft: Ganz Seestadt wird Stromproduzentin', ['Rentnerin', 'Ich habe zehn Anteilscheine – mir gehört jetzt ein Stück Windrad!'], ['Skeptiker', 'Noch ein Verein mit Sitzungen bis Mitternacht.']],
+  bond: ['Klimaanleihe: Stadt macht Schulden fürs Klima', ['Finanzvorsteherin', 'Abwarten wäre am Ende teurer.'], ['Steuerzahlerbund', 'Unsere Kinder zahlen die Zeche.']],
+  verbrenner: ['Aus für Benzin und Diesel bei Neuwagen', ['Klimaforscherin', 'Endlich Planungssicherheit für alle.'], ['Autohändler', 'Wer soll sich jetzt noch ein Auto leisten?']],
+  heizverbot: ['Neue Ölheizungen verboten', ['Heizungsinstallateur', 'Wir bauen nur noch Wärmepumpen ein – Auftragsbücher voll.'], ['Hausbesitzer', 'Bevormundung! Meine Heizung, meine Wahl.']],
+  treibstoff: ['Benzinpreis steigt um 20 Rappen', ['Velokurier', 'Wer Auto fährt, soll auch die Folgen bezahlen.'], ['Pendlerin vom Land', 'Ich habe keinen Bus – ich zahle einfach drauf.']],
+  heizoel: ['Heizöl wird teurer', ['Energieberaterin', 'Jetzt rechnet sich der Umstieg endlich.'], ['Rentner', 'Mein Haus ist alt, ich kann nicht einfach umbauen.']],
+  klimabonus: ['Klimabonus: Geld zurück für alle', ['Familienvater', 'Wir fahren wenig Auto – am Ende haben wir mehr im Portemonnaie.'], ['Ökonom', 'Bürokratie für ein Nullsummenspiel?']]
+};
+
+// --- Zufall (reproduzierbar über Szenario-Code) ---
+function hashCode(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+
+// --- Ereignisse ---
+const EVENTS = {
+  dunkelflaute: { title: 'Dunkelflaute im Januar', icon: '🌫️', apply(S, m, R) {
+    if (m.sec < 55) { R.pop -= 8; R.budget -= 10; return 'Zwei Wochen Nebel und Windstille. Das Netz kam an seine Grenzen, Notmassnahmen waren nötig (−10 Mio., −8 Akzeptanz).'; }
+    if (m.sec < 70) { R.pop -= 3; return 'Zwei Wochen Nebel und Windstille. Knapp gutgegangen, aber die Medien berichten über Blackout-Gefahr (−3 Akzeptanz).'; }
+    R.pop += 4; return 'Zwei Wochen Nebel und Windstille – die Versorgung hielt dank Reserven stand (+4 Akzeptanz).'; } },
+  preisschock: { title: 'Öl- und Gaspreisschock', icon: '🛢️', apply(S, m, R) {
+    const f = m.fossilShare; const b = Math.round(30 * f), p = Math.round(16 * f);
+    R.budget -= b; R.pop -= p;
+    return `Internationale Krise: Fossile Energie wird teuer. Je abhängiger die Stadt, desto härter der Schlag (Fossilanteil ${Math.round(f * 100)} %: −${b} Mio., −${p} Akzeptanz).`; } },
+  foerderung: { title: 'Bundesförderprogramm Gebäude', icon: '🏛️', apply(S, m, R) {
+    R.budget += 20; S.discounts.push({ cat: 'waerme', f: 0.7 });
+    return 'Der Bund stockt die Fördergelder auf: +20 Mio. und in der nächsten Legislatur 30 % Rabatt auf Wärme & Gebäude.'; } },
+  pvpreis: { title: 'Preissturz bei Solarmodulen', icon: '📉', apply(S, m, R) {
+    S.discounts.push({ cat: 'erneuerbar', f: 0.7 }); S.flags.pvBoom = true;
+    return 'Modulpreise fallen stark: 30 % Rabatt auf Erneuerbare in der nächsten Legislatur, private Dächer werden schneller belegt.'; } },
+  trockenheit: { title: 'Hitzesommer & Trockenheit', icon: '🌡️', apply(S, m, R) {
+    S.temp.drought = true; R.pop -= 2;
+    return 'Flüsse führen wenig Wasser: Wasserkraft im Sommer −25 %. Fehlender Strom muss importiert werden.'; } },
+  initiative: { title: 'Bürgerinitiative «Hände weg von unserer Landschaft»', icon: '📣', apply(S, m, R) {
+    S.protest = true; R.pop -= 3;
+    return S.active.has('buerger') || S.chosen.some(c => c.id === 'buerger')
+      ? 'Eine Initiative mobilisiert gegen Grossprojekte. Dank Energiegenossenschaft bleibt der Widerstand moderat (nächste Legislatur ×1,5 Akzeptanzverlust bei Infrastruktur, halbiert durch Beteiligung).'
+      : 'Eine Initiative mobilisiert gegen Grossprojekte: In der nächsten Legislatur kosten Infrastrukturprojekte 50 % mehr Akzeptanz.'; } },
+  kosten: { title: 'Kostenüberschreitung auf Baustellen', icon: '🚧', apply(S, m, R) {
+    const open = S.pipeline.filter(p => p.ready > S.round);
+    if (!open.length) { R.budget += 5; return 'Der Bauindex steigt – zum Glück hat die Stadt gerade keine Grossbaustellen (+5 Mio. Reserve aufgelöst).'; }
+    const p = open[0]; const extra = Math.round(Math.abs(M[p.id].cost) * 0.3); R.budget -= extra;
+    return `Das Projekt «${M[p.id].title}» wird teurer als geplant: −${extra} Mio.`; } },
+  klimademo: { title: 'Grosse Klimademonstration', icon: '🪧', apply(S, m, R) {
+    const path = CFG.co2Path[S.round];
+    if (m.co2pct > path + 5) { R.pop -= 7; return `Zehntausende fordern mehr Tempo: Die Stadt liegt über dem Absenkpfad (${m.co2pct} % statt ≤ ${path} %) – −7 Akzeptanz.`; }
+    R.pop += 4; return 'Die Klimabewegung lobt den Kurs der Stadt (+4 Akzeptanz).'; } },
+  techsprung: { title: 'Effizienzsprung bei Wärmepumpen', icon: '🔬', apply(S, m, R) {
+    S.flags.hpBoost = true; return 'Neue Kältemittel und Serienfertigung: Private wechseln schneller zur Wärmepumpe (Trend verstärkt).'; } },
+  revision: { title: 'Ungeplante Revision im Kernkraftwerk', icon: '⚠️', apply(S, m, R) {
+    if (!m.kernActive) { R.pop += 1; return 'Ein Kernkraftwerk steht still – die Stadt ist nicht mehr betroffen, ihr Vertrag ist ausgelaufen.'; }
+    S.temp.kernOut = true; return 'Ein Kernkraftwerk steht monatelang still: Der Vertragsstrom fehlt in diesem Winter.'; } }
+};
+const EVENT_IDS = Object.keys(EVENTS);
+
+// Schlagzeilen: [gut, schlecht]
+const HEADLINES = {
+  dunkelflaute: ['Dunkelflaute? Seestadts Lichter bleiben an', 'Nebel, Flaute, Notstrom: Seestadt am Limit'],
+  preisschock: ['Ölpreis-Schock? Seestadt zuckt nur mit den Schultern', 'Heizöl so teuer wie nie – Haushalte ächzen'],
+  foerderung: ['Geldsegen aus Bern für Hausbesitzer:innen', 'Geldsegen aus Bern für Hausbesitzer:innen'],
+  pvpreis: ['Solarmodule zum Schnäppchenpreis', 'Solarmodule zum Schnäppchenpreis'],
+  trockenheit: ['Hitzesommer: Flüsse führen kaum Wasser', 'Hitzesommer: Flüsse führen kaum Wasser'],
+  initiative: ['«Hände weg von unserer Landschaft!» – Initiative eingereicht', '«Hände weg von unserer Landschaft!» – Initiative eingereicht'],
+  kosten: ['Bauindex steigt – Stadt kommt glimpflich davon', 'Baustellen-Kosten laufen aus dem Ruder'],
+  klimademo: ['Klimabewegung lobt Seestadt: «Weiter so!»', 'Zehntausende auf der Strasse: «Viel zu langsam!»'],
+  techsprung: ['Durchbruch: Wärmepumpen günstiger und leiser', 'Durchbruch: Wärmepumpen günstiger und leiser'],
+  revision: ['Kernkraftwerk vom Netz – Seestadt nicht betroffen', 'Kernkraftwerk vom Netz – Seestadt muss Strom zukaufen']
+};
+
+// Ratsentscheide zu Beginn jeder Legislatur
+const DILEMMAS = [
+  { id: 'rechenzentrum', icon: '🖥️', title: 'Ein Tech-Konzern will ein Rechenzentrum bauen',
+    text: 'Hunderte Arbeitsplätze und Steuern – aber Serverhallen fressen Strom, auch im Winter.',
+    options: [
+      { label: 'Ansiedeln', desc: '+25 Mio. Steuern, aber +60 GWh Strombedarf pro Jahr. Mit Seewasser-Netz wird die Abwärme genutzt.',
+        apply(S) { S.budget += 25; S.flags.extraLoad = (S.flags.extraLoad || 0) + 60;
+          if (S.active.has('see') || S.chosen.some(c => c.id === 'see')) { S.flags.heatExtra = (S.flags.heatExtra || 0) + 0.03; return 'Das Rechenzentrum kommt – und heizt über das Seewasser-Netz gleich ein Quartier mit.'; }
+          return 'Das Rechenzentrum kommt. Die Kasse klingelt, die Stromkurve steigt.'; } },
+      { label: 'Ablehnen', desc: '−3 Akzeptanz (Gewerbe ist enttäuscht).', apply(S) { S.pop -= 3; return 'Der Konzern zieht in die Nachbarstadt. Das Gewerbe murrt.'; } }
+    ] },
+  { id: 'schulen', icon: '🏫', title: 'Schüler:innen fordern Solardächer auf allen Schulhäusern',
+    text: 'Eine Petition mit 4000 Unterschriften liegt im Stadthaus. Die Jugendlichen stehen vor der Tür.',
+    options: [
+      { label: 'Ja, machen wir', desc: '−10 Mio., +25 GWh Solar, +5 Akzeptanz.', apply(S) { S.budget -= 10; S.flags.solarExtra = (S.flags.solarExtra || 0) + 25; S.pop += 5; return 'Jubel auf dem Schulhof: Bald glitzern Module auf allen Schulhäusern.'; } },
+      { label: 'Kein Geld dafür', desc: '−4 Akzeptanz.', apply(S) { S.pop -= 4; return 'Enttäuschte Gesichter. Auf Social Media trendet #SeestadtSchläft.'; } }
+    ] },
+  { id: 'bonus', icon: '💸', title: 'Die Opposition fordert einen Energiebonus',
+    text: 'Die Energiepreise drücken aufs Portemonnaie. Wie hilft die Stadt?',
+    options: [
+      { label: 'Bonus für alle', desc: '−15 Mio., +6 Akzeptanz.', apply(S) { S.budget -= 15; S.pop += 6; return 'Jeder Haushalt erhält einen Check. Beliebt – aber teuer.'; } },
+      { label: 'Gezielte Hilfe', desc: '−5 Mio., +2 Akzeptanz. Nur Haushalte mit wenig Einkommen.', apply(S) { S.budget -= 5; S.pop += 2; return 'Wer es nötig hat, bekommt Unterstützung. Weniger Applaus, aber solide.'; } }
+    ] },
+  { id: 'sonntag', icon: '🚗', title: 'Autofreie Sonntage?',
+    text: 'Ein Komitee will an vier Sonntagen im Jahr die Innenstadt für Autos sperren.',
+    options: [
+      { label: 'Einführen', desc: '−5 Akzeptanz jetzt, Verkehrsenergie −3 % dauerhaft (Gewohnheiten ändern sich).', apply(S) { S.pop -= 5; S.flags.verkehrF = (S.flags.verkehrF || 1) * 0.97; return 'Picknick auf der Hauptstrasse! Manche lieben es, andere schäumen.'; } },
+      { label: 'Ablehnen', desc: '+1 Akzeptanz.', apply(S) { S.pop += 1; return 'Alles bleibt, wie es ist. Die Autofahrer:innen atmen auf.'; } }
+    ] },
+  { id: 'biogas', icon: '🐄', title: 'Der Bauernverband will eine Biogas-Prämie',
+    text: 'Mit einer Prämie würden mehrere Höfe Gülle und Mist vergären.',
+    options: [
+      { label: 'Prämie zahlen', desc: '−8 Mio., +20 GWh steuerbares Biogas, +2 Akzeptanz.', apply(S) { S.budget -= 8; S.flags.bioExtra = (S.flags.bioExtra || 0) + 20; S.pop += 2; return 'Auf drei Höfen wachsen grüne Kuppeln. Es riecht nach Zukunft – und ein bisschen nach Stall.'; } },
+      { label: 'Ablehnen', desc: '−2 Akzeptanz.', apply(S) { S.pop -= 2; return 'Die Bauern ziehen verärgert mit Traktoren vors Stadthaus.'; } }
+    ] },
+  { id: 'nachbar', icon: '🤝', title: 'Die Nachbargemeinde bietet einen Wärmeverbund an',
+    text: 'Ihre Holzschnitzel-Heizzentrale hat noch Kapazität für Seestadts Westquartier.',
+    options: [
+      { label: 'Anschliessen', desc: '−12 Mio., fossile Wärme −4 Prozentpunkte.', apply(S) { S.budget -= 12; S.flags.heatExtra = (S.flags.heatExtra || 0) + 0.04; return 'Rohre werden verlegt – das Westquartier heizt bald mit Holz aus der Region.'; } },
+      { label: 'Ablehnen', desc: 'Keine Kosten, keine Wirkung.', apply(S) { return 'Man bleibt freundlich, aber getrennt.'; } }
+    ] },
+  { id: 'leuchtreklame', icon: '💡', title: 'Leuchtreklamen nachts abschalten?',
+    text: 'Zwischen 23 und 6 Uhr brennen in der Innenstadt hunderte Schaufenster und Reklamen.',
+    options: [
+      { label: 'Abschaltpflicht', desc: '−3 Akzeptanz (Gewerbe), Stromverbrauch −2 %.', apply(S) { S.pop -= 3; S.flags.stromF = (S.flags.stromF || 1) * 0.98; return 'Nachts wird es dunkel in der Altstadt – die Sterne sind wieder zu sehen.'; } },
+      { label: 'Freiwillige Kampagne', desc: '−1 Mio., Stromverbrauch −0,5 %.', apply(S) { S.budget -= 1; S.flags.stromF = (S.flags.stromF || 1) * 0.995; return 'Plakate bitten um Mithilfe. Ein paar Läden machen mit.'; } }
+    ] },
+  { id: 'pilot', icon: '🧪', title: 'Der Kanton bietet einen Pilotprojekt-Beitrag',
+    text: 'Er übernimmt diese Legislatur 40 % der Kosten – für genau ein Technologieprojekt.',
+    options: [
+      { label: 'Wasserstoff-Pilot', desc: '−40 % auf «Elektrolyse & grüner Wasserstoff» in dieser Legislatur.', apply(S) { S.discounts.push({ id: 'h2', f: 0.6 }); return 'Wasserstoff wird diese Legislatur deutlich günstiger.'; } },
+      { label: 'Speicher-Pilot', desc: '−40 % auf Quartierbatterien und Pumpspeicher in dieser Legislatur.', apply(S) { S.discounts.push({ id: 'smartgrid', f: 0.6 }, { id: 'pump', f: 0.6 }); return 'Speicher werden diese Legislatur deutlich günstiger.'; } }
+    ] },
+  { id: 'stadion', icon: '⚽', title: 'Der FC Seestadt baut ein neues Stadion',
+    text: 'Der Club fragt, ob die Stadt ein Solardach und eine Tramhaltestelle mitfinanziert.',
+    options: [
+      { label: 'Solardach mitfinanzieren', desc: '−8 Mio., +15 GWh Solar, +4 Akzeptanz.', apply(S) { S.budget -= 8; S.flags.solarExtra = (S.flags.solarExtra || 0) + 15; S.pop += 4; return 'Die Fans singen: «Mir sind de FC und mir hei Sunne!»'; } },
+      { label: 'Nur das Pflicht-Minimum', desc: 'Keine Kosten, −1 Akzeptanz.', apply(S) { S.pop -= 1; return 'Das Stadion bekommt ein graues Dach. Niemand ist begeistert.'; } }
+    ] }
+];
+const DIL = Object.fromEntries(DILEMMAS.map(d => [d.id, d]));
+
+function currentDilemma(S) { return S.over || S.dilemmaDone[S.round] ? null : DIL[S.dilemmas[S.round - 1]]; }
+function applyDilemma(S, idx) {
+  const d = currentDilemma(S); if (!d) return null;
+  const text = d.options[idx].apply(S);
+  S.pop = Math.round(clamp(S.pop, 0, 100));
+  S.dilemmaDone[S.round] = { id: d.id, idx };
+  return text;
+}
+
+// Abzeichen
+const SYNERGY_PAIRS = [['netz', 'wind'], ['netz', 'alpin'], ['wp', 'daemm'], ['gas', 'h2'], ['smartmeter', 'solar'], ['oev', 'velo'], ['buerger', 'wind'], ['buerger', 'stau'], ['smartgrid', 'solar']];
+const BADGES = [
+  { id: 'perfekt', icon: '🏆', name: 'Netto-Null-Stadt', desc: 'Alle vier Ziele erreicht', test: (S, ev) => ev.passed === 4 },
+  { id: 'winter', icon: '❄️', name: 'Winterheld:in', desc: 'Winter-Eigenversorgung ≥ 80 %', test: (S, ev) => ev.last.selfW >= 0.8 },
+  { id: 'waerme', icon: '🔥', name: 'Wärmewende', desc: 'Wärme-CO₂ unter 40 kt', test: (S, ev) => ev.last.co2.waerme < 40 },
+  { id: 'verkehr', icon: '🚋', name: 'Verkehrswende', desc: 'Verkehrs-CO₂ unter 40 kt', test: (S, ev) => ev.last.co2.verkehr < 40 },
+  { id: 'schnell', icon: '⚡', name: 'Schnellstart', desc: 'Schon 2032 auf dem Absenkpfad', test: (S) => S.history[0] && S.history[0].co2pct <= CFG.co2Path[1] },
+  { id: 'weitsicht', icon: '🔭', name: 'Weitsicht', desc: 'Staumauer oder Geothermie bis 2037 beschlossen', test: (S) => S.chosen.some(c => (c.id === 'stau' || c.id === 'fw') && c.round <= 2) },
+  { id: 'synergie', icon: '🧩', name: 'Synergie-Profi', desc: 'Mindestens drei Synergien genutzt', test: (S) => SYNERGY_PAIRS.filter(([a, b]) => S.active.has(a) && S.active.has(b)).length >= 3 },
+  { id: 'ohne', icon: '🌿', name: 'Ohne Atom und Gas', desc: 'Mindestens 3 Ziele ohne Kernstrom und Reservekraftwerk', test: (S, ev) => ev.passed >= 3 && !S.active.has('kern') && !S.active.has('gas') },
+  { id: 'mutig', icon: '🦁', name: 'Mutig', desc: 'Zwei Beschlüsse mit starkem Gegenwind (≤ −10) – und trotzdem nie abgewählt', test: (S) => !S.ousted && S.chosen.filter(c => c.pop <= -10).length >= 2 },
+  { id: 'volksnah', icon: '🤝', name: 'Volksnah', desc: 'Akzeptanz am Ende ≥ 60 %', test: (S) => !S.ousted && S.pop >= 60 },
+  { id: 'sparfuchs', icon: '🦊', name: 'Sparfuchs', desc: 'Endbudget ≥ 40 Mio.', test: (S) => S.budget >= 40 },
+  { id: 'punkt', icon: '🎯', name: 'Punktlandung', desc: 'Endbudget zwischen 0 und 5 Mio.', test: (S) => S.budget >= 0 && S.budget <= 5 }
+];
+
+function createState(code) {
+  const rng = mulberry32(hashCode(code));
+  const deck = [...EVENT_IDS];
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  const dil = DILEMMAS.map(d => d.id);
+  for (let i = dil.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [dil[i], dil[j]] = [dil[j], dil[i]]; }
+  return {
+    code, rng, deck: deck.slice(0, 4), dilemmas: dil.slice(0, 4), dilemmaDone: {}, round: 1, over: false, ousted: false,
+    budget: CFG.startBudget, pop: CFG.startPop,
+    active: new Set(), chosen: [], pipeline: [], flags: { fwFactor: 1 },
+    temp: {}, discounts: [], protest: false, bondFrom: null,
+    history: [], log: []
+  };
+}
+
+// Verteilt Reduktionen proportional, falls sie zusammen mehr als 'room' ergeben
+function fitShares(room, ...xs) { const s = xs.reduce((a, b) => a + b, 0); return s > room ? xs.map(x => x * room / s) : xs; }
+
+function computeMetrics(S, ti, opts = {}) {
+  const act = opts.active || S.active;
+  const A = id => act.has(id);
+  const tr = CFG.trendT[ti];
+  const temp = opts.temp || {};
+  const flags = opts.flags || S.flags;
+
+  // Nachfrage (GWh/Jahr)
+  const dStrom = 1000 * (1 - 0.025 * tr) * (A('smartmeter') ? 0.96 : 1) * (flags.stromF || 1);
+  const dWaerme = 1600 * (1 - 0.025 * tr) * (A('daemm') ? 0.80 : 1) * (A('heizoel') ? 0.95 : 1);
+  const dVerkehr = 900 * (1 - 0.01 * tr) * (A('oev') ? 0.85 : 1) * (A('velo') ? 0.9 : 1) * (A('treibstoff') ? 0.93 : 1) * (flags.verkehrF || 1);
+  const dInd = 600;
+
+  // Wärme: fossiler Anteil
+  let [hp, fw, see] = fitShares(0.76,
+    0.05 * tr * (flags.hpBoost ? 1.4 : 1) + (A('wp') ? 0.28 : 0) + (A('heizverbot') ? 0.22 : 0) + (A('heizoel') ? 0.05 : 0),
+    (A('fw') ? 0.22 * flags.fwFactor : 0) + (flags.heatExtra || 0),
+    A('see') ? 0.12 : 0);
+  const fossW = 0.80 - hp - fw - see;
+  const cop = A('daemm') ? 3.6 : 3.0;
+  const elHeat = dWaerme * (hp / cop + see / 4 + fw * 0.08);
+
+  // Verkehr
+  const ev = Math.min(0.9, 0.11 * tr + (A('ev') ? 0.35 : 0) + (A('verbrenner') ? 0.30 : 0) + (A('treibstoff') ? 0.05 : 0));
+  const fossV = 0.95 - ev;
+  const elTr = dVerkehr * ev * 0.33;
+
+  // Industrie
+  const [ie, ih] = fitShares(0.65, 0.04 * tr + (A('ind') ? 0.30 : 0), A('h2') ? 0.15 : 0);
+  const fossI = 0.70 - ie - ih;
+  const elInd = dInd * ie * 0.75;
+  const elH2 = dInd * ih * 1.6;
+
+  // Stromnachfrage nach Saison
+  const extraLoad = flags.extraLoad || 0;
+  const wD = dStrom * 0.55 + elHeat * 0.72 + elTr * 0.52 + elInd * 0.5 + elH2 * 0.15 + extraLoad * 0.5;
+  const sD = dStrom * 0.45 + elHeat * 0.28 + elTr * 0.48 + elInd * 0.5 + elH2 * 0.85 + extraLoad * 0.5;
+
+  // Erzeugung
+  const kernActive = (ti <= CFG.kernEndsAfter || A('kern'));
+  const kernW = kernActive && !temp.kernOut ? 150 : 0, kernS = kernActive ? 150 : 0;
+  const shift = A('stau') ? 140 : 0;
+  const hydroS = 300 * (temp.drought ? 0.75 : 1) - shift, hydroW = 200 + shift;
+  const solarAnnual = 60 + 40 * tr * (flags.pvBoom ? 1.4 : 1) + (A('solar') ? 200 : 0) + (A('agri') ? 60 : 0) + (flags.solarExtra || 0);
+  const alpinAnnual = A('alpin') ? 130 * (A('netz') ? 1 : 0.6) : 0;
+  const windAnnual = A('wind') ? 200 * (A('netz') ? 1 : 0.8) : 0;
+  const bio = (A('agri') ? 40 : 0) + (flags.bioExtra || 0);
+  const gen = {
+    wasser: { s: hydroS, w: hydroW },
+    kern: { s: kernS, w: kernW },
+    solar: { s: solarAnnual * 0.75 + alpinAnnual * 0.45, w: solarAnnual * 0.25 + alpinAnnual * 0.55 },
+    wind: { s: windAnnual * 0.35, w: windAnnual * 0.65 },
+    bio: { s: bio * 0.3, w: bio * 0.7 }
+  };
+  const wG = Object.values(gen).reduce((a, g) => a + g.w, 0);
+  const sG = Object.values(gen).reduce((a, g) => a + g.s, 0);
+  const backup = A('gas') ? 200 : 0;
+  const gapW = wD - wG;
+  const backupUsed = clamp(gapW, 0, backup);
+  const importW = Math.max(0, gapW - backupUsed);
+  const sBal = sG - sD;
+  const importS = Math.max(0, -sBal), exportS = Math.max(0, sBal);
+  const importCap = 180 + (A('netz') ? 70 : 0);
+
+  // Versorgungssicherheit
+  const cover = (wG + backup + importCap) / wD;
+  const adequacy = clamp((cover - 0.65) / 0.45);
+  let flex = 10 + (bio && !A('agri') ? 5 : 0) + (A('smartgrid') ? 25 : 0) + (A('pump') ? 30 : 0) + (A('last') ? 20 : 0) + (A('gas') ? 10 : 0) + (A('netz') ? 15 : 0) + (A('agri') ? 5 : 0);
+  if (A('smartmeter')) flex += 15 + ((A('solar') || A('agri')) ? 10 : 0);
+  const varAnnual = solarAnnual + alpinAnnual + windAnnual;
+  const varShare = varAnnual / (wD + sD);
+  const flexNeed = varShare * 90;
+  const stability = clamp(0.55 + (flex - flexNeed) / 70);
+  const sec = Math.round(100 * (0.6 * adequacy + 0.4 * stability));
+
+  // CO2 (kt/Jahr) – der europäische Importstrom wird über die Zeit sauberer
+  const efImpW = CFG.ef.importW * (1 - 0.16 * tr), efImpS = CFG.ef.importS * (1 - 0.2 * tr);
+  const co2 = {
+    waerme: dWaerme * fossW * CFG.ef.waerme,
+    verkehr: dVerkehr * fossV * CFG.ef.verkehr,
+    industrie: dInd * fossI * CFG.ef.industrie,
+    strom: importW * efImpW + importS * efImpS + backupUsed * (A('h2') ? CFG.ef.gasH2 : CFG.ef.gas)
+  };
+  const co2Total = co2.waerme + co2.verkehr + co2.industrie + co2.strom;
+  const fossilEnergy = dWaerme * fossW + dVerkehr * fossV + dInd * fossI;
+  const totalEnergy = dWaerme + dVerkehr + dInd + dStrom;
+
+  return {
+    ti, year: CFG.snapYears[ti],
+    co2, co2Total, co2pct: Math.round(co2Total / BASE_CO2 * 100),
+    sec, adequacy, stability, flex, flexNeed, varShare,
+    wD, sD, wG, sG, gen, backup, backupUsed, importW, importS, exportS, importCap,
+    selfW: wG / wD, kernActive, fossW, fossV, fossI, solarLocal: solarAnnual,
+    fossilShare: fossilEnergy / totalEnergy,
+    demand: { strom: dStrom, waerme: dWaerme, verkehr: dVerkehr, industrie: dInd },
+    elec: { heat: elHeat, tr: elTr, ind: elInd, h2: elH2 }
+  };
+}
+let BASE_CO2 = 1;
+const baseMetrics = () => computeMetrics({ active: new Set(), flags: { fwFactor: 1 } }, 0);
+BASE_CO2 = baseMetrics().co2Total;
+
+const bonusOn = (S, now = []) => S.active.has('klimabonus') || S.chosen.some(c => c.id === 'klimabonus') || now.includes('klimabonus');
+function effectiveCost(S, id, now = []) {
+  const m = M[id];
+  if (m.abgabe && bonusOn(S, now)) return 0;   // Einnahmen gehen an die Bevölkerung zurück
+  if (m.cost < 0) return m.cost;
+  const f = (S.discounts || []).reduce((a, d) => (d.cat === m.cat || d.id === id) ? a * d.f : a, 1);
+  return Math.round(m.cost * f);
+}
+function popEffect(S, id, pickedNow = []) {
+  const m = M[id];
+  let p = m.pop;
+  if (m.abgabe && bonusOn(S, pickedNow)) return 0;
+  if (m.infra && p < 0) {
+    const hasBuerger = S.active.has('buerger') || S.chosen.some(c => c.id === 'buerger') || pickedNow.includes('buerger');
+    if (hasBuerger) p *= 0.5;
+    if (S.protest) p *= 1.5;
+  }
+  return Math.round(p);
+}
+function readyRound(S, id) { return S.round + M[id].build; }
+
+// Ein Legislatur-Schritt. Gibt einen Bericht zurück.
+function playRound(S, picks) {
+  const R = { picks: [], completed: [], late: [], event: null, budget: 0, pop: 0, lines: [] };
+  const budget0 = S.budget, pop0 = S.pop;
+
+  // 1. Beschlüsse
+  for (const id of picks) {
+    const cost = effectiveCost(S, id, picks);
+    const p = popEffect(S, id, picks);
+    S.budget -= cost; S.pop += p;
+    S.chosen.push({ id, round: S.round, cost, pop: p });
+    const rr = readyRound(S, id);
+    S.pipeline.push({ id, ready: rr });
+    if (id === 'bond') S.bondFrom = S.round + 1;
+    R.picks.push({ id, cost, pop: p, ready: rr });
+    if (rr > CFG.rounds) R.late.push(id);
+  }
+  S.discounts = []; S.protest = false; S.temp = {};
+
+  // 2. Fertigstellungen
+  for (const p of S.pipeline) {
+    if (p.ready === S.round && !S.active.has(p.id)) {
+      if (p.id === 'fw') {
+        const ok = S.rng() > 0.3;
+        S.flags.fwFactor = ok ? 1 : 0.5;
+        if (!ok) { S.pop -= 6; R.lines.push('Geothermie: Die Bohrung ist nur teilweise fündig, Mikrobeben verunsichern die Bevölkerung. Das Fernwärmenetz wird mit Abwärme ergänzt – halbe Wirkung (−6 Akzeptanz).'); }
+        else R.lines.push('Geothermie: Die Bohrung ist fündig! Das Fernwärmenetz läuft mit voller Leistung.');
+      }
+      S.active.add(p.id); R.completed.push(p.id);
+    }
+  }
+
+  // 3. Ereignis
+  let m = computeMetrics(S, S.round);
+  const evId = S.deck[S.round - 1];
+  const ER = { budget: 0, pop: 0 };
+  const evText = EVENTS[evId].apply(S, m, ER);
+  S.budget += ER.budget; S.pop += ER.pop;
+  const evOk = ER.pop >= 0 && ER.budget >= -5;
+  R.event = { id: evId, title: EVENTS[evId].title, icon: EVENTS[evId].icon, text: evText, ok: evOk,
+    headline: (HEADLINES[evId] || [EVENTS[evId].title, EVENTS[evId].title])[evOk ? 0 : 1] };
+  m = computeMetrics(S, S.round, { temp: S.temp });
+
+  // 4. Laufende Finanzen
+  const years = S.round === 4 ? 0.6 : 1;
+  const trade = Math.round((m.exportS - m.importS - m.importW) * CFG.tradePrice * years);
+  S.budget += trade; R.trade = trade;
+  if (S.active.has('gas')) { S.budget -= 4; R.lines.push('Bereitschaftskosten Reservekraftwerk: −4 Mio.'); }
+  if (S.bondFrom !== null && S.round >= S.bondFrom) { S.budget -= 6; R.lines.push('Zins Green Bond: −6 Mio.'); }
+
+  // 5. Politische Dynamik
+  const path = CFG.co2Path[S.round];
+  if (m.co2pct > path + 10) { S.pop -= 5; R.lines.push(`CO₂ deutlich über dem Absenkpfad (${m.co2pct} % statt ≤ ${path} %): Glaubwürdigkeit leidet (−5).`); }
+  else if (m.co2pct <= path) { S.pop += 3; R.lines.push(`CO₂ auf Kurs (${m.co2pct} % ≤ ${path} %): Rückenwind (+3).`); }
+  if (m.sec < 45) { S.pop -= 4; R.lines.push('Versorgungsängste in der Bevölkerung (−4).'); }
+  S.pop += (CFG.popAnchor - S.pop) * 0.3;   // Rückkehr zur Normalstimmung
+  S.pop = Math.round(clamp(S.pop, 0, 100));
+
+  R.budget = S.budget - budget0; R.pop = S.pop - pop0;
+  R.metrics = m;
+  S.history.push({ ...m, budget: S.budget, pop: S.pop, round: S.round });
+
+  // 6. Wahl
+  if (S.pop < CFG.electionThreshold) { S.ousted = true; S.over = true; }
+  if (S.round >= CFG.rounds) S.over = true;
+  R.election = S.round < CFG.rounds ? (S.ousted ? 'abgewählt' : 'wiedergewählt') : (S.ousted ? 'abgewählt' : 'Ende');
+
+  // 7. Nächste Legislatur vorbereiten
+  if (!S.over) {
+    S.round++;
+    if (S.budget < 0) { const i = Math.round(-S.budget * CFG.interest); S.budget -= i; R.lines.push(`Schuldzinsen: −${i} Mio.`); }
+    S.budget += CFG.income;
+  }
+  return R;
+}
+
+function evaluate(S) {
+  const last = S.history[S.history.length - 1] || baseMetrics();
+  const goals = {
+    co2: last.co2pct <= CFG.co2Target,
+    sec: last.sec >= CFG.secTarget,
+    budget: S.budget >= 0,
+    pop: !S.ousted && S.pop >= CFG.electionThreshold
+  };
+  const sCo2 = clamp((100 - last.co2pct) / (100 - CFG.co2Target)) * 40;
+  const sSec = clamp((last.sec - 40) / (CFG.secTarget - 40)) * 25;
+  const sBud = S.budget >= 0 ? 15 : clamp(1 + S.budget / 60) * 15;
+  const sPop = clamp((S.pop - 30) / (55 - 30)) * 20;
+  let score = sCo2 + sSec + sBud + sPop;
+  if (S.ousted) score *= 0.7;
+  return { last, goals, passed: Object.values(goals).filter(Boolean).length, score: Math.round(score) };
+}
+// MODEL-END
+// ===================================================================
+
+// ===================================================================
+// UI
+// ===================================================================
+let S = null;
+let selected = [];
+let activeCat = 'all';
+let sortMode = 'default';
+let chartTab = 'verlauf';
+let chart = null;
+let expert = false;
+
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 0) => Number(x).toLocaleString('de-CH', { maximumFractionDigits: d, minimumFractionDigits: d });
+const sign = (x, d = 0) => (x > 0 ? '+' : x < 0 ? '−' : '±') + fmt(Math.abs(x), d);
+const catOf = id => CATS.find(c => c.id === id);
+const COLORS = () => { const cs = getComputedStyle(document.documentElement); const g = n => cs.getPropertyValue(n).trim(); return {
+  wasser: g('--c-wasser'), kern: g('--c-kern'), wind: g('--c-wind'), solar: g('--c-solar'), gas: g('--c-gas'), bio: g('--c-bio'), import: g('--c-import'),
+  waerme: g('--c-waerme'), verkehr: g('--c-verkehr'), strom: g('--c-strom'), industrie: g('--c-industrie') }; };
+
+function store(key, val) { try { if (val === undefined) return JSON.parse(localStorage.getItem(key)); localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; } }
+
+function randomCode() {
+  const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  return 'SEE-' + L[Math.floor(Math.random() * L.length)] + Math.floor(100 + Math.random() * 900);
+}
+
+function startGame(code, withDilemma = true) {
+  S = createState(code);
+  selected = [];
+  prevKPI = {};
+  activeCat = 'all';
+  $('code-display').textContent = code;
+  try { const u = new URL(location.href); u.searchParams.set('code', code); history.replaceState(null, '', u); } catch (e) {}
+  addLog('🏙️', 'Start 2026', `Szenario ${code}. Ausgangslage: ${fmt(BASE_CO2)} kt CO₂/Jahr, Sicherheit ${current().sec}, Winter-Eigenversorgung ${Math.round(current().selfW * 100)} %.`);
+  renderAll();
+  if (withDilemma) showDilemma();
+}
+
+// ---------- Ratsentscheid ----------
+let modalLocked = false;
+function showDilemma() {
+  const d = currentDilemma(S); if (!d) return;
+  const body = `<p class="text-center text-slate-300">${d.text}</p>
+    <div class="grid sm:grid-cols-2 gap-3 mt-3">${d.options.map((o, i) => `<button data-opt="${i}" class="dil-opt text-left bg-slate-900/70 hover:bg-slate-700 border border-slate-600 hover:border-emerald-400 rounded-xl p-4 transition">
+      <div class="font-semibold text-slate-100">${o.label}</div><div class="text-xs text-slate-400 mt-1 leading-snug">${o.desc}</div></button>`).join('')}</div>
+    <p class="text-[11px] text-slate-500 text-center">Ratsentscheid zu Beginn der Legislatur ${S.round} · zählt nicht als Beschluss</p>`;
+  showModal(d.icon, d.title, body, []);
+  modalLocked = true;
+  document.querySelectorAll('.dil-opt').forEach(b => b.onclick = () => {
+    const i = +b.dataset.opt;
+    const txt = applyDilemma(S, i);
+    addLog(d.icon, `Ratsentscheid: ${d.options[i].label}`, txt);
+    modalLocked = false;
+    showModal(d.icon, d.options[i].label, `<p class="text-center">${txt}</p>`, [{ label: 'An die Arbeit!', primary: true, fn: () => { closeModal(); renderAll(); } }]);
+  });
+}
+
+function current() { return S.history.length ? S.history[S.history.length - 1] : baseMetrics(); }
+function addLog(icon, head, text) { S.log.unshift({ icon, head, text }); }
+
+// Prognose: Wirkung einer (hypothetischen) Auswahl
+function projected(extraIds, mode) {
+  const act = new Set(S.active);
+  // Alles, was bis Ende dieser Legislatur fertig wird (bereits beschlossen)
+  for (const p of S.pipeline) if (mode === 'final' || p.ready <= S.round) act.add(p.id);
+  for (const id of extraIds) if (mode === 'final' || M[id].build === 0) act.add(id);
+  const ti = mode === 'final' ? CFG.rounds : S.round;
+  return computeMetrics(S, ti, { active: act });
+}
+
+function marginal(id) {
+  const base = projected(selected.filter(x => x !== id), 'final');
+  const withM = projected([...selected.filter(x => x !== id), id], 'final');
+  return { co2: withM.co2pct - base.co2pct, sec: withM.sec - base.sec, self: Math.round((withM.selfW - base.selfW) * 100) };
+}
+
+// ---------- Rendering ----------
+function renderAll() {
+  renderHeader(); renderTimeline(); renderAlerts(); renderTabs(); renderMeasures();
+  renderSelection(); renderKPIs(); renderChart(); renderPipeline(); renderChronicle(); renderCity();
+}
+
+function renderHeader() {
+  const done = S.over;
+  const y = CFG.years[S.round - 1];
+  $('round-display').textContent = done ? 'Beendet' : `Legislatur ${S.round} · ${y[0]}–${y[1]}`;
+  $('round-badge').textContent = S.round;
+  const sb = $('status-badge');
+  if (done) { const ev = evaluate(S); sb.textContent = `${ev.passed}/4 Ziele`; sb.className = 'text-[11px] px-2 py-0.5 rounded-full font-bold border ' + (ev.passed === 4 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'); }
+  else { sb.textContent = S.history.length ? 'In Umsetzung' : 'Start'; sb.className = 'text-[11px] px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30'; }
+}
+
+function renderTimeline() {
+  const items = [`<li class="px-2 py-1 rounded-md bg-slate-800 text-slate-400">2026 Start</li>`];
+  CFG.years.forEach((y, i) => {
+    const r = i + 1;
+    const h = S.history.find(x => x.round === r);
+    const state = h ? 'done' : (r === S.round && !S.over ? 'now' : 'future');
+    const cls = state === 'done' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : state === 'now' ? 'bg-teal-500/25 text-teal-200 border border-teal-400 font-semibold' : 'bg-slate-800 text-slate-500 border border-slate-700';
+    const picks = S.chosen.filter(c => c.round === r).map(c => `<i class="fa-solid ${M[c.id].icon}" title="${M[c.id].title}"></i>`).join(' ');
+    items.push(`<li class="text-slate-600"><i class="fa-solid fa-chevron-right text-[9px]"></i></li>`);
+    items.push(`<li class="px-2 py-1 rounded-md ${cls}">L${r} · ${y[0]}–${y[1]} ${picks ? '<span class="ml-1 opacity-80">' + picks + '</span>' : ''}</li>`);
+    if (r === 2) items.push(`<li class="px-2 py-1 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/30" title="Der Kernstrom-Liefervertrag läuft aus"><i class="fa-solid fa-atom mr-1"></i>2034 Vertragsende${S.active.has('kern') || selected.includes('kern') || S.chosen.some(c => c.id === 'kern') ? ' (verlängert)' : ''}</li>`);
+  });
+  items.push(`<li class="text-slate-600"><i class="fa-solid fa-flag-checkered ml-1"></i></li><li class="px-2 py-1 rounded-md bg-slate-800 text-slate-300">2045 Netto-Null</li>`);
+  $('timeline').innerHTML = items.join('');
+}
+
+function alertBox(icon, cls, html) { return `<div class="flex gap-2 items-start rounded-lg px-3 py-2 text-xs border ${cls}"><i class="fa-solid ${icon} mt-0.5"></i><div>${html}</div></div>`; }
+
+function renderAlerts() {
+  const a = [];
+  if (S.over) { $('round-alerts').innerHTML = ''; return; }
+  a.push(alertBox('fa-wallet', 'bg-slate-900/60 border-slate-700 text-slate-300', `Verfügbar: <strong class="${S.budget < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget)} Mio. CHF</strong> · Kreditlimit bis ${CFG.minBudget} Mio. (10 % Zins pro Legislatur) · Einnahmen +${CFG.income} Mio. pro Legislatur.`));
+  if (S.round <= 2 && !S.chosen.some(c => c.id === 'kern')) a.push(alertBox('fa-atom', 'bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 läuft der Kernstrom-Liefervertrag aus: <strong>150 GWh Winterstrom</strong> fallen weg. Ersatz, Verlängerung oder Import?'));
+  if (S.discounts.length) a.push(alertBox('fa-tags', 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200', 'Rabatt diese Legislatur: ' + S.discounts.map(d => `<strong>${Math.round((1 - d.f) * 100)} %</strong> auf «${d.cat ? catOf(d.cat).label : M[d.id].title}»`).join(', ') + '.'));
+  if (S.protest) a.push(alertBox('fa-bullhorn', 'bg-amber-500/10 border-amber-500/30 text-amber-200', 'Bürgerinitiative aktiv: Infrastrukturprojekte kosten diese Legislatur 50 % mehr Akzeptanz.'));
+  if (S.pop < 47) a.push(alertBox('fa-check-to-slot', 'bg-amber-500/10 border-amber-500/30 text-amber-200', `Akzeptanz ${S.pop} %: Unter ${CFG.electionThreshold} % wird die Regierung am Ende der Legislatur abgewählt.`));
+  if (S.round >= 3) a.push(alertBox('fa-hourglass-end', 'bg-slate-900/60 border-slate-700 text-slate-300', 'Projekte mit Bauzeit werden nur wirksam, wenn sie bis 2045 fertig sind.'));
+  $('round-alerts').innerHTML = a.join('');
+}
+
+function renderTabs() {
+  const counts = {};
+  MEASURES.forEach(m => counts[m.cat] = (counts[m.cat] || 0) + (isAvailable(m.id) ? 1 : 0));
+  const total = MEASURES.filter(m => isAvailable(m.id)).length;
+  const btn = (id, label, n) => `<button data-cat="${id}" class="cat-btn px-3 py-1.5 rounded-lg font-medium whitespace-nowrap border ${activeCat === id ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}">${label} <span class="opacity-60">${n}</span></button>`;
+  $('cat-tabs').innerHTML = btn('all', 'Alle', total) + CATS.map(c => btn(c.id, c.label, counts[c.id] || 0)).join('');
+  document.querySelectorAll('.cat-btn').forEach(b => b.onclick = () => { activeCat = b.dataset.cat; renderTabs(); renderMeasures(); });
+}
+
+function isAvailable(id) { return !S.chosen.some(c => c.id === id); }
+
+function cardBlockReason(id) {
+  if (S.over) return 'Spiel beendet';
+  if (selected.includes(id)) return null;
+  if (selected.length >= CFG.maxPicks) return `Bereits ${CFG.maxPicks} Beschlüsse gewählt – entferne zuerst einen`;
+  const after = S.budget - selected.reduce((a, x) => a + effectiveCost(S, x, selected), 0) - effectiveCost(S, id, [...selected, id]);
+  if (after < CFG.minBudget) return `Zu teuer: Kreditlimit (${CFG.minBudget} Mio.) würde überschritten`;
+  return null;
+}
+
+function renderMeasures() {
+  const grid = $('measures-grid');
+  if (S.over) {
+    grid.innerHTML = `<div class="col-span-full bg-slate-800/80 border border-slate-700 rounded-2xl p-6 text-center space-y-3">
+      <div class="text-3xl">🏁</div><h3 class="text-lg font-bold">Transformationspfad abgeschlossen</h3>
+      <p class="text-xs text-slate-300">${S.ousted ? 'Die Regierung wurde abgewählt – das Programm endet vorzeitig.' : 'Alle vier Legislaturen sind gespielt.'}</p>
+      <div class="flex flex-wrap gap-2 justify-center">
+        <button onclick="showFinal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">Auswertung ansehen</button>
+        <button onclick="startGame(S.code)" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-bold">Gleiches Szenario nochmals</button>
+        <button onclick="showIntro()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-bold">Neues Szenario</button>
+      </div></div>`;
+    return;
+  }
+  let list = MEASURES.filter(m => isAvailable(m.id) && (activeCat === 'all' || m.cat === activeCat));
+  const marg = Object.fromEntries(list.map(m => [m.id, marginal(m.id)]));
+  if (sortMode === 'cost') list.sort((a, b) => effectiveCost(S, a.id) - effectiveCost(S, b.id));
+  if (sortMode === 'co2') list.sort((a, b) => marg[a.id].co2 - marg[b.id].co2);
+  if (sortMode === 'sec') list.sort((a, b) => marg[b.id].sec - marg[a.id].sec);
+  if (sortMode === 'pop') list.sort((a, b) => popEffect(S, b.id, selected) - popEffect(S, a.id, selected));
+
+  grid.innerHTML = '';
+  if (!list.length) { grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-500 text-xs">Keine Massnahmen mehr in dieser Kategorie.</div>'; return; }
+
+  for (const m of list) {
+    const isSel = selected.includes(m.id);
+    const block = cardBlockReason(m.id);
+    const cost = effectiveCost(S, m.id, selected);
+    const pop = popEffect(S, m.id, selected);
+    const rr = readyRound(S, m.id);
+    const late = rr > CFG.rounds;
+    const readyYear = CFG.years[Math.min(rr, 4) - 1][1];
+    const cat = catOf(m.cat);
+    const mg = marg[m.id];
+    const syn = m.synergy.map(s => {
+      const on = S.active.has(s) || S.chosen.some(c => c.id === s) || selected.includes(s);
+      return `<span class="px-1.5 py-0.5 rounded ${on ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-400'}" title="${on ? 'Synergie aktiv' : 'Synergie möglich'}">${on ? '✓ ' : '↔ '}${SHORT[s]}</span>`;
+    }).join(' ');
+
+    const card = document.createElement('div');
+    card.className = 'card-measure rounded-xl p-3.5 border flex flex-col justify-between ' +
+      (isSel ? 'bg-slate-800/90 border-emerald-500 ring-2 ring-emerald-500/30' : block ? 'bg-slate-800/30 border-slate-800 opacity-75' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer');
+    card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-pressed', isSel);
+    if (block) { card.setAttribute('aria-disabled', 'true'); card.title = block; }
+    const toggle = () => toggleSelect(m.id);
+    card.onclick = e => { if (e.target.closest('details')) return; toggle(); };
+    card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
+
+    const costHtml = m.abgabe && cost === 0 ? `<strong class="text-slate-300">→ Klimabonus</strong>` : m.cost < 0 ? `<strong class="text-emerald-400">+${-cost} M</strong>` : `<strong class="text-amber-300">${cost} M</strong>${cost !== m.cost ? `<s class="text-slate-500 ml-1">${m.cost}</s>` : ''}`;
+    const fcst = expert ? '' : `<div class="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+        <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose CO₂ 2045 (Prozentpunkte), inkl. Wechselwirkungen mit deiner Auswahl">CO₂ <strong class="${mg.co2 < 0 ? 'text-emerald-400' : mg.co2 > 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.co2)} Pp</strong></span>
+        <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose Versorgungssicherheit 2045 (Punkte)">Sicherheit <strong class="${mg.sec > 0 ? 'text-emerald-400' : mg.sec < 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.sec)}</strong></span>
+        <span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-700" title="Prognose Winter-Eigenversorgung 2045 (Prozentpunkte)">Winter <strong class="${mg.self > 0 ? 'text-emerald-400' : mg.self < 0 ? 'text-rose-400' : 'text-slate-400'}">${sign(mg.self)} Pp</strong></span>
+      </div>`;
+
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between mb-1.5 gap-2">
+          <span class="flex items-center gap-1.5"><span class="text-[10px] px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span><span class="text-[10px] px-2 py-0.5 rounded font-medium ${cat.cls}">${cat.label}</span></span>
+          <div class="w-5 h-5 rounded-full grid place-items-center text-[10px] ${isSel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}"><i class="fa-solid ${isSel ? 'fa-check' : 'fa-plus'}"></i></div>
+        </div>
+        <h4 class="font-semibold text-slate-100 text-[13px] leading-tight flex gap-2"><i class="fa-solid ${m.icon} text-emerald-400 mt-0.5"></i><span>${m.title}</span></h4>
+        <p class="text-[11px] text-slate-400 mt-1 leading-snug">${m.desc}</p>
+        <p class="text-[11px] text-slate-200 mt-1.5 leading-snug"><i class="fa-solid fa-bolt text-teal-400 mr-1"></i>${m.effect}</p>
+        ${fcst}
+        ${syn ? `<div class="mt-2 flex flex-wrap gap-1 text-[10px]">${syn}</div>` : ''}
+        ${late ? `<div class="mt-2 text-[10px] text-rose-300"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Erst nach 2045 fertig – keine Wirkung im Spiel!</div>` : ''}
+        ${block && block !== 'Spiel beendet' ? `<div class="mt-2 text-[10px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5"><i class="fa-solid fa-lock mr-1"></i>${block}</div>` : ''}
+      </div>
+      <div class="mt-3 pt-2 border-t border-slate-700/60 grid grid-cols-3 gap-1 text-[11px] text-slate-300">
+        <span title="Kosten in Mio. CHF">${m.cost < 0 ? 'Ertrag' : 'Kosten'}: ${costHtml}</span>
+        <span title="Fertigstellung">Bau: <strong class="${m.build ? 'text-sky-300' : 'text-slate-200'}">${m.build ? '→ ' + readyYear : 'sofort'}</strong></span>
+        <span title="Wirkung auf die Akzeptanz">Akzeptanz: <strong class="${pop > 0 ? 'text-emerald-400' : pop < 0 ? 'text-rose-400' : 'text-slate-300'}">${sign(pop)}</strong></span>
+      </div>
+      <details class="mt-2 text-[11px] text-slate-400">
+        <summary class="hover:text-slate-200"><i class="fa-solid fa-lightbulb mr-1 text-amber-300"></i>Hintergrund</summary>
+        <p class="mt-1 leading-snug">${m.fact}</p>
+      </details>`;
+    grid.appendChild(card);
+  }
+}
+
+function toggleSelect(id) {
+  if (S.over) return;
+  if (selected.includes(id)) selected = selected.filter(x => x !== id);
+  else { if (cardBlockReason(id)) return; selected.push(id); }
+  renderTimeline(); renderMeasures(); renderSelection(); renderChart(); renderCity();
+}
+
+function deltaCell(label, now, then, unit, goodIfUp, target) {
+  const d = then - now;
+  const good = goodIfUp ? d > 0 : d < 0;
+  return `<div class="bg-slate-900/60 rounded-lg p-2 border border-slate-700">
+    <div class="text-slate-400">${label}</div>
+    <div class="font-bold text-slate-100 text-sm">${fmt(then)}${unit} <span class="${d === 0 ? 'text-slate-500' : good ? 'text-emerald-400' : 'text-rose-400'} text-[11px] font-semibold">${sign(d)}</span></div>
+    ${target ? `<div class="text-[10px] text-slate-500">${target}</div>` : ''}</div>`;
+}
+
+function renderSelection() {
+  const btn = $('confirm-btn');
+  if (S.over) { $('selection-panel').classList.add('hidden'); return; }
+  $('selection-panel').classList.remove('hidden');
+  const cost = selected.reduce((a, id) => a + effectiveCost(S, id, selected), 0);
+  $('selection-list').innerHTML = selected.length
+    ? selected.map(id => `<span class="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 rounded-lg px-2 py-0.5 mr-1 mb-1 text-xs"><i class="fa-solid ${M[id].icon}"></i>${M[id].title}<button class="ml-1 text-emerald-300 hover:text-white" onclick="toggleSelect('${id}')" aria-label="entfernen">×</button></span>`).join('') +
+      `<div class="text-xs text-slate-400 mt-1">Saldo: <strong class="${cost > 0 ? 'text-amber-300' : 'text-emerald-400'}">${sign(-cost)} Mio.</strong> → Budget danach <strong class="${S.budget - cost < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget - cost)} Mio.</strong></div>`
+    : '<span class="text-slate-500 text-xs">Klicke auf bis zu drei Karten. Ohne Auswahl wird die Legislatur übersprungen (Budget sparen).</span>';
+
+  const ok = selected.length > 0;
+  btn.disabled = false;
+  btn.className = 'px-5 py-3 rounded-xl font-semibold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer ' + (ok ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600');
+  $('confirm-text').textContent = !ok ? 'Ohne Beschluss weiter' : S.round === CFG.rounds ? 'Beschliessen & Bilanz 2045' : `Beschliessen → ${CFG.years[S.round - 1][1]}`;
+
+  const now = current();
+  const endBase = projected([], 'end');
+  const endSel = projected(selected, 'end');
+  const finSel = projected(selected, 'final');
+  $('forecast').innerHTML = expert
+    ? '<div class="col-span-full text-[11px] text-slate-500"><i class="fa-solid fa-eye-slash mr-1"></i>Expertenmodus: keine Prognosen. Entscheide mit Modellwissen und Strombilanz.</div>'
+    : `<div class="col-span-full text-[11px] text-slate-400">Prognose ohne Zufallsereignisse · <span class="text-slate-500">Ende ${CFG.years[S.round - 1][1]} (nur Fertiges) und 2045 (alles Beschlossene fertig)</span></div>` +
+      deltaCell(`CO₂ ${CFG.years[S.round - 1][1]}`, endBase.co2pct, endSel.co2pct, ' %', false, `Pfad ≤ ${CFG.co2Path[S.round]} %`) +
+      deltaCell(`Sicherheit ${CFG.years[S.round - 1][1]}`, endBase.sec, endSel.sec, '', true, `Ziel ≥ ${CFG.secTarget}`) +
+      deltaCell('CO₂ 2045', projected([], 'final').co2pct, finSel.co2pct, ' %', false, `Ziel ≤ ${CFG.co2Target} %`) +
+      deltaCell('Sicherheit 2045', projected([], 'final').sec, finSel.sec, '', true, `Ziel ≥ ${CFG.secTarget}`);
+}
+
+function kpiTile(icon, iconCls, label, value, unit, target, ok, sub) {
+  return `<div class="bg-slate-900/60 p-3 rounded-xl border ${ok === null ? 'border-slate-700' : ok ? 'border-emerald-500/30' : 'border-rose-500/30'}">
+    <div class="text-[11px] text-slate-400 flex items-center justify-between"><span><i class="fa-solid ${icon} ${iconCls} mr-1"></i>${label}</span>
+      ${ok === null ? '' : `<span class="${ok ? 'text-emerald-400' : 'text-rose-400'}" title="${ok ? 'Ziel erreicht' : 'Ziel noch nicht erreicht'}"><i class="fa-solid ${ok ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${ok ? 'ok' : 'offen'}</span>`}</div>
+    <div class="text-xl font-bold text-slate-100 mt-1">${value}<span class="text-xs font-normal text-slate-400 ml-0.5">${unit}</span></div>
+    <div class="text-[10px] text-slate-500">${target}${sub ? ' · ' + sub : ''}</div></div>`;
+}
+
+let prevKPI = {};
+const cnt = (k, v) => { const from = prevKPI[k] ?? v; prevKPI[k] = v; return `<span class="count" data-from="${from}" data-to="${v}">${fmt(from)}</span>`; };
+function animateCounts(root, dur = 800) {
+  root.querySelectorAll('.count').forEach(el => {
+    const a = +el.dataset.from, b = +el.dataset.to;
+    if (a === b || REDUCED) { el.textContent = fmt(b); return; }
+    const t0 = performance.now();
+    const step = t => { const k = Math.min(1, (t - t0) / dur); const e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(a + (b - a) * e)); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
+function renderKPIs() {
+  const m = current();
+  $('kpi-year').textContent = `(${m.year})`;
+  const bar = (v, max, cls) => `<div class="w-full bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden"><div class="${cls} h-full rounded-full transition-all duration-500" style="width:${clamp(v / max) * 100}%"></div></div>`;
+  $('kpis').innerHTML =
+    kpiTile('fa-smog', 'text-rose-400', 'CO₂-Ausstoss', cnt('co2', m.co2pct), ' %', `Ziel 2045 ≤ ${CFG.co2Target} %`, m.co2pct <= CFG.co2Target, `${fmt(m.co2Total)} kt`) +
+    kpiTile('fa-shield-halved', 'text-teal-400', 'Versorgungssicherheit', cnt('sec', m.sec), '/100', `Ziel ≥ ${CFG.secTarget}`, m.sec >= CFG.secTarget) +
+    kpiTile('fa-wallet', 'text-amber-400', 'Budget', cnt('budget', S.budget), ' Mio.', 'Ziel 2045 ≥ 0', S.budget >= 0) +
+    kpiTile('fa-users', 'text-sky-400', 'Akzeptanz', cnt('pop', S.pop), ' %', `Wahlschwelle ${CFG.electionThreshold} %`, S.pop >= CFG.electionThreshold);
+  animateCounts($('kpis'));
+  const sub = (label, val, hint, title) => `<div class="bg-slate-900/40 rounded-lg p-2 border border-slate-700/60" title="${title}"><div class="text-slate-400">${label}</div><div class="font-semibold text-slate-200">${val}</div><div class="text-[10px] text-slate-500">${hint}</div></div>`;
+  $('subkpis').innerHTML =
+    sub('Winter-Eigenversorgung', Math.round(m.selfW * 100) + ' %', `Import ${fmt(m.importW)} GWh`, 'Anteil des Winterstrombedarfs, den eigene Anlagen decken') +
+    sub('Flexibilität', `${fmt(m.flex)} / ${fmt(m.flexNeed)}`, 'vorhanden / nötig', 'Speicher, Netze und steuerbarer Verbrauch im Verhältnis zum Anteil wetterabhängiger Erzeugung') +
+    sub('Fossilanteil', Math.round(m.fossilShare * 100) + ' %', 'am Endenergiebedarf', 'Anteil von Öl, Gas, Benzin und Diesel am gesamten Energiebedarf');
+}
+
+function chartBase() {
+  return {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10, boxHeight: 10, usePointStyle: false } },
+      tooltip: { backgroundColor: '#0f172a', borderColor: '#334155', borderWidth: 1, titleColor: '#f1f5f9', bodyColor: '#cbd5e1' }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+      y: { grid: { color: 'rgba(148,163,184,0.12)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+    }
+  };
+}
+
+// Erwärmung 2100, wenn weltweit alle so handeln (didaktische Vereinfachung):
+// heutige Politik ≈ +2,7 °C, Ziel-Pfad (≤ 25 % CO₂ 2045) ≈ +1,5 °C, heute ≈ +1,3 °C
+const TEMP = { now: 1.3, nowYear: 2025, bau: 2.7, best: 1.5 };
+function warming2100() {
+  const bau = bauLine()[4];
+  const fin = S.over ? current().co2pct : projected([], 'final').co2pct;
+  const p = clamp((bau - fin) / (bau - 25));
+  return { p, t: TEMP.bau - (TEMP.bau - TEMP.best) * p };
+}
+function tempCurve(t2100, p, year) {
+  const t = (year - TEMP.nowYear) / (2100 - TEMP.nowYear);
+  const bau = TEMP.now + (TEMP.bau - TEMP.now) * t;
+  return Math.min(bau, TEMP.now + (t2100 - TEMP.now) * (1 - Math.pow(1 - t, 1 + 2.5 * p)));
+}
+const fmt1 = x => x.toFixed(1).replace('.', ',');
+const tempCol = t => t <= 1.8 ? '#34d399' : t <= 2.2 ? '#fbbf24' : '#f87171';
+
+function bauLine() {
+  const empty = { active: new Set(), flags: { fwFactor: 1 } };
+  return CFG.snapYears.map((_, i) => computeMetrics(empty, i).co2pct);
+}
+
+function renderChart() {
+  document.querySelectorAll('.chart-tab').forEach(b => b.className = 'chart-tab px-3 py-1.5 rounded-lg ' + (b.dataset.tab === chartTab ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-900/60 text-slate-400 border border-slate-700 hover:text-slate-200'));
+  if (typeof Chart === 'undefined') { $('chart-caption').textContent = 'Diagramme konnten nicht geladen werden (offline?).'; return; }
+  const C = COLORS();
+  if (chart) chart.destroy();
+  const ctx = $('mainChart').getContext('2d');
+  const labels = CFG.snapYears.map(String);
+  const snaps = [baseMetrics(), ...S.history];
+  let cfg, caption, table;
+
+  if (chartTab === 'verlauf') {
+    const co2 = labels.map((_, i) => snaps[i] ? snaps[i].co2pct : null);
+    const sec = labels.map((_, i) => snaps[i] ? snaps[i].sec : null);
+    const bau = bauLine();
+    const opts = chartBase();
+    opts.scales.y.min = 0; opts.scales.y.max = 100;
+    opts.scales.y.title = { display: true, text: 'Prozent bzw. Punkte', color: '#94a3b8', font: { size: 10 } };
+    cfg = { type: 'line', data: { labels, datasets: [
+      { label: 'CO₂ (% von 2026)', data: co2, borderColor: '#f43f5e', backgroundColor: '#f43f5e', borderWidth: 2, pointRadius: 4, tension: 0.2 },
+      { label: 'Absenkpfad', data: CFG.co2Path, borderColor: '#f43f5e', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
+      { label: 'Ohne Massnahmen', data: bau, borderColor: '#64748b', borderDash: [2, 3], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
+      { label: 'Sicherheit', data: sec, borderColor: '#2dd4bf', backgroundColor: '#2dd4bf', borderWidth: 2, pointRadius: 4, tension: 0.2 },
+      { label: 'Sicherheitsziel', data: labels.map(() => CFG.secTarget), borderColor: '#2dd4bf', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+    ] }, options: opts };
+    caption = 'Beide Grössen auf derselben Skala (0–100). Gestrichelt: Ziele. Gepunktet grau: was ohne Massnahmen allein durch den Trend passieren würde.';
+    table = [['Jahr', 'CO₂ %', 'Pfad %', 'Ohne Massn. %', 'Sicherheit'], ...labels.map((l, i) => [l, co2[i] ?? '–', CFG.co2Path[i], bau[i], sec[i] ?? '–'])];
+  }
+
+  if (chartTab === 'bilanz') {
+    const showPrev = selected.length > 0 && !S.over;
+    const m = showPrev ? projected(selected, 'final') : current();
+    const src = [
+      ['Wasserkraft', 'wasser', m.gen.wasser], ['Kernstrom', 'kern', m.gen.kern], ['Wind', 'wind', m.gen.wind],
+      ['Solar', 'solar', m.gen.solar], ['Reservekraftwerk', 'gas', { s: 0, w: m.backupUsed }], ['Biogas', 'bio', m.gen.bio],
+      ['Import', 'import', { s: m.importS, w: m.importW }]
+    ];
+    const opts = chartBase();
+    opts.scales.x.stacked = true; opts.scales.y.stacked = true;
+    opts.scales.y.title = { display: true, text: 'GWh pro Halbjahr', color: '#94a3b8', font: { size: 10 } };
+    opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: ${fmt(c.raw)} GWh` };
+    cfg = { type: 'bar', data: { labels: ['Sommer', 'Winter'], datasets: [
+      ...src.map(([label, key, v]) => ({ label, data: [Math.round(v.s), Math.round(v.w)], backgroundColor: C[key], borderColor: '#1e293b', borderWidth: { top: 2 }, borderSkipped: false, stack: 'a', barPercentage: 0.55, order: 2 })),
+      { type: 'line', label: 'Bedarf', data: [Math.round(m.sD), Math.round(m.wD)], borderColor: '#f8fafc', backgroundColor: '#f8fafc', showLine: false, pointStyle: 'line', pointRadius: 44, pointBorderWidth: 3, pointHoverRadius: 44, order: 0 }
+    ] }, options: opts };
+    caption = (showPrev ? `<strong class="text-amber-300">Prognose 2045 inkl. Auswahl.</strong> ` : `Stand ${m.year}. `) +
+      `Weisse Linie = Bedarf. Im Sommer ${m.exportS > 0 ? `Überschuss ${fmt(m.exportS)} GWh (Export)` : `Import ${fmt(m.importS)} GWh`}, im Winter Import ${fmt(m.importW)} GWh (Kapazität ${fmt(m.importCap)}). Die Winterlücke ist das Kernproblem.`;
+    table = [['Quelle', 'Sommer', 'Winter'], ...src.map(([l, , v]) => [l, fmt(v.s), fmt(v.w)]), ['Bedarf', fmt(m.sD), fmt(m.wD)], ['Export', fmt(m.exportS), '0']];
+  }
+
+  if (chartTab === 'sektoren') {
+    const keys = [['Wärme', 'waerme'], ['Verkehr', 'verkehr'], ['Strom (Import/Reserve)', 'strom'], ['Industrie', 'industrie']];
+    const opts = chartBase();
+    opts.scales.x.stacked = true; opts.scales.y.stacked = true;
+    opts.scales.y.title = { display: true, text: 'kt CO₂ pro Jahr', color: '#94a3b8', font: { size: 10 } };
+    opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: ${fmt(c.raw)} kt` };
+    cfg = { type: 'bar', data: { labels, datasets: keys.map(([label, k]) => ({
+      label, data: labels.map((_, i) => snaps[i] ? Math.round(snaps[i].co2[k]) : null),
+      backgroundColor: C[k], borderColor: '#1e293b', borderWidth: { top: 2 }, borderSkipped: false, barPercentage: 0.6 })) }, options: opts };
+    const m = current();
+    const top = keys.map(([l, k]) => [l, m.co2[k]]).sort((a, b) => b[1] - a[1])[0];
+    caption = `Grösster verbleibender Brocken ${m.year}: <strong>${top[0]}</strong> mit ${fmt(top[1])} kt. Ziel 2045: insgesamt ≤ ${fmt(BASE_CO2 * CFG.co2Target / 100)} kt.`;
+    table = [['Jahr', ...keys.map(k => k[0]), 'Total'], ...labels.map((l, i) => snaps[i] ? [l, ...keys.map(([, k]) => fmt(snaps[i].co2[k])), fmt(snaps[i].co2Total)] : [l, '–', '–', '–', '–', '–'])];
+  }
+
+  if (chartTab === 'erwaermung') {
+    const w = warming2100();
+    const yrs = Array.from({ length: 16 }, (_, i) => TEMP.nowYear + i * 5);
+    const opts = chartBase();
+    opts.scales.y.min = 1.0; opts.scales.y.max = 3.0;
+    opts.scales.y.ticks.callback = v => fmt1(v) + '°';
+    opts.scales.y.title = { display: true, text: '°C über vorindustriell', color: '#94a3b8', font: { size: 10 } };
+    opts.scales.x.ticks.callback = function (v, i) { return yrs[i] % 25 === 0 ? yrs[i] : ''; };
+    opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: +${fmt1(c.raw)} °C` };
+    cfg = { type: 'line', data: { labels: yrs.map(String), datasets: [
+      { label: 'Wenn alle so handeln', data: yrs.map(y => +tempCurve(w.t, w.p, y).toFixed(2)), borderColor: tempCol(w.t), backgroundColor: tempCol(w.t), borderWidth: 3, pointRadius: 0, tension: 0.3 },
+      { label: 'Ohne Klimaschutz', data: yrs.map(y => +tempCurve(TEMP.bau, 0, y).toFixed(2)), borderColor: '#94a3b8', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
+      { label: 'Paris 1,5 °C', data: yrs.map(() => 1.5), borderColor: '#34d399', borderDash: [2, 3], borderWidth: 1, pointRadius: 0, backgroundColor: 'transparent' }
+    ] }, options: opts };
+    caption = `<strong style="color:${tempCol(w.t)}">+${fmt1(w.t)} °C</strong> statt +${fmt1(TEMP.bau)} °C bis 2100 – wenn alle so handeln${S.over ? '' : ' (mit allem, was beschlossen ist)'}.`;
+    table = [['Jahr', 'Wenn alle so handeln', 'Ohne Klimaschutz'], ...[2025, 2050, 2075, 2100].map(y => [y, '+' + fmt1(tempCurve(w.t, w.p, y)) + ' °C', '+' + fmt1(tempCurve(TEMP.bau, 0, y)) + ' °C'])];
+  }
+
+  chart = new Chart(ctx, cfg);
+  $('chart-caption').innerHTML = caption;
+  $('chart-table').innerHTML = `<table class="data w-full text-[11px]"><thead class="text-slate-300">${'<tr>' + table[0].map(h => `<th>${h}</th>`).join('') + '</tr>'}</thead><tbody>${table.slice(1).map(r => '<tr class="border-t border-slate-700/60">' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('')}</tbody></table>`;
+}
+
+function renderPipeline() {
+  const open = S.pipeline.filter(p => !S.active.has(p.id));
+  $('pipeline').innerHTML = open.length
+    ? open.map(p => { const late = p.ready > CFG.rounds; return `<div class="flex items-center justify-between bg-slate-900/60 px-2.5 py-1.5 rounded border ${late ? 'border-rose-500/40' : 'border-slate-700/60'}">
+        <span class="truncate pr-2"><i class="fa-solid ${M[p.id].icon} text-amber-300 mr-1.5"></i>${M[p.id].title}</span>
+        <span class="text-[10px] shrink-0 ${late ? 'text-rose-300' : 'text-slate-400'}">${late ? 'nach 2045' : 'fertig ' + CFG.years[p.ready - 1][1]}</span></div>`; }).join('')
+    : '<span class="text-slate-500 italic">Keine laufenden Bauprojekte.</span>';
+}
+
+function renderChronicle() {
+  $('chronicle').innerHTML = S.log.map(l => `<div class="bg-slate-900/50 px-2.5 py-1.5 rounded border border-slate-700/60 fade-in"><div class="font-semibold text-slate-200">${l.icon} ${l.head}</div><div class="text-slate-400 leading-snug">${l.text}</div></div>`).join('');
+}
+
+// ---------- Stadtpanorama ----------
+const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+let justBuilt = new Set();
+function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+const rot = (dur, cx = 0, cy = 0, swing) => REDUCED ? '' : swing
+  ? `<animateTransform attributeName="transform" type="rotate" values="-8 ${cx} ${cy};8 ${cx} ${cy};-8 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`
+  : `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`;
+
+function renderCity() {
+  const m = current();
+  const act = S.active;
+  const ghost = new Set(S.over ? [] : selected.filter(id => !act.has(id)));
+  const pending = new Set(S.pipeline.filter(p => !act.has(p.id)).map(p => p.id));
+  const has = id => act.has(id) || ghost.has(id);
+  const cls = id => !act.has(id) && ghost.has(id) ? 'ghost' : justBuilt.has(id) ? 'pop-in' : '';
+  const dirt = clamp((m.co2pct - 30) / 70);
+  const dark = m.sec < 45;
+  const o = [];
+  const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
+
+  // Himmel, Sonne, Wolken
+  o.push(`<defs><linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mixHex('#3b9be0', '#7c7468', dirt)}"/><stop offset="1" stop-color="${mixHex('#d3f0ff', '#d8c9a8', dirt)}"/></linearGradient></defs>`);
+  o.push(`<rect width="1000" height="260" fill="url(#g-sky)"/>`);
+  o.push(`<circle cx="880" cy="46" r="22" fill="#fde047" opacity="${(1 - dirt * 0.65).toFixed(2)}"><title>Sonne</title></circle>`);
+  [[70, 20, 34], [95, 55, 58], [120, 80, 22]].forEach(([dur, del, y]) => o.push(`<g class="cloud" style="animation-duration:${dur}s;animation-delay:-${del}s"><g transform="translate(0,${y})" fill="${dirt > 0.5 ? '#d6d3d1' : '#ffffff'}" opacity=".85"><ellipse cx="0" cy="0" rx="30" ry="9"/><ellipse cx="14" cy="-7" rx="17" ry="10"/><ellipse cx="-12" cy="-3" rx="12" ry="7"/></g></g>`));
+
+  // Alpen mit Speichersee
+  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon>`);
+  o.push(`<polygon points="120,52 165,112 140,112 125,80" fill="#64748b" opacity=".6"/><polygon points="205,72 250,128 228,128 212,96" fill="#64748b" opacity=".6"/>`);
+  o.push(`<g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/><polygon points="292,102 300,92 308,103 301,100"/></g>`);
+  const stauOn = has('stau');
+  o.push(`<ellipse cx="200" cy="133" rx="${stauOn ? 30 : 22}" ry="${stauOn ? 7 : 5}" fill="#38bdf8"><title>Speichersee</title></ellipse>`);
+  o.push(`<g class="${cls('stau')}"><polygon points="${stauOn ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"><title>${stauOn ? 'Erhöhte Staumauer' : 'Staumauer'}</title></polygon></g>`);
+  if (has('alpin')) {
+    const panels = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) panels.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`);
+    o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage${act.has('netz') ? '' : ' (ohne Netzausbau teilweise abgeregelt)'}</title>${panels.join('')}</g>`);
+  }
+  if (has('pump')) o.push(`<g class="${cls('pump')}"><title>Pumpspeicherwerk</title><path d="M178,136 Q215,160 252,182" stroke="#475569" stroke-width="2.5" fill="none"/><rect x="248" y="178" width="12" height="8" fill="#cbd5e1"/></g>`);
+
+  // Windräder (hinter den Hügeln, damit die Masten im Boden verschwinden)
+  if (has('wind')) {
+    const slow = !act.has('netz');
+    o.push(`<g class="${cls('wind')}"><title>Windpark Jurahöhen${slow ? ' (ohne Netzausbau gedrosselt)' : ''}</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) =>
+      `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><rect x="${x - 3}" y="${y - 2}" width="7" height="4" rx="1" fill="#e2e8f0"/>
+       <g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${rot(slow ? 4.5 : 2.6 + i * 0.3)}</g></g>`).join('') + `</g>`);
+  }
+  // Jura-Hügel
+  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  // Kernkraftwerk in der Ferne
+  o.push(`<g opacity="${m.kernActive ? 1 : 0.45}"><title>${m.kernActive ? 'Kernkraftwerk (Liefervertrag aktiv)' : 'Kernkraftwerk – Vertrag ausgelaufen'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${m.kernActive ? [0, 1.3, 2.6].map(d => puff(957, 100, '#ffffff', 6, 4, d, 'steam')).join('') : ''}</g>`);
+
+  // Strommasten
+  if (has('netz')) {
+    const xs = [300, 445, 590, 700];
+    const top = x => x === 700 ? 150 : 140;
+    o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},${top(x)} ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="${top(x) + 8}" x2="${x + 13}" y2="${top(x) + 8}" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 9}" y1="${top(x) + 20}" x2="${x + 9}" y2="${top(x) + 20}" stroke="#94a3b8" stroke-width="1.5"/>`).join('') +
+      xs.slice(0, -1).map((x, i) => { const x2 = xs[i + 1]; return [-13, 13].map(dx => `<path d="M${x + dx},${top(x) + 8} Q${(x + x2) / 2},${top(x) + 22} ${x2 + dx},${top(x2) + 8}" stroke="#64748b" stroke-width=".8" fill="none"/>`).join(''); }).join('') + `</g>`);
+  }
+
+  // Boden, See, Uferstrasse
+  o.push(`<rect x="0" y="198" width="1000" height="62" fill="#4d7c0f"/>`);
+  o.push(`<path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"><title>Der See</title></path>`);
+  o.push(`<g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
+  if (has('see')) o.push(`<g class="${cls('see')}"><title>Seewasser-Wärmepumpe</title><rect x="226" y="196" width="22" height="13" fill="#e2e8f0"/><polygon points="224,196 237,188 250,196" fill="#0369a1"/><path d="M228,206 Q205,214 185,222" stroke="#f97316" stroke-width="2" fill="none"/></g>`);
+
+  // Fernwärme / Geothermie
+  if (has('fw') || (S.flags.heatExtra || 0) > 0) {
+    const fwOn = has('fw');
+    o.push(`<g class="${fwOn ? cls('fw') : ''}"><title>Fernwärmenetz${fwOn ? ' mit Tiefengeothermie' : ''}</title><line x1="262" y1="230" x2="${fwOn ? 615 : 420}" y2="230" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/>${fwOn ? `<polygon points="606,232 616,186 626,232" fill="none" stroke="#ea580c" stroke-width="2"/><line x1="609" y1="216" x2="623" y2="216" stroke="#ea580c" stroke-width="1.5"/><line x1="612" y1="201" x2="620" y2="201" stroke="#ea580c" stroke-width="1.5"/>` : ''}</g>`);
+  }
+
+  // Gebäude
+  const B = [[262, 34, 52], [298, 28, 80], [328, 40, 42], [370, 30, 96], [402, 36, 62], [440, 26, 112], [468, 38, 72], [508, 30, 50], [540, 34, 88], [576, 26, 58]];
+  const smokeOrder = [3, 7, 1, 9, 5, 0, 8, 2, 6, 4];
+  const nSmoke = Math.round(clamp(m.fossW / 0.80) * 10);
+  const smoking = new Set(smokeOrder.slice(0, nSmoke));
+  const nSolarNow = Math.round(clamp((m.solarLocal - 60) / 260) * 10);
+  const solarGhost = ghost.has('solar');
+  const reno = has('daemm');
+  const nHP = Math.round(clamp((0.80 - m.fossW) / 0.70) * 10);
+  B.forEach(([x, w, h], i) => {
+    const top = 232 - h;
+    const facade = reno ? ['#f5f5f4', '#e7e5e4', '#fef3c7'][i % 3] : ['#9ca3af', '#a8a29e', '#94a3b8'][i % 3];
+    const wins = [];
+    for (let r = 0; r < Math.floor((h - 12) / 11); r++) for (let c = 0; c < Math.floor((w - 6) / 8); c++) {
+      const lit = !dark && (i * 7 + c * 3 + r * 5) % 4 !== 0;
+      const flick = dark && (i + c + r) % 5 === 0;
+      wins.push(`<rect x="${x + 4 + c * 8}" y="${top + 7 + r * 11}" width="4" height="5" fill="${lit ? '#fde68a' : '#334155'}" ${flick ? 'class="flicker"' : ''}/>`);
+    }
+    o.push(`<g class="${reno ? cls('daemm') : ''}"><title>${reno ? 'Saniertes Wohnhaus' : 'Wohnhaus'}${smoking.has(i) ? ' – heizt noch mit Öl oder Gas' : ''}</title><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
+    o.push(`<rect x="${x + w - 8}" y="${top - 9}" width="4" height="9" fill="#78716c"/>`);
+    if (smoking.has(i)) o.push(puff(x + w - 6, top - 11, dirt > 0.5 ? '#57534e' : '#78716c', 3, 3.2, (i * 0.7) % 3.2) + puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7 + 1.6) % 3.2));
+    const solarHere = smokeOrder.indexOf(i) >= 10 - nSolarNow;
+    if (solarHere || solarGhost) o.push(`<g class="${solarHere ? (justBuilt.has('solar') ? 'pop-in' : '') : 'ghost'}"><polygon points="${x + 3},${top - 1} ${x + 6},${top - 5} ${x + w - 11},${top - 5} ${x + w - 14},${top - 1}" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/></g>`);
+    const hpHere = i < nHP, hpGhost = !hpHere && ghost.has('wp') && i < nHP + 4;
+    if (hpHere || hpGhost) o.push(`<g class="${hpGhost ? 'ghost' : justBuilt.has('wp') ? 'pop-in' : ''}"><title>Wärmepumpe</title><rect x="${x + 2}" y="226" width="9" height="6" fill="#f1f5f9" stroke="#64748b" stroke-width=".5"/><circle cx="${x + 6.5}" cy="229" r="2" fill="none" stroke="#64748b" stroke-width=".6"/></g>`);
+  });
+  o.push(`<g><title>Stadthaus</title><polygon points="440,${232 - 112} 453,${232 - 126} 466,${232 - 112}" fill="#b91c1c"/></g>`);
+
+  // Industrie
+  const indSmoke = Math.round(clamp(m.fossI / 0.70) * 3);
+  o.push(`<g><title>Industrie${has('ind') ? ' (elektrifiziert)' : ''}</title><rect x="700" y="168" width="7" height="40" fill="#57534e"/><rect x="722" y="176" width="7" height="32" fill="#57534e"/>
+    <path d="M645,232 L645,212 L660,204 L660,212 L675,204 L675,212 L690,204 L690,212 L705,204 L705,212 L720,204 L720,212 L735,204 L735,212 L750,204 L750,232 Z" fill="#78716c" stroke="#57534e" stroke-width=".6"/>
+    ${Array.from({ length: indSmoke }, (_, k) => puff(703, 166, '#44403c', 4, 3.6, k * 1.2) + puff(725, 174, '#57534e', 3.5, 3.6, k * 1.2 + 0.6)).join('')}
+    ${has('ind') ? `<text x="656" y="226" font-size="12" class="${cls('ind')}">⚡</text>` : ''}</g>`);
+  if (has('h2')) o.push(`<g class="${cls('h2')}"><title>Elektrolyseur & Wasserstofftank</title><line x1="769" y1="232" x2="771" y2="222" stroke="#64748b"/><line x1="781" y1="232" x2="779" y2="222" stroke="#64748b"/><circle cx="775" cy="218" r="11" fill="#e0f2fe" stroke="#38bdf8"/><text x="775" y="221" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">H₂</text></g>`);
+  if (has('gas')) {
+    const run = act.has('gas') && m.backupUsed > 5;
+    o.push(`<g class="${cls('gas')}"><title>Reservekraftwerk${run ? ` – läuft (${fmt(m.backupUsed)} GWh)` : ' – in Bereitschaft'}</title><rect x="795" y="210" width="34" height="22" fill="#a8a29e" stroke="#57534e" stroke-width=".6"/><rect x="820" y="182" width="6" height="28" fill="#78716c"/>${run ? [0, 1.1, 2.2].map(d => puff(823, 180, act.has('h2') ? '#ffffff' : '#6b7280', 4, 3.3, d, act.has('h2') ? 'steam' : 'smoke')).join('') : ''}</g>`);
+  }
+  if (has('smartgrid')) o.push(`<g class="${cls('smartgrid')}"><title>Quartierbatterien</title>${[0, 1, 2].map(k => `<rect x="${838 + k * 21}" y="220" width="18" height="12" rx="1" fill="#0f766e" stroke="#134e4a" stroke-width=".6"/><text x="${847 + k * 21}" y="229.5" text-anchor="middle" font-size="8" fill="#fef08a">⚡</text>`).join('')}</g>`);
+  if (has('agri') || (S.flags.bioExtra || 0) > 0) {
+    const ag = has('agri');
+    o.push(`<g class="${ag ? cls('agri') : ''}"><title>Landwirtschaft${ag ? ' mit Agri-PV' : ''} und Biogas</title><rect x="905" y="222" width="70" height="10" fill="#a3a635"/>${[0, 1, 2, 3].map(k => `<line x1="905" y1="${223.5 + k * 2.5}" x2="975" y2="${223.5 + k * 2.5}" stroke="#65a30d" stroke-width=".8"/>`).join('')}
+      ${ag ? [0, 1, 2].map(k => `<line x1="${912 + k * 22}" y1="222" x2="${912 + k * 22}" y2="212" stroke="#64748b"/><rect x="${905 + k * 22}" y="209" width="18" height="3" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".4"/>`).join('') : ''}
+      <path d="M977,232 A11,11 0 0 1 999,232 Z" fill="#84cc16" stroke="#3f6212" stroke-width=".6"/></g>`);
+  }
+
+  // Trottoir & Strasse
+  o.push(`<rect x="0" y="232" width="1000" height="3" fill="#a8a29e"/><rect x="0" y="235" width="1000" height="25" fill="#3f3f46"/><line x1="0" y1="247.5" x2="1000" y2="247.5" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="10 8"/>`);
+  if (has('oev')) o.push(`<g class="${cls('oev')}"><line x1="0" y1="215" x2="1000" y2="215" stroke="#334155" stroke-width=".8"/></g>`);
+
+  // Fahrzeuge
+  const slots = 7 - (has('oev') ? 2 : 0);
+  const nC = Math.min(slots, Math.round(clamp(m.fossV / 0.95) * 7));
+  const car = (col, ev) => `<title>${ev ? 'E-Auto' : 'Benzin- oder Dieselauto'}</title><rect x="0" y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><rect x="6" y="-9" width="6" height="3" fill="#bae6fd"/><circle cx="5" cy="0" r="2" fill="#111827"/><circle cx="15" cy="0" r="2" fill="#111827"/>${ev ? '<text x="10" y="-1.5" text-anchor="middle" font-size="5" fill="#fef08a">⚡</text>' : puff(-2, -3, '#57534e', 2, 1.4, 0)}`;
+  const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
+  for (let k = 0; k < slots; k++) {
+    const ev = k >= nC;
+    const back = k % 2 === 1;
+    const dur = 11 + (k * 3.7) % 8, delay = (k * 4.3) % dur;
+    const col = ev ? '#22c55e' : vcols[k % vcols.length];
+    o.push(`<g class="${back ? 'drive-back' : 'drive'}" style="animation-duration:${dur}s;animation-delay:-${delay}s"><g transform="translate(0,${back ? 254 : 242})${back ? ' scale(-1,1)' : ''}">${car(col, ev)}</g></g>`);
+  }
+  if (has('oev')) o.push(`<g class="drive ${ghost.has('oev') ? 'ghost' : ''}" style="animation-duration:20s;animation-delay:-6s"><g transform="translate(0,242)"><title>Tram</title><line x1="30" y1="-12" x2="36" y2="-27" stroke="#334155" stroke-width="1"/><rect x="0" y="-13" width="66" height="12" rx="3" fill="#2563eb"/><rect x="0" y="-7" width="66" height="2" fill="#ffffff"/>${[6, 18, 30, 42, 54].map(wx => `<rect x="${wx}" y="-11" width="7" height="3.5" fill="#bae6fd"/>`).join('')}<circle cx="10" cy="0" r="1.8" fill="#111827"/><circle cx="56" cy="0" r="1.8" fill="#111827"/></g></g>`);
+  if (has('velo')) for (let k = 0; k < 3; k++) o.push(`<g class="drive ${ghost.has('velo') ? 'ghost' : ''}" style="animation-duration:${34 + k * 6}s;animation-delay:-${k * 13}s"><g transform="translate(0,234)"><circle cx="0" cy="0" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><circle cx="8" cy="0" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><line x1="0" y1="0" x2="5" y2="-4" stroke="#111827" stroke-width=".8"/><line x1="5" y1="-4" x2="8" y2="0" stroke="#111827" stroke-width=".8"/><circle cx="5" cy="-8" r="2" fill="${['#ec4899', '#14b8a6', '#eab308'][k]}"/></g></g>`);
+
+  // Baukräne
+  const CRANES = { wind: [722, 150, 34], alpin: [112, 126, 24], netz: [520, 212, 46], gas: [840, 232, 44], stau: [244, 141, 24], pump: [266, 186, 22], fw: [636, 232, 54], see: [252, 210, 26], oev: [360, 234, 48], ind: [758, 210, 36], h2: [786, 232, 42] };
+  for (const id of pending) { const c = CRANES[id]; if (!c) continue; const [x, y, h] = c;
+    o.push(`<g><title>Baustelle: ${M[id].title}</title><line x1="${x}" y1="${y}" x2="${x}" y2="${y - h}" stroke="#f97316" stroke-width="2"/><g><line x1="${x - 6}" y1="${y - h}" x2="${x + 24}" y2="${y - h}" stroke="#f97316" stroke-width="2"/><line x1="${x + 18}" y1="${y - h}" x2="${x + 18}" y2="${y - h + 10}" stroke="#334155" stroke-width=".8"/><rect x="${x + 15.5}" y="${y - h + 10}" width="5" height="3" fill="#facc15"/>${rot(5, x, y - h, true)}</g></g>`); }
+
+  // Dunst
+  o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
+
+  $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  cityTitlesToTips();
+  const mood = S.pop >= 60 ? '😀' : S.pop >= 50 ? '🙂' : S.pop >= 42 ? '😐' : '😠';
+  $('city-year').textContent = `Seestadt ${m.year}`;
+  $('city-mood').textContent = `${mood} Stimmung ${S.pop} % · ${m.co2pct <= 35 ? '🌤️ klare Luft' : m.co2pct <= 65 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${dark ? ' · 🕯️ Stromknappheit' : ''}`;
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl (Vorschau)' : pending.size ? '🏗️ Kräne zeigen Baustellen' : 'Tipp: auf Anlagen zeigen oder tippen';
+}
+
+
+// ---------- Tooltips im Stadtbild (eigene statt Browser-Tooltips: sofort, auch per Antippen) ----------
+function setupCityTips() {
+  const box = $('city'), tip = $('city-tip'), host = box.parentElement;
+  let hideT = null;
+  const hide = () => tip.classList.add('hidden');
+  const show = e => {
+    const el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (!el || !box.contains(el)) { if (e.pointerType !== 'touch') hide(); return; }
+    tip.textContent = el.getAttribute('data-tip');
+    tip.classList.remove('hidden');
+    const r = host.getBoundingClientRect();
+    const x = Math.max(4, Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 4));
+    const y = Math.max(4, Math.min(e.clientY - r.top + 14, r.height - tip.offsetHeight - 4));
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    clearTimeout(hideT);
+    if (e.pointerType === 'touch') hideT = setTimeout(hide, 2500);
+  };
+  box.addEventListener('pointermove', show);
+  box.addEventListener('pointerdown', show);
+  box.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') hide(); });
+}
+// <title>-Elemente in data-tip umwandeln, damit nur unser Tooltip erscheint
+function cityTitlesToTips() {
+  $('city').querySelectorAll('title').forEach(t => {
+    const el = t.parentNode;
+    el.setAttribute('data-tip', t.textContent); t.remove();
+    // dünne Anlagen (Windräder, Masten, Kräne) bekommen eine unsichtbare Trefferfläche
+    if (el.tagName === 'g') {
+      try { const bb = el.getBBox(); if (bb.width > 0 && bb.height > 0) el.insertAdjacentHTML('afterbegin', `<rect x="${bb.x}" y="${bb.y}" width="${bb.width}" height="${bb.height}" fill="transparent"/>`); } catch (e) {}
+    }
+  });
+}
+
+// ---------- Ablauf ----------
+let skipArmed = false;
+function confirmRound() {
+  if (S.over) return;
+  if (!selected.length && !skipArmed) {
+    skipArmed = true;
+    $('confirm-text').textContent = 'Wirklich ohne Beschluss? Nochmals klicken';
+    setTimeout(() => { skipArmed = false; if (S && !S.over) renderSelection(); }, 4000);
+    return;
+  }
+  skipArmed = false;
+  const before = current();
+  const pop0 = S.pop, bud0 = S.budget;
+  const roundNo = S.round;
+  const y = CFG.years[roundNo - 1];
+  const R = playRound(S, [...selected]);
+  selected = [];
+  const m = R.metrics;
+  justBuilt = new Set(R.completed);
+
+  const logStart = S.log.length;
+  addLog('🗳️', `Legislatur ${roundNo} (${y[0]}–${y[1]})`, R.picks.length ? R.picks.map(p => M[p.id].title).join(' + ') + '.' : 'Kein neuer Beschluss.');
+  const built = R.completed.filter(id => id !== 'bond');
+  if (built.length) addLog('🏗️', `Fertiggestellt bis ${y[1]}`, built.map(id => M[id].title).join(', ') + '.');
+  addLog(R.event.icon, R.event.title, R.event.text);
+  R.lines.forEach(l => addLog('•', `Legislatur ${roundNo}`, l));
+  // Einträge dieser Runde chronologisch (neueste Runde bleibt oben)
+  const fresh = S.log.splice(0, S.log.length - logStart).reverse();
+  S.log.unshift(...fresh);
+
+  const row = (label, a, b, unit, goodUp) => { const d = b - a; const good = goodUp ? d >= 0 : d <= 0;
+    return `<tr class="border-t border-slate-700/60"><td class="py-1">${label}</td><td class="text-right">${fmt(a)}${unit}</td><td class="text-right font-semibold">${fmt(b)}${unit}</td><td class="text-right ${d === 0 ? 'text-slate-500' : good ? 'text-emerald-400' : 'text-rose-400'}">${sign(d)}</td></tr>`; };
+
+  const body = newspaper(R, roundNo, y[1]) + `
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+        <div class="text-xs text-slate-400 mb-1">Beschlossen</div>
+        ${R.picks.length ? '' : '<div class="text-xs text-slate-500">Kein neuer Beschluss.</div>'}${R.picks.map(p => `<div class="text-sm"><i class="fa-solid ${M[p.id].icon} text-emerald-400 mr-1"></i>${M[p.id].title}
+          <div class="text-[11px] text-slate-400 ml-5">${p.cost < 0 ? '+' + (-p.cost) : '−' + p.cost} Mio. · Akzeptanz ${sign(p.pop)} · ${p.ready > CFG.rounds ? '<span class="text-rose-300">fertig erst nach 2045</span>' : M[p.id].build ? 'fertig ' + CFG.years[p.ready - 1][1] : 'wirksam'}</div></div>`).join('')}
+        ${R.completed.length ? `<div class="text-xs text-slate-400 mt-2 mb-1">In Betrieb genommen</div>${R.completed.map(id => `<div class="text-xs"><i class="fa-solid fa-check text-emerald-400 mr-1"></i>${M[id].title}</div>`).join('')}` : ''}
+      </div>
+      <div class="flip cursor-pointer" id="event-flip" title="Karte umdrehen"><div class="flip-inner h-full">
+        <div class="front rounded-xl border border-amber-400/50 bg-gradient-to-br from-amber-500/30 via-rose-500/20 to-violet-500/30 grid place-items-center text-center p-3 min-h-[130px]">
+          <div><div class="text-4xl">🎴</div><div class="text-xs text-amber-200 mt-1 font-semibold tracking-wide">Ereigniskarte</div></div></div>
+        <div class="back bg-amber-500/10 p-3 rounded-xl border border-amber-500/30">
+          <div class="text-xs text-amber-300 mb-1">Ereignis</div>
+          <div class="font-semibold text-slate-100">${R.event.icon} ${R.event.title}</div>
+          <p class="text-xs text-slate-300 mt-1">${R.event.text}</p>
+        </div></div></div>
+    </div>
+    ${R.lines.length ? `<ul class="text-xs text-slate-300 space-y-1 list-disc pl-5">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
+    <table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Kennzahl</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th></tr></thead><tbody>
+      ${row('CO₂ (% von 2026)', before.co2pct, m.co2pct, ' %', false)}
+      ${row('Versorgungssicherheit', before.sec, m.sec, '', true)}
+      ${row('Winter-Eigenversorgung', Math.round(before.selfW * 100), Math.round(m.selfW * 100), ' %', true)}
+      ${row('Budget (Mio. CHF)', bud0, S.budget, '', true)}
+      ${row('Akzeptanz', pop0, S.pop, ' %', true)}
+    </tbody></table>
+    <p class="text-[11px] text-slate-500">Energiehandel diese Legislatur: ${sign(R.trade)} Mio. (Export minus Import).${!S.over ? ` Neue Einnahmen für die nächste Legislatur: +${CFG.income} Mio.` : ''}</p>
+    ${roundNo < CFG.rounds ? `<div class="text-center text-sm font-semibold ${S.ousted ? 'text-rose-400' : 'text-emerald-400'}">${S.ousted ? '🗳️ Wahl verloren – die neue Mehrheit stoppt das Programm.' : '🗳️ Wiedergewählt! Weiter geht’s.'}</div>` : ''}`;
+
+  renderAll();
+  justBuilt = new Set();
+  if (S.over) showModal(S.ousted ? '🗳️' : '📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: 'Zur Gesamtauswertung', primary: true, fn: showFinal }]);
+  else showModal('📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: `Weiter zur Legislatur ${S.round}`, primary: true, fn: () => { closeModal(); showDilemma(); } }]);
+  const fl = $('event-flip');
+  if (fl) { fl.onclick = () => fl.classList.toggle('flipped'); setTimeout(() => fl.classList.add('flipped'), REDUCED ? 0 : 900); }
+  if (R.event.id === 'dunkelflaute' && !R.event.ok) setTimeout(() => { const c = $('city'); c.classList.remove('blackout'); void c.offsetWidth; c.classList.add('blackout'); }, 1200);
+}
+
+function newspaper(R, roundNo, year) {
+  const main = [...R.picks].filter(p => p.id !== 'bond').sort((a, b) => Math.abs(M[b.id].cost) - Math.abs(M[a.id].cost))[0] || R.picks[0];
+  const head = S.ousted ? 'Machtwechsel im Stadthaus: Energieprogramm gestoppt' : R.event.headline;
+  const sub = main ? NEWS[main.id][0] : 'Stadtrat legt eine Denkpause ein – keine neuen Beschlüsse';
+  const quotes = R.picks.slice(0, 3).map(p => { const [who, text] = NEWS[p.id][p.pop >= 0 ? 1 : 2];
+    return `<div class="bubble rounded-lg p-2 text-xs leading-snug">«${text}»<div class="text-[10px] text-stone-500 mt-1" style="font-family:Inter,sans-serif">— ${who}</div></div>`; });
+  const cols = ['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3'][quotes.length];
+  return `<div class="paper rounded-xl p-4 shadow-inner">
+    <div class="masthead text-[10px] uppercase text-stone-500 flex justify-between border-b-2 border-stone-700 pb-1"><span>Seestadter Anzeiger</span><span>Ausgabe ${year}</span></div>
+    <h4 class="text-xl md:text-2xl font-bold leading-tight mt-2">${head}</h4>
+    <p class="text-sm italic text-stone-600 mt-1">Ausserdem: ${sub}</p>
+    ${quotes.length ? `<div class="grid ${cols} gap-2 mt-3">${quotes.join('')}</div>` : ''}
+  </div>`;
+}
+
+function confetti() {
+  if (REDUCED) return;
+  const c = $('confetti'); c.style.display = 'block'; c.width = innerWidth; c.height = innerHeight;
+  const g = c.getContext('2d');
+  const cols = ['#34d399', '#fbbf24', '#60a5fa', '#f472b6', '#a78bfa', '#f87171'];
+  const P = Array.from({ length: 180 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.6, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, r: 5 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - 0.5) * 0.3, col: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    g.clearRect(0, 0, c.width, c.height);
+    for (const p of P) { p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.a += p.va; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.col; g.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); g.restore(); }
+    if (t - t0 < 4500) requestAnimationFrame(frame); else { g.clearRect(0, 0, c.width, c.height); c.style.display = 'none'; }
+  })(t0);
+}
+
+function insights(S, ev) {
+  const m = ev.last, out = [];
+  const lateIds = S.pipeline.filter(p => p.ready > CFG.rounds).map(p => M[p.id].title);
+  if (lateIds.length) out.push(`⏳ <strong>Zu spät gestartet:</strong> ${lateIds.join(', ')} wurde(n) erst nach 2045 fertig. Lange Bauzeiten brauchen frühe Entscheide.`);
+  const elec = m.elec.heat + m.elec.tr + m.elec.ind;
+  if (elec > 250 && m.selfW < 0.75) out.push(`🔌 <strong>Elektrifizierung ohne Winterstrom:</strong> Wärmepumpen, E-Mobilität und Industrie brauchen zusätzlich ${fmt(elec)} GWh Strom pro Jahr – im Winter musste viel importiert werden (${fmt(m.importW)} GWh).`);
+  if (m.exportS > 150 && !S.active.has('stau') && !S.active.has('h2')) out.push(`☀️ <strong>Sommerüberschuss ungenutzt:</strong> ${fmt(m.exportS)} GWh gingen in den Export. Saisonale Verschiebung (Speichersee, Wasserstoff) hätte daraus Winterstrom machen können.`);
+  if (m.flex < m.flexNeed) out.push(`⚡ <strong>Zu wenig Flexibilität:</strong> Viel wetterabhängige Erzeugung (${Math.round(m.varShare * 100)} %), aber zu wenig Speicher und steuerbarer Verbrauch.`);
+  if ((S.active.has('wind') || S.active.has('alpin')) && !S.active.has('netz')) out.push('🗼 <strong>Netz fehlte:</strong> Wind- und Alpinstrom wurden mangels Leitungen teilweise abgeregelt.');
+  if (S.active.has('wp') && S.active.has('daemm')) out.push('🏠 <strong>Synergie genutzt:</strong> Dämmung macht Wärmepumpen effizienter – weniger Strom im Winter.');
+  if (S.active.has('gas') && S.active.has('h2')) out.push('💧 <strong>Synergie genutzt:</strong> Das Reservekraftwerk läuft mit eigenem Wasserstoff fast CO₂-frei.');
+  if (S.active.has('gas') && !S.active.has('h2') && m.backupUsed > 30) out.push(`🔥 <strong>Reservekraftwerk im Dauerbetrieb:</strong> ${fmt(m.backupUsed)} GWh aus Gas – Versorgung gesichert, aber mit ${fmt(m.co2.strom)} kt CO₂ im Stromsektor.`);
+  const top = Object.entries(m.co2).sort((a, b) => b[1] - a[1])[0];
+  const names = { waerme: 'Wärme', verkehr: 'Verkehr', industrie: 'Industrie', strom: 'Strom' };
+  if (!ev.goals.co2) out.push(`🏭 <strong>Grösster Rest-Emittent:</strong> ${names[top[0]]} mit ${fmt(top[1])} kt. Hier hätte eine weitere Massnahme am meisten gebracht.`);
+  if (S.ousted) out.push('🗳️ <strong>Akzeptanz unterschätzt:</strong> Ohne Mehrheit keine Energiewende. Beteiligung, populäre Massnahmen und gutes Timing gehören zur Strategie.');
+  if (!out.length) out.push('🌱 Ein ausgewogener Pfad – CO₂, Versorgung, Finanzen und Akzeptanz wurden zusammen gedacht.');
+  return out;
+}
+
+function showFinal() {
+  const ev = evaluate(S);
+  const m = ev.last;
+  const tile = (ok, label, val, okText, failText) => `<div class="p-3 rounded-xl border ${ok ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}">
+    <div class="text-slate-400 text-xs">${label}</div><div class="font-bold text-sm ${ok ? 'text-emerald-300' : 'text-rose-300'}">${val}</div>
+    <div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid ${ok ? 'fa-check' : 'fa-xmark'} mr-1"></i>${ok ? okText : failText}</div></div>`;
+  const title = S.ousted ? 'Abgewählt – Transformation abgebrochen' : ev.passed === 4 ? 'Netto-Null-Pfad geschafft!' : ev.passed >= 3 ? 'Starker Pfad mit einer Lücke' : ev.passed >= 2 ? 'Teilerfolg mit Zielkonflikten' : 'Transformation gescheitert';
+  const icon = S.ousted ? '🗳️' : ev.passed === 4 ? '🏆' : ev.passed >= 2 ? '⚖️' : '⚠️';
+
+  const earned = BADGES.filter(b => b.test(S, ev));
+  const owned = new Set(store('pfs-badges') || []);
+  const fresh = earned.filter(b => !owned.has(b.id));
+  earned.forEach(b => owned.add(b.id)); store('pfs-badges', [...owned]);
+  const badgeHtml = `<div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+      <div class="text-xs font-semibold text-slate-200 mb-2 flex justify-between"><span>Abzeichen in diesem Lauf: ${earned.length}</span><span class="text-slate-400 font-normal">Sammlung ${owned.size}/${BADGES.length}</span></div>
+      <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">${BADGES.map(b => { const e = earned.includes(b), o = owned.has(b.id);
+        return `<div class="text-center p-1.5 rounded-lg border ${e ? 'border-amber-400/60 bg-amber-500/10' : 'border-slate-700'}" title="${b.name}: ${b.desc}">
+          <div class="text-2xl ${e || o ? '' : 'badge-locked'} ${fresh.includes(b) ? 'animate-bounce' : ''}">${b.icon}</div><div class="text-[9px] leading-tight text-slate-300 mt-0.5">${b.name}</div></div>`; }).join('')}</div>
+      <div class="text-[10px] text-slate-500 mt-2">Grau = noch nie erreicht. Fahre mit der Maus über ein Abzeichen für die Bedingung.</div></div>`;
+  let best = store('pfs-best-' + S.code) || [];
+  best.push({ score: ev.score, passed: ev.passed, d: new Date().toISOString().slice(0, 10) });
+  best = best.sort((a, b) => b.score - a.score).slice(0, 5);
+  store('pfs-best-' + S.code, best);
+
+  const decisions = S.chosen.map(c => `<tr class="border-t border-slate-700/60"><td class="py-1">L${c.round}</td><td>${M[c.id].title}</td><td class="text-right">${c.cost}</td><td class="text-right">${sign(c.pop)}</td></tr>`).join('');
+
+  const body = `
+    <div class="text-center"><div class="text-4xl font-bold text-emerald-300"><span class="count" data-from="0" data-to="${ev.score}">0</span><span class="text-base text-slate-400"> / 100 Punkte</span></div>
+      <div class="text-xs text-slate-400">${ev.passed} von 4 Zielen erreicht · Szenario ${S.code}</div></div>
+    <div class="grid grid-cols-2 gap-3">
+      ${tile(ev.goals.co2, 'CO₂ 2045', `${m.co2pct} % von 2026 (${fmt(m.co2Total)} kt)`, `Ziel ≤ ${CFG.co2Target} % erreicht – Rest kompensierbar`, `Ziel ≤ ${CFG.co2Target} % verfehlt`)}
+      ${tile(ev.goals.sec, 'Versorgungssicherheit', `${m.sec} / 100 · Winter ${Math.round(m.selfW * 100)} % eigen`, 'Gut abgesichert', 'Blackout-Risiko im Winter')}
+      ${tile(ev.goals.budget, 'Budget', `${fmt(S.budget)} Mio. CHF`, 'Solide Finanzen', 'Schulden hinterlassen')}
+      ${tile(ev.goals.pop, 'Akzeptanz', `${S.pop} %`, 'Rückhalt in der Bevölkerung', S.ousted ? 'Abgewählt' : 'Knapp')}
+    </div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
+      <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
+      <div class="text-right"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${tempCol(warming2100().t)}">+${fmt1(warming2100().t)} °C</strong></div>
+    </div>
+    ${badgeHtml}
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+      <div class="text-xs font-semibold text-slate-200 mb-2">Was die Analyse zeigt</div>
+      <ul class="space-y-1.5 text-xs">${insights(S, ev).map(t => `<li>${t}</li>`).join('')}</ul>
+    </div>
+    <details class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><summary class="font-semibold text-slate-200">Alle Beschlüsse</summary>
+      <table class="w-full mt-2"><thead class="text-slate-400"><tr><th class="text-left">Leg.</th><th class="text-left">Massnahme</th><th class="text-right">Mio.</th><th class="text-right">Akz.</th></tr></thead><tbody>${decisions}</tbody></table></details>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs">
+      <div class="font-semibold text-slate-200 mb-1">Deine besten Läufe in Szenario ${S.code}</div>
+      ${best.map((b, i) => `<div class="flex justify-between"><span>${i + 1}. ${b.d}</span><span>${b.score} Punkte · ${b.passed}/4</span></div>`).join('')}
+    </div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs text-slate-300">
+      <strong>Zum Nachdenken:</strong> Welche Entscheidung würdest du mit dem Wissen von heute früher treffen? Welche Massnahme hat mehr gekostet (Geld oder Akzeptanz), als sie gebracht hat? Vergleicht eure Pfade im gleichen Szenario-Code.
+    </div>`;
+  showModal(icon, title, body, [
+    { label: '<i class="fa-regular fa-copy mr-1"></i>Ergebnis kopieren', fn: () => copyResult(ev) },
+    { label: 'Gleiches Szenario nochmals', fn: () => { closeModal(); startGame(S.code); } },
+    { label: 'Übersicht ansehen', primary: true, fn: closeModal }
+  ]);
+  animateCounts($('modal-body'), 1400);
+  if (ev.passed === 4) setTimeout(confetti, 300);
+}
+
+function copyResult(ev) {
+  const m = ev.last;
+  const txt = [`Postfossile Stadt – Szenario ${S.code}`, `Punkte: ${ev.score}/100 · Ziele: ${ev.passed}/4${S.ousted ? ' (abgewählt)' : ''}`,
+    `CO₂: ${m.co2pct} % · Sicherheit: ${m.sec} · Budget: ${S.budget} Mio. · Akzeptanz: ${S.pop} %`,
+    ...S.chosen.map(c => `L${c.round}: ${M[c.id].title}`)].join('\n');
+  const done = () => { const b = document.querySelector('#modal-actions button'); if (b) b.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Kopiert'; };
+  const fallback = () => {
+    if ($('copy-fallback')) return;
+    $('modal-body').insertAdjacentHTML('afterbegin', `<div><div class="text-xs text-slate-400 mb-1">Kopieren war nicht möglich – markiere den Text und kopiere ihn selbst:</div><textarea id="copy-fallback" rows="6" readonly class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-100">${txt}</textarea></div>`);
+    $('modal').firstElementChild.scrollTop = 0; $('copy-fallback').select();
+  };
+  try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+}
+
+// ---------- Modals ----------
+function showModal(icon, title, html, actions) {
+  $('modal-icon').textContent = icon;
+  $('modal-title').innerHTML = title;
+  $('modal-body').innerHTML = html;
+  $('modal-actions').innerHTML = '';
+  for (const a of actions) {
+    const b = document.createElement('button');
+    b.innerHTML = a.label;
+    b.className = a.primary ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-2.5 rounded-xl font-semibold text-sm' : 'bg-slate-700 hover:bg-slate-600 text-slate-100 px-5 py-2.5 rounded-xl font-semibold text-sm border border-slate-600';
+    b.onclick = a.fn;
+    $('modal-actions').appendChild(b);
+  }
+  $('modal').classList.remove('hidden');
+  $('modal').firstElementChild.scrollTop = 0;
+  const first = $('modal-actions').querySelector('button:last-child'); if (first) first.focus({ preventScroll: true });
+}
+function closeModal() { $('modal').classList.add('hidden'); }
+
+function showIntro() {
+  const urlCode = new URLSearchParams(location.search).get('code');
+  const suggested = (urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode)) ? urlCode.toUpperCase() : randomCode();
+  const body = `
+    <div class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-100 rounded-lg px-3 py-2">Dies ist die <strong>komplexe Version</strong> mit Energiemodell, Bauzeiten und Winterstrombilanz. Die <strong>einfache Version</strong> zeigt Wirkungen in drei Stufen und bezieht Ernährung, Konsum, Fliegen und Kreislauf mit ein.</div>
+    <p>Du entscheidest in <strong>Gemeinde, Kanton und Bund</strong> – <strong>Seestadt</strong> zeigt, was das vor Ort bedeutet. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
+    <div class="grid sm:grid-cols-2 gap-2 text-xs">
+      <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-smog text-rose-400 mr-1"></i><strong>CO₂ ≤ ${CFG.co2Target} %</strong> von heute (Rest wird kompensiert)</div>
+      <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-shield-halved text-teal-400 mr-1"></i><strong>Versorgungssicherheit ≥ ${CFG.secTarget}</strong> – vor allem im Winter</div>
+      <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-wallet text-amber-400 mr-1"></i><strong>Budget ≥ 0</strong> am Ende (Kredit bis ${CFG.minBudget} Mio. möglich)</div>
+      <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-users text-sky-400 mr-1"></i><strong>Akzeptanz ≥ ${CFG.electionThreshold} %</strong> bei jeder Wahl</div>
+    </div>
+    <ul class="list-disc pl-5 text-xs space-y-1">
+      <li>4 Legislaturen, je <strong>bis zu ${CFG.maxPicks} Beschlüsse</strong> aus ${MEASURES.length} Massnahmen – das Budget reicht aber nicht für alles.</li>
+      <li>Grossprojekte haben <strong>Bauzeiten</strong> – manche sind erst eine oder zwei Legislaturen später fertig.</li>
+      <li>Massnahmen <strong>wirken zusammen</strong>: Wärmepumpen sparen CO₂, brauchen aber Winterstrom. Wind braucht Netze.</li>
+      <li>Zu Beginn jeder Legislatur wartet ein <strong>Ratsentscheid</strong> mit zwei Optionen, danach liest du im <strong>Seestadter Anzeiger</strong>, was die Leute von deinen Beschlüssen halten.</li>
+      <li>Oben siehst du deine Stadt: Rauch, Smog, Windräder, Tram – alles reagiert auf deine Politik. Sammle <strong>Abzeichen</strong> für besondere Pfade.</li>
+      <li>Jede Legislatur bringt ein <strong>Ereignis</strong>. Der Szenario-Code legt die Ereignisse fest – so können Gruppen dasselbe Szenario vergleichen.</li>
+    </ul>
+    <label class="block text-xs text-slate-400">Szenario-Code
+      <input id="intro-code" value="${suggested}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase">
+    </label>`;
+  showModal('🏙️', 'Postfossile Stadt 2045', body, [
+    { label: 'Einfache Version', fn: () => $('link-simple').click() },
+    { label: 'Modellannahmen', fn: () => showModelInfo(true) },
+    { label: 'Los geht’s', primary: true, fn: () => {
+      const v = ($('intro-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || randomCode();
+      closeModal(); startGame(v); } }
+  ]);
+}
+
+function showModelInfo(fromIntro) {
+  const b = baseMetrics();
+  const body = `
+    <p class="text-xs">Das Modell ist <strong>stilisiert</strong>: Die Zahlen sind in plausiblen Grössenordnungen für eine Schweizer Stadt gewählt, aber bewusst vereinfacht. Es geht um Zusammenhänge, nicht um Prognosen.</p>
+    <div class="text-xs space-y-2">
+      <div><strong class="text-slate-100">Energiebedarf 2026</strong> (GWh/Jahr): Strom ${fmt(b.demand.strom)}, Wärme ${fmt(b.demand.waerme)} (80 % fossil), Verkehr ${fmt(b.demand.verkehr)} (95 % fossil), Industrie ${fmt(b.demand.industrie)} (70 % fossil).</div>
+      <div><strong class="text-slate-100">Trend ohne Politik:</strong> Ein Teil der Heizungen und Autos wird ohnehin ersetzt (Vorschriften, Flottenziele), private Dächer bekommen Solaranlagen, und Geräte werden effizienter – der «klassische» Stromverbrauch sinkt leicht. Dafür steigt der Strombedarf durch Elektrifizierung.</div>
+      <div><strong class="text-slate-100">Elektrifizierung:</strong> Wärmepumpe Faktor 3 (3,6 in sanierten Gebäuden), Seewasser-Grosswärmepumpe Faktor 4, E-Auto braucht ⅓ der Energie eines Verbrenners, Wasserstoff braucht 1,6 kWh Strom pro kWh Gas-Ersatz.</div>
+      <div><strong class="text-slate-100">Saisonalität:</strong> Strombedarf zu 55 % im Winter, Heizstrom zu 72 %. Solar Mittelland ¼ im Winter, Alpin-Solar 55 %, Wind 65 %, Wasserkraft 40 % (mit Staumauer-Erhöhung mehr).</div>
+      <div><strong class="text-slate-100">Versorgungssicherheit</strong> = 60 % Winter-Adäquanz (eigene Produktion + Reserve + Importkapazität im Verhältnis zum Winterbedarf) + 40 % Netzstabilität (Flexibilität im Verhältnis zum Anteil von Sonne und Wind).</div>
+      <div><strong class="text-slate-100">CO₂:</strong> Öl/Gas für Wärme 0,24 t/MWh, Treibstoff 0,26 t/MWh, Industrie 0,22 t/MWh, Importstrom im Winter 0,30 t/MWh, im Sommer 0,12 t/MWh – beide sinken bis 2045 um gut die Hälfte, weil auch Europa dekarbonisiert. Gaskraftwerk 0,40 t/MWh Strom, mit eigenem Wasserstoff 0,08. Strom wird hier verbrauchsbasiert bilanziert (wie in vielen Städten), nicht nur territorial.</div>
+      <div><strong class="text-slate-100">Politik:</strong> Akzeptanz kehrt pro Legislatur um 30 % zur Normalstimmung (57 %) zurück. Wer über dem Absenkpfad liegt, verliert Glaubwürdigkeit. Unter ${CFG.electionThreshold} % folgt die Abwahl.</div>
+      <div><strong class="text-slate-100">Nicht abgebildet:</strong> Graue Energie, Flugverkehr, Landwirtschaft, Bundes- und EU-Politik im Detail, Stromabkommen, Netzentgelte.</div>
+    </div>`;
+  showModal('🧮', 'Modellannahmen', body, [{ label: fromIntro ? 'Zurück' : 'Schliessen', primary: true, fn: fromIntro ? showIntro : closeModal }]);
+}
+
+// ---------- Init ----------
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.chart-tab').forEach(b => b.onclick = () => { chartTab = b.dataset.tab; renderChart(); });
+  setupCityTips();
+  $('sort-select').onchange = e => { sortMode = e.target.value; renderMeasures(); };
+  $('expert-toggle').onchange = e => { expert = e.target.checked; store('pfs-expert', expert); renderMeasures(); renderSelection(); };
+  expert = !!store('pfs-expert'); $('expert-toggle').checked = expert;
+  $('code-pill').onclick = () => { try { navigator.clipboard.writeText(location.href); $('code-display').textContent = 'Link kopiert'; setTimeout(() => $('code-display').textContent = S.code, 1200); } catch (e) {} };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalLocked && !$('modal').classList.contains('hidden') && S) closeModal(); });
+  const urlCode = new URLSearchParams(location.search).get('code');
+  startGame(urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode) ? urlCode.toUpperCase() : randomCode(), false);
+  showIntro();
+});
+</script>
+</body>
+</html>

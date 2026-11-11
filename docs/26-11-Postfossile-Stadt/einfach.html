@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postfossile Stadt · Einfach</title>
+<meta name="description" content="Einfache Version des Energiewende-Spiels: Massnahmen mit Wirkung in drei Stufen, Drehmeter für Inland, Strom, Fliegen, Waren und Kreislauf.">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: Stadtpanorama oben, links Massnahmen, rechts Drehmeter-Dashboard */
+  :root {
+    color-scheme: dark;
+    --bg: #0f172a; --panel: #1e293b; --line: #334155; --ink: #f1f5f9; --muted: #94a3b8;
+    --bad: #e66767; --mid: #c98500; --good: #199e70; --accent: #34d399;
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  .card { transition: border-color .15s, background-color .15s, transform .15s; }
+  .card:not([aria-disabled="true"]):hover { transform: translateY(-1px); }
+  .card:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .fade-in { animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .needle { transition: transform 1s cubic-bezier(.3, 1.35, .5, 1); transform-origin: 60px 62px; }
+  .gauge-val { font-variant-numeric: tabular-nums; }
+
+  /* Stadt */
+  #city svg { display: block; width: 100%; height: auto; }
+  @media (max-width: 640px) { #city svg { height: 190px; } }
+  .smoke { animation: smoke 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes smoke { 0% { transform: translate(0, 0) scale(.5); opacity: 0; } 15% { opacity: .85; } 100% { transform: translate(14px, -38px) scale(2.2); opacity: 0; } }
+  .steam { animation: steam 4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes steam { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(8px, -30px) scale(2.4); opacity: 0; } }
+  .drive { animation: drive linear infinite; }
+  @keyframes drive { from { transform: translateX(-140px); } to { transform: translateX(1140px); } }
+  .drive-back { animation: driveback linear infinite; }
+  @keyframes driveback { from { transform: translateX(1140px); } to { transform: translateX(-140px); } }
+  .cloud { animation: cloud linear infinite; }
+  @keyframes cloud { from { transform: translateX(-200px); } to { transform: translateX(1150px); } }
+  .wave { animation: wave 4s ease-in-out infinite alternate; }
+  @keyframes wave { to { transform: translateX(14px); } }
+  .ghost { opacity: .45; }
+  .flicker { animation: flicker 1.3s steps(2) infinite; }
+  @keyframes flicker { 50% { opacity: .15; } }
+  .pop-in { animation: popin .6s cubic-bezier(.2, 1.6, .4, 1) 1; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes popin { from { transform: scale(.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .smoke, .steam, .drive, .drive-back, .cloud, .wave, .flicker, .pop-in, .fade-in { animation: none !important; }
+    .needle { transition: none; }
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="bg-slate-800 border-b border-slate-700 px-4 md:px-6 py-3 flex flex-wrap gap-3 justify-between items-center shadow-md">
+  <div class="flex items-center gap-3">
+    <div class="bg-emerald-500 text-slate-900 w-10 h-10 grid place-items-center rounded-xl text-xl shadow-lg" aria-hidden="true">🏙️</div>
+    <div>
+      <h1 class="text-lg md:text-xl font-bold text-emerald-300">Postfossile Stadt <span class="text-xs align-middle ml-1 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-500/40 font-semibold">Einfache Version</span></h1>
+      <p class="text-xs text-slate-400">Gemeinde, Kanton und Bund · Seestadt zeigt die Wirkung vor Ort</p>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2 text-sm">
+    <span id="round-display" class="bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 font-semibold text-emerald-300">Legislatur 1 · 2028–2032</span>
+    <a id="link-complex" href="./" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200">Komplexe Version →</a>
+    <button id="btn-new" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200">↻ Neu</button>
+  </div>
+</header>
+
+<main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+  <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
+    <div id="city" role="img" aria-label="Animierte Ansicht von Seestadt"></div>
+    <div id="city-tip" class="hidden absolute z-10 pointer-events-none bg-slate-900/95 text-slate-100 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 shadow-lg max-w-[240px]"></div>
+    <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
+      <span id="city-year" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg font-semibold">Seestadt 2026</span>
+      <span id="city-mood" class="bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-slate-200"></span>
+    </div>
+    <div id="city-hint" class="hidden sm:block absolute top-2 right-2 bg-slate-900/75 backdrop-blur px-2.5 py-1 rounded-lg text-[11px] text-slate-300 pointer-events-none"></div>
+  </section>
+
+  <!-- Massnahmen -->
+  <section class="lg:col-span-7 flex flex-col gap-4 min-w-0">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 id="phase-title" class="text-base font-semibold">Wähle bis zu 4 Massnahmen</h2>
+          <p class="text-xs text-slate-400 mt-1">Jede Karte zeigt die Wirkung in drei Stufen: <strong class="text-slate-200">gross</strong>, <strong class="text-slate-200">mittel</strong> oder <strong class="text-slate-200">wenig</strong> – manchmal sogar <strong class="text-rose-300">rückläufig</strong>.</p>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-[11px] text-slate-400">Budget</div>
+          <div id="coins" class="text-lg font-bold text-amber-300 tracking-wide"></div>
+        </div>
+      </div>
+      <div id="alerts" class="mt-3 space-y-2"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 items-center justify-between">
+      <div id="tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin min-w-0"></div>
+      <select id="sort" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-2 py-1.5 text-slate-300" aria-label="Sortierung">
+        <option value="default">Sortieren: Bereich</option>
+        <option value="klima">Klimawirkung ▼</option>
+        <option value="strom">Stromwirkung ▼</option>
+        <option value="kosten">Kosten ▲</option>
+        <option value="ebene">Ebene: Gemeinde → Bund</option>
+      </select>
+    </div>
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[640px] overflow-y-auto pr-1 scroll-thin"></div>
+
+    <div id="tray" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="text-xs text-slate-400">Deine Auswahl</div>
+        <div id="sel-list" class="text-sm mt-1"></div>
+      </div>
+      <button id="btn-confirm" class="px-5 py-3 rounded-xl font-semibold text-sm shadow-lg"></button>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section class="lg:col-span-5 flex flex-col gap-4 min-w-0">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3 flex justify-between items-center">
+        <span>Dashboard <span id="dash-year" class="text-slate-400 font-normal">(2026)</span></span>
+        <span id="stars" class="text-amber-300 text-xs font-semibold" title="Anzeigen 60 %, Erwärmung 40 %"></span>
+      </h3>
+      <div id="gauges" class="grid grid-cols-2 gap-3"></div>
+      <p class="text-[11px] text-slate-500 mt-3">Ziel: weniger CO₂ – im Inland und im Ausland. Rund ⅔ unseres Fussabdrucks entstehen im Ausland (BAFU).</p>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <div class="flex items-baseline justify-between gap-2">
+        <h3 class="text-sm font-semibold text-slate-200">Erwärmung bis 2100 <span class="text-slate-400 font-normal">– wenn alle so handeln</span></h3>
+        <span id="temp-big" class="text-xl font-bold gauge-val"></span>
+      </div>
+      <div id="temp-chart" class="mt-2"></div>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl text-xs">
+      <h3 class="text-sm font-semibold text-slate-200 mb-2">So liest du die Karten</h3>
+      <div class="grid grid-cols-2 gap-2" id="legend"></div>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
+      <h3 class="text-sm font-semibold text-slate-200 mb-2">Chronik</h3>
+      <div id="log" class="space-y-1.5 text-xs max-h-64 overflow-y-auto scroll-thin pr-1"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="text-center text-[11px] text-slate-500 pb-4 px-4">Vereinfachtes Lernspiel: Die drei Wirkungsstufen sind Grössenordnungen, keine exakten Werte.</footer>
+
+<canvas id="confetti" class="fixed inset-0 pointer-events-none z-[60]" style="width:100vw;height:100vh;display:none"></canvas>
+<div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[92vh] overflow-y-auto scroll-thin fade-in">
+    <div id="m-icon" class="text-4xl mb-2 text-center"></div>
+    <h3 id="m-title" class="text-xl font-bold text-center mb-3"></h3>
+    <div id="m-body" class="text-slate-300 text-sm leading-relaxed space-y-3"></div>
+    <div id="m-actions" class="flex flex-wrap justify-center gap-3 mt-6"></div>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// SIMPLE-MODEL-START
+// ===================================================================
+const CFG = {
+  rounds: 4, years: [[2028, 2032], [2033, 2037], [2038, 2042], [2043, 2045]], snapYears: [2026, 2032, 2037, 2042, 2045],
+  picks: 4, coinsStart: 5, coinsPerRound: 5,
+  start: { co2: 20, strom: 46, flug: 34, waren: 22, kreis: 30, acc: 60 },
+  trend: { co2: 3, strom: -2, flug: -1, waren: 1, kreis: 0 },
+  kernDrop: 14,                                    // Ende 2034: Kernstrom-Vertrag läuft aus (nach Legislatur 2)
+  pts: { 3: 16, 2: 9, 1: 3, '-1': -8 },            // gross / mittel / wenig / rückläufig
+  acc: { 1: 4, 0: 0, '-1': -9 }, accBuerger: -4,
+  zones: [34, 67]                                  // < 34 rot, < 67 gelb, sonst grün
+};
+const DIMS = ['co2', 'strom', 'flug', 'waren', 'kreis'];
+const CLIMATE = ['co2', 'flug', 'waren'];
+const DIM_LABEL = { co2: 'Inland', strom: 'Strom', flug: 'Fliegen', waren: 'Waren', kreis: 'Kreislauf' };
+
+const CATS = [
+  { id: 'energie', label: 'Energie', icon: '⚡' },
+  { id: 'gebaeude', label: 'Gebäude & Wärme', icon: '🏠' },
+  { id: 'mobil', label: 'Mobilität & Fliegen', icon: '🚋' },
+  { id: 'essen', label: 'Ernährung & Landwirtschaft', icon: '🥕' },
+  { id: 'kreislauf', label: 'Konsum & Kreislauf', icon: '♻️' },
+  { id: 'regeln', label: 'Verbote & Abgaben', icon: '⚖️' },
+  { id: 'politik', label: 'Industrie & Mitsprache', icon: '🏛️' }
+];
+
+// fx: Wirkung pro Anzeige (3 gross, 2 mittel, 1 wenig, -1 rückläufig) · cost 1–3 · acc: 1 beliebt, 0 neutral, -1 umstritten
+const MEASURES = [
+  { id: 'solar', cat: 'energie', icon: '☀️', title: 'Solaroffensive auf Dächern', cost: 2, acc: 1, fx: { strom: 2, co2: 1 },
+    why: 'Viel Strom – aber drei Viertel davon im Sommer. Im Winter hilft Solar im Mittelland nur mittel.' },
+  { id: 'balkon', cat: 'energie', icon: '🪴', title: 'Balkonkraftwerke fördern', cost: 1, acc: 1, fx: { strom: 1, co2: 1 },
+    why: 'Steckersolar macht Mietende zu Produzent:innen. Sympathisch, aber ein Modul liefert nur etwa so viel wie ein Kühlschrank braucht – und kaum im Winter.' },
+  { id: 'wind', cat: 'energie', icon: '🌬️', title: 'Windpark auf den Jurahöhen', cost: 2, acc: -1, fx: { strom: 3, co2: 1 },
+    why: 'Wind weht vor allem im Winter – genau dann, wenn Strom knapp ist. Dafür gibt es Widerstand wegen Landschaft und Lärm.' },
+  { id: 'alpin', cat: 'energie', icon: '🏔️', title: 'Alpine Solaranlage', cost: 3, acc: 0, fx: { strom: 3, co2: 1 },
+    why: 'Über dem Nebel und mit Schneereflexion liefern alpine Anlagen viel Winterstrom. Teuer und weit weg.' },
+  { id: 'stau', cat: 'energie', icon: '🏞️', title: 'Staumauer erhöhen', cost: 3, acc: -1, fx: { strom: 3 },
+    why: 'Bringt keinen zusätzlichen Strom, verschiebt aber Wasser vom Sommer in den Winter. Das ist die grösste «Batterie» der Schweiz.' },
+  { id: 'smartgrid', cat: 'energie', icon: '🔋', title: 'Quartierbatterien & Smart Grid', cost: 2, acc: 0, fx: { strom: 2 },
+    why: 'Batterien gleichen Tag und Nacht aus und stabilisieren das Netz – für die Winterlücke reichen sie nicht.' },
+  { id: 'netz', cat: 'energie', icon: '🗼', title: 'Stromnetz ausbauen', cost: 2, acc: -1, fx: { strom: 2 },
+    why: 'Ohne Leitungen kommt der Strom nicht dorthin, wo er gebraucht wird. Baustellen nerven.' },
+  { id: 'kern', cat: 'energie', icon: '⚛️', title: 'Kernkraftwerk länger laufen lassen', cost: 1, acc: -1, fx: { strom: 3 },
+    why: 'Ende 2034 soll ein Kernkraftwerk vom Netz gehen. Ein Weiterbetrieb sichert Winterstrom, ist aber stark umstritten.' },
+  { id: 'gas', cat: 'energie', icon: '🔥', title: 'Gas-Reservekraftwerk', cost: 2, acc: -1, fx: { strom: 3, co2: -1 },
+    why: 'Eine Versicherung gegen Blackouts. Läuft es, verbrennt es Gas – die Emissionen im Inland steigen.' },
+
+  { id: 'wp', cat: 'gebaeude', icon: '🌡️', title: 'Wärmepumpen statt Ölheizungen', cost: 2, acc: 0, fx: { co2: 3, strom: -1 },
+    why: 'Heizen ist der grösste CO₂-Brocken einer Stadt. Wärmepumpen sparen enorm – brauchen aber Strom, gerade im Winter.' },
+  { id: 'daemm', cat: 'gebaeude', icon: '🧱', title: 'Gebäude sanieren & dämmen', cost: 3, acc: 0, fx: { co2: 2, strom: 1 },
+    why: 'Was nicht verbraucht wird, muss nicht erzeugt werden. Gedämmte Häuser brauchen weniger Wärme und weniger Winterstrom.' },
+  { id: 'fw', cat: 'gebaeude', icon: '♨️', title: 'Fernwärme mit Seewasser & Abwärme', cost: 3, acc: 1, fx: { co2: 3 },
+    why: 'Grosswärmepumpen am See und Abwärme aus Kehrichtverbrennung heizen ganze Quartiere.' },
+  { id: 'holz', cat: 'gebaeude', icon: '🪵', title: 'Holzbau & Recyclingbeton', cost: 1, acc: 1, fx: { waren: 2, kreis: 2 },
+    why: 'Zement verursacht viel CO₂. Holz und wiederverwerteter Beton senken die «grauen» Emissionen von Neubauten.' },
+
+  { id: 'oev', cat: 'mobil', icon: '🚋', title: 'ÖV-Ausbau & dichter Takt', cost: 3, acc: 1, fx: { co2: 2, strom: 1 },
+    why: 'Ein Tram braucht pro Person nur einen Bruchteil der Energie eines Autos.' },
+  { id: 'ev', cat: 'mobil', icon: '🔌', title: 'Ladestationen & E-Busse', cost: 1, acc: 0, fx: { co2: 2, strom: -1 },
+    why: 'E-Autos sind viel effizienter als Verbrenner – brauchen aber zusätzlichen Strom.' },
+  { id: 'velo', cat: 'mobil', icon: '🚲', title: 'Velonetz statt Parkplätze', cost: 1, acc: -1, fx: { co2: 2 },
+    why: 'Günstig und wirksam, aber Autofahrende protestieren gegen weniger Parkplätze.' },
+  { id: 'nachtzug', cat: 'mobil', icon: '🚆', title: 'Nachtzüge & Bahnferien fördern', cost: 1, acc: 1, fx: { flug: 3 },
+    why: 'Wer mit dem Nachtzug nach Wien, Berlin oder Rom fährt, spart den Flug. Der Bund kann Nachtzüge mitfinanzieren.' },
+  { id: 'flugv', cat: 'mobil', icon: '🛬', title: 'Verwaltung: Bahn statt Flug', cost: 1, acc: 0, fx: { flug: 1 },
+    why: 'Ein gutes Vorbild – aber die Dienstreisen der Verwaltung sind nur ein kleiner Teil aller Flüge.' },
+
+  { id: 'vegi', cat: 'essen', icon: '🥗', title: 'Vegi als Standard in Kantinen', cost: 1, acc: -1, fx: { waren: 2, co2: 2 },
+    why: 'Fleisch und Milch verursachen viel Methan und brauchen importiertes Futter. Mehr Pflanzliches wirkt stark – löst aber Debatten aus.' },
+  { id: 'foodwaste', cat: 'essen', icon: '🍞', title: 'Food Waste halbieren', cost: 1, acc: 1, fx: { waren: 2, kreis: 2 },
+    why: 'Rund ein Drittel der Lebensmittel geht verloren. Was nicht weggeworfen wird, muss gar nicht erst produziert werden.' },
+  { id: 'regional', cat: 'essen', icon: '🧺', title: 'Regionale & saisonale Märkte', cost: 1, acc: 1, fx: { waren: 1 },
+    why: 'Beliebt, aber der Transport macht bei den meisten Lebensmitteln nur einen kleinen Teil der Emissionen aus – ausser bei Flugware.' },
+  { id: 'agri', cat: 'essen', icon: '🌾', title: 'Agri-PV & Biogas auf Höfen', cost: 2, acc: 1, fx: { strom: 2, co2: 1 },
+    why: 'Solarmodule über Kulturen und Biogas aus Gülle. Biogas lässt sich im Winter gezielt verstromen.' },
+  { id: 'humus', cat: 'essen', icon: '🌱', title: 'Humusaufbau & klimafreundliche Höfe', cost: 1, acc: 0, fx: { co2: 1 },
+    why: 'Gesunde Böden speichern etwas Kohlenstoff. Die Wirkung ist real, aber begrenzt und schwer zu messen.' },
+
+  { id: 'recycling', cat: 'kreislauf', icon: '♻️', title: 'Recycling-Offensive & Wertstoffhöfe', cost: 1, acc: 1, fx: { kreis: 2, waren: 1 },
+    why: 'Gesammeltes Material ersetzt neue Rohstoffe aus dem Ausland. Noch besser ist, gar nicht erst wegzuwerfen.' },
+  { id: 'repair', cat: 'kreislauf', icon: '🔧', title: 'Reparaturbonus & Repair-Cafés', cost: 1, acc: 1, fx: { kreis: 2, waren: 2 },
+    why: 'Ein reparierter Laptop spart fast alle Emissionen eines neuen – die entstehen bei der Herstellung im Ausland.' },
+  { id: 'sharing', cat: 'kreislauf', icon: '📚', title: 'Bibliothek der Dinge & Sharing', cost: 1, acc: 1, fx: { kreis: 2, waren: 1 },
+    why: 'Eine Bohrmaschine wird im Schnitt nur wenige Minuten im Jahr gebraucht. Teilen statt besitzen.' },
+  { id: 'beschaffung', cat: 'kreislauf', icon: '🏷️', title: 'Kreislauf-Einkauf der Verwaltung', cost: 2, acc: 0, fx: { waren: 2, kreis: 2 },
+    why: 'Die Verwaltung kauft langlebig, gebraucht und in Mehrweg ein – Schulmöbel, Computer, Fahrzeuge.' },
+  { id: 'mehrweg', cat: 'kreislauf', icon: '🥤', title: 'Mehrweg statt Einweg', cost: 1, acc: 0, fx: { kreis: 1, waren: 1 },
+    why: 'Mehrweggeschirr bei Take-away und Festen spart Abfall – die Klimawirkung ist eher klein.' },
+
+  { id: 'ind', cat: 'politik', icon: '🏭', title: 'Industrie elektrifizieren', cost: 3, acc: 0, fx: { co2: 3, strom: -1 },
+    why: 'Prozesswärme mit Strom statt Gas spart viel CO₂ – und erhöht den Strombedarf.' },
+  { id: 'bildung', cat: 'politik', icon: '🎓', title: 'Klimabildung & Energieberatung', cost: 1, acc: 1, fx: { flug: 1, waren: 1, co2: 1 },
+    why: 'Wissen verändert Gewohnheiten – langsam und in kleinen Schritten, dafür überall ein wenig.' },
+  { id: 'buerger', cat: 'politik', icon: '🤝', title: 'Energiegenossenschaft & Mitsprache', cost: 1, acc: 1, fx: {},
+    why: 'Wer mitbesitzt und mitredet, akzeptiert Anlagen eher: Umstrittene Massnahmen kosten danach nur noch halb so viel Akzeptanz.' },
+
+  { id: 'verbrenner', cat: 'regeln', icon: '🚫', title: 'Verbot neuer Benzin- & Dieselautos', cost: 1, acc: -1, fx: { co2: 3, strom: -1 },
+    why: 'Wirkt stark, weil alle umsteigen müssen – E-Autos brauchen aber Strom. In Wirklichkeit entscheiden das Bund und EU (EU: ab 2035).' },
+  { id: 'heizverbot', cat: 'regeln', icon: '🛢️', title: 'Verbot neuer Öl- & Gasheizungen', cost: 1, acc: -1, fx: { co2: 3, strom: -1 },
+    why: 'Beim Ersatz muss erneuerbar geheizt werden – so wie im Kanton Zürich seit 2022. Mehr Wärmepumpen heisst mehr Winterstrom.' },
+  { id: 'treibstoff', cat: 'regeln', icon: '⛽', title: 'Benzin & Diesel teurer (Lenkungsabgabe)', cost: -2, acc: -1, abgabe: true, fx: { co2: 2 },
+    why: 'Höhere Preise lenken: weniger fahren, sparsamer fahren, umsteigen. Bringt Geld in die Kasse – und Ärger an der Zapfsäule.' },
+  { id: 'heizoel', cat: 'regeln', icon: '🔥', title: 'Heizöl & Gas teurer (CO₂-Abgabe)', cost: -2, acc: -1, abgabe: true, fx: { co2: 2 },
+    why: 'Die Schweiz kennt eine CO₂-Abgabe auf Heizöl und Gas. Sie macht den Umstieg auf erneuerbares Heizen attraktiver.' },
+  { id: 'flugabgabe', cat: 'regeln', icon: '🎫', title: 'Flugticket-Abgabe', cost: -1, acc: -1, abgabe: true, fx: { flug: 3 },
+    why: 'Fliegen wird teurer, Nachtzug und Ferien in der Nähe attraktiver. 2021 lehnte das Stimmvolk ein CO₂-Gesetz mit Flugticketabgabe ab.' },
+  { id: 'klimabonus', cat: 'regeln', icon: '💌', title: 'Klimabonus: Abgaben zurückverteilen', cost: 1, acc: 1, fx: {},
+    why: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück – wer wenig verbraucht, gewinnt. Danach bringen Abgaben kein Geld mehr in die Kasse, sind aber nicht mehr umstritten.' }
+];
+// Wer entscheidet in der Schweiz typischerweise? G = Gemeinde, K = Kanton, B = Bund (vereinfacht)
+const LEVEL = {
+  balkon: 'G', smartgrid: 'G', fw: 'G', holz: 'G', oev: 'G', ev: 'G', velo: 'G', flugv: 'G', vegi: 'G', regional: 'G',
+  recycling: 'G', repair: 'G', sharing: 'G', beschaffung: 'G', mehrweg: 'G', buerger: 'G',
+  solar: 'K', wind: 'K', stau: 'K', wp: 'K', daemm: 'K', agri: 'K', humus: 'K', bildung: 'K', heizverbot: 'K',
+  alpin: 'B', netz: 'B', kern: 'B', gas: 'B', nachtzug: 'B', foodwaste: 'B', ind: 'B',
+  verbrenner: 'B', treibstoff: 'B', heizoel: 'B', flugabgabe: 'B', klimabonus: 'B'
+};
+MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
+const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40', order: 0 },
+              K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40', order: 1 },
+              B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40', order: 2 } };
+const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
+
+const EVENTS = {
+  dunkelflaute: { icon: '🌫️', title: 'Dunkelflaute im Januar', run(S) {
+    if (S.g.strom < 40) { S.g.acc -= 8; return 'Zwei Wochen Nebel und Windstille. Der Bundesrat ruft zum Stromsparen auf (Akzeptanz −8).'; }
+    S.g.acc += 3; return 'Zwei Wochen Nebel und Windstille – die Versorgung hält (Akzeptanz +3).'; } },
+  billigflug: { icon: '✈️', title: 'Billig-Airline eröffnet Basis in der Nähe', run(S) {
+    const n = ['nachtzug', 'flugabgabe'].filter(id => has(S, id)).length, d = [6, 3, 0][n]; S.g.flug -= d;
+    return d ? `Wochenendtrips für 29 Franken. Fliegen −${d}${n ? ' (gebremst durch deine Massnahmen)' : ''}.` : 'Wochenendtrips für 29 Franken – dank Flugabgabe und Nachtzügen bucht kaum jemand.'; } },
+  rohstoff: { icon: '📦', title: 'Rohstoffe werden knapp und teuer', run(S) {
+    if (S.g.kreis >= 60) { S.coins += 2; return 'Lieferketten stocken. Seestadt profitiert von ihrer Kreislaufwirtschaft (+2 Budget).'; }
+    S.coins -= 1; return 'Lieferketten stocken, Material wird teurer (−1 Budget). Mit mehr Kreislauf wäre die Wirtschaft robuster.'; } },
+  hitze: { icon: '🌡️', title: 'Hitzesommer & Trockenheit', run(S) { S.g.strom -= 5; S.g.acc -= 2; return 'Flüsse führen wenig Wasser, die Wasserkraft liefert weniger (Strom −5, Akzeptanz −2).'; } },
+  klimademo: { icon: '🪧', title: 'Grosse Klimademonstration', run(S) {
+    const avg = (S.g.co2 + S.g.flug + S.g.waren) / 3;
+    if (avg < 30 + S.round * 6) { S.g.acc -= 6; return 'Tausende fordern mehr Tempo beim Klimaschutz (Akzeptanz −6).'; }
+    S.g.acc += 4; return 'Die Klimabewegung lobt den eingeschlagenen Kurs (Akzeptanz +4).'; } },
+  bund: { icon: '🏛️', title: 'Förderprogramm vom Bund', run(S) { S.coins += 2; return 'Bern stockt die Fördergelder auf: +2 Budget.'; } },
+  solarboom: { icon: '📉', title: 'Solarmodule werden billig', run(S) { S.g.strom += 5; return 'Private belegen ihre Dächer schneller als geplant (Strom +5).'; } },
+  foodskandal: { icon: '🗑️', title: 'Reportage: Tonnenweise Brot im Container', run(S) {
+    if (has(S, 'foodwaste')) { S.g.acc += 4; return 'Seestadt wird als Vorbild gezeigt – hier wurde vorgesorgt (Akzeptanz +4).'; }
+    S.g.acc -= 3; return 'Die Bilder empören. Warum tut niemand etwas? (Akzeptanz −3)'; } }
+};
+
+function hashCode(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const has = (S, id) => S.chosen.some(c => c.id === id);
+
+function createState(code) {
+  const rng = mulberry32(hashCode(code));
+  const deck = Object.keys(EVENTS);
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  return { code, deck: deck.slice(0, 4), round: 1, over: false, coins: CFG.coinsStart, picks: CFG.picks,
+    g: { ...CFG.start }, chosen: [], history: [{ ...CFG.start }], log: [] };
+}
+
+// Klimastufe einer Massnahme (beste positive Wirkung auf Inland, Fliegen oder Waren)
+function climateLevel(m) {
+  const v = CLIMATE.map(d => m.fx[d]).filter(x => x !== undefined);
+  if (!v.length) return { lv: 1, none: true };
+  const pos = v.filter(x => x > 0);
+  return pos.length ? { lv: Math.max(...pos) } : { lv: -1 };
+}
+function powerLevel(m) { return m.fx.strom === undefined ? { lv: 1, none: true } : { lv: m.fx.strom }; }
+const bonusOn = (S, now = []) => has(S, 'klimabonus') || now.includes('klimabonus');
+// Mit Klimabonus fliessen Abgaben an die Bevölkerung zurück: kein Geld für die Stadt, aber nicht mehr umstritten
+function costOf(S, id, now = []) { return M[id].abgabe && bonusOn(S, now) ? 0 : M[id].cost; }
+function accEffect(S, id, now = []) {
+  const a = M[id].acc;
+  if (M[id].abgabe && bonusOn(S, now)) return 0;
+  if (a < 0 && (has(S, 'buerger') || now.includes('buerger'))) return CFG.accBuerger;
+  return CFG.acc[a];
+}
+
+function clampG(S) { for (const k in S.g) S.g[k] = Math.round(clamp(S.g[k], 0, 100)); }
+
+function playRound(S, picks) {
+  const before = { ...S.g }, R = { picks: [...picks], lines: [] };
+  for (const id of picks) {
+    const m = M[id];
+    S.coins -= costOf(S, id, picks);
+    for (const d of DIMS) if (m.fx[d] !== undefined) S.g[d] += CFG.pts[m.fx[d]];
+    S.g.acc += accEffect(S, id, picks);
+    S.chosen.push({ id, round: S.round });
+  }
+  for (const d of DIMS) S.g[d] += CFG.trend[d];
+  if (S.round === 2) { S.g.strom -= CFG.kernDrop; R.lines.push(`Ende 2034 ist ein Kernkraftwerk vom Netz gegangen: Stromversorgung −${CFG.kernDrop}.`); }
+  clampG(S);
+  const ev = EVENTS[S.deck[S.round - 1]];
+  R.event = { icon: ev.icon, title: ev.title, text: ev.run(S) };
+  S.g.acc += Math.round((57 - S.g.acc) * 0.25);
+  clampG(S);
+  R.before = before; R.after = { ...S.g };
+  S.history.push({ ...S.g });
+  if (S.round >= CFG.rounds) { S.over = true; return R; }
+  S.round++;
+  S.coins += CFG.coinsPerRound;
+  S.picks = S.g.acc < CFG.zones[0] ? CFG.picks - 1 : CFG.picks;
+  if (S.picks < CFG.picks) R.lines.push(`Gegenwind im Parlament: In der nächsten Legislatur sind nur ${S.picks} Beschlüsse möglich.`);
+  return R;
+}
+
+const zone = v => v < CFG.zones[0] ? 0 : v < CFG.zones[1] ? 1 : 2;
+// Sterne (0–10): 60 % Drehmeter (grün 2, gelb 1), 40 % Erwärmung 2100
+function score(S) {
+  const gauges = DIMS.reduce((a, d) => a + zone(S.g[d]), 0);
+  return Math.round(0.6 * gauges + 0.4 * 10 * warming(S.g).p);
+}
+
+// Erwärmung 2100 (°C über vorindustriell), falls weltweit alle so handeln wie Seestadt.
+// Didaktische Vereinfachung: heutige Politik ≈ +2,7 °C (UNEP/Climate Action Tracker), heute ≈ +1,3 °C.
+const TEMP = { now: 1.3, nowYear: 2025, bau: 2.7, best: 1.5 };
+function climateIndex(g) { return g.co2 * 0.4 + g.waren * 0.4 + g.flug * 0.2; }
+function warming(g) {
+  const s0 = climateIndex(CFG.start), p = clamp((climateIndex(g) - s0) / (70 - s0));
+  return { p, t2100: TEMP.bau - (TEMP.bau - TEMP.best) * p };
+}
+function tempCurve(t2100, p, year) {           // stärkerer Klimaschutz → Kurve flacht früher ab
+  const t = (year - TEMP.nowYear) / (2100 - TEMP.nowYear);
+  const bau = TEMP.now + (TEMP.bau - TEMP.now) * t;
+  return Math.min(bau, TEMP.now + (t2100 - TEMP.now) * (1 - Math.pow(1 - t, 1 + 2.5 * p)));
+}
+// SIMPLE-MODEL-END
+// ===================================================================
+
+// ===================================================================
+// UI
+// ===================================================================
+let S, selected = [], cat = 'all', sortMode = 'default', justBuilt = new Set();
+const $ = id => document.getElementById(id);
+const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+const ZONE = [
+  { t: 'schlecht', sym: '✗', cls: 'text-rose-300', bg: 'bg-rose-500/10 border-rose-500/30' },
+  { t: 'mittel', sym: '~', cls: 'text-amber-300', bg: 'bg-amber-500/10 border-amber-500/30' },
+  { t: 'gut', sym: '✓', cls: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/30' }
+];
+const LV = {
+  3: { t: 'gross', bars: 3, cls: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40' },
+  2: { t: 'mittel', bars: 2, cls: 'bg-lime-500/15 text-lime-200 border-lime-500/30' },
+  1: { t: 'wenig', bars: 1, cls: 'bg-slate-700/60 text-slate-300 border-slate-600' },
+  '-1': { t: 'rückläufig', bars: -1, cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' }
+};
+const GAUGES = [
+  { id: 'co2', icon: '🏭', label: 'CO₂ im Inland', sub: 'Heizen, Verkehr, Industrie, Landwirtschaft', ends: [['kein Ausstoss', '(Ziel)'], ['mehr als', '2026']] },
+  { id: 'flug', icon: '✈️', label: 'CO₂ durchs Fliegen', sub: 'Flugreisen der Bevölkerung', ends: [['kein Ausstoss', '(Ziel)'], ['mehr als', '2026']] },
+  { id: 'waren', icon: '📦', label: 'CO₂ aus Waren', sub: 'Im Ausland hergestellt und transportiert', ends: [['kein Ausstoss', '(Ziel)'], ['mehr als', '2026']] },
+  { id: 'strom', icon: '⚡', label: 'Stromversorgung', sub: 'Erneuerbar und sicher, vor allem im Winter', ends: [['zu wenig', 'Strom'], ['genug', 'Strom']] },
+  { id: 'kreis', icon: '♻️', label: 'Kreislauf', sub: 'Recycling, Reparieren, Teilen', ends: [['alles', 'weggeworfen'], ['alles wieder-', 'verwendet']] },
+  { id: 'acc', icon: '🗳️', label: 'Akzeptanz', sub: 'Rückhalt in der Bevölkerung', ends: [['tief'], ['hoch']] }
+];
+// CO₂-Anzeigen: Veränderung gegenüber 2026 (−45 % = 45 % weniger CO₂)
+const isCO2 = id => CLIMATE.includes(id);
+const co2Pct = (id, v) => Math.round(((100 - v) / (100 - CFG.start[id]) - 1) * 100);
+const pctStr = p => p === 0 ? '±0 %' : (p < 0 ? '−' : '+') + Math.abs(p) + ' %';
+const gaugeText = (id, v) => isCO2(id) ? pctStr(co2Pct(id, v)) : String(v);
+function deltaHtml(id, a, b) {
+  if (isCO2(id)) { const d = co2Pct(id, b) - co2Pct(id, a); return d === 0 ? '<span class="text-slate-500">±0</span>' : `<span class="${d < 0 ? 'text-emerald-300' : 'text-rose-300'}">${d < 0 ? '▼ −' : '▲ +'}${Math.abs(d)} Pkt.</span>`; }
+  const d = b - a; return d === 0 ? '<span class="text-slate-500">±0</span>' : `<span class="${d > 0 ? 'text-emerald-300' : 'text-rose-300'}">${d > 0 ? '▲ +' : '▼ −'}${Math.abs(d)}</span>`;
+}
+const coinStr = n => n > 0 ? '●'.repeat(Math.min(n, 12)) + (n > 12 ? ` ${n}` : '') : '–';
+
+function bars(lv) {
+  if (lv.bars < 0) return '<span aria-hidden="true">▼</span>';
+  return '<span aria-hidden="true" class="tracking-tighter">' + '▮'.repeat(lv.bars) + '<span class="opacity-25">' + '▮'.repeat(3 - lv.bars) + '</span></span>';
+}
+function lvBadge(label, l) {
+  const lv = LV[l.lv];
+  return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${lv.cls}" title="${label}: ${l.none ? 'kaum Wirkung' : lv.t}">${label} ${bars(lv)} <strong>${l.none ? 'wenig' : lv.t}</strong></span>`;
+}
+
+// ---------- Drehmeter ----------
+function polar(r, deg) { const a = (deg - 180) * Math.PI / 180; return [60 + r * Math.cos(a), 62 + r * Math.sin(a)]; }
+function arc(r, d0, d1) { const [x0, y0] = polar(r, d0), [x1, y1] = polar(r, d1); return `M${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)}`; }
+// Skalenenden zweizeilig unter dem Bogen
+const endLabel = (lines, x, anchor) => `<text x="${x}" y="71" font-size="6" fill="#94a3b8" text-anchor="${anchor}">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? 6.5 : 0}">${l}</tspan>`).join('')}</text>`;
+// Markierung «2026» auf dem Bogen der CO₂-Anzeigen (gespiegelt: links = kein Ausstoss)
+function mark2026(id) {
+  const deg = (100 - CFG.start[id]) * 1.8;
+  const [x0, y0] = polar(40, deg), [x1, y1] = polar(53, deg), [tx, ty] = polar(63, deg);
+  return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#f8fafc" stroke-width="1.5"/>
+    <text x="${tx.toFixed(1)}" y="${(ty + 2).toFixed(1)}" font-size="6" font-weight="700" fill="#e2e8f0" text-anchor="middle">2026</text>`;
+}
+function buildGauges() {
+  const up = [[0, 0.34 * 180 - 1, 'var(--bad)'], [0.34 * 180 + 1, 0.67 * 180 - 1, 'var(--mid)'], [0.67 * 180 + 1, 180, 'var(--good)']];
+  const down = [[0, 0.33 * 180 - 1, 'var(--good)'], [0.33 * 180 + 1, 0.66 * 180 - 1, 'var(--mid)'], [0.66 * 180 + 1, 180, 'var(--bad)']];
+  $('gauges').innerHTML = GAUGES.map(g => { const segs = isCO2(g.id) ? down : up; return `
+    <div class="bg-slate-900/60 rounded-xl border border-slate-700 p-2.5" id="gw-${g.id}">
+      <div class="text-[11px] text-slate-300 font-semibold leading-tight"><span aria-hidden="true">${g.icon}</span> ${g.label}</div>
+      <div class="text-[10px] text-slate-500 leading-tight min-h-[26px]">${g.sub}</div>
+      <svg viewBox="0 0 120 80" class="w-full max-w-[170px] mx-auto block" role="img" aria-label="${g.label}">
+        ${segs.map(([a, b, c]) => `<path d="${arc(46, a, b)}" stroke="${c}" stroke-width="11" fill="none"/>`).join('')}
+        ${[0, 45, 90, 135, 180].map(d => { const [x0, y0] = polar(33, d), [x1, y1] = polar(37, d); return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#64748b" stroke-width="1"/>`; }).join('')}
+        <g class="needle" id="nd-${g.id}" style="transform: rotate(-90deg)"><line x1="60" y1="62" x2="60" y2="22" stroke="#f8fafc" stroke-width="2.5" stroke-linecap="round"/></g>
+        <circle cx="60" cy="62" r="5" fill="#f8fafc"/><circle cx="60" cy="62" r="2" fill="#0f172a"/>
+        ${endLabel(g.ends[0], 3, 'start')}${endLabel(g.ends[1], 117, 'end')}
+        ${isCO2(g.id) ? mark2026(g.id) : ''}
+      </svg>
+      <div class="flex items-baseline justify-between mt-0.5">
+        <span class="gauge-val text-lg font-bold" id="gv-${g.id}">–</span>
+      </div>
+      <div class="text-[10px] text-slate-500 gauge-val" id="gd-${g.id}">&nbsp;</div>
+    </div>`; }).join('');
+}
+function updateGauges() {
+  const prev = S.history.length > 1 ? S.history[S.history.length - 2] : null;
+  for (const g of GAUGES) {
+    const v = S.g[g.id], z = ZONE[zone(v)];
+    // CO₂-Anzeigen gespiegelt: links = weniger CO₂ (grün), rechts = mehr (rot)
+    $('nd-' + g.id).style.transform = `rotate(${-90 + (isCO2(g.id) ? 100 - v : v) * 1.8}deg)`;
+    $('gv-' + g.id).textContent = gaugeText(g.id, v);
+    $('gw-' + g.id).setAttribute('aria-label', `${g.label}: ${isCO2(g.id) ? gaugeText(g.id, v) + ' gegenüber 2026' : v + ' von 100'}, ${z.t}`);
+    $('gd-' + g.id).innerHTML = [isCO2(g.id) ? 'seit 2026' : '', prev && prev[g.id] !== v ? `letzte Leg. ${deltaHtml(g.id, prev[g.id], v)}` : ''].filter(Boolean).join(' · ') || '&nbsp;';
+  }
+  const sc = score(S);
+  $('stars').textContent = `${'★'.repeat(sc)}${'☆'.repeat(10 - sc)} ${sc}/10`;
+}
+
+// ---------- Render ----------
+function renderAll() { renderHeader(); renderAlerts(); renderTabs(); renderGrid(); renderTray(); updateGauges(); renderTemp(); renderLog(); renderCity(); }
+
+// ---------- Temperatur-Diagramm ----------
+const fmt1 = x => x.toFixed(1).replace('.', ',');
+function renderTemp() {
+  const w = warming(S.g);
+  const W = 320, H = 150, L = 30, Rr = 70, T = 8, B = 22;
+  const x = y => L + (y - TEMP.nowYear) / (2100 - TEMP.nowYear) * (W - L - Rr);
+  const y = v => T + (3.0 - v) / (3.0 - 1.0) * (H - T - B);
+  const years = Array.from({ length: 16 }, (_, i) => TEMP.nowYear + i * 5);
+  const path = f => years.map((yr, i) => `${i ? 'L' : 'M'}${x(yr).toFixed(1)},${y(f(yr)).toFixed(1)}`).join(' ');
+  const col = w.t2100 <= 1.8 ? '#34d399' : w.t2100 <= 2.2 ? '#fbbf24' : '#f87171';
+  const yEnd = y(w.t2100), yBau = y(TEMP.bau);
+  // Endbeschriftungen ohne Überlappung: nach Höhe sortieren und mit Mindestabstand auseinanderschieben
+  const lx = W - Rr + 6, GAP = 10;
+  const labels = [
+    { y: y(1.5), text: 'Paris 1,5°', fill: '#34d399', weight: 400 },
+    { y: yBau, text: `+${fmt1(TEMP.bau)}° ohne`, fill: '#cbd5e1', weight: 400 }
+  ];
+  if (Math.abs(w.t2100 - TEMP.bau) >= 0.05) labels.push({ y: yEnd, text: `+${fmt1(w.t2100)}° alle`, fill: col, weight: 700 });
+  labels.sort((a, b) => a.y - b.y);
+  labels.forEach(l => { l.ty = l.y; });
+  for (let i = 1; i < labels.length; i++) labels[i].ty = Math.max(labels[i].ty, labels[i - 1].ty + GAP);
+  const over = labels[labels.length - 1].ty - (H - B);
+  if (over > 0) labels.forEach(l => { l.ty -= over; });
+  for (let i = labels.length - 2; i >= 0; i--) labels[i].ty = Math.min(labels[i].ty, labels[i + 1].ty - GAP);
+  const labelSvg = labels.map(l => `<text x="${lx}" y="${l.ty + 3}" font-size="8" font-weight="${l.weight}" fill="${l.fill}">${l.text}</text>`).join('');
+  $('temp-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="Erwärmung bis 2100: ohne Klimaschutz +${fmt1(TEMP.bau)} Grad, wenn alle so handeln +${fmt1(w.t2100)} Grad">
+    ${[1.5, 2.0, 2.5, 3.0].map(v => `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#334155" stroke-width="${v === 1.5 ? 0 : 0.6}"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end" font-size="8" fill="#94a3b8">${fmt1(v)}°</text>`).join('')}
+    ${[2025, 2050, 2075, 2100].map(yr => `<text x="${x(yr)}" y="${H - 6}" text-anchor="middle" font-size="8" fill="#94a3b8">${yr}</text>`).join('')}
+    <line x1="${L}" x2="${W - Rr}" y1="${y(1.5)}" y2="${y(1.5)}" stroke="#34d399" stroke-width="1" stroke-dasharray="2 3"/>
+    <path d="${path(yr => tempCurve(TEMP.bau, 0, yr))}" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <path d="${path(yr => tempCurve(w.t2100, w.p, yr))}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="${x(2100)}" cy="${yEnd}" r="3.5" fill="${col}" stroke="#1e293b" stroke-width="1.5"/>
+    ${labelSvg}
+    <circle cx="${x(TEMP.nowYear)}" cy="${y(TEMP.now)}" r="2.5" fill="#f1f5f9"/>
+    <text x="${x(TEMP.nowYear) + 5}" y="${y(TEMP.now) + 10}" font-size="8" fill="#94a3b8">heute</text>
+  </svg>`;
+  const big = $('temp-big');
+  big.textContent = `+${fmt1(w.t2100)} °C`;
+  big.style.color = col;
+}
+
+function renderHeader() {
+  const y = CFG.years[S.round - 1];
+  $('round-display').textContent = S.over ? 'Beendet · 2045' : `Legislatur ${S.round} · ${y[0]}–${y[1]}`;
+  $('dash-year').textContent = `(${CFG.snapYears[S.history.length - 1]})`;
+  $('phase-title').textContent = S.over ? 'Spiel beendet' : `Legislatur ${S.round}: Wähle bis zu ${S.picks} Massnahmen`;
+  const left = S.coins - selected.reduce((a, id) => a + costOf(S, id, selected), 0);
+  $('coins').textContent = coinStr(left);
+  $('coins').title = `${left} Budgetpunkte übrig`;
+}
+
+function alertBox(cls, html) { return `<div class="rounded-lg px-3 py-2 text-xs border ${cls}">${html}</div>`; }
+function renderAlerts() {
+  const a = [];
+  if (!S.over) {
+    a.push(alertBox('bg-slate-900/60 border-slate-700 text-slate-300', `Budget: <strong class="text-amber-300">${S.coins} Punkte</strong> (● = 1 Punkt). Jede Legislatur kommen ${CFG.coinsPerRound} dazu, Unverbrauchtes bleibt.`));
+    if (S.round <= 2 && !has(S, 'kern')) a.push(alertBox('bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 geht ein Kernkraftwerk vom Netz: Die Stromversorgung fällt dann um ' + CFG.kernDrop + ' Punkte.'));
+    if (S.picks < CFG.picks) a.push(alertBox('bg-amber-500/10 border-amber-500/30 text-amber-200', `Gegenwind im Parlament: Diese Legislatur sind nur ${S.picks} Beschlüsse möglich. Beliebte Massnahmen helfen.`));
+  }
+  $('alerts').innerHTML = a.join('');
+}
+
+function renderTabs() {
+  const avail = MEASURES.filter(m => !has(S, m.id));
+  const btn = (id, label, n) => `<button data-cat="${id}" class="px-3 py-1.5 rounded-lg font-medium whitespace-nowrap border ${cat === id ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}">${label} <span class="opacity-60">${n}</span></button>`;
+  $('tabs').innerHTML = btn('all', 'Alle', avail.length) + CATS.map(c => btn(c.id, `${c.icon} ${c.label}`, avail.filter(m => m.cat === c.id).length)).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderTabs(); renderGrid(); });
+}
+
+function blockReason(id) {
+  if (selected.includes(id)) return null;
+  if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt – entferne zuerst eine`;
+  const left = S.coins - selected.reduce((a, x) => a + costOf(S, x, selected), 0);
+  if (costOf(S, id, selected) > left) return `Budget reicht nicht: braucht ${'●'.repeat(M[id].cost)}, übrig ${left > 0 ? '●'.repeat(left) : 'nichts'}`;
+  return null;
+}
+
+function renderGrid() {
+  const grid = $('grid');
+  if (S.over) {
+    grid.innerHTML = `<div class="col-span-full bg-slate-800/80 border border-slate-700 rounded-2xl p-6 text-center space-y-3"><div class="text-3xl">🏁</div>
+      <h3 class="text-lg font-bold">Seestadt ist im Jahr 2045 angekommen</h3>
+      <div class="flex flex-wrap gap-2 justify-center"><button id="g-final" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">Auswertung ansehen</button>
+      <button id="g-again" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-bold">Gleiches Szenario nochmals</button></div></div>`;
+    $('g-final').onclick = showFinal; $('g-again').onclick = () => start(S.code);
+    return;
+  }
+  const list = MEASURES.filter(m => !has(S, m.id) && (cat === 'all' || m.cat === cat));
+  const key = (m, l) => (l.none ? 0.5 : l.lv);
+  const climSum = m => CLIMATE.reduce((a, d) => a + (m.fx[d] ? CFG.pts[m.fx[d]] : 0), 0);
+  if (sortMode === 'klima') list.sort((a, b) => key(b, climateLevel(b)) - key(a, climateLevel(a)) || climSum(b) - climSum(a));
+  if (sortMode === 'strom') list.sort((a, b) => key(b, powerLevel(b)) - key(a, powerLevel(a)) || a.cost - b.cost);
+  if (sortMode === 'kosten') list.sort((a, b) => a.cost - b.cost);
+  if (sortMode === 'ebene') list.sort((a, b) => LVL[a.lvl].order - LVL[b.lvl].order);
+  grid.innerHTML = '';
+  for (const m of list) {
+    const sel = selected.includes(m.id), block = blockReason(m.id);
+    const cl = climateLevel(m), pw = powerLevel(m);
+    const where = CLIMATE.filter(d => (m.fx[d] || 0) > 0).map(d => DIM_LABEL[d]);
+    const ae = accEffect(S, m.id, selected);
+    const acc = m.acc > 0 ? ['👍 beliebt', 'text-emerald-300'] : m.acc < 0 && ae === 0 ? ['😐 neutral dank Klimabonus', 'text-slate-300'] : m.acc < 0 ? [ae === CFG.accBuerger ? '👎 umstritten (gedämpft)' : '👎 umstritten', 'text-rose-300'] : ['😐 neutral', 'text-slate-300'];
+    const c = document.createElement('div');
+    c.className = 'card rounded-xl p-3.5 border flex flex-col justify-between ' + (sel ? 'bg-slate-800/90 border-emerald-500 ring-2 ring-emerald-500/30' : block ? 'bg-slate-800/30 border-slate-800 opacity-75' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer');
+    c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-pressed', sel);
+    if (block) { c.setAttribute('aria-disabled', 'true'); c.title = block; }
+    c.onclick = e => { if (e.target.closest('details')) return; toggle(m.id); };
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(m.id); } };
+    const catInfo = CATS.find(x => x.id === m.cat);
+    c.innerHTML = `
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[10px] text-slate-400 flex items-center gap-1.5"><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${catInfo.icon} ${catInfo.label}</span>
+          <span class="w-5 h-5 rounded-full grid place-items-center text-[11px] ${sel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}">${sel ? '✓' : '+'}</span>
+        </div>
+        <h4 class="font-semibold text-[14px] leading-tight flex gap-2"><span aria-hidden="true">${m.icon}</span><span>${m.title}</span></h4>
+        <div class="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+          ${lvBadge('Klima', cl)}
+          ${lvBadge('Strom', pw)}
+        </div>
+        <div class="mt-1.5 text-[10px] text-slate-400">${where.length ? 'Weniger CO₂: ' + where.join(', ') : cl.lv < 0 ? 'Mehr CO₂ im Inland' : 'Keine direkte Klimawirkung'}${m.fx.kreis ? ' · ♻️ Kreislauf ' + LV[m.fx.kreis].t : ''}</div>
+      </div>
+      ${block ? `<div class="mt-2 text-[10px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5">🔒 ${block}</div>` : ''}
+      <div class="mt-3 pt-2 border-t border-slate-700/60 flex justify-between text-[11px]">
+        ${m.abgabe && costOf(S, m.id, selected) === 0 ? `<span title="Geht an die Bevölkerung zurück">Einnahmen <strong class="text-slate-300">→ Klimabonus</strong></span>` : m.cost < 0 ? `<span title="Einnahmen in Budgetpunkten">Einnahmen <strong class="text-emerald-300 tracking-wide">+${'●'.repeat(-m.cost)}</strong></span>` : `<span title="Kosten in Budgetpunkten">Kosten <strong class="text-amber-300 tracking-wide">${'●'.repeat(m.cost)}</strong></span>`}
+        <span class="${acc[1]}">${acc[0]}</span>
+      </div>
+      <details class="mt-2 text-[11px] text-slate-400"><summary class="hover:text-slate-200">💡 Warum?</summary><p class="mt-1 leading-snug">${m.why}</p></details>`;
+    grid.appendChild(c);
+  }
+}
+
+function toggle(id) {
+  if (S.over) return;
+  if (selected.includes(id)) selected = selected.filter(x => x !== id);
+  else { if (blockReason(id)) return; selected.push(id); }
+  renderHeader(); renderGrid(); renderTray(); renderCity();
+}
+
+let skipArmed = false;
+function renderTray() {
+  if (S.over) { $('tray').classList.add('hidden'); return; }
+  $('tray').classList.remove('hidden');
+  $('sel-list').innerHTML = selected.length
+    ? selected.map(id => `<span class="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 rounded-lg px-2 py-0.5 mr-1 mb-1 text-xs">${M[id].icon} ${M[id].title} <button class="ml-1 hover:text-white" data-rm="${id}" aria-label="entfernen">×</button></span>`).join('')
+    : '<span class="text-xs text-slate-500">Klicke auf Karten, um sie auszuwählen.</span>';
+  $('sel-list').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => toggle(b.dataset.rm));
+  const ok = selected.length > 0, b = $('btn-confirm');
+  b.className = 'px-5 py-3 rounded-xl font-semibold text-sm shadow-lg ' + (ok ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600');
+  b.textContent = skipArmed ? 'Wirklich ohne Beschluss? Nochmals klicken' : !ok ? 'Ohne Beschluss weiter' : S.round === CFG.rounds ? 'Beschliessen & Bilanz 2045' : `Beschliessen → ${CFG.years[S.round - 1][1]}`;
+}
+
+function renderLog() { $('log').innerHTML = S.log.map(l => `<div class="bg-slate-900/50 px-2.5 py-1.5 rounded border border-slate-700/60"><div class="font-semibold text-slate-200">${l[0]} ${l[1]}</div><div class="text-slate-400 leading-snug">${l[2]}</div></div>`).join(''); }
+function addLog(icon, head, text) { S.log.unshift([icon, head, text]); }
+
+function renderLegend() {
+  $('legend').innerHTML = [3, 2, 1, -1].map(l => `<div class="flex items-center gap-2"><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${LV[l].cls}">${bars(LV[l])} ${LV[l].t}</span><span class="text-slate-400">${{ 3: 'starker Effekt', 2: 'spürbarer Effekt', 1: 'kleiner oder kaum Effekt', '-1': 'macht es schlechter' }[l]}</span></div>`).join('') +
+    `<div class="col-span-2 flex flex-wrap items-center gap-1.5 mt-1"><span class="text-slate-400">Wer entscheidet:</span>${['G', 'K', 'B'].map(l => `<span class="px-1.5 py-px rounded border font-semibold ${LVL[l].cls}">${LVL[l].t}</span>`).join('')}</div>` +
+    `<div class="col-span-2 text-slate-400 mt-1">Ziel 2045: alle Drehmeter im <span class="text-emerald-300">grünen</span> Bereich.</div>`;
+}
+
+// ---------- Ablauf ----------
+function confirmRound() {
+  if (S.over) return;
+  if (!selected.length && !skipArmed) { skipArmed = true; renderTray(); setTimeout(() => { skipArmed = false; if (!S.over) renderTray(); }, 4000); return; }
+  skipArmed = false;
+  const roundNo = S.round, y = CFG.years[roundNo - 1];
+  const R = playRound(S, selected);
+  justBuilt = new Set(selected);
+  selected = [];
+  addLog('🗳️', `Legislatur ${roundNo} (${y[0]}–${y[1]})`, R.picks.length ? R.picks.map(id => M[id].title).join(' + ') : 'Kein neuer Beschluss.');
+  addLog(R.event.icon, R.event.title, R.event.text);
+  R.lines.forEach(l => addLog('•', `Legislatur ${roundNo}`, l));
+  renderAll();
+  justBuilt = new Set();
+  const rows = GAUGES.map(g => { const a = R.before[g.id], b = R.after[g.id], z = ZONE[zone(b)];
+    return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${gaugeText(g.id, a)}</td><td class="text-right gauge-val font-semibold ${z.cls}">${gaugeText(g.id, b)}</td><td class="text-right gauge-val">${deltaHtml(g.id, a, b)}</td></tr>`; }).join('');
+  const body = `
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs text-slate-400 mb-1">Beschlossen</div>${R.picks.length ? R.picks.map(id => `<div class="text-sm">${M[id].icon} ${M[id].title}</div>`).join('') : '<div class="text-xs text-slate-500">Kein neuer Beschluss.</div>'}</div>
+      <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/30"><div class="text-xs text-amber-300 mb-1">Ereignis</div><div class="font-semibold">${R.event.icon} ${R.event.title}</div><p class="text-xs text-slate-300 mt-1">${R.event.text}</p></div>
+    </div>
+    ${R.lines.length ? `<ul class="text-xs list-disc pl-5 space-y-1">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
+    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Anzeige</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="text-[11px] text-slate-500">CO₂-Werte: Veränderung gegenüber 2026. Auch ohne Massnahmen: Heizungen werden ersetzt, der Strombedarf wächst, es wird mehr geflogen.</p>`;
+  modal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: S.over ? 'Zur Auswertung' : `Weiter zur Legislatur ${S.round}`, primary: true, fn: S.over ? showFinal : close }]);
+}
+
+function insights() {
+  const out = [], g = S.g;
+  if (zone(g.flug) < 2) out.push('✈️ <strong>Fliegen:</strong> Die schwierigste Anzeige. Abgaben und Nachtzüge helfen, am Ende entscheidet aber jede einzelne Reise.');
+  if (zone(g.waren) === 0) out.push('📦 <strong>Graue Emissionen übersehen:</strong> Wer nur im Inland handelt, sieht etwa ein Drittel des Fussabdrucks. Ernährung, Reparieren und Teilen wirken auf den Rest.');
+  if (zone(g.strom) === 0) out.push('⚡ <strong>Winterlücke:</strong> Wärmepumpen, E-Autos und Industrie brauchen mehr Strom. Ohne zusätzlichen Winterstrom wird die Versorgung knapp.');
+  if (zone(g.co2) === 0) out.push('🏭 <strong>Inland:</strong> Heizen und Verkehr sind die grössten Brocken. Ohne Wärmepumpen, Fernwärme oder ÖV bleibt die Anzeige rot.');
+  if (has(S, 'regional') && !has(S, 'vegi')) out.push('🧺 <strong>Regional ist gut, aber:</strong> Was auf dem Teller liegt, zählt mehr als der Transportweg. Weniger Fleisch wirkt stärker als regional einkaufen.');
+  if (has(S, 'balkon') && !has(S, 'wind') && !has(S, 'alpin') && !has(S, 'stau')) out.push('🪴 <strong>Balkonkraftwerke</strong> sind ein guter Einstieg, liefern aber wenig – besonders im Winter.');
+  if (['treibstoff', 'heizoel', 'flugabgabe'].some(id => has(S, id)) && !has(S, 'klimabonus') && g.acc < 50) out.push('💌 <strong>Abgaben ohne Rückverteilung</strong> füllen die Kasse, kosten aber Rückhalt. Ein Klimabonus macht sie fairer.');
+  if (has(S, 'gas')) out.push('🔥 <strong>Gas-Reserve:</strong> Sicherheit gewonnen, aber Emissionen im Inland in Kauf genommen. Ein klassischer Zielkonflikt.');
+  if (g.acc < CFG.zones[0]) out.push('🗳️ <strong>Akzeptanz:</strong> Ohne Rückhalt bremst das Parlament. Beliebte Massnahmen und Mitsprache gehören zur Strategie.');
+  if (!out.length) out.push('🌱 Ausgewogen: Inland, Strom, Konsum und Kreislauf wurden zusammen gedacht.');
+  return out;
+}
+
+function showFinal() {
+  const sc = score(S);
+  const title = sc >= 9 ? 'Vorbild-Stadt 2045!' : sc >= 7 ? 'Auf gutem Weg' : sc >= 5 ? 'Gemischte Bilanz' : 'Noch weit vom Ziel';
+  const tiles = GAUGES.map(g => { const v = S.g[g.id], z = ZONE[zone(v)];
+    return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${gaugeText(g.id, v)}</div></div>`; }).join('');
+  const body = `
+    <div class="text-center"><div class="text-3xl text-amber-300 tracking-wider">${'★'.repeat(sc)}<span class="opacity-30">${'★'.repeat(10 - sc)}</span></div>
+      <div class="text-xs text-slate-400 mt-1">${sc} von 10 Sternen (Anzeigen 60 %, Erwärmung 40 %) · Szenario ${S.code}</div></div>
+    <div class="flex flex-wrap justify-center gap-2 text-xs">${['G', 'K', 'B'].map(l => `<span class="px-2 py-0.5 rounded border ${LVL[l].cls}">${LVL[l].t}: ${S.chosen.filter(c => M[c.id].lvl === l).length} Beschlüsse</span>`).join('')}</div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
+      <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
+      <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong></div>
+    </div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs font-semibold text-slate-200 mb-2">Was die Bilanz zeigt</div><ul class="space-y-1.5 text-xs">${insights().map(t => `<li>${t}</li>`).join('')}</ul></div>
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat dich überrascht – weil sie mehr oder weniger bewirkt hat, als du dachtest? Was hätte deine Gemeinde allein geschafft – und wofür braucht es Kanton und Bund?</div>`;
+  modal(sc >= 9 ? '🏆' : sc >= 7 ? '🌿' : '⚖️', title, body, [
+    { label: 'Gleiches Szenario nochmals', fn: () => { close(); start(S.code); } },
+    { label: 'Übersicht ansehen', primary: true, fn: close }
+  ]);
+  if (sc >= 9) setTimeout(confetti, 300);
+}
+
+function confetti() {
+  if (REDUCED) return;
+  const c = $('confetti'); c.style.display = 'block'; c.width = innerWidth; c.height = innerHeight;
+  const g = c.getContext('2d'), cols = ['#34d399', '#fbbf24', '#60a5fa', '#f472b6', '#a78bfa', '#f87171'];
+  const P = Array.from({ length: 170 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.6, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, r: 5 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - 0.5) * 0.3, col: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function f(t) { g.clearRect(0, 0, c.width, c.height); for (const p of P) { p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.a += p.va; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.col; g.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); g.restore(); }
+    if (t - t0 < 4500) requestAnimationFrame(f); else { g.clearRect(0, 0, c.width, c.height); c.style.display = 'none'; } })(t0);
+}
+
+function modal(icon, title, html, actions) {
+  $('m-icon').textContent = icon; $('m-title').textContent = title; $('m-body').innerHTML = html; $('m-actions').innerHTML = '';
+  for (const a of actions) { const b = document.createElement('button'); b.textContent = a.label;
+    b.className = a.primary ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-2.5 rounded-xl font-semibold text-sm' : 'bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl font-semibold text-sm border border-slate-600';
+    b.onclick = a.fn; $('m-actions').appendChild(b); }
+  $('modal').classList.remove('hidden'); $('modal').firstElementChild.scrollTop = 0;
+  const last = $('m-actions').querySelector('button:last-child'); if (last) last.focus({ preventScroll: true });
+}
+function close() { $('modal').classList.add('hidden'); }
+
+function randomCode() { const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; return 'SEE-' + L[Math.floor(Math.random() * L.length)] + Math.floor(100 + Math.random() * 900); }
+function start(code) { S = createState(code); selected = []; cat = 'all'; skipArmed = false; addLog('🏙️', 'Start 2026', `Szenario ${code}. Die meisten Anzeigen stehen im roten oder gelben Bereich.`); renderAll(); }
+
+function intro() {
+  const code = randomCode();
+  modal('🏙️', 'Postfossile Stadt – einfache Version', `
+    <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
+    <ul class="list-disc pl-5 text-xs space-y-1">
+      <li>4 Legislaturen, je bis zu <strong>${CFG.picks} Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
+      <li>Jede Massnahme zeigt ihre Wirkung auf <strong>Klima</strong> und <strong>Strom</strong> in drei Stufen: gross, mittel, wenig – manchmal sogar rückläufig.</li>
+      <li>Ziel: <strong>weniger CO₂</strong> – im Inland, beim <strong>Fliegen</strong> und bei <strong>Waren</strong> aus dem Ausland. Dazu sichere Stromversorgung und Kreislauf.</li>
+      <li>Ende 2034 fällt ein Teil der Stromversorgung weg. Jede Legislatur bringt ein Ereignis.</li>
+    </ul>
+    <label class="block text-xs text-slate-400">Szenario-Code (gleicher Code = gleiche Ereignisse)
+      <input id="in-code" value="${code}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase"></label>`,
+    [{ label: 'Zur komplexen Version', fn: () => $('link-complex').click() },
+     { label: 'Los geht’s', primary: true, fn: () => { const v = ($('in-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || code; close(); start(v); } }]);
+}
+
+// ---------- Stadtpanorama ----------
+function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+const spinAnim = dur => REDUCED ? '' : `<animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="${dur}s" repeatCount="indefinite"/>`;
+
+function renderCity() {
+  const g = S.g;
+  const ghost = new Set(S.over ? [] : selected);
+  const act = new Set(S.chosen.map(c => c.id));
+  const on = id => act.has(id) || ghost.has(id);
+  const cls = id => !act.has(id) && ghost.has(id) ? 'ghost' : justBuilt.has(id) ? 'pop-in' : '';
+  const climate = g.co2 * 0.6 + g.waren * 0.2 + g.flug * 0.2;
+  const dirt = clamp(1 - climate / 75);
+  const fossW = 0.8 * clamp(1 - g.co2 / 85 - (on('heizverbot') ? 0.2 : 0)), fossV = 0.95 * clamp(1 - g.co2 / 85 - (on('ev') ? 0.25 : 0) - (on('verbrenner') ? 0.35 : 0));
+  const dark = g.strom < 30;
+  const o = [];
+  const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
+
+  o.push(`<defs><linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mixHex('#3b9be0', '#7c7468', dirt)}"/><stop offset="1" stop-color="${mixHex('#d3f0ff', '#d8c9a8', dirt)}"/></linearGradient></defs>`);
+  o.push(`<rect width="1000" height="260" fill="url(#g-sky)"/><circle cx="880" cy="46" r="22" fill="#fde047" opacity="${(1 - dirt * 0.65).toFixed(2)}"/>`);
+  [[70, 20, 34], [95, 55, 58]].forEach(([d, del, y]) => o.push(`<g class="cloud" style="animation-duration:${d}s;animation-delay:-${del}s"><g transform="translate(0,${y})" fill="${dirt > 0.5 ? '#d6d3d1' : '#fff'}" opacity=".85"><ellipse rx="30" ry="9"/><ellipse cx="14" cy="-7" rx="17" ry="10"/><ellipse cx="-12" cy="-3" rx="12" ry="7"/></g></g>`));
+  // Flugzeuge: je schlechter die Anzeige, desto mehr Verkehr am Himmel
+  const planes = 3 - zone(g.flug);
+  for (let k = 0; k < planes; k++) o.push(`<g class="cloud" style="animation-duration:${26 + k * 9}s;animation-delay:-${k * 11}s"><g transform="translate(0,${26 + k * 16})"><title>Flugverkehr</title><line x1="-90" y1="0" x2="-6" y2="0" stroke="#fff" stroke-width="1.5" opacity=".6"/><path d="M0,0 L-14,-2 L-18,-7 L-15,-7 L-9,-2 L-2,-2 L-6,-9 L-2,-9 L6,-2 L12,-1 L12,1 L6,2 L-2,9 L-6,9 L-2,2 L-9,2 L-15,7 L-18,7 L-14,2 Z" fill="#f8fafc" transform="scale(.9)"/></g></g>`);
+
+  // Alpen, Speichersee
+  o.push(`<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
+  o.push(`<ellipse cx="200" cy="133" rx="${on('stau') ? 30 : 22}" ry="${on('stau') ? 7 : 5}" fill="#38bdf8"/><g class="${cls('stau')}"><polygon points="${on('stau') ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/></g>`);
+  if (on('alpin')) { const p = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) p.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`); o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage</title>${p.join('')}</g>`); }
+  if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
+  o.push(`<path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/>`);
+  const kernOn = S.history.length <= 2 || has(S, 'kern');
+  o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
+  if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
+
+  // Nachtzug im Hintergrund
+  o.push(`<rect x="0" y="198" width="1000" height="62" fill="#4d7c0f"/>`);
+  if (on('nachtzug')) o.push(`<line x1="0" y1="203" x2="1000" y2="203" stroke="#57534e" stroke-width="1.5"/><g class="drive ${ghost.has('nachtzug') ? 'ghost' : ''}" style="animation-duration:26s;animation-delay:-8s"><g transform="translate(0,202)"><title>Nachtzug</title>${[0, 34, 68, 102].map(x => `<rect x="${x}" y="-10" width="32" height="9" rx="2" fill="#1e3a8a"/><rect x="${x + 3}" y="-8" width="26" height="2.5" fill="#fde68a" opacity=".8"/>`).join('')}<text x="64" y="-12" font-size="7" fill="#fde68a">★ ☾</text></g></g>`);
+  o.push(`<path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
+  if (on('fw')) o.push(`<g class="${cls('fw')}"><title>Fernwärme mit Seewasser</title><rect x="226" y="196" width="22" height="13" fill="#e2e8f0"/><polygon points="224,196 237,188 250,196" fill="#0369a1"/><path d="M228,206 Q205,214 185,222" stroke="#f97316" stroke-width="2" fill="none"/><line x1="262" y1="230" x2="604" y2="230" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/></g>`);
+
+  // Gebäude
+  const B = [[262, 34, 52], [298, 28, 80], [328, 40, 42], [370, 30, 96], [402, 36, 62], [440, 26, 112], [468, 38, 72], [508, 30, 50], [540, 34, 88], [576, 26, 58]];
+  const order = [3, 7, 1, 9, 5, 0, 8, 2, 6, 4];
+  const smoking = new Set(order.slice(0, Math.round(clamp(fossW / 0.8) * 10)));
+  const nSolar = (on('solar') ? 7 : 0) + 1;
+  const reno = on('daemm'), wood = on('holz');
+  B.forEach(([x, w, h], i) => {
+    const top = 232 - h;
+    const facade = wood && i % 4 === 1 ? '#b45309' : reno ? ['#f5f5f4', '#e7e5e4', '#fef3c7'][i % 3] : ['#9ca3af', '#a8a29e', '#94a3b8'][i % 3];
+    const wins = [];
+    for (let r = 0; r < Math.floor((h - 12) / 11); r++) for (let c = 0; c < Math.floor((w - 6) / 8); c++) {
+      const lit = !dark && (i * 7 + c * 3 + r * 5) % 4 !== 0;
+      wins.push(`<rect x="${x + 4 + c * 8}" y="${top + 7 + r * 11}" width="4" height="5" fill="${lit ? '#fde68a' : '#334155'}" ${dark && (i + c + r) % 5 === 0 ? 'class="flicker"' : ''}/>`);
+    }
+    o.push(`<g class="${wood && i % 4 === 1 ? cls('holz') : reno ? cls('daemm') : ''}"><title>${wood && i % 4 === 1 ? 'Holzbau' : reno ? 'Saniertes Wohnhaus' : 'Wohnhaus'}${smoking.has(i) ? ' – heizt noch mit Öl oder Gas' : ''}</title><rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${facade}" stroke="#475569" stroke-width=".6"/>${reno ? `<rect x="${x}" y="${top - 2}" width="${w}" height="2.5" fill="#65a30d"/>` : ''}${wins.join('')}</g>`);
+    o.push(`<rect x="${x + w - 8}" y="${top - 9}" width="4" height="9" fill="#78716c"/>`);
+    if (smoking.has(i)) o.push(puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7) % 3.2) + puff(x + w - 6, top - 11, '#78716c', 3, 3.2, (i * 0.7 + 1.6) % 3.2));
+    if (order.indexOf(i) >= 10 - nSolar) o.push(`<g class="${cls('solar')}"><polygon points="${x + 3},${top - 1} ${x + 6},${top - 5} ${x + w - 11},${top - 5} ${x + w - 14},${top - 1}" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/></g>`);
+    if (on('balkon') && i % 2 === 0 && h > 50) o.push(`<g class="${cls('balkon')}"><title>Balkonkraftwerk</title><rect x="${x + w - 3}" y="${top + 18}" width="5" height="7" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".4"/><rect x="${x + w - 3}" y="${top + 34}" width="5" height="7" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".4"/></g>`);
+    if (on('wp') && i % 2 === 1) o.push(`<g class="${cls('wp')}"><title>Wärmepumpe</title><rect x="${x + 2}" y="226" width="9" height="6" fill="#f1f5f9" stroke="#64748b" stroke-width=".5"/><circle cx="${x + 6.5}" cy="229" r="2" fill="none" stroke="#64748b" stroke-width=".6"/></g>`);
+  });
+  o.push(`<polygon points="440,120 453,106 466,120" fill="#b91c1c"/>`);
+  if (on('repair')) o.push(`<g class="${cls('repair')}"><title>Repair-Café</title><rect x="330" y="200" width="36" height="10" rx="2" fill="#fef3c7"/><text x="348" y="207.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#92400e">REPAIR</text></g>`);
+  if (on('sharing')) o.push(`<g class="${cls('sharing')}"><title>Bibliothek der Dinge</title><rect x="470" y="196" width="34" height="10" rx="2" fill="#e0e7ff"/><text x="487" y="203.5" text-anchor="middle" font-size="6" font-weight="700" fill="#3730a3">TEILEN</text></g>`);
+
+  // Markt, Industrie, Recyclinghof, Batterien, Hof
+  if (on('vegi') || on('regional') || on('foodwaste')) o.push(`<g class="${cls(on('regional') ? 'regional' : on('vegi') ? 'vegi' : 'foodwaste')}"><title>Markt & Kantine</title><rect x="610" y="214" width="30" height="18" fill="#fef3c7"/>${[0, 1, 2, 3, 4].map(k => `<rect x="${608 + k * 7}" y="208" width="7" height="6" fill="${k % 2 ? '#fff' : '#dc2626'}"/>`).join('')}${[0, 1, 2].map(k => `<circle cx="${616 + k * 9}" cy="224" r="3" fill="${['#16a34a', '#f97316', '#dc2626'][k]}"/>`).join('')}</g>`);
+  const indSmoke = on('ind') ? 0 : 2;
+  o.push(`<g><title>Industrie${on('ind') ? ' (elektrifiziert)' : ''}</title><rect x="700" y="168" width="7" height="40" fill="#57534e"/><rect x="722" y="176" width="7" height="32" fill="#57534e"/><path d="M645,232 L645,212 L660,204 L660,212 L675,204 L675,212 L690,204 L690,212 L705,204 L705,212 L720,204 L720,212 L735,204 L735,212 L750,204 L750,232 Z" fill="#78716c" stroke="#57534e" stroke-width=".6"/>${Array.from({ length: indSmoke }, (_, k) => puff(703, 166, '#44403c', 4, 3.6, k * 1.2) + puff(725, 174, '#57534e', 3.5, 3.6, k * 1.2 + .6)).join('')}${on('ind') ? `<text x="656" y="226" font-size="12" class="${cls('ind')}">⚡</text>` : ''}</g>`);
+  if (on('recycling') || on('beschaffung') || on('mehrweg')) o.push(`<g class="${cls(on('recycling') ? 'recycling' : on('beschaffung') ? 'beschaffung' : 'mehrweg')}"><title>Wertstoffhof</title>${['#16a34a', '#2563eb', '#eab308'].map((c, k) => `<rect x="${758 + k * 11}" y="222" width="9" height="10" rx="1" fill="${c}"/>`).join('')}<text x="773" y="219" text-anchor="middle" font-size="8">♻</text></g>`);
+  if (on('gas')) o.push(`<g class="${cls('gas')}"><title>Gas-Reservekraftwerk</title><rect x="795" y="210" width="34" height="22" fill="#a8a29e"/><rect x="820" y="182" width="6" height="28" fill="#78716c"/>${act.has('gas') && g.strom < 60 ? [0, 1.1].map(d => puff(823, 180, '#6b7280', 4, 3.3, d)).join('') : ''}</g>`);
+  if (on('smartgrid')) o.push(`<g class="${cls('smartgrid')}"><title>Quartierbatterien</title>${[0, 1, 2].map(k => `<rect x="${838 + k * 21}" y="220" width="18" height="12" rx="1" fill="#0f766e"/><text x="${847 + k * 21}" y="229.5" text-anchor="middle" font-size="8" fill="#fef08a">⚡</text>`).join('')}</g>`);
+  if (on('agri') || on('humus')) o.push(`<g class="${cls(on('agri') ? 'agri' : 'humus')}"><title>Bauernhof</title><rect x="905" y="222" width="70" height="10" fill="${on('humus') ? '#4d7c0f' : '#a3a635'}"/>${on('agri') ? [0, 1, 2].map(k => `<line x1="${912 + k * 22}" y1="222" x2="${912 + k * 22}" y2="212" stroke="#64748b"/><rect x="${905 + k * 22}" y="209" width="18" height="3" fill="#1e3a8a"/>`).join('') + '<path d="M977,232 A11,11 0 0 1 999,232 Z" fill="#84cc16"/>' : ''}</g>`);
+
+  // Strasse & Fahrzeuge
+  o.push(`<rect x="0" y="232" width="1000" height="3" fill="#a8a29e"/><rect x="0" y="235" width="1000" height="25" fill="#3f3f46"/><line x1="0" y1="247.5" x2="1000" y2="247.5" stroke="#e5e7eb" stroke-dasharray="10 8"/>`);
+  if (on('oev')) o.push(`<line x1="0" y1="215" x2="1000" y2="215" stroke="#334155" stroke-width=".8" class="${cls('oev')}"/>`);
+  const slots = 7 - (on('oev') ? 2 : 0), nC = Math.min(slots, Math.round(clamp(fossV / 0.95) * 7));
+  const vcols = ['#ef4444', '#f59e0b', '#a855f7', '#e11d48', '#0ea5e9', '#f97316', '#64748b'];
+  for (let k = 0; k < slots; k++) {
+    const ev = k >= nC, back = k % 2 === 1, dur = 11 + (k * 3.7) % 8, col = ev ? '#22c55e' : vcols[k];
+    o.push(`<g class="${back ? 'drive-back' : 'drive'}" style="animation-duration:${dur}s;animation-delay:-${(k * 4.3) % dur}s"><g transform="translate(0,${back ? 254 : 242})${back ? ' scale(-1,1)' : ''}"><title>${ev ? 'E-Auto' : 'Benzin- oder Dieselauto'}</title><rect y="-6" width="20" height="6" rx="2" fill="${col}"/><rect x="4" y="-10" width="10" height="5" rx="2" fill="${col}"/><circle cx="5" r="2" fill="#111827"/><circle cx="15" r="2" fill="#111827"/>${ev ? '' : puff(-2, -3, '#57534e', 2, 1.4, 0)}</g></g>`);
+  }
+  if (on('oev')) o.push(`<g class="drive ${ghost.has('oev') ? 'ghost' : ''}" style="animation-duration:20s;animation-delay:-6s"><g transform="translate(0,242)"><title>Tram</title><line x1="30" y1="-12" x2="36" y2="-27" stroke="#334155"/><rect y="-13" width="66" height="12" rx="3" fill="#2563eb"/><rect y="-7" width="66" height="2" fill="#fff"/><circle cx="10" r="1.8" fill="#111827"/><circle cx="56" r="1.8" fill="#111827"/></g></g>`);
+  if (on('velo')) for (let k = 0; k < 3; k++) o.push(`<g class="drive ${ghost.has('velo') ? 'ghost' : ''}" style="animation-duration:${34 + k * 6}s;animation-delay:-${k * 13}s"><g transform="translate(0,234)"><circle r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><circle cx="8" r="2.5" fill="none" stroke="#111827" stroke-width=".8"/><line x2="5" y2="-4" stroke="#111827" stroke-width=".8"/><line x1="5" y1="-4" x2="8" stroke="#111827" stroke-width=".8"/><circle cx="5" cy="-8" r="2" fill="${['#ec4899', '#14b8a6', '#eab308'][k]}"/></g></g>`);
+  o.push(`<rect width="1000" height="260" fill="#78350f" opacity="${(dirt * 0.13).toFixed(3)}" pointer-events="none"/>`);
+
+  $('city').innerHTML = `<svg viewBox="0 18 1000 242" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  cityTitlesToTips();
+  $('city-year').textContent = `Seestadt ${CFG.snapYears[S.history.length - 1]}`;
+  $('city-mood').textContent = `${g.acc >= 60 ? '😀' : g.acc >= 45 ? '🙂' : g.acc >= 34 ? '😐' : '😠'} Stimmung ${g.acc} · ${dirt < 0.35 ? '🌤️ klare Luft' : dirt < 0.7 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${planes >= 3 ? ' · ✈️ viel Flugverkehr' : ''}`;
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl' : 'Tipp: auf Anlagen zeigen oder tippen';
+}
+
+
+// ---------- Tooltips im Stadtbild (eigene statt Browser-Tooltips: sofort, auch per Antippen) ----------
+function setupCityTips() {
+  const box = $('city'), tip = $('city-tip'), host = box.parentElement;
+  let hideT = null;
+  const hide = () => tip.classList.add('hidden');
+  const show = e => {
+    const el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (!el || !box.contains(el)) { if (e.pointerType !== 'touch') hide(); return; }
+    tip.textContent = el.getAttribute('data-tip');
+    tip.classList.remove('hidden');
+    const r = host.getBoundingClientRect();
+    const x = Math.max(4, Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 4));
+    const y = Math.max(4, Math.min(e.clientY - r.top + 14, r.height - tip.offsetHeight - 4));
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    clearTimeout(hideT);
+    if (e.pointerType === 'touch') hideT = setTimeout(hide, 2500);
+  };
+  box.addEventListener('pointermove', show);
+  box.addEventListener('pointerdown', show);
+  box.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') hide(); });
+}
+// <title>-Elemente in data-tip umwandeln, damit nur unser Tooltip erscheint
+function cityTitlesToTips() {
+  $('city').querySelectorAll('title').forEach(t => {
+    const el = t.parentNode;
+    el.setAttribute('data-tip', t.textContent); t.remove();
+    // dünne Anlagen (Windräder, Masten, Kräne) bekommen eine unsichtbare Trefferfläche
+    if (el.tagName === 'g') {
+      try { const bb = el.getBBox(); if (bb.width > 0 && bb.height > 0) el.insertAdjacentHTML('afterbegin', `<rect x="${bb.x}" y="${bb.y}" width="${bb.width}" height="${bb.height}" fill="transparent"/>`); } catch (e) {}
+    }
+  });
+}
+
+// ---------- Start ----------
+window.addEventListener('DOMContentLoaded', () => {
+  buildGauges(); renderLegend(); setupCityTips();
+  $('sort').onchange = e => { sortMode = e.target.value; renderGrid(); };
+  $('btn-confirm').onclick = confirmRound;
+  $('btn-new').onclick = intro;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').classList.contains('hidden') && S) close(); });
+  start(randomCode());
+  intro();
+});
+</script>
+</body>
+</html>
