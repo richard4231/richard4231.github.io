@@ -126,7 +126,7 @@
         <span id="stars" class="text-amber-300 text-xs font-semibold" title="Grün = 2 Punkte, Gelb = 1 Punkt (ohne Akzeptanz)"></span>
       </h3>
       <div id="gauges" class="grid grid-cols-2 gap-3"></div>
-      <p class="text-[11px] text-slate-500 mt-3">Rund ⅔ des Schweizer CO₂-Fussabdrucks entstehen im Ausland (BAFU).</p>
+      <p class="text-[11px] text-slate-500 mt-3">Ziel: weniger CO₂ – im Inland und im Ausland. Rund ⅔ unseres Fussabdrucks entstehen im Ausland (BAFU).</p>
     </div>
 
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
@@ -374,13 +374,22 @@ const LV = {
   '-1': { t: 'rückläufig', bars: -1, cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' }
 };
 const GAUGES = [
-  { id: 'co2', icon: '🏭', label: 'Emissionen Inland', sub: 'Heizen, Verkehr, Industrie, Landwirtschaft' },
-  { id: 'strom', icon: '⚡', label: 'Strom aus dem Inland', sub: 'Eigenproduktion, vor allem im Winter' },
-  { id: 'flug', icon: '✈️', label: 'Fliegen', sub: 'Importiertes CO₂ durch Flugreisen' },
-  { id: 'waren', icon: '📦', label: 'Waren & Materialien', sub: 'Im Ausland hergestellt und transportiert' },
-  { id: 'kreis', icon: '♻️', label: 'Kreislauf', sub: 'Recycling, Reparieren, Teilen' },
-  { id: 'acc', icon: '🗳️', label: 'Akzeptanz', sub: 'Rückhalt in der Bevölkerung' }
+  { id: 'co2', icon: '🏭', label: 'CO₂ im Inland', sub: 'Heizen, Verkehr, Industrie, Landwirtschaft', ends: ['mehr CO₂', 'weniger'] },
+  { id: 'flug', icon: '✈️', label: 'CO₂ durchs Fliegen', sub: 'Flugreisen der Bevölkerung', ends: ['mehr CO₂', 'weniger'] },
+  { id: 'waren', icon: '📦', label: 'CO₂ aus Waren', sub: 'Im Ausland hergestellt und transportiert', ends: ['mehr CO₂', 'weniger'] },
+  { id: 'strom', icon: '⚡', label: 'Stromversorgung', sub: 'Erneuerbar und sicher, vor allem im Winter', ends: ['knapp', 'sicher'] },
+  { id: 'kreis', icon: '♻️', label: 'Kreislauf', sub: 'Recycling, Reparieren, Teilen', ends: ['Wegwerfen', 'Kreislauf'] },
+  { id: 'acc', icon: '🗳️', label: 'Akzeptanz', sub: 'Rückhalt in der Bevölkerung', ends: ['tief', 'hoch'] }
 ];
+// CO₂-Anzeigen: Veränderung gegenüber 2026 (−45 % = 45 % weniger CO₂)
+const isCO2 = id => CLIMATE.includes(id);
+const co2Pct = (id, v) => Math.round(((100 - v) / (100 - CFG.start[id]) - 1) * 100);
+const pctStr = p => p === 0 ? '±0 %' : (p < 0 ? '−' : '+') + Math.abs(p) + ' %';
+const gaugeText = (id, v) => isCO2(id) ? pctStr(co2Pct(id, v)) : String(v);
+function deltaHtml(id, a, b) {
+  if (isCO2(id)) { const d = co2Pct(id, b) - co2Pct(id, a); return d === 0 ? '<span class="text-slate-500">±0</span>' : `<span class="${d < 0 ? 'text-emerald-300' : 'text-rose-300'}">${d < 0 ? '▼ −' : '▲ +'}${Math.abs(d)} Pkt.</span>`; }
+  const d = b - a; return d === 0 ? '<span class="text-slate-500">±0</span>' : `<span class="${d > 0 ? 'text-emerald-300' : 'text-rose-300'}">${d > 0 ? '▲ +' : '▼ −'}${Math.abs(d)}</span>`;
+}
 const coinStr = n => n > 0 ? '●'.repeat(Math.min(n, 12)) + (n > 12 ? ` ${n}` : '') : '–';
 
 function bars(lv) {
@@ -406,6 +415,7 @@ function buildGauges() {
         ${[0, 45, 90, 135, 180].map(d => { const [x0, y0] = polar(33, d), [x1, y1] = polar(37, d); return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#64748b" stroke-width="1"/>`; }).join('')}
         <g class="needle" id="nd-${g.id}" style="transform: rotate(-90deg)"><line x1="60" y1="62" x2="60" y2="22" stroke="#f8fafc" stroke-width="2.5" stroke-linecap="round"/></g>
         <circle cx="60" cy="62" r="5" fill="#f8fafc"/><circle cx="60" cy="62" r="2" fill="#0f172a"/>
+        <text x="8" y="69.5" font-size="6.5" fill="#94a3b8">${g.ends[0]}</text><text x="112" y="69.5" font-size="6.5" fill="#94a3b8" text-anchor="end">${g.ends[1]}</text>
       </svg>
       <div class="flex items-baseline justify-between mt-0.5">
         <span class="gauge-val text-lg font-bold" id="gv-${g.id}">–</span>
@@ -419,12 +429,11 @@ function updateGauges() {
   for (const g of GAUGES) {
     const v = S.g[g.id], z = ZONE[zone(v)];
     $('nd-' + g.id).style.transform = `rotate(${-90 + v * 1.8}deg)`;
-    $('gv-' + g.id).textContent = v;
+    $('gv-' + g.id).textContent = gaugeText(g.id, v);
     $('gz-' + g.id).className = 'text-[11px] font-semibold ' + z.cls;
     $('gz-' + g.id).textContent = `${z.sym} ${z.t}`;
-    $('gw-' + g.id).setAttribute('aria-label', `${g.label}: ${v} von 100, ${z.t}`);
-    const d = prev ? v - prev[g.id] : 0;
-    $('gd-' + g.id).innerHTML = prev && d ? `letzte Legislatur <span class="${d > 0 ? 'text-emerald-300' : 'text-rose-300'}">${d > 0 ? '▲ +' : '▼ −'}${Math.abs(d)}</span>` : '&nbsp;';
+    $('gw-' + g.id).setAttribute('aria-label', `${g.label}: ${isCO2(g.id) ? gaugeText(g.id, v) + ' gegenüber 2026' : v + ' von 100'}, ${z.t}`);
+    $('gd-' + g.id).innerHTML = [isCO2(g.id) ? 'seit 2026' : '', prev && prev[g.id] !== v ? `letzte Leg. ${deltaHtml(g.id, prev[g.id], v)}` : ''].filter(Boolean).join(' · ') || '&nbsp;';
   }
   const sc = score(S);
   $('stars').textContent = `${'★'.repeat(sc)}${'☆'.repeat(10 - sc)} ${sc}/10`;
@@ -493,9 +502,9 @@ function renderTabs() {
 
 function blockReason(id) {
   if (selected.includes(id)) return null;
-  if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt`;
+  if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt – entferne zuerst eine`;
   const left = S.coins - selected.reduce((a, x) => a + M[x].cost, 0);
-  if (M[id].cost > left) return 'Zu wenig Budget';
+  if (M[id].cost > left) return `Budget reicht nicht: braucht ${'●'.repeat(M[id].cost)}, übrig ${left > 0 ? '●'.repeat(left) : 'nichts'}`;
   return null;
 }
 
@@ -522,7 +531,7 @@ function renderGrid() {
     const where = CLIMATE.filter(d => (m.fx[d] || 0) > 0).map(d => DIM_LABEL[d]);
     const acc = m.acc > 0 ? ['👍 beliebt', 'text-emerald-300'] : m.acc < 0 ? [accEffect(S, m.id, selected) === CFG.accBuerger ? '👎 umstritten (gedämpft)' : '👎 umstritten', 'text-rose-300'] : ['😐 neutral', 'text-slate-300'];
     const c = document.createElement('div');
-    c.className = 'card rounded-xl p-3.5 border flex flex-col justify-between ' + (sel ? 'bg-slate-800/90 border-emerald-500 ring-2 ring-emerald-500/30' : block ? 'bg-slate-800/30 border-slate-800 opacity-60' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer');
+    c.className = 'card rounded-xl p-3.5 border flex flex-col justify-between ' + (sel ? 'bg-slate-800/90 border-emerald-500 ring-2 ring-emerald-500/30' : block ? 'bg-slate-800/30 border-slate-800 opacity-75' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer');
     c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-pressed', sel);
     if (block) { c.setAttribute('aria-disabled', 'true'); c.title = block; }
     c.onclick = e => { if (e.target.closest('details')) return; toggle(m.id); };
@@ -539,8 +548,9 @@ function renderGrid() {
           ${lvBadge('Klima', cl)}
           ${lvBadge('Strom', pw)}
         </div>
-        <div class="mt-1.5 text-[10px] text-slate-400">${where.length ? 'Wirkt bei: ' + where.join(', ') : cl.lv < 0 ? 'Mehr Emissionen im Inland' : 'Keine direkte Klimawirkung'}${m.fx.kreis ? ' · ♻️ Kreislauf ' + LV[m.fx.kreis].t : ''}</div>
+        <div class="mt-1.5 text-[10px] text-slate-400">${where.length ? 'Weniger CO₂: ' + where.join(', ') : cl.lv < 0 ? 'Mehr CO₂ im Inland' : 'Keine direkte Klimawirkung'}${m.fx.kreis ? ' · ♻️ Kreislauf ' + LV[m.fx.kreis].t : ''}</div>
       </div>
+      ${block ? `<div class="mt-2 text-[10px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5">🔒 ${block}</div>` : ''}
       <div class="mt-3 pt-2 border-t border-slate-700/60 flex justify-between text-[11px]">
         <span title="Kosten in Budgetpunkten">Kosten <strong class="text-amber-300 tracking-wide">${'●'.repeat(m.cost)}</strong></span>
         <span class="${acc[1]}">${acc[0]}</span>
@@ -592,8 +602,8 @@ function confirmRound() {
   R.lines.forEach(l => addLog('•', `Legislatur ${roundNo}`, l));
   renderAll();
   justBuilt = new Set();
-  const rows = GAUGES.map(g => { const a = R.before[g.id], b = R.after[g.id], d = b - a, z = ZONE[zone(b)];
-    return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${a}</td><td class="text-right gauge-val font-semibold">${b}</td><td class="text-right gauge-val ${d > 0 ? 'text-emerald-300' : d < 0 ? 'text-rose-300' : 'text-slate-500'}">${d > 0 ? '▲ +' + d : d < 0 ? '▼ −' + (-d) : '±0'}</td><td class="text-right text-[11px] ${z.cls}">${z.sym} ${z.t}</td></tr>`; }).join('');
+  const rows = GAUGES.map(g => { const a = R.before[g.id], b = R.after[g.id], z = ZONE[zone(b)];
+    return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${gaugeText(g.id, a)}</td><td class="text-right gauge-val font-semibold">${gaugeText(g.id, b)}</td><td class="text-right gauge-val">${deltaHtml(g.id, a, b)}</td><td class="text-right text-[11px] ${z.cls}">${z.sym} ${z.t}</td></tr>`; }).join('');
   const body = `
     <div class="grid sm:grid-cols-2 gap-3">
       <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs text-slate-400 mb-1">Beschlossen</div>${R.picks.length ? R.picks.map(id => `<div class="text-sm">${M[id].icon} ${M[id].title}</div>`).join('') : '<div class="text-xs text-slate-500">Kein neuer Beschluss.</div>'}</div>
@@ -601,7 +611,7 @@ function confirmRound() {
     </div>
     ${R.lines.length ? `<ul class="text-xs list-disc pl-5 space-y-1">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
     <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Anzeige</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th><th class="text-right">Bereich</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="text-[11px] text-slate-500">Auch ohne Massnahmen verändert sich etwas: Heizungen werden ohnehin ersetzt (Inland +${CFG.trend.co2}), der Strombedarf wächst (Strom ${CFG.trend.strom}), die Leute fliegen mehr (Fliegen ${CFG.trend.flug}), Lieferketten werden etwas sauberer (Waren +${CFG.trend.waren}).</p>`;
+    <p class="text-[11px] text-slate-500">CO₂-Werte: Veränderung gegenüber 2026. Auch ohne Massnahmen: Heizungen werden ersetzt, der Strombedarf wächst, es wird mehr geflogen.</p>`;
   modal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: S.over ? 'Zur Auswertung' : `Weiter zur Legislatur ${S.round}`, primary: true, fn: S.over ? showFinal : close }]);
 }
 
@@ -623,7 +633,7 @@ function showFinal() {
   const sc = score(S);
   const title = sc >= 9 ? 'Vorbild-Stadt 2045!' : sc >= 7 ? 'Auf gutem Weg' : sc >= 5 ? 'Gemischte Bilanz' : 'Noch weit vom Ziel';
   const tiles = GAUGES.map(g => { const v = S.g[g.id], z = ZONE[zone(v)];
-    return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${v} · ${z.sym} ${z.t}</div></div>`; }).join('');
+    return `<div class="p-2.5 rounded-xl border ${z.bg}"><div class="text-[11px] text-slate-400">${g.icon} ${g.label}</div><div class="font-bold ${z.cls}">${gaugeText(g.id, v)} · ${z.sym} ${z.t}</div></div>`; }).join('');
   const body = `
     <div class="text-center"><div class="text-3xl text-amber-300 tracking-wider">${'★'.repeat(sc)}<span class="opacity-30">${'★'.repeat(10 - sc)}</span></div>
       <div class="text-xs text-slate-400 mt-1">${sc} von 10 Punkten (grün = 2, gelb = 1, ohne Akzeptanz) · Szenario ${S.code}</div></div>
@@ -671,7 +681,7 @@ function intro() {
     <ul class="list-disc pl-5 text-xs space-y-1">
       <li>4 Legislaturen, je bis zu <strong>3 Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
       <li>Jede Massnahme zeigt ihre Wirkung auf <strong>Klima</strong> und <strong>Strom</strong> in drei Stufen: gross, mittel, wenig – manchmal sogar rückläufig.</li>
-      <li>Das Dashboard zeigt nicht nur das Inland, sondern auch <strong>Fliegen</strong>, <strong>Waren & Materialien</strong> aus dem Ausland und den <strong>Kreislauf</strong>.</li>
+      <li>Ziel: <strong>weniger CO₂</strong> – im Inland, beim <strong>Fliegen</strong> und bei <strong>Waren</strong> aus dem Ausland. Dazu sichere Stromversorgung und Kreislauf.</li>
       <li>Ende 2034 fällt ein Teil der Stromversorgung weg. Jede Legislatur bringt ein Ereignis.</li>
     </ul>
     <label class="block text-xs text-slate-400">Szenario-Code (gleicher Code = gleiche Ereignisse)
