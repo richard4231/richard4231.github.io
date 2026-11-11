@@ -48,6 +48,32 @@
   @keyframes flicker { 50% { opacity: .15; } }
   .pop-in { animation: popin .6s cubic-bezier(.2, 1.6, .4, 1) 1; transform-box: fill-box; transform-origin: 50% 100%; }
   @keyframes popin { from { transform: scale(.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  /* Ein-Bildschirm-Ansicht für grosse Bildschirme: Seite scrollt nicht, Karten und Dashboard scrollen je für sich */
+  @media (min-width: 1024px) and (min-height: 720px) {
+    html, body { height: 100%; }
+    body { overflow: hidden; }
+    #layout { flex: 1 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); row-gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+    #city svg { height: clamp(110px, 21vh, 230px); }
+    #left, #right { min-height: 0; }
+    #left { gap: 10px; }
+    #grid { max-height: none; flex: 1 1 auto; min-height: 0; }
+    #tray { flex: 0 0 auto; padding-top: 12px; padding-bottom: 12px; }
+    #right { overflow-y: auto; padding-right: 4px; gap: 12px; }
+    #gauges { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    #footer { display: none; }
+  }
+  @media (min-width: 1024px) and (min-height: 720px) {
+    #tabbar { flex-wrap: nowrap; }
+    #tabs { flex: 1 1 auto; }
+    #sort, #search { flex: 0 0 auto; }
+  }
+  @media (min-width: 1024px) and (min-height: 720px) and (max-height: 949px) {
+    #round-desc, .alert-budget { display: none; }
+    header { padding-top: 8px; padding-bottom: 8px; }
+    #city svg { height: clamp(100px, 17vh, 160px); }
+    #alerts { margin-top: 8px; }
+    #left > div:first-child { padding-top: 12px; padding-bottom: 12px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .smoke, .steam, .drive, .drive-back, .cloud, .wave, .flicker, .pop-in, .fade-in { animation: none !important; }
     .needle { transition: none; }
@@ -71,9 +97,9 @@
   </div>
 </header>
 
-<main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+<main id="layout" class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-  <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
+  <section id="city-sec" class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
     <div id="city" role="img" aria-label="Animierte Ansicht von Seestadt"></div>
     <div id="city-tip" class="hidden absolute z-10 pointer-events-none bg-slate-900/95 text-slate-100 text-xs px-2.5 py-1.5 rounded-lg border border-slate-600 shadow-lg max-w-[240px]"></div>
     <div class="absolute top-2 left-2 flex flex-wrap gap-2 text-[11px] md:text-xs pointer-events-none">
@@ -84,12 +110,12 @@
   </section>
 
   <!-- Massnahmen -->
-  <section class="lg:col-span-7 flex flex-col gap-4 min-w-0">
+  <section id="left" class="lg:col-span-7 flex flex-col gap-4 min-w-0">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 id="phase-title" class="text-base font-semibold">Wähle bis zu 4 Massnahmen</h2>
-          <p class="text-xs text-slate-400 mt-1">Jede Karte zeigt die Wirkung in drei Stufen: <strong class="text-slate-200">gross</strong>, <strong class="text-slate-200">mittel</strong> oder <strong class="text-slate-200">wenig</strong> – manchmal sogar <strong class="text-rose-300">rückläufig</strong>.</p>
+          <p id="round-desc" class="text-xs text-slate-400 mt-1">Jede Karte zeigt die Wirkung in drei Stufen: <strong class="text-slate-200">gross</strong>, <strong class="text-slate-200">mittel</strong> oder <strong class="text-slate-200">wenig</strong> – manchmal sogar <strong class="text-rose-300">rückläufig</strong>.</p>
         </div>
         <div class="text-right shrink-0">
           <div class="text-[11px] text-slate-400">Budget</div>
@@ -99,7 +125,8 @@
       <div id="alerts" class="mt-3 space-y-2"></div>
     </div>
 
-    <div class="flex flex-wrap gap-2 items-center justify-between">
+    <div id="tabbar" class="flex flex-wrap gap-2 items-center justify-between">
+      <input id="search" type="search" autocomplete="off" placeholder="Suchen …" title="Schlagwörter, z. B. Auto, Heizung, Strom, Flug, Abgabe" aria-label="Massnahmen durchsuchen" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-3 py-1.5 text-slate-200 w-44 placeholder:text-slate-500 focus:border-emerald-500 outline-none">
       <div id="tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin min-w-0"></div>
       <select id="sort" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-2 py-1.5 text-slate-300" aria-label="Sortierung">
         <option value="default">Sortieren: Bereich</option>
@@ -121,7 +148,7 @@
   </section>
 
   <!-- Dashboard -->
-  <section class="lg:col-span-5 flex flex-col gap-4 min-w-0">
+  <section id="right" class="lg:col-span-5 flex flex-col gap-4 min-w-0 scroll-thin">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3 flex justify-between items-center">
         <span>Dashboard <span id="dash-year" class="text-slate-400 font-normal">(2026)</span></span>
@@ -151,7 +178,7 @@
   </section>
 </main>
 
-<footer class="text-center text-[11px] text-slate-500 pb-4 px-4">Vereinfachtes Lernspiel: Die drei Wirkungsstufen sind Grössenordnungen, keine exakten Werte.</footer>
+<footer id="footer" class="text-center text-[11px] text-slate-500 pb-4 px-4">Vereinfachtes Lernspiel: Die drei Wirkungsstufen sind Grössenordnungen, keine exakten Werte.</footer>
 
 <canvas id="confetti" class="fixed inset-0 pointer-events-none z-[60]" style="width:100vw;height:100vh;display:none"></canvas>
 <div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
@@ -286,6 +313,25 @@ MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
 const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40', order: 0 },
               K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40', order: 1 },
               B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40', order: 2 } };
+// Kategorien als Tags: eine Massnahme kann in mehreren Kategorien erscheinen (erste = Hauptkategorie)
+const TAGS = { solar: ['energie', 'gebaeude'], balkon: ['energie', 'gebaeude'], wind: ['energie'], alpin: ['energie'], stau: ['energie'], smartgrid: ['energie'], netz: ['energie'], kern: ['energie'], gas: ['energie'],
+  wp: ['gebaeude', 'energie'], daemm: ['gebaeude'], fw: ['gebaeude', 'energie'], holz: ['gebaeude', 'kreislauf'],
+  oev: ['mobil'], ev: ['mobil'], velo: ['mobil'], nachtzug: ['mobil'], flugv: ['mobil'],
+  vegi: ['essen'], foodwaste: ['essen', 'kreislauf'], regional: ['essen'], agri: ['essen', 'energie'], humus: ['essen'],
+  recycling: ['kreislauf'], repair: ['kreislauf'], sharing: ['kreislauf'], beschaffung: ['kreislauf', 'politik'], mehrweg: ['kreislauf', 'essen'],
+  ind: ['politik', 'energie'], bildung: ['politik'], buerger: ['politik', 'energie'],
+  verbrenner: ['regeln', 'mobil'], heizverbot: ['regeln', 'gebaeude'], treibstoff: ['regeln', 'mobil'], heizoel: ['regeln', 'gebaeude'], flugabgabe: ['regeln', 'mobil'], klimabonus: ['regeln', 'politik'] };
+MEASURES.forEach(m => { m.tags = TAGS[m.id] || [m.cat]; });
+// Zusätzliche Schlagwörter für die Suche
+const KW = { solar: 'pv photovoltaik sonne dach', balkon: 'pv photovoltaik sonne steckersolar mieter', wind: 'windrad windkraft jura winterstrom', alpin: 'pv photovoltaik sonne berge alpen winterstrom',
+  stau: 'wasserkraft speicher see winterstrom', smartgrid: 'batterie speicher', netz: 'leitungen strommasten', kern: 'akw atom kernkraft', gas: 'reserve kraftwerk blackout fossil',
+  wp: 'heizung heizen ol gas', daemm: 'heizung isolation fenster haus', fw: 'heizung abwarme see', holz: 'bauen zement beton graue emissionen',
+  oev: 'tram bus bahn verkehr', ev: 'auto elektroauto e-auto laden verkehr', velo: 'fahrrad rad parkplatz verkehr', nachtzug: 'zug bahn ferien reisen flug', flugv: 'flug fliegen dienstreise zug',
+  vegi: 'fleisch essen ernahrung vegetarisch kantine', foodwaste: 'essen lebensmittel abfall', regional: 'essen lebensmittel markt', agri: 'pv solar landwirtschaft biogas bauern', humus: 'boden landwirtschaft bauern',
+  recycling: 'abfall mull', repair: 'reparieren elektronik', sharing: 'teilen ausleihen', beschaffung: 'einkauf verwaltung', mehrweg: 'abfall plastik verpackung',
+  ind: 'fabrik prozesswarme', bildung: 'schule beratung', buerger: 'genossenschaft beteiligung mitbestimmung',
+  verbrenner: 'auto benzin diesel verbot verkehr', heizverbot: 'heizung ol gas verbot', treibstoff: 'auto benzin diesel steuer preis verkehr', heizoel: 'heizung ol gas steuer preis co2-abgabe',
+  flugabgabe: 'flug fliegen steuer preis', klimabonus: 'ruckverteilung geld' };
 const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 
 const EVENTS = {
@@ -441,13 +487,13 @@ function lvBadge(label, l) {
 function polar(r, deg) { const a = (deg - 180) * Math.PI / 180; return [60 + r * Math.cos(a), 62 + r * Math.sin(a)]; }
 function arc(r, d0, d1) { const [x0, y0] = polar(r, d0), [x1, y1] = polar(r, d1); return `M${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)}`; }
 // Skalenenden zweizeilig unter dem Bogen
-const endLabel = (lines, x, anchor) => `<text x="${x}" y="71" font-size="6" fill="#94a3b8" text-anchor="${anchor}">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? 6.5 : 0}">${l}</tspan>`).join('')}</text>`;
+const endLabel = (lines, x, anchor) => `<text x="${x}" y="71" font-size="7.5" fill="#94a3b8" text-anchor="${anchor}">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? 7.5 : 0}">${l}</tspan>`).join('')}</text>`;
 // Markierung «2026» auf dem Bogen der CO₂-Anzeigen (gespiegelt: links = kein Ausstoss)
 function mark2026(id) {
   const deg = (100 - CFG.start[id]) * 1.8;
   const [x0, y0] = polar(40, deg), [x1, y1] = polar(53, deg), [tx, ty] = polar(63, deg);
   return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#f8fafc" stroke-width="1.5"/>
-    <text x="${tx.toFixed(1)}" y="${(ty + 2).toFixed(1)}" font-size="6" font-weight="700" fill="#e2e8f0" text-anchor="middle">2026</text>`;
+    <text x="${Math.min(Math.max(tx, 12), 107).toFixed(1)}" y="${(ty + 2.5).toFixed(1)}" font-size="7.5" font-weight="700" fill="#e2e8f0" text-anchor="middle">2026</text>`;
 }
 function buildGauges() {
   const up = [[0, 0.34 * 180 - 1, 'var(--bad)'], [0.34 * 180 + 1, 0.67 * 180 - 1, 'var(--mid)'], [0.67 * 180 + 1, 180, 'var(--good)']];
@@ -456,7 +502,7 @@ function buildGauges() {
     <div class="bg-slate-900/60 rounded-xl border border-slate-700 p-2.5" id="gw-${g.id}">
       <div class="text-[11px] text-slate-300 font-semibold leading-tight"><span aria-hidden="true">${g.icon}</span> ${g.label}</div>
       <div class="text-[10px] text-slate-500 leading-tight min-h-[26px]">${g.sub}</div>
-      <svg viewBox="0 0 120 80" class="w-full max-w-[170px] mx-auto block" role="img" aria-label="${g.label}">
+      <svg viewBox="0 0 120 82" class="w-full max-w-[170px] mx-auto block" role="img" aria-label="${g.label}">
         ${segs.map(([a, b, c]) => `<path d="${arc(46, a, b)}" stroke="${c}" stroke-width="11" fill="none"/>`).join('')}
         ${[0, 45, 90, 135, 180].map(d => { const [x0, y0] = polar(33, d), [x1, y1] = polar(37, d); return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#64748b" stroke-width="1"/>`; }).join('')}
         <g class="needle" id="nd-${g.id}" style="transform: rotate(-90deg)"><line x1="60" y1="62" x2="60" y2="22" stroke="#f8fafc" stroke-width="2.5" stroke-linecap="round"/></g>
@@ -483,6 +529,23 @@ function updateGauges() {
   const sc = score(S);
   $('stars').textContent = `${'★'.repeat(sc)}${'☆'.repeat(10 - sc)} ${sc}/10`;
 }
+
+
+// ---------- Suche (Schlagwörter, Umlaute egal, mehrere Wörter = alle müssen passen) ----------
+let query = '';
+const norm = t => String(t).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
+const searchCache = {};
+function searchText(m) {
+  if (!searchCache[m.id]) searchCache[m.id] = norm([m.title, m.desc || '', m.effect || '', m.why || '', m.tags.map(t => CATS.find(c => c.id === t).label).join(' '), LVL[m.lvl] ? LVL[m.lvl].t : '', KW[m.id] || ''].join(' '));
+  return searchCache[m.id];
+}
+function matchesQuery(m) { const words = norm(query).split(/\s+/).filter(Boolean); return !words.length || words.every(w => searchText(m).includes(w)); }
+function setupSearch(rerender) {
+  const inp = $('search');
+  inp.addEventListener('input', () => { query = inp.value; if (query.trim()) setCatAll(); rerender(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Escape') { inp.value = ''; query = ''; rerender(); } });
+}
+function setCatAll() { cat = 'all'; }
 
 // ---------- Render ----------
 function renderAll() { renderHeader(); renderAlerts(); renderTabs(); renderGrid(); renderTray(); updateGauges(); renderTemp(); renderLog(); renderCity(); }
@@ -542,7 +605,7 @@ function alertBox(cls, html) { return `<div class="rounded-lg px-3 py-2 text-xs 
 function renderAlerts() {
   const a = [];
   if (!S.over) {
-    a.push(alertBox('bg-slate-900/60 border-slate-700 text-slate-300', `Budget: <strong class="text-amber-300">${S.coins} Punkte</strong> (● = 1 Punkt). Jede Legislatur kommen ${CFG.coinsPerRound} dazu, Unverbrauchtes bleibt.`));
+    a.push(alertBox('alert-budget bg-slate-900/60 border-slate-700 text-slate-300', `Budget: <strong class="text-amber-300">${S.coins} Punkte</strong> (● = 1 Punkt). Jede Legislatur kommen ${CFG.coinsPerRound} dazu, Unverbrauchtes bleibt.`));
     if (S.round <= 2 && !has(S, 'kern')) a.push(alertBox('bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 geht ein Kernkraftwerk vom Netz: Die Stromversorgung fällt dann um ' + CFG.kernDrop + ' Punkte.'));
     if (S.picks < CFG.picks) a.push(alertBox('bg-amber-500/10 border-amber-500/30 text-amber-200', `Gegenwind im Parlament: Diese Legislatur sind nur ${S.picks} Beschlüsse möglich. Beliebte Massnahmen helfen.`));
   }
@@ -550,9 +613,9 @@ function renderAlerts() {
 }
 
 function renderTabs() {
-  const avail = MEASURES.filter(m => !has(S, m.id));
+  const avail = MEASURES.filter(m => !has(S, m.id) && matchesQuery(m));
   const btn = (id, label, n) => `<button data-cat="${id}" class="px-3 py-1.5 rounded-lg font-medium whitespace-nowrap border ${cat === id ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}">${label} <span class="opacity-60">${n}</span></button>`;
-  $('tabs').innerHTML = btn('all', 'Alle', avail.length) + CATS.map(c => btn(c.id, `${c.icon} ${c.label}`, avail.filter(m => m.cat === c.id).length)).join('');
+  $('tabs').innerHTML = btn('all', 'Alle', avail.length) + CATS.map(c => btn(c.id, `${c.icon} ${c.label}`, avail.filter(m => m.tags.includes(c.id)).length)).join('');
   $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderTabs(); renderGrid(); });
 }
 
@@ -574,7 +637,7 @@ function renderGrid() {
     $('g-final').onclick = showFinal; $('g-again').onclick = () => start(S.code);
     return;
   }
-  const list = MEASURES.filter(m => !has(S, m.id) && (cat === 'all' || m.cat === cat));
+  const list = MEASURES.filter(m => !has(S, m.id) && (cat === 'all' || m.tags.includes(cat)) && matchesQuery(m));
   const key = (m, l) => (l.none ? 0.5 : l.lv);
   const climSum = m => CLIMATE.reduce((a, d) => a + (m.fx[d] ? CFG.pts[m.fx[d]] : 0), 0);
   if (sortMode === 'klima') list.sort((a, b) => key(b, climateLevel(b)) - key(a, climateLevel(a)) || climSum(b) - climSum(a));
@@ -582,6 +645,7 @@ function renderGrid() {
   if (sortMode === 'kosten') list.sort((a, b) => a.cost - b.cost);
   if (sortMode === 'ebene') list.sort((a, b) => LVL[a.lvl].order - LVL[b.lvl].order);
   grid.innerHTML = '';
+  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versuche ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
   for (const m of list) {
     const sel = selected.includes(m.id), block = blockReason(m.id);
     const cl = climateLevel(m), pw = powerLevel(m);
@@ -598,7 +662,7 @@ function renderGrid() {
     c.innerHTML = `
       <div>
         <div class="flex justify-between items-center mb-1">
-          <span class="text-[10px] text-slate-400 flex items-center gap-1.5"><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${catInfo.icon} ${catInfo.label}</span>
+          <span class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1.5"><span class="px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${m.tags.map(t => { const c = CATS.find(x => x.id === t); return `${c.icon} ${c.label}`; }).join(' · ')}</span>
           <span class="w-5 h-5 rounded-full grid place-items-center text-[11px] ${sel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}">${sel ? '✓' : '+'}</span>
         </div>
         <h4 class="font-semibold text-[14px] leading-tight flex gap-2"><span aria-hidden="true">${m.icon}</span><span>${m.title}</span></h4>
@@ -882,6 +946,7 @@ function cityTitlesToTips() {
 // ---------- Start ----------
 window.addEventListener('DOMContentLoaded', () => {
   buildGauges(); renderLegend(); setupCityTips();
+  setupSearch(() => { renderTabs(); renderGrid(); });
   $('sort').onchange = e => { sortMode = e.target.value; renderGrid(); };
   $('btn-confirm').onclick = confirmRound;
   $('btn-new').onclick = intro;

@@ -76,6 +76,35 @@
   .bubble { position: relative; background: #fff; border: 1px solid #d6d3d1; }
 
   .badge-locked { filter: grayscale(1); opacity: .35; }
+  /* Ein-Bildschirm-Ansicht für grosse Bildschirme: Seite scrollt nicht, Karten und Dashboard scrollen je für sich */
+  @media (min-width: 1024px) and (min-height: 720px) {
+    html, body { height: 100%; }
+    body { overflow: hidden; }
+    header, nav { flex-shrink: 0; }
+    #layout { flex: 1 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); row-gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+    #city svg { height: clamp(110px, 18vh, 200px); }
+    #phase-desc, .alert-budget, #forecast .fc-head, #forecast .fc-target { display: none; }
+    #forecast { margin-top: 8px; }
+    #left, #right { min-height: 0; }
+    #left { gap: 10px; }
+    #tabbar { flex-wrap: nowrap; }
+    #cat-tabs { flex: 1 1 auto; }
+    #sort-select, #search { flex: 0 0 auto; }
+    #measures-grid { max-height: none; flex: 1 1 auto; min-height: 0; }
+    #selection-panel { flex: 0 0 auto; padding-top: 12px; padding-bottom: 12px; }
+    #right { overflow-y: auto; padding-right: 4px; gap: 12px; }
+    #footer { display: none; }
+  }
+  @media (min-width: 1024px) and (min-height: 720px) and (max-height: 949px) {
+    header { padding-top: 8px; padding-bottom: 8px; }
+    nav { padding-top: 4px; padding-bottom: 4px; }
+    #city svg { height: clamp(90px, 15vh, 140px); }
+    #round-alerts { margin-top: 8px; }
+    #measures-grid .m-desc, #measures-grid .m-bg { display: none; }
+    #forecast > div { padding: 4px 8px; }
+    #forecast .text-sm { font-size: 12px; line-height: 16px; }
+    #left > div:first-child { padding-top: 12px; padding-bottom: 12px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .spin, .smoke, .steam, .drive, .drive-back, .cloud, .wave, .swing, .flicker, .blackout, .pop-in, .fade-in { animation: none !important; }
     .flip-inner { transition: none; }
@@ -115,7 +144,7 @@
   <ol id="timeline" class="flex items-center gap-2 text-xs min-w-max max-w-7xl mx-auto"></ol>
 </nav>
 
-<main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+<main id="layout" class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
   <!-- Stadtpanorama -->
   <section class="lg:col-span-12 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl bg-slate-800">
@@ -129,7 +158,7 @@
   </section>
 
   <!-- Linke Spalte -->
-  <section class="lg:col-span-7 flex flex-col gap-4 min-w-0">
+  <section id="left" class="lg:col-span-7 flex flex-col gap-4 min-w-0">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
@@ -141,8 +170,9 @@
       <div id="round-alerts" class="mt-3 space-y-2"></div>
     </div>
 
-    <div class="flex flex-wrap gap-2 items-center justify-between">
-      <div id="cat-tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin"></div>
+    <div id="tabbar" class="flex flex-wrap gap-2 items-center justify-between">
+      <input id="search" type="search" autocomplete="off" placeholder="Suchen …" title="Schlagwörter, z. B. Auto, Heizung, Strom, Flug, Abgabe" aria-label="Massnahmen durchsuchen" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-3 py-1.5 text-slate-200 w-44 placeholder:text-slate-500 focus:border-emerald-500 outline-none">
+      <div id="cat-tabs" class="flex gap-2 overflow-x-auto pb-1 text-xs scroll-thin min-w-0"></div>
       <select id="sort-select" class="bg-slate-800 border border-slate-700 rounded-lg text-xs px-2 py-1.5 text-slate-300">
         <option value="default">Sortierung: Kategorie</option>
         <option value="cost">Kosten aufsteigend</option>
@@ -170,7 +200,7 @@
   </section>
 
   <!-- Rechte Spalte -->
-  <section class="lg:col-span-5 flex flex-col gap-4 min-w-0">
+  <section id="right" class="lg:col-span-5 flex flex-col gap-4 min-w-0 scroll-thin">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3 flex items-center justify-between">
         <span><i class="fa-solid fa-gauge-high text-emerald-400 mr-2"></i>Lage der Stadt <span id="kpi-year" class="text-slate-400 font-normal">(2026)</span></span>
@@ -207,7 +237,7 @@
   </section>
 </main>
 
-<footer class="text-center text-[11px] text-slate-500 pb-4 px-4">Stilisiertes Lernmodell mit plausiblen Grössenordnungen – keine Prognose. Details unter «Modell».</footer>
+<footer id="footer" class="text-center text-[11px] text-slate-500 pb-4 px-4">Stilisiertes Lernmodell mit plausiblen Grössenordnungen – keine Prognose. Details unter «Modell».</footer>
 
 <canvas id="confetti" class="fixed inset-0 pointer-events-none z-[60]" style="width:100vw;height:100vh;display:none"></canvas>
 
@@ -377,6 +407,22 @@ const LEVEL = { solar: 'K', agri: 'K', wind: 'K', alpin: 'B', kern: 'G', gas: 'B
   verbrenner: 'B', heizverbot: 'K', treibstoff: 'B', heizoel: 'B', klimabonus: 'B' };
 MEASURES.forEach(m => { m.lvl = LEVEL[m.id]; });
 const LVL = { G: { t: 'Gemeinde', cls: 'bg-sky-500/15 text-sky-200 border-sky-500/40' }, K: { t: 'Kanton', cls: 'bg-violet-500/15 text-violet-200 border-violet-500/40' }, B: { t: 'Bund', cls: 'bg-rose-500/15 text-rose-200 border-rose-500/40' } };
+// Kategorien als Tags: eine Massnahme kann in mehreren Kategorien erscheinen (erste = Hauptkategorie)
+const TAGS = { solar: ['erneuerbar'], agri: ['erneuerbar', 'industrie'], wind: ['erneuerbar'], alpin: ['erneuerbar'],
+  kern: ['versorgung'], gas: ['versorgung'], netz: ['versorgung'], smartgrid: ['versorgung'], pump: ['versorgung'], stau: ['versorgung', 'erneuerbar'], smartmeter: ['versorgung'],
+  wp: ['waerme'], daemm: ['waerme'], fw: ['waerme', 'erneuerbar'], see: ['waerme', 'erneuerbar'],
+  oev: ['mobil'], ev: ['mobil'], velo: ['mobil'],
+  ind: ['industrie', 'waerme'], h2: ['industrie', 'versorgung'], last: ['industrie', 'versorgung'],
+  buerger: ['politik', 'erneuerbar'], bond: ['politik'],
+  verbrenner: ['regeln', 'mobil'], heizverbot: ['regeln', 'waerme'], treibstoff: ['regeln', 'mobil'], heizoel: ['regeln', 'waerme'], klimabonus: ['regeln', 'politik'] };
+MEASURES.forEach(m => { m.tags = TAGS[m.id] || [m.cat]; });
+// Zusätzliche Schlagwörter für die Suche
+const KW = { solar: 'pv photovoltaik sonne dach', agri: 'pv photovoltaik sonne landwirtschaft bauern biogas', wind: 'windrad windkraft jura winterstrom', alpin: 'pv photovoltaik sonne berge alpen winterstrom',
+  kern: 'akw atom kernkraft', gas: 'reserve kraftwerk blackout fossil wasserstoff', netz: 'leitungen strommasten', smartgrid: 'batterie speicher', pump: 'speicher wasserkraft', stau: 'wasserkraft speicher see winterstrom', smartmeter: 'zahler tarif strompreis',
+  wp: 'heizung heizen ol gas', daemm: 'heizung isolation fenster haus', fw: 'heizung erdwarme bohrung', see: 'heizung abwarme',
+  oev: 'tram bus bahn verkehr', ev: 'auto elektroauto e-auto laden verkehr', velo: 'fahrrad rad parkplatz verkehr',
+  ind: 'fabrik prozesswarme gas', h2: 'wasserstoff speicher', last: 'flexibilitat fabrik', buerger: 'genossenschaft beteiligung mitbestimmung', bond: 'kredit schulden anleihe geld',
+  verbrenner: 'auto benzin diesel verbot verkehr', heizverbot: 'heizung ol gas verbot', treibstoff: 'auto benzin diesel steuer preis verkehr', heizoel: 'heizung ol gas steuer preis co2-abgabe', klimabonus: 'ruckverteilung geld' };
 const M = Object.fromEntries(MEASURES.map(m => [m.id, m]));
 const SHORT = { solar: 'Dach-Solar', agri: 'Agri-PV', wind: 'Wind', alpin: 'Alpin-Solar', kern: 'Kernstrom', gas: 'Reservekraftwerk', netz: 'Netzausbau',
   smartgrid: 'Batterien', pump: 'Pumpspeicher', stau: 'Staumauer', smartmeter: 'Smart Meter', wp: 'Wärmepumpen', daemm: 'Sanierung', fw: 'Geothermie',
@@ -874,6 +920,23 @@ function marginal(id) {
   return { co2: withM.co2pct - base.co2pct, sec: withM.sec - base.sec, self: Math.round((withM.selfW - base.selfW) * 100) };
 }
 
+
+// ---------- Suche (Schlagwörter, Umlaute egal, mehrere Wörter = alle müssen passen) ----------
+let query = '';
+const norm = t => String(t).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
+const searchCache = {};
+function searchText(m) {
+  if (!searchCache[m.id]) searchCache[m.id] = norm([m.title, m.desc || '', m.effect || '', m.why || '', m.tags.map(t => CATS.find(c => c.id === t).label).join(' '), LVL[m.lvl] ? LVL[m.lvl].t : '', KW[m.id] || ''].join(' '));
+  return searchCache[m.id];
+}
+function matchesQuery(m) { const words = norm(query).split(/\s+/).filter(Boolean); return !words.length || words.every(w => searchText(m).includes(w)); }
+function setupSearch(rerender) {
+  const inp = $('search');
+  inp.addEventListener('input', () => { query = inp.value; if (query.trim()) setCatAll(); rerender(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Escape') { inp.value = ''; query = ''; rerender(); } });
+}
+function setCatAll() { activeCat = 'all'; }
+
 // ---------- Rendering ----------
 function renderAll() {
   renderHeader(); renderTimeline(); renderAlerts(); renderTabs(); renderMeasures();
@@ -911,7 +974,7 @@ function alertBox(icon, cls, html) { return `<div class="flex gap-2 items-start 
 function renderAlerts() {
   const a = [];
   if (S.over) { $('round-alerts').innerHTML = ''; return; }
-  a.push(alertBox('fa-wallet', 'bg-slate-900/60 border-slate-700 text-slate-300', `Verfügbar: <strong class="${S.budget < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget)} Mio. CHF</strong> · Kreditlimit bis ${CFG.minBudget} Mio. (10 % Zins pro Legislatur) · Einnahmen +${CFG.income} Mio. pro Legislatur.`));
+  a.push(alertBox('fa-wallet', 'alert-budget bg-slate-900/60 border-slate-700 text-slate-300', `Verfügbar: <strong class="${S.budget < 0 ? 'text-rose-400' : 'text-emerald-400'}">${fmt(S.budget)} Mio. CHF</strong> · Kreditlimit bis ${CFG.minBudget} Mio. (10 % Zins pro Legislatur) · Einnahmen +${CFG.income} Mio. pro Legislatur.`));
   if (S.round <= 2 && !S.chosen.some(c => c.id === 'kern')) a.push(alertBox('fa-atom', 'bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 läuft der Kernstrom-Liefervertrag aus: <strong>150 GWh Winterstrom</strong> fallen weg. Ersatz, Verlängerung oder Import?'));
   if (S.discounts.length) a.push(alertBox('fa-tags', 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200', 'Rabatt diese Legislatur: ' + S.discounts.map(d => `<strong>${Math.round((1 - d.f) * 100)} %</strong> auf «${d.cat ? catOf(d.cat).label : M[d.id].title}»`).join(', ') + '.'));
   if (S.protest) a.push(alertBox('fa-bullhorn', 'bg-amber-500/10 border-amber-500/30 text-amber-200', 'Bürgerinitiative aktiv: Infrastrukturprojekte kosten diese Legislatur 50 % mehr Akzeptanz.'));
@@ -922,8 +985,8 @@ function renderAlerts() {
 
 function renderTabs() {
   const counts = {};
-  MEASURES.forEach(m => counts[m.cat] = (counts[m.cat] || 0) + (isAvailable(m.id) ? 1 : 0));
-  const total = MEASURES.filter(m => isAvailable(m.id)).length;
+  MEASURES.forEach(m => m.tags.forEach(t => { counts[t] = (counts[t] || 0) + (isAvailable(m.id) && matchesQuery(m) ? 1 : 0); }));
+  const total = MEASURES.filter(m => isAvailable(m.id) && matchesQuery(m)).length;
   const btn = (id, label, n) => `<button data-cat="${id}" class="cat-btn px-3 py-1.5 rounded-lg font-medium whitespace-nowrap border ${activeCat === id ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}">${label} <span class="opacity-60">${n}</span></button>`;
   $('cat-tabs').innerHTML = btn('all', 'Alle', total) + CATS.map(c => btn(c.id, c.label, counts[c.id] || 0)).join('');
   document.querySelectorAll('.cat-btn').forEach(b => b.onclick = () => { activeCat = b.dataset.cat; renderTabs(); renderMeasures(); });
@@ -953,7 +1016,7 @@ function renderMeasures() {
       </div></div>`;
     return;
   }
-  let list = MEASURES.filter(m => isAvailable(m.id) && (activeCat === 'all' || m.cat === activeCat));
+  let list = MEASURES.filter(m => isAvailable(m.id) && (activeCat === 'all' || m.tags.includes(activeCat)) && matchesQuery(m));
   const marg = Object.fromEntries(list.map(m => [m.id, marginal(m.id)]));
   if (sortMode === 'cost') list.sort((a, b) => effectiveCost(S, a.id) - effectiveCost(S, b.id));
   if (sortMode === 'co2') list.sort((a, b) => marg[a.id].co2 - marg[b.id].co2);
@@ -961,7 +1024,7 @@ function renderMeasures() {
   if (sortMode === 'pop') list.sort((a, b) => popEffect(S, b.id, selected) - popEffect(S, a.id, selected));
 
   grid.innerHTML = '';
-  if (!list.length) { grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-500 text-xs">Keine Massnahmen mehr in dieser Kategorie.</div>'; return; }
+  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versuche ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
 
   for (const m of list) {
     const isSel = selected.includes(m.id);
@@ -997,11 +1060,11 @@ function renderMeasures() {
     card.innerHTML = `
       <div>
         <div class="flex items-center justify-between mb-1.5 gap-2">
-          <span class="flex items-center gap-1.5"><span class="text-[10px] px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span><span class="text-[10px] px-2 py-0.5 rounded font-medium ${cat.cls}">${cat.label}</span></span>
+          <span class="flex flex-wrap items-center gap-1.5"><span class="text-[10px] px-1.5 py-px rounded border font-semibold ${LVL[m.lvl].cls}" title="Wer entscheidet">${LVL[m.lvl].t}</span>${m.tags.map(t => { const c = catOf(t); return `<span class="text-[10px] px-2 py-0.5 rounded font-medium ${c.cls}">${c.label}</span>`; }).join('')}</span>
           <div class="w-5 h-5 rounded-full grid place-items-center text-[10px] ${isSel ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-600 text-slate-500'}"><i class="fa-solid ${isSel ? 'fa-check' : 'fa-plus'}"></i></div>
         </div>
         <h4 class="font-semibold text-slate-100 text-[13px] leading-tight flex gap-2"><i class="fa-solid ${m.icon} text-emerald-400 mt-0.5"></i><span>${m.title}</span></h4>
-        <p class="text-[11px] text-slate-400 mt-1 leading-snug">${m.desc}</p>
+        <p class="m-desc text-[11px] text-slate-400 mt-1 leading-snug">${m.desc}</p>
         <p class="text-[11px] text-slate-200 mt-1.5 leading-snug"><i class="fa-solid fa-bolt text-teal-400 mr-1"></i>${m.effect}</p>
         ${fcst}
         ${syn ? `<div class="mt-2 flex flex-wrap gap-1 text-[10px]">${syn}</div>` : ''}
@@ -1013,7 +1076,7 @@ function renderMeasures() {
         <span title="Fertigstellung">Bau: <strong class="${m.build ? 'text-sky-300' : 'text-slate-200'}">${m.build ? '→ ' + readyYear : 'sofort'}</strong></span>
         <span title="Wirkung auf die Akzeptanz">Akzeptanz: <strong class="${pop > 0 ? 'text-emerald-400' : pop < 0 ? 'text-rose-400' : 'text-slate-300'}">${sign(pop)}</strong></span>
       </div>
-      <details class="mt-2 text-[11px] text-slate-400">
+      <details class="m-bg mt-2 text-[11px] text-slate-400">
         <summary class="hover:text-slate-200"><i class="fa-solid fa-lightbulb mr-1 text-amber-300"></i>Hintergrund</summary>
         <p class="mt-1 leading-snug">${m.fact}</p>
       </details>`;
@@ -1034,7 +1097,7 @@ function deltaCell(label, now, then, unit, goodIfUp, target) {
   return `<div class="bg-slate-900/60 rounded-lg p-2 border border-slate-700">
     <div class="text-slate-400">${label}</div>
     <div class="font-bold text-slate-100 text-sm">${fmt(then)}${unit} <span class="${d === 0 ? 'text-slate-500' : good ? 'text-emerald-400' : 'text-rose-400'} text-[11px] font-semibold">${sign(d)}</span></div>
-    ${target ? `<div class="text-[10px] text-slate-500">${target}</div>` : ''}</div>`;
+    ${target ? `<div class="fc-target text-[10px] text-slate-500">${target}</div>` : ''}</div>`;
 }
 
 function renderSelection() {
@@ -1058,7 +1121,7 @@ function renderSelection() {
   const finSel = projected(selected, 'final');
   $('forecast').innerHTML = expert
     ? '<div class="col-span-full text-[11px] text-slate-500"><i class="fa-solid fa-eye-slash mr-1"></i>Expertenmodus: keine Prognosen. Entscheide mit Modellwissen und Strombilanz.</div>'
-    : `<div class="col-span-full text-[11px] text-slate-400">Prognose ohne Zufallsereignisse · <span class="text-slate-500">Ende ${CFG.years[S.round - 1][1]} (nur Fertiges) und 2045 (alles Beschlossene fertig)</span></div>` +
+    : `<div class="fc-head col-span-full text-[11px] text-slate-400">Prognose ohne Zufallsereignisse · <span class="text-slate-500">Ende ${CFG.years[S.round - 1][1]} (nur Fertiges) und 2045 (alles Beschlossene fertig)</span></div>` +
       deltaCell(`CO₂ ${CFG.years[S.round - 1][1]}`, endBase.co2pct, endSel.co2pct, ' %', false, `Pfad ≤ ${CFG.co2Path[S.round]} %`) +
       deltaCell(`Sicherheit ${CFG.years[S.round - 1][1]}`, endBase.sec, endSel.sec, '', true, `Ziel ≥ ${CFG.secTarget}`) +
       deltaCell('CO₂ 2045', projected([], 'final').co2pct, finSel.co2pct, ' %', false, `Ziel ≤ ${CFG.co2Target} %`) +
@@ -1693,6 +1756,7 @@ function showModelInfo(fromIntro) {
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.chart-tab').forEach(b => b.onclick = () => { chartTab = b.dataset.tab; renderChart(); });
   setupCityTips();
+  setupSearch(() => { renderTabs(); renderMeasures(); });
   $('sort-select').onchange = e => { sortMode = e.target.value; renderMeasures(); };
   $('expert-toggle').onchange = e => { expert = e.target.checked; store('pfs-expert', expert); renderMeasures(); renderSelection(); };
   expert = !!store('pfs-expert'); $('expert-toggle').checked = expert;
