@@ -859,6 +859,7 @@ function showFinal() {
       <div class="text-xs text-slate-400 mt-1">${sc} von 10 Sternen (Anzeigen 60 %, Erwärmung 40 %) · Szenario ${S.code}</div></div>
     <div class="flex flex-wrap justify-center gap-2 text-xs">${['G', 'K', 'B'].map(l => `<span class="px-2 py-0.5 rounded border ${LVL[l].cls}">${LVL[l].t}: ${S.chosen.filter(c => M[c.id].lvl === l).length} Beschlüsse</span>`).join('')}</div>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
+    ${futureFig(citySnapshot(S.chosen.map(c => c.id), S.g, warming(S.g).t2100, 'end'), 'So wird Seestadt 2100 – wenn alle so handeln wie ihr', '', '#e2e8f0')}
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
       <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
       <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong><div class="text-[10px] text-slate-400">wahrscheinlich ${rangeStr(warming(S.g).t2100)} °C</div></div>
@@ -882,11 +883,12 @@ function confetti() {
     if (t - t0 < 4500) requestAnimationFrame(f); else { g.clearRect(0, 0, c.width, c.height); c.style.display = 'none'; } })(t0);
 }
 
-function modal(icon, title, html, actions) {
+function modal(icon, title, html, actions, wide = false) {
   $('m-icon').textContent = icon; $('m-title').textContent = title; $('m-body').innerHTML = html; $('m-actions').innerHTML = '';
   for (const a of actions) { const b = document.createElement('button'); b.textContent = a.label;
     b.className = a.primary ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-2.5 rounded-xl font-semibold text-sm' : 'bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl font-semibold text-sm border border-slate-600';
     b.onclick = a.fn; $('m-actions').appendChild(b); }
+  $('modal').firstElementChild.style.maxWidth = wide ? '50rem' : '';
   $('modal').classList.remove('hidden'); $('modal').firstElementChild.scrollTop = 0;
   const last = $('m-actions').querySelector('button:last-child'); if (last) last.focus({ preventScroll: true });
 }
@@ -897,20 +899,26 @@ function start(code) { holdDash = false; pendingAfter = null; shownG = {}; tempS
 
 function intro() {
   const code = randomCode();
-  modal('🏙️', 'Seestadt 2045 – einfache Version', `
+  modal('🏙️', 'Welche Stadt wird es? Ihr entscheidet!', `
+    <div style="display:grid;gap:8px">
+      ${futureFig(FUTURE.bau(), 'Ohne Klimaschutz · +2,7 °C', 'Gletscher fast weg, Felder ausgetrocknet', '#f87171')}
+      ${futureFig(FUTURE.gut(), 'Mit Klimaschutz · +1,5 °C', 'Gletscher kleiner, Felder grün', '#34d399')}
+    </div>
+    <p style="font-size:11px;text-align:center;color:#64748b;margin-top:4px">Seestadt im Jahr 2100 – wenn alle so handeln.</p>
     <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
-    <ul class="list-disc pl-5 text-xs space-y-1">
+    <details class="text-xs"><summary class="cursor-pointer text-slate-400 hover:text-slate-200">So geht’s ▾</summary>
+    <ul class="list-disc pl-5 text-xs space-y-1 mt-2">
       <li>4 Legislaturen, je bis zu <strong>${CFG.picks} Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
       <li>Jede Massnahme zeigt ihre Wirkung auf <strong>Klima</strong> und <strong>Strom</strong> in drei Stufen: gross, mittel, wenig – manchmal sogar rückläufig.</li>
       <li>Ziel: <strong>weniger CO₂</strong> – im Inland, beim <strong>Fliegen</strong> und bei <strong>Waren</strong> aus dem Ausland. Dazu sichere Stromversorgung und Kreislauf.</li>
       <li>Ende 2034 fällt ein Teil der Stromversorgung weg. Jede Legislatur bringt ein Ereignis.</li>
-    </ul>
+    </ul></details>
     <label class="block text-xs text-slate-400">Szenario-Code (gleicher Code = gleiche Ereignisse)
       <input id="in-code" value="${code}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase"></label>
     <p class="text-[10px] text-slate-500 border-t border-slate-700 pt-2">Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.</p>`,
     [{ label: '🖨 Karten (Hybrid)', fn: () => window.open('einfach.html?karten', '_blank') },
      { label: 'Zur komplexen Version', fn: () => $('link-complex').click() },
-     { label: 'Los geht’s', primary: true, fn: () => { const v = ($('in-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || code; close(); start(v); } }]);
+     { label: 'Los geht’s', primary: true, fn: () => { const v = ($('in-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || code; close(); start(v); } }], true);
 }
 
 // ---------- Stadtpanorama ----------
@@ -933,6 +941,24 @@ function releaseDash() {
   const after = pendingAfter; pendingAfter = null;
   if (after) setTimeout(after, REDUCED ? 0 : 1700);
 }
+let cityHeat = null;
+// Bild von Seestadt mit anderen Beschlüssen/Anzeigen und Erwärmung T (für Start- und Schlussbild)
+function citySnapshot(ids, g, T, key, vb = '-40 40 1080 200') {
+  const keep = { S, selected, justBuilt, holdDash };
+  S = { ...S, chosen: ids.map(id => ({ id, round: 1 })), g: { ...g }, history: [CFG.start, {}, {}, {}, {}] };
+  selected = []; justBuilt = new Set(); holdDash = false; cityHeat = T;
+  let inner = '';
+  try { renderCity(); inner = $('city').querySelector('svg').innerHTML.replace(/g-sky/g, 'g-sky-' + key); }
+  finally { S = keep.S; selected = keep.selected; justBuilt = keep.justBuilt; cityHeat = null; holdDash = false; renderCity(); holdDash = keep.holdDash; }
+  return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMax slice" style="--x0:-200px;--x1:900px;--cx0:-260px;--cx1:960px;display:block;width:100%;height:100%" aria-hidden="true">${inner}</svg>`;
+}
+const FUTURE = {
+  bau: () => citySnapshot([], { co2: 18, strom: 30, flug: 28, waren: 24, kreis: 30, acc: 50 }, TEMP.bau, 'bau'),
+  gut: () => citySnapshot(['wind', 'alpin', 'solar', 'balkon', 'oev', 'velo', 'ev', 'fw', 'daemm', 'agri', 'smartgrid', 'recycling', 'repair', 'sharing', 'vegi', 'nachtzug', 'ind'], { co2: 85, strom: 80, flug: 70, waren: 75, kreis: 78, acc: 70 }, TEMP.best, 'gut')
+};
+const futureFig = (svg, head, sub, col, h = 132) => `<figure style="margin:0;position:relative;height:${h}px;border-radius:12px;overflow:hidden;border:1px solid #334155">${svg}
+  <figcaption style="position:absolute;left:8px;bottom:12px;background:rgba(15,23,42,.82);border-radius:8px;padding:4px 9px;font-size:12px;line-height:1.35"><strong style="color:${col}">${head}</strong>${sub ? `<br><span style="color:#cbd5e1">${sub}</span>` : ''}</figcaption></figure>`;
+
 function renderCity() {
   if (holdDash) return;
   const g = S.g;
@@ -944,6 +970,12 @@ function renderCity() {
   const dirt = clamp(1 - climate / 75);
   const fossW = 0.8 * clamp(1 - g.co2 / 85 - (on('heizverbot') ? 0.2 : 0)), fossV = 0.95 * clamp(1 - g.co2 / 85 - (on('ev') ? 0.25 : 0) - (on('verbrenner') ? 0.35 : 0));
   const dark = g.strom < 30;
+  // Landschaft 2100 je nach Erwärmung (nur für Zukunftsbilder; im Spiel: heute)
+  const heatT = cityHeat ?? TEMP.now;
+  const ice = heatT <= 1.3 ? 1 : heatT <= 1.5 ? 1 - 2 * (heatT - 1.3) : Math.max(0.08, 0.6 - 0.4 * (heatT - 1.5));
+  const dry = 0.85 * clamp((heatT - 1.5) / 1.2), grA = mixHex('#5b8a1f', '#b8954a', dry), grB = mixHex('#4d7c0f', '#a07f3a', dry);
+  const cap = (x, y, h) => { h *= ice; const w = 0.55 * h; return `<polygon points="${x},${y} ${(x + w).toFixed(1)},${(y + h).toFixed(1)} ${(x + w * 0.35).toFixed(1)},${(y + h * 0.8).toFixed(1)} ${x},${(y + h * 0.95).toFixed(1)} ${(x - w * 0.4).toFixed(1)},${(y + h * 0.78).toFixed(1)} ${(x - w).toFixed(1)},${(y + h).toFixed(1)}"/>`; };
+  const caps = pk => `<g fill="#f8fafc"><title>Gletscher</title>${pk.map(p => cap(...p)).join('')}</g>`;
   const o = [];
   const puff = (x, y, col, r, dur, delay, kind = 'smoke') => `<circle class="${kind}" cx="${x}" cy="${y}" r="${r}" fill="${col}" style="animation-duration:${dur}s;animation-delay:-${delay}s"/>`;
 
@@ -955,17 +987,17 @@ function renderCity() {
   for (let k = 0; k < planes; k++) o.push(`<g class="cloud" style="animation-duration:${26 + k * 9}s;animation-delay:-${k * 11}s"><g transform="translate(0,${26 + k * 16})"><title>Flugverkehr</title><line x1="-90" y1="0" x2="-6" y2="0" stroke="#fff" stroke-width="1.5" opacity=".6"/><path d="M0,0 L-14,-2 L-18,-7 L-15,-7 L-9,-2 L-2,-2 L-6,-9 L-2,-9 L6,-2 L12,-1 L12,1 L6,2 L-2,9 L-6,9 L-2,2 L-9,2 L-15,7 L-18,7 L-14,2 Z" fill="#f8fafc" transform="scale(.9)"/></g></g>`);
 
   // Alpen, Speichersee
-  o.push(`<polygon points="-1100,175 -1060,128 -1000,148 -930,96 -870,134 -800,122 -800,175" fill="#7b8aa0"/><g fill="#f8fafc"><polygon points="-940,110 -930,96 -919,111 -927,107"/></g><polygon points="-800,175 -760,122 -705,140 -640,84 -585,128 -520,102 -462,146 -400,96 -342,124 -280,68 -222,116 -160,90 -100,134 -40,104 30,175" fill="#7b8aa0"/><polygon points="-640,84 -585,128 -610,128 -632,104" fill="#64748b" opacity=".6"/><polygon points="-280,68 -222,116 -250,116 -272,92" fill="#64748b" opacity=".6"/><g fill="#f8fafc"><polygon points="-651,100 -640,84 -628,101 -636,96 -644,102"/><polygon points="-292,86 -280,68 -267,88 -276,82 -284,89"/><polygon points="-410,108 -400,96 -390,109 -399,105"/></g><polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon><g fill="#f8fafc"><polygon points="108,74 120,52 133,76 125,70 117,77"/><polygon points="196,86 205,72 215,88 208,83 201,89"/><polygon points="33,110 40,98 48,109 41,106"/></g>`);
+  o.push(`<polygon points="-1100,175 -1060,128 -1000,148 -930,96 -870,134 -800,122 -800,175" fill="#7b8aa0"/>${caps([[-930, 96, 15]])}<polygon points="-800,175 -760,122 -705,140 -640,84 -585,128 -520,102 -462,146 -400,96 -342,124 -280,68 -222,116 -160,90 -100,134 -40,104 30,175" fill="#7b8aa0"/><polygon points="-640,84 -585,128 -610,128 -632,104" fill="#64748b" opacity=".6"/><polygon points="-280,68 -222,116 -250,116 -272,92" fill="#64748b" opacity=".6"/>${caps([[-640, 84, 17], [-280, 68, 21], [-400, 96, 13]])}<polygon points="0,175 40,98 75,122 120,52 165,112 205,72 250,128 300,92 370,175" fill="#7b8aa0"><title>Alpen</title></polygon>${caps([[120, 52, 25], [205, 72, 16], [40, 98, 12]])}`);
   o.push(`<ellipse cx="200" cy="133" rx="${on('stau') ? 30 : 22}" ry="${on('stau') ? 7 : 5}" fill="#38bdf8"/><g class="${cls('stau')}"><polygon points="${on('stau') ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/></g>`);
   if (on('alpin')) { const p = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) p.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`); o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage</title>${p.join('')}</g>`); }
   if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
-  o.push(`<path d="M980,142 L1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L980,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M985,175.5 L1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L985,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M980,142 L1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L980,210 Z" fill="${grA}"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="${grA}"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="${grB}"/><path d="M985,175.5 L1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L985,210 Z" fill="${grB}"/>`);
   const kernOn = S.history.length <= 2 || has(S, 'kern');
   o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
   if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
 
   // Nachtzug im Hintergrund
-  o.push(`<rect x="-1100" y="198" width="3200" height="62" fill="#4d7c0f"/><g><rect x="1058.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1060" cy="156" r="8" fill="#3f6212"/></g><g><rect x="1083.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1085" cy="162" r="6" fill="#3f6212"/></g><g><rect x="1178.5" y="158" width="3" height="9" fill="#78350f"/><circle cx="1180" cy="154" r="9" fill="#3f6212"/></g><g><rect x="1298.5" y="156" width="3" height="9" fill="#78350f"/><circle cx="1300" cy="152" r="8" fill="#3f6212"/></g><g><rect x="1328.5" y="163" width="3" height="9" fill="#78350f"/><circle cx="1330" cy="159" r="6" fill="#3f6212"/></g><g><rect x="1458.5" y="162" width="3" height="9" fill="#78350f"/><circle cx="1460" cy="158" r="8" fill="#3f6212"/></g><g><rect x="1558.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1560" cy="162" r="7" fill="#3f6212"/></g><g><rect x="1698.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1700" cy="156" r="9" fill="#3f6212"/></g><g><rect x="-61.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-60" cy="185" r="7" fill="#3f6212"/></g><g><rect x="-171.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-170" cy="185" r="6" fill="#3f6212"/></g>`);
+  o.push(`<rect x="-1100" y="198" width="3200" height="62" fill="${grB}"/><g><rect x="1058.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1060" cy="156" r="8" fill="#3f6212"/></g><g><rect x="1083.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1085" cy="162" r="6" fill="#3f6212"/></g><g><rect x="1178.5" y="158" width="3" height="9" fill="#78350f"/><circle cx="1180" cy="154" r="9" fill="#3f6212"/></g><g><rect x="1298.5" y="156" width="3" height="9" fill="#78350f"/><circle cx="1300" cy="152" r="8" fill="#3f6212"/></g><g><rect x="1328.5" y="163" width="3" height="9" fill="#78350f"/><circle cx="1330" cy="159" r="6" fill="#3f6212"/></g><g><rect x="1458.5" y="162" width="3" height="9" fill="#78350f"/><circle cx="1460" cy="158" r="8" fill="#3f6212"/></g><g><rect x="1558.5" y="166" width="3" height="9" fill="#78350f"/><circle cx="1560" cy="162" r="7" fill="#3f6212"/></g><g><rect x="1698.5" y="160" width="3" height="9" fill="#78350f"/><circle cx="1700" cy="156" r="9" fill="#3f6212"/></g><g><rect x="-61.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-60" cy="185" r="7" fill="#3f6212"/></g><g><rect x="-171.5" y="189" width="3" height="9" fill="#78350f"/><circle cx="-170" cy="185" r="6" fill="#3f6212"/></g>`);
   if (on('nachtzug')) o.push(`<line x1="-1100" y1="203" x2="2100" y2="203" stroke="#57534e" stroke-width="1.5"/><g class="drive ${ghost.has('nachtzug') ? 'ghost' : ''}" style="animation-duration:26s;animation-delay:-8s"><g transform="translate(0,202)"><title>Nachtzug</title>${[0, 34, 68, 102].map(x => `<rect x="${x}" y="-10" width="32" height="9" rx="2" fill="#1e3a8a"/><rect x="${x + 3}" y="-8" width="26" height="2.5" fill="#fde68a" opacity=".8"/>`).join('')}<text x="64" y="-12" font-size="7" fill="#fde68a">★ ☾</text></g></g>`);
   o.push(`<path d="M-1100,204 L6,204 L6,233 L-1100,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8"><line x1="-760" y1="216" x2="-746" y2="216"/><line x1="-640" y1="226" x2="-626" y2="226"/><line x1="-520" y1="214" x2="-506" y2="214"/><line x1="-400" y1="222" x2="-386" y2="222"/><line x1="-280" y1="216" x2="-266" y2="216"/><line x1="-170" y1="228" x2="-156" y2="228"/><line x1="-60" y1="218" x2="-46" y2="218"/></g><path d="M0,204 Q120,197 252,210 L252,233 L0,233 Z" fill="#0ea5e9"/><g class="wave" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity=".8">${[[30, 214], [90, 222], [150, 216], [60, 228], [190, 226]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x + 14}" y2="${y}"/>`).join('')}</g>`);
   if (on('fw')) o.push(`<g class="${cls('fw')}"><title>Fernwärme mit Seewasser</title><rect x="226" y="196" width="22" height="13" fill="#e2e8f0"/><polygon points="224,196 237,188 250,196" fill="#0369a1"/><path d="M228,206 Q205,214 185,222" stroke="#f97316" stroke-width="2" fill="none"/><line x1="262" y1="230" x2="604" y2="230" stroke="#f97316" stroke-width="2" stroke-dasharray="5 3"/></g>`);
