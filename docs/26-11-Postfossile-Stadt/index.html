@@ -117,6 +117,11 @@
   html.beamer #layout { max-width: none; }
   html.beamer #city svg { height: 115px; }
   html.beamer #confetti { width: 1366px !important; height: 768px !important; }
+  /* Dashboard nach der Legislatur-Auswertung: veränderte Anzeigen leuchten kurz auf */
+  .flash-up { animation: flashup 1.7s ease-out 1; }
+  .flash-down { animation: flashdown 1.7s ease-out 1; }
+  @keyframes flashup { 0%, 55% { box-shadow: 0 0 0 2px rgba(52, 211, 153, .95), 0 0 22px rgba(52, 211, 153, .35); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
+  @keyframes flashdown { 0%, 55% { box-shadow: 0 0 0 2px rgba(248, 113, 113, .95), 0 0 22px rgba(248, 113, 113, .35); } 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); } }
   @media (prefers-reduced-motion: reduce) {
     .spin, .smoke, .steam, .drive, .drive-back, .cloud, .wave, .swing, .flicker, .blackout, .pop-in, .fade-in { animation: none !important; }
     .flip-inner { transition: none; }
@@ -884,6 +889,7 @@ function randomCode() {
 }
 
 function startGame(code, withDilemma = true) {
+  holdDash = false; pendingAfter = null;
   S = createState(code);
   selected = [];
   prevKPI = {};
@@ -1160,7 +1166,38 @@ function animateCounts(root, dur = 800) {
     requestAnimationFrame(step);
   });
 }
+
+// ---------- Dashboard erst nach dem Schliessen der Auswertung animieren ----------
+let holdDash = false, pendingAfter = null;
+function countTo(el, a, b, fmtFn, dur = 900) {
+  if (REDUCED || a === b) { el.textContent = fmtFn(b); return; }
+  const t0 = performance.now();
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(a + (b - a) * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function flash(el, good) {
+  if (!el || REDUCED) return;
+  el.classList.remove('flash-up', 'flash-down'); void el.offsetWidth;
+  el.classList.add(good ? 'flash-up' : 'flash-down');
+  setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 1800);
+}
+let pendingBlackout = false;
+function releaseDash() {
+  if (!holdDash) return;
+  holdDash = false;
+  renderCity(); justBuilt = new Set();
+  const before = { ...prevKPI };
+  renderKPIs(); renderChart();
+  const tiles = $('kpis').children, now = prevKPI;
+  [['co2', false], ['sec', true], ['budget', true], ['pop', true]].forEach(([k, upGood], i) => {
+    if (before[k] !== undefined && before[k] !== now[k]) flash(tiles[i], upGood ? now[k] > before[k] : now[k] < before[k]);
+  });
+  if (pendingBlackout) { pendingBlackout = false; setTimeout(() => { const c = $('city'); c.classList.remove('blackout'); void c.offsetWidth; c.classList.add('blackout'); }, 300); }
+  const after = pendingAfter; pendingAfter = null;
+  if (after) setTimeout(after, REDUCED ? 0 : 1800);
+}
 function renderKPIs() {
+  if (holdDash) return;
   const m = current();
   $('kpi-year').textContent = `(${m.year})`;
   const bar = (v, max, cls) => `<div class="w-full bg-slate-700 h-1.5 rounded-full mt-1.5 overflow-hidden"><div class="${cls} h-full rounded-full transition-all duration-500" style="width:${clamp(v / max) * 100}%"></div></div>`;
@@ -1215,6 +1252,7 @@ function bauLine() {
 }
 
 function renderChart() {
+  if (holdDash) return;
   document.querySelectorAll('.chart-tab').forEach(b => b.className = 'chart-tab px-3 py-1.5 rounded-lg ' + (b.dataset.tab === chartTab ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-900/60 text-slate-400 border border-slate-700 hover:text-slate-200'));
   if (typeof Chart === 'undefined') { $('chart-caption').textContent = 'Diagramme konnten nicht geladen werden (offline?).'; return; }
   const C = COLORS();
@@ -1323,6 +1361,7 @@ const rot = (dur, cx = 0, cy = 0, swing) => REDUCED ? '' : swing
   : `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`;
 
 function renderCity() {
+  if (holdDash) return;
   const m = current();
   const act = S.active;
   const ghost = new Set(S.over ? [] : selected.filter(id => !act.has(id)));
@@ -1578,6 +1617,7 @@ function confirmRound() {
   selected = [];
   const m = R.metrics;
   justBuilt = new Set(R.completed);
+  holdDash = true;
 
   const logStart = S.log.length;
   addLog('🗳️', `Legislatur ${roundNo} (${y[0]}–${y[1]})`, R.picks.length ? R.picks.map(p => M[p.id].title).join(' + ') + '.' : 'Kein neuer Beschluss.');
@@ -1621,12 +1661,12 @@ function confirmRound() {
     ${roundNo < CFG.rounds ? `<div class="text-center text-sm font-semibold ${S.ousted ? 'text-rose-400' : 'text-emerald-400'}">${S.ousted ? '🗳️ Wahl verloren – die neue Mehrheit stoppt das Programm.' : '🗳️ Wiedergewählt! Weiter geht’s.'}</div>` : ''}`;
 
   renderAll();
-  justBuilt = new Set();
-  if (S.over) showModal(S.ousted ? '🗳️' : '📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: 'Zur Gesamtauswertung', primary: true, fn: showFinal }]);
-  else showModal('📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: `Weiter zur Legislatur ${S.round}`, primary: true, fn: () => { closeModal(); showDilemma(); } }]);
+  pendingAfter = S.over ? showFinal : showDilemma;
+  if (S.over) showModal(S.ousted ? '🗳️' : '📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: 'Zur Gesamtauswertung', primary: true, fn: closeModal }]);
+  else showModal('📰', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: `Weiter zur Legislatur ${S.round}`, primary: true, fn: closeModal }]);
   const fl = $('event-flip');
   if (fl) { fl.onclick = () => fl.classList.toggle('flipped'); setTimeout(() => fl.classList.add('flipped'), REDUCED ? 0 : 900); }
-  if (R.event.id === 'dunkelflaute' && !R.event.ok) setTimeout(() => { const c = $('city'); c.classList.remove('blackout'); void c.offsetWidth; c.classList.add('blackout'); }, 1200);
+  pendingBlackout = R.event.id === 'dunkelflaute' && !R.event.ok;
 }
 
 function newspaper(R, roundNo, year) {
@@ -1771,7 +1811,7 @@ function showModal(icon, title, html, actions) {
   $('modal').firstElementChild.scrollTop = 0;
   const first = $('modal-actions').querySelector('button:last-child'); if (first) first.focus({ preventScroll: true });
 }
-function closeModal() { $('modal').classList.add('hidden'); }
+function closeModal() { $('modal').classList.add('hidden'); if (holdDash) releaseDash(); }
 
 function showIntro() {
   const urlCode = new URLSearchParams(location.search).get('code');

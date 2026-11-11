@@ -85,6 +85,11 @@
   html.beamer #layout { max-width: none; }
   html.beamer #city svg { height: 130px; }
   html.beamer #confetti { width: 1366px !important; height: 768px !important; }
+  /* Dashboard nach der Legislatur-Auswertung: veränderte Anzeigen leuchten kurz auf */
+  .flash-up { animation: flashup 1.7s ease-out 1; }
+  .flash-down { animation: flashdown 1.7s ease-out 1; }
+  @keyframes flashup { 0%, 55% { box-shadow: 0 0 0 2px rgba(52, 211, 153, .95), 0 0 22px rgba(52, 211, 153, .35); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
+  @keyframes flashdown { 0%, 55% { box-shadow: 0 0 0 2px rgba(248, 113, 113, .95), 0 0 22px rgba(248, 113, 113, .35); } 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); } }
   @media (prefers-reduced-motion: reduce) {
     .smoke, .steam, .drive, .drive-back, .cloud, .wave, .flicker, .pop-in, .fade-in { animation: none !important; }
     .needle { transition: none; }
@@ -528,13 +533,33 @@ function buildGauges() {
       <div class="text-[10px] text-slate-500 gauge-val" id="gd-${g.id}">&nbsp;</div>
     </div>`; }).join('');
 }
-function updateGauges() {
+
+// ---------- Dashboard erst nach dem Schliessen der Auswertung animieren ----------
+let holdDash = false, pendingAfter = null;
+function countTo(el, a, b, fmtFn, dur = 900) {
+  if (REDUCED || a === b) { el.textContent = fmtFn(b); return; }
+  const t0 = performance.now();
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(a + (b - a) * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function flash(el, good) {
+  if (!el || REDUCED) return;
+  el.classList.remove('flash-up', 'flash-down'); void el.offsetWidth;
+  el.classList.add(good ? 'flash-up' : 'flash-down');
+  setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 1800);
+}
+let shownG = {}, tempShown = null;
+function updateGauges(animate = false) {
+  if (holdDash) return;
   const prev = S.history.length > 1 ? S.history[S.history.length - 2] : null;
   for (const g of GAUGES) {
     const v = S.g[g.id], z = ZONE[zone(v)];
     // CO₂-Anzeigen gespiegelt: links = weniger CO₂ (grün), rechts = mehr (rot)
     $('nd-' + g.id).style.transform = `rotate(${-90 + (isCO2(g.id) ? 100 - v : v) * 1.8}deg)`;
-    $('gv-' + g.id).textContent = gaugeText(g.id, v);
+    const from = shownG[g.id];
+    if (animate && from !== undefined && from !== v) { countTo($('gv-' + g.id), from, v, x => gaugeText(g.id, Math.round(x))); flash($('gw-' + g.id), v > from); }
+    else $('gv-' + g.id).textContent = gaugeText(g.id, v);
+    shownG[g.id] = v;
     $('gw-' + g.id).setAttribute('aria-label', `${g.label}: ${isCO2(g.id) ? gaugeText(g.id, v) + ' gegenüber 2026' : v + ' von 100'}, ${z.t}`);
     $('gd-' + g.id).innerHTML = [isCO2(g.id) ? 'seit 2026' : '', prev && prev[g.id] !== v ? `letzte Leg. ${deltaHtml(g.id, prev[g.id], v)}` : ''].filter(Boolean).join(' · ') || '&nbsp;';
   }
@@ -564,8 +589,10 @@ function renderAll() { renderHeader(); renderAlerts(); renderTabs(); renderGrid(
 
 // ---------- Temperatur-Diagramm ----------
 const fmt1 = x => x.toFixed(1).replace('.', ',');
-function renderTemp() {
-  const w = warming(S.g);
+function renderTemp(g = S.g) {
+  if (holdDash) return;
+  tempShown = { ...g };
+  const w = warming(g);
   const W = 320, H = 150, L = 30, Rr = 70, T = 8, B = 22;
   const x = y => L + (y - TEMP.nowYear) / (2100 - TEMP.nowYear) * (W - L - Rr);
   const y = v => T + (3.0 - v) / (3.0 - 1.0) * (H - T - B);
@@ -731,12 +758,13 @@ function confirmRound() {
   const roundNo = S.round, y = CFG.years[roundNo - 1];
   const R = playRound(S, selected);
   justBuilt = new Set(selected);
+  holdDash = true;
   selected = [];
   addLog('🗳️', `Legislatur ${roundNo} (${y[0]}–${y[1]})`, R.picks.length ? R.picks.map(id => M[id].title).join(' + ') : 'Kein neuer Beschluss.');
   addLog(R.event.icon, R.event.title, R.event.text);
   R.lines.forEach(l => addLog('•', `Legislatur ${roundNo}`, l));
   renderAll();
-  justBuilt = new Set();
+  pendingAfter = S.over ? showFinal : null;
   const rows = GAUGES.map(g => { const a = R.before[g.id], b = R.after[g.id], z = ZONE[zone(b)];
     return `<tr class="border-t border-slate-700/60"><td class="py-1">${g.icon} ${g.label}</td><td class="text-right gauge-val">${gaugeText(g.id, a)}</td><td class="text-right gauge-val font-semibold ${z.cls}">${gaugeText(g.id, b)}</td><td class="text-right gauge-val">${deltaHtml(g.id, a, b)}</td></tr>`; }).join('');
   const body = `
@@ -747,7 +775,7 @@ function confirmRound() {
     ${R.lines.length ? `<ul class="text-xs list-disc pl-5 space-y-1">${R.lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
     <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="text-left">Anzeige</th><th class="text-right">vorher</th><th class="text-right">${y[1]}</th><th class="text-right">Δ</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="text-[11px] text-slate-500">CO₂-Werte: Veränderung gegenüber 2026. Auch ohne Massnahmen: Heizungen werden ersetzt, der Strombedarf wächst, es wird mehr geflogen.</p>`;
-  modal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: S.over ? 'Zur Auswertung' : `Weiter zur Legislatur ${S.round}`, primary: true, fn: S.over ? showFinal : close }]);
+  modal('📋', `Legislatur ${roundNo} abgeschlossen`, body, [{ label: S.over ? 'Zur Auswertung' : `Weiter zur Legislatur ${S.round}`, primary: true, fn: close }]);
 }
 
 function insights() {
@@ -806,10 +834,10 @@ function modal(icon, title, html, actions) {
   $('modal').classList.remove('hidden'); $('modal').firstElementChild.scrollTop = 0;
   const last = $('m-actions').querySelector('button:last-child'); if (last) last.focus({ preventScroll: true });
 }
-function close() { $('modal').classList.add('hidden'); }
+function close() { $('modal').classList.add('hidden'); if (holdDash) releaseDash(); }
 
 function randomCode() { const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; return 'SEE-' + L[Math.floor(Math.random() * L.length)] + Math.floor(100 + Math.random() * 900); }
-function start(code) { S = createState(code); selected = []; cat = 'all'; skipArmed = false; addLog('🏙️', 'Start 2026', `Szenario ${code}. Die meisten Anzeigen stehen im roten oder gelben Bereich.`); renderAll(); }
+function start(code) { holdDash = false; pendingAfter = null; shownG = {}; tempShown = null; S = createState(code); selected = []; cat = 'all'; skipArmed = false; addLog('🏙️', 'Start 2026', `Szenario ${code}. Die meisten Anzeigen stehen im roten oder gelben Bereich.`); renderAll(); }
 
 function intro() {
   const code = randomCode();
@@ -831,7 +859,24 @@ function intro() {
 function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
 const spinAnim = dur => REDUCED ? '' : `<animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="${dur}s" repeatCount="indefinite"/>`;
 
+function animateTemp() {
+  const from = tempShown, to = { ...S.g };
+  if (!from || REDUCED) { renderTemp(); return; }
+  const t0 = performance.now(), dur = 1000;
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); const g = {}; for (const key in to) g[key] = from[key] + (to[key] - from[key]) * e;
+    renderTemp(k < 1 ? g : S.g); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function releaseDash() {
+  if (!holdDash) return;
+  holdDash = false;
+  renderCity(); justBuilt = new Set();
+  updateGauges(true); animateTemp();
+  const after = pendingAfter; pendingAfter = null;
+  if (after) setTimeout(after, REDUCED ? 0 : 1700);
+}
 function renderCity() {
+  if (holdDash) return;
   const g = S.g;
   const ghost = new Set(S.over ? [] : selected);
   const act = new Set(S.chosen.map(c => c.id));
