@@ -134,7 +134,7 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h2 id="phase-title" class="text-base font-semibold">Wähle bis zu 4 Massnahmen</h2>
+          <h2 id="phase-title" class="text-base font-semibold">Wählt bis zu 4 Massnahmen</h2>
           <p id="round-desc" class="text-xs text-slate-400 mt-1">Jede Karte zeigt die Wirkung in drei Stufen: <strong class="text-slate-200">gross</strong>, <strong class="text-slate-200">mittel</strong> oder <strong class="text-slate-200">wenig</strong> – manchmal sogar <strong class="text-rose-300">rückläufig</strong>.</p>
         </div>
         <div class="text-right shrink-0">
@@ -160,7 +160,7 @@
 
     <div id="tray" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
-        <div class="text-xs text-slate-400">Deine Auswahl</div>
+        <div class="text-xs text-slate-400">Eure Auswahl</div>
         <div id="sel-list" class="text-sm mt-1"></div>
       </div>
       <button id="btn-confirm" class="px-5 py-3 rounded-xl font-semibold text-sm shadow-lg"></button>
@@ -187,7 +187,7 @@
     </div>
 
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl text-xs">
-      <h3 class="text-sm font-semibold text-slate-200 mb-2">So liest du die Karten</h3>
+      <h3 class="text-sm font-semibold text-slate-200 mb-2">So lest ihr die Karten</h3>
       <div class="grid grid-cols-2 gap-2" id="legend"></div>
     </div>
 
@@ -360,7 +360,7 @@ const EVENTS = {
     S.g.acc += 3; return 'Zwei Wochen Nebel und Windstille – die Versorgung hält (Akzeptanz +3).'; } },
   billigflug: { icon: '✈️', title: 'Billig-Airline eröffnet Basis in der Nähe', run(S) {
     const n = ['nachtzug', 'flugabgabe'].filter(id => has(S, id)).length, d = [6, 3, 0][n]; S.g.flug -= d;
-    return d ? `Wochenendtrips für 29 Franken. Fliegen −${d}${n ? ' (gebremst durch deine Massnahmen)' : ''}.` : 'Wochenendtrips für 29 Franken – dank Flugabgabe und Nachtzügen bucht kaum jemand.'; } },
+    return d ? `Wochenendtrips für 29 Franken. Fliegen −${d}${n ? ' (gebremst durch eure Massnahmen)' : ''}.` : 'Wochenendtrips für 29 Franken – dank Flugabgabe und Nachtzügen bucht kaum jemand.'; } },
   rohstoff: { icon: '📦', title: 'Rohstoffe werden knapp und teuer', run(S) {
     if (S.g.kreis >= 60) { S.coins += 2; return 'Lieferketten stocken. Seestadt profitiert von ihrer Kreislaufwirtschaft (+2 Budget).'; }
     S.coins -= 1; return 'Lieferketten stocken, Material wird teurer (−1 Budget). Mit mehr Kreislauf wäre die Wirtschaft robuster.'; } },
@@ -685,7 +685,7 @@ function renderHeader() {
   const y = CFG.years[S.round - 1];
   $('round-display').textContent = S.over ? 'Beendet · 2045' : `Legislatur ${S.round} · ${y[0]}–${y[1]}`;
   $('dash-year').textContent = `(${CFG.snapYears[S.history.length - 1]})`;
-  $('phase-title').textContent = S.over ? 'Spiel beendet' : `Legislatur ${S.round}: Wähle bis zu ${S.picks} Massnahmen`;
+  $('phase-title').textContent = S.over ? 'Spiel beendet' : `Legislatur ${S.round}: Wählt bis zu ${S.picks} Massnahmen`;
   const left = S.coins - selected.reduce((a, id) => a + costOf(S, id, selected), 0);
   $('coins').textContent = coinStr(left);
   $('coins').title = `${left} Budgetpunkte übrig`;
@@ -711,7 +711,7 @@ function renderTabs() {
 
 function blockReason(id) {
   if (selected.includes(id)) return null;
-  if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt – entferne zuerst eine`;
+  if (selected.length >= S.picks) return `Schon ${S.picks} Massnahmen gewählt – entfernt zuerst eine`;
   const left = S.coins - selected.reduce((a, x) => a + costOf(S, x, selected), 0);
   if (costOf(S, id, selected) > left) return `Budget reicht nicht: braucht ${'●'.repeat(M[id].cost)}, übrig ${left > 0 ? '●'.repeat(left) : 'nichts'}`;
   return null;
@@ -736,7 +736,7 @@ function renderGrid() {
   if (sortMode === 'kosten') list.sort((a, b) => a.cost - b.cost);
   if (sortMode === 'ebene') list.sort((a, b) => LVL[a.lvl].order - LVL[b.lvl].order);
   grid.innerHTML = '';
-  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versuche ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
+  if (!list.length) { grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">${query.trim() ? `Keine Massnahme passt zu «${query.trim().replace(/[<>&]/g, '')}». Versucht ein anderes Wort, z. B. Strom, Heizung, Auto.` : 'Keine Massnahmen mehr in dieser Kategorie.'}</div>`; return; }
   for (const m of list) {
     const sel = selected.includes(m.id), block = blockReason(m.id);
     const ef = effFx(S, m.id, selected), fxE = ef.fx;
@@ -790,7 +790,7 @@ function renderTray() {
   $('tray').classList.remove('hidden');
   $('sel-list').innerHTML = selected.length
     ? selected.map(id => `<span class="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 rounded-lg px-2 py-0.5 mr-1 mb-1 text-xs">${M[id].icon} ${M[id].title} <button class="ml-1 hover:text-white" data-rm="${id}" aria-label="entfernen">×</button></span>`).join('')
-    : '<span class="text-xs text-slate-500">Klicke auf Karten, um sie auszuwählen.</span>';
+    : '<span class="text-xs text-slate-500">Klickt auf Karten, um sie auszuwählen.</span>';
   $('sel-list').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => toggle(b.dataset.rm));
   const ok = selected.length > 0, b = $('btn-confirm');
   b.className = 'px-5 py-3 rounded-xl font-semibold text-sm shadow-lg ' + (ok ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600');
@@ -859,13 +859,13 @@ function showFinal() {
       <div class="text-xs text-slate-400 mt-1">${sc} von 10 Sternen (Anzeigen 60 %, Erwärmung 40 %) · Szenario ${S.code}</div></div>
     <div class="flex flex-wrap justify-center gap-2 text-xs">${['G', 'K', 'B'].map(l => `<span class="px-2 py-0.5 rounded border ${LVL[l].cls}">${LVL[l].t}: ${S.chosen.filter(c => M[c.id].lvl === l).length} Beschlüsse</span>`).join('')}</div>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${tiles}</div>
-    ${futureFig(citySnapshot(S.chosen.map(c => c.id), S.g, warming(S.g).t2100, 'end'), 'So wird Seestadt 2100 – wenn alle so handeln wie ihr', '', '#e2e8f0')}
+    <div>${futureFig(citySnapshot(S.chosen.map(c => c.id), S.g, warming(S.g).t2100, 'end'), `Seestadt 2100 bei +${fmt1(warming(S.g).t2100)} °C`)}<p style="font-size:11px;text-align:center;color:#64748b;margin-top:4px">Seestadt im Jahr 2100 – wenn alle so handeln wie ihr.</p></div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3">
       <div class="text-xs text-slate-300">🌍 Erwärmung 2100, wenn alle so handeln</div>
       <div class="text-right gauge-val"><span class="text-slate-500 line-through mr-2">+${fmt1(TEMP.bau)} °C</span><strong class="text-lg" style="color:${warming(S.g).t2100 <= 1.8 ? '#34d399' : warming(S.g).t2100 <= 2.2 ? '#fbbf24' : '#f87171'}">+${fmt1(warming(S.g).t2100)} °C</strong><div class="text-[10px] text-slate-400">wahrscheinlich ${rangeStr(warming(S.g).t2100)} °C</div></div>
     </div>
     <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700"><div class="text-xs font-semibold text-slate-200 mb-2">Was die Bilanz zeigt</div><ul class="space-y-1.5 text-xs">${insights().map(t => `<li>${t}</li>`).join('')}</ul></div>
-    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat dich überrascht – weil sie mehr oder weniger bewirkt hat, als du dachtest? Was hätte deine Gemeinde allein geschafft – und wofür braucht es Kanton und Bund?</div>`;
+    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 text-xs"><strong>Zum Nachdenken:</strong> Welche Massnahme hat euch überrascht – weil sie mehr oder weniger bewirkt hat, als ihr dachtet? Was hätte eure Gemeinde allein geschafft – und wofür braucht es Kanton und Bund?</div>`;
   modal(sc >= 9 ? '🏆' : sc >= 7 ? '🌿' : '⚖️', title, body, [
     { label: 'Gleiches Szenario nochmals', fn: () => { close(); start(S.code); } },
     { label: 'Übersicht ansehen', primary: true, fn: close }
@@ -899,13 +899,13 @@ function start(code) { holdDash = false; pendingAfter = null; shownG = {}; tempS
 
 function intro() {
   const code = randomCode();
-  modal('🏙️', 'Welche Stadt wird es? Ihr entscheidet!', `
+  modal('🏙️', 'Welche Stadt wird es? Ihr entscheidet mit!', `
     <div style="display:grid;gap:8px">
-      ${futureFig(FUTURE.bau(), 'Ohne Klimaschutz · +2,7 °C', 'Gletscher fast weg, Felder ausgetrocknet', '#f87171')}
-      ${futureFig(FUTURE.gut(), 'Mit Klimaschutz · +1,5 °C', 'Gletscher kleiner, Felder grün', '#34d399')}
+      ${futureFig(FUTURE.bau(), 'Ohne Klimaschutz (+2,7 °C): Smog, Gletscher fast weg, Felder ausgetrocknet')}
+      ${futureFig(FUTURE.gut(), 'Mit Klimaschutz (+1,5 °C): saubere Stadt, Gletscher kleiner, Felder grün')}
     </div>
     <p style="font-size:11px;text-align:center;color:#64748b;margin-top:4px">Seestadt im Jahr 2100 – wenn alle so handeln.</p>
-    <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
+    <p>Ihr entscheidet für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt euch, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
     <details class="text-xs"><summary class="cursor-pointer text-slate-400 hover:text-slate-200">So geht’s ▾</summary>
     <ul class="list-disc pl-5 text-xs space-y-1 mt-2">
       <li>4 Legislaturen, je bis zu <strong>${CFG.picks} Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
@@ -956,8 +956,8 @@ const FUTURE = {
   bau: () => citySnapshot([], { co2: 18, strom: 30, flug: 28, waren: 24, kreis: 30, acc: 50 }, TEMP.bau, 'bau'),
   gut: () => citySnapshot(['wind', 'alpin', 'solar', 'balkon', 'oev', 'velo', 'ev', 'fw', 'daemm', 'agri', 'smartgrid', 'recycling', 'repair', 'sharing', 'vegi', 'nachtzug', 'ind'], { co2: 85, strom: 80, flug: 70, waren: 75, kreis: 78, acc: 70 }, TEMP.best, 'gut')
 };
-const futureFig = (svg, head, sub, col, h = 132) => `<figure style="margin:0;position:relative;height:${h}px;border-radius:12px;overflow:hidden;border:1px solid #334155">${svg}
-  <figcaption style="position:absolute;left:8px;bottom:12px;background:rgba(15,23,42,.82);border-radius:8px;padding:4px 9px;font-size:12px;line-height:1.35"><strong style="color:${col}">${head}</strong>${sub ? `<br><span style="color:#cbd5e1">${sub}</span>` : ''}</figcaption></figure>`;
+// Beschriftung nur beim Darüberfahren (unaufdringlich)
+const futureFig = (svg, tip, h = 132) => `<figure title="${tip}" aria-label="${tip}" role="img" style="margin:0;height:${h}px;border-radius:12px;overflow:hidden;border:1px solid #334155">${svg}</figure>`;
 
 function renderCity() {
   if (holdDash) return;
@@ -1054,7 +1054,7 @@ function renderCity() {
   fitCityViewBox();
   $('city-year').textContent = `Seestadt ${CFG.snapYears[S.history.length - 1]}`;
   $('city-mood').textContent = `${g.acc >= 60 ? '😀' : g.acc >= 45 ? '🙂' : g.acc >= 34 ? '😐' : '😠'} Stimmung ${g.acc} · ${dirt < 0.35 ? '🌤️ klare Luft' : dirt < 0.7 ? '⛅ leicht dunstig' : '🌫️ dicke Luft'}${planes >= 3 ? ' · ✈️ viel Flugverkehr' : ''}`;
-  $('city-hint').textContent = ghost.size ? 'Halbtransparent = deine Auswahl' : 'Tipp: auf Anlagen zeigen oder tippen';
+  $('city-hint').textContent = ghost.size ? 'Halbtransparent = eure Auswahl' : 'Tipp: auf Anlagen zeigen oder tippen';
 }
 
 
