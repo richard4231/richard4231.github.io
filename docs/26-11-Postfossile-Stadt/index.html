@@ -1334,12 +1334,14 @@ function renderChart() {
     opts.scales.x.ticks.callback = function (v, i) { return yrs[i] % 25 === 0 ? yrs[i] : ''; };
     opts.plugins.tooltip.callbacks = { label: c => `${c.dataset.label}: +${fmt1(c.raw)} °C` };
     opts.plugins.tooltip.filter = c => !c.dataset.isBand;
-    opts.plugins.legend.labels.filter = l => l.text !== '_band_lo';
+    opts.plugins.legend.labels.filter = l => !l.text.startsWith('_band');
     const curC = y => tempCurve(w.t, w.p, y);
     cfg = { type: 'line', data: { labels: yrs.map(String), datasets: [
       { label: '_band_lo', isBand: true, data: yrs.map(y => +tempBand(curC(y), y)[0].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: 'transparent', tension: 0.3 },
-      { label: 'Wahrscheinlicher Bereich', isBand: true, data: yrs.map(y => +tempBand(curC(y), y)[1].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: tempCol(w.t) + '33', fill: '-1', tension: 0.3 },
+      { label: '_band_hi', isBand: true, data: yrs.map(y => +tempBand(curC(y), y)[1].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: tempCol(w.t) + '33', fill: '-1', tension: 0.3 },
       { label: 'Wenn alle so handeln', data: yrs.map(y => +tempCurve(w.t, w.p, y).toFixed(2)), borderColor: tempCol(w.t), backgroundColor: tempCol(w.t), borderWidth: 3, pointRadius: 0, tension: 0.3 },
+      { label: '_band_bau_lo', isBand: true, data: yrs.map(y => +tempBand(tempCurve(TEMP.bau, 0, y), y)[0].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: 'transparent', tension: 0.3 },
+      { label: '_band_bau_hi', isBand: true, data: yrs.map(y => +tempBand(tempCurve(TEMP.bau, 0, y), y)[1].toFixed(2)), borderWidth: 0, pointRadius: 0, backgroundColor: 'rgba(148,163,184,.14)', fill: '-1', tension: 0.3 },
       { label: 'Ohne Klimaschutz', data: yrs.map(y => +tempCurve(TEMP.bau, 0, y).toFixed(2)), borderColor: '#94a3b8', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' },
       { label: 'Paris 1,5 °C', data: yrs.map(() => 1.5), borderColor: '#34d399', borderDash: [2, 3], borderWidth: 1, pointRadius: 0, backgroundColor: 'transparent' }
     ] }, options: opts };
@@ -1414,7 +1416,7 @@ function renderCity() {
        <g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${rot(slow ? 4.5 : 2.6 + i * 0.3)}</g></g>`).join('') + `</g>`);
   }
   // Jura-Hügel
-  o.push(`<path d="M1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L1000,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L1000,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M980,142 L1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L980,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M985,175.5 L1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L985,210 Z" fill="#4d7c0f"/>`);
   // Kernkraftwerk in der Ferne
   o.push(`<g opacity="${m.kernActive ? 1 : 0.45}"><title>${m.kernActive ? 'Kernkraftwerk (Liefervertrag aktiv)' : 'Kernkraftwerk – Vertrag ausgelaufen'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${m.kernActive ? [0, 1.3, 2.6].map(d => puff(957, 100, '#ffffff', 6, 4, d, 'steam')).join('') : ''}</g>`);
 
