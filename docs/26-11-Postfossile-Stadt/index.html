@@ -104,6 +104,7 @@
     <label class="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer" title="Im Expertenmodus sind die Wirkungsprognosen auf den Karten ausgeblendet.">
       <input type="checkbox" id="expert-toggle" class="accent-emerald-500"> Expertenmodus
     </label>
+    <a id="link-simple" href="einfach.html" class="bg-sky-500/15 hover:bg-sky-500/25 px-3 py-1.5 rounded-lg border border-sky-500/40 text-sky-200">Einfache Version</a>
     <button onclick="showModelInfo()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200"><i class="fa-solid fa-circle-info mr-1"></i>Modell</button>
     <button onclick="showIntro()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200"><i class="fa-solid fa-rotate-right mr-1"></i>Neu</button>
   </div>
@@ -1529,6 +1530,7 @@ function showIntro() {
   const urlCode = new URLSearchParams(location.search).get('code');
   const suggested = (urlCode && /^[A-Za-z0-9-]{3,20}$/.test(urlCode)) ? urlCode.toUpperCase() : randomCode();
   const body = `
+    <div class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-100 rounded-lg px-3 py-2">Dies ist die <strong>komplexe Version</strong> mit Energiemodell, Bauzeiten und Winterstrombilanz. Die <strong>einfache Version</strong> zeigt Wirkungen in drei Stufen und bezieht Ernährung, Konsum, Fliegen und Kreislauf mit ein.</div>
     <p>Du leitest die Energiepolitik von <strong>Seestadt</strong>. Heute stammen rund 80 % der Wärme und fast der ganze Verkehr aus Öl, Gas und Treibstoff. Bis <strong>2045</strong> soll die Stadt netto null erreichen – ohne Blackout, ohne Schuldenberg und ohne abgewählt zu werden.</p>
     <div class="grid sm:grid-cols-2 gap-2 text-xs">
       <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700"><i class="fa-solid fa-smog text-rose-400 mr-1"></i><strong>CO₂ ≤ ${CFG.co2Target} %</strong> von heute (Rest wird kompensiert)</div>
@@ -1548,6 +1550,7 @@ function showIntro() {
       <input id="intro-code" value="${suggested}" maxlength="20" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 font-mono uppercase">
     </label>`;
   showModal('🏙️', 'Postfossile Stadt 2045', body, [
+    { label: 'Einfache Version', fn: () => $('link-simple').click() },
     { label: 'Modellannahmen', fn: () => showModelInfo(true) },
     { label: 'Los geht’s', primary: true, fn: () => {
       const v = ($('intro-code').value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '') || randomCode();
