@@ -88,7 +88,7 @@
     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-xl">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h2 id="phase-title" class="text-base font-semibold">Wähle bis zu 3 Massnahmen</h2>
+          <h2 id="phase-title" class="text-base font-semibold">Wähle bis zu 4 Massnahmen</h2>
           <p class="text-xs text-slate-400 mt-1">Jede Karte zeigt die Wirkung in drei Stufen: <strong class="text-slate-200">gross</strong>, <strong class="text-slate-200">mittel</strong> oder <strong class="text-slate-200">wenig</strong> – manchmal sogar <strong class="text-rose-300">rückläufig</strong>.</p>
         </div>
         <div class="text-right shrink-0">
@@ -169,9 +169,9 @@
 // ===================================================================
 const CFG = {
   rounds: 4, years: [[2028, 2032], [2033, 2037], [2038, 2042], [2043, 2045]], snapYears: [2026, 2032, 2037, 2042, 2045],
-  picks: 3, coinsStart: 5, coinsPerRound: 5,
-  start: { co2: 20, strom: 46, flug: 32, waren: 22, kreis: 30, acc: 60 },
-  trend: { co2: 3, strom: -2, flug: -2, waren: 1, kreis: 0 },
+  picks: 4, coinsStart: 5, coinsPerRound: 5,
+  start: { co2: 20, strom: 46, flug: 34, waren: 22, kreis: 30, acc: 60 },
+  trend: { co2: 3, strom: -2, flug: -1, waren: 1, kreis: 0 },
   kernDrop: 14,                                    // Ende 2034: Kernstrom-Vertrag läuft aus (nach Legislatur 2)
   pts: { 3: 16, 2: 9, 1: 3, '-1': -8 },            // gross / mittel / wenig / rückläufig
   acc: { 1: 4, 0: 0, '-1': -9 }, accBuerger: -4,
@@ -227,7 +227,7 @@ const MEASURES = [
     why: 'E-Autos sind viel effizienter als Verbrenner – brauchen aber zusätzlichen Strom.' },
   { id: 'velo', cat: 'mobil', icon: '🚲', title: 'Velonetz statt Parkplätze', cost: 1, acc: -1, fx: { co2: 2 },
     why: 'Günstig und wirksam, aber Autofahrende protestieren gegen weniger Parkplätze.' },
-  { id: 'nachtzug', cat: 'mobil', icon: '🚆', title: 'Nachtzüge & Bahnferien fördern', cost: 1, acc: 1, fx: { flug: 2 },
+  { id: 'nachtzug', cat: 'mobil', icon: '🚆', title: 'Nachtzüge & Bahnferien fördern', cost: 1, acc: 1, fx: { flug: 3 },
     why: 'Wer mit dem Nachtzug nach Wien, Berlin oder Rom fährt, spart den Flug. Der Bund kann Nachtzüge mitfinanzieren.' },
   { id: 'flugv', cat: 'mobil', icon: '🛬', title: 'Verwaltung: Bahn statt Flug', cost: 1, acc: 0, fx: { flug: 1 },
     why: 'Ein gutes Vorbild – aber die Dienstreisen der Verwaltung sind nur ein kleiner Teil aller Flüge.' },
@@ -269,7 +269,7 @@ const MEASURES = [
     why: 'Höhere Preise lenken: weniger fahren, sparsamer fahren, umsteigen. Bringt Geld in die Kasse – und Ärger an der Zapfsäule.' },
   { id: 'heizoel', cat: 'regeln', icon: '🔥', title: 'Heizöl & Gas teurer (CO₂-Abgabe)', cost: -2, acc: -1, abgabe: true, fx: { co2: 2 },
     why: 'Die Schweiz kennt eine CO₂-Abgabe auf Heizöl und Gas. Sie macht den Umstieg auf erneuerbares Heizen attraktiver.' },
-  { id: 'flugabgabe', cat: 'regeln', icon: '🎫', title: 'Flugticket-Abgabe', cost: -1, acc: -1, abgabe: true, fx: { flug: 2 },
+  { id: 'flugabgabe', cat: 'regeln', icon: '🎫', title: 'Flugticket-Abgabe', cost: -1, acc: -1, abgabe: true, fx: { flug: 3 },
     why: 'Fliegen wird teurer, Nachtzug und Ferien in der Nähe attraktiver. 2021 lehnte das Stimmvolk ein CO₂-Gesetz mit Flugticketabgabe ab.' },
   { id: 'klimabonus', cat: 'regeln', icon: '💌', title: 'Klimabonus: Abgaben zurückverteilen', cost: 1, acc: 1, fx: {},
     why: 'Die Einnahmen gehen pro Kopf an die Bevölkerung zurück – wer wenig verbraucht, gewinnt. Danach bringen Abgaben kein Geld mehr in die Kasse, sind aber nicht mehr umstritten.' }
@@ -293,8 +293,8 @@ const EVENTS = {
     if (S.g.strom < 40) { S.g.acc -= 8; return 'Zwei Wochen Nebel und Windstille. Der Bundesrat ruft zum Stromsparen auf (Akzeptanz −8).'; }
     S.g.acc += 3; return 'Zwei Wochen Nebel und Windstille – die Versorgung hält (Akzeptanz +3).'; } },
   billigflug: { icon: '✈️', title: 'Billig-Airline eröffnet Basis in der Nähe', run(S) {
-    const d = has(S, 'nachtzug') ? 3 : 6; S.g.flug -= d;
-    return `Wochenendtrips für 29 Franken. Fliegen −${d}${d === 3 ? ' (Nachtzüge bremsen den Effekt)' : ''}.`; } },
+    const n = ['nachtzug', 'flugabgabe'].filter(id => has(S, id)).length, d = [6, 3, 0][n]; S.g.flug -= d;
+    return d ? `Wochenendtrips für 29 Franken. Fliegen −${d}${n ? ' (gebremst durch deine Massnahmen)' : ''}.` : 'Wochenendtrips für 29 Franken – dank Flugabgabe und Nachtzügen bucht kaum jemand.'; } },
   rohstoff: { icon: '📦', title: 'Rohstoffe werden knapp und teuer', run(S) {
     if (S.g.kreis >= 60) { S.coins += 2; return 'Lieferketten stocken. Seestadt profitiert von ihrer Kreislaufwirtschaft (+2 Budget).'; }
     S.coins -= 1; return 'Lieferketten stocken, Material wird teurer (−1 Budget). Mit mehr Kreislauf wäre die Wirtschaft robuster.'; } },
@@ -364,8 +364,8 @@ function playRound(S, picks) {
   if (S.round >= CFG.rounds) { S.over = true; return R; }
   S.round++;
   S.coins += CFG.coinsPerRound;
-  S.picks = S.g.acc < CFG.zones[0] ? 2 : CFG.picks;
-  if (S.picks < CFG.picks) R.lines.push('Gegenwind im Parlament: In der nächsten Legislatur sind nur 2 Beschlüsse möglich.');
+  S.picks = S.g.acc < CFG.zones[0] ? CFG.picks - 1 : CFG.picks;
+  if (S.picks < CFG.picks) R.lines.push(`Gegenwind im Parlament: In der nächsten Legislatur sind nur ${S.picks} Beschlüsse möglich.`);
   return R;
 }
 
@@ -526,7 +526,7 @@ function renderAlerts() {
   if (!S.over) {
     a.push(alertBox('bg-slate-900/60 border-slate-700 text-slate-300', `Budget: <strong class="text-amber-300">${S.coins} Punkte</strong> (● = 1 Punkt). Jede Legislatur kommen ${CFG.coinsPerRound} dazu, Unverbrauchtes bleibt.`));
     if (S.round <= 2 && !has(S, 'kern')) a.push(alertBox('bg-rose-500/10 border-rose-500/30 text-rose-200', 'Ende 2034 geht ein Kernkraftwerk vom Netz: Die Stromversorgung fällt dann um ' + CFG.kernDrop + ' Punkte.'));
-    if (S.picks < CFG.picks) a.push(alertBox('bg-amber-500/10 border-amber-500/30 text-amber-200', 'Gegenwind im Parlament: Diese Legislatur sind nur 2 Beschlüsse möglich. Beliebte Massnahmen helfen.'));
+    if (S.picks < CFG.picks) a.push(alertBox('bg-amber-500/10 border-amber-500/30 text-amber-200', `Gegenwind im Parlament: Diese Legislatur sind nur ${S.picks} Beschlüsse möglich. Beliebte Massnahmen helfen.`));
   }
   $('alerts').innerHTML = a.join('');
 }
@@ -722,7 +722,7 @@ function intro() {
   modal('🏙️', 'Postfossile Stadt – einfache Version', `
     <p>Du entscheidest für die ganze Schweiz – in der <strong>Gemeinde</strong>, im <strong>Kanton</strong> und beim <strong>Bund</strong>. <strong>Seestadt</strong> zeigt dir, was das vor Ort bedeutet. Bis 2045 sollen möglichst viele Anzeigen im grünen Bereich sein.</p>
     <ul class="list-disc pl-5 text-xs space-y-1">
-      <li>4 Legislaturen, je bis zu <strong>3 Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
+      <li>4 Legislaturen, je bis zu <strong>${CFG.picks} Massnahmen</strong>. Das Budget (●) reicht nicht für alles.</li>
       <li>Jede Massnahme zeigt ihre Wirkung auf <strong>Klima</strong> und <strong>Strom</strong> in drei Stufen: gross, mittel, wenig – manchmal sogar rückläufig.</li>
       <li>Ziel: <strong>weniger CO₂</strong> – im Inland, beim <strong>Fliegen</strong> und bei <strong>Waren</strong> aus dem Ausland. Dazu sichere Stromversorgung und Kreislauf.</li>
       <li>Ende 2034 fällt ein Teil der Stromversorgung weg. Jede Legislatur bringt ein Ereignis.</li>
