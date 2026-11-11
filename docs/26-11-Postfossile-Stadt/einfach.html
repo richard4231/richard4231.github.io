@@ -640,7 +640,8 @@ function renderTemp(g = S.g) {
   const col = w.t2100 <= 1.8 ? '#34d399' : w.t2100 <= 2.2 ? '#fbbf24' : '#f87171';
   const yEnd = y(w.t2100), yBau = y(TEMP.bau);
   const cur = yr => tempCurve(w.t2100, w.p, yr);
-  const band = years.map(yr => `${x(yr).toFixed(1)},${y(tempBand(cur(yr), yr)[1]).toFixed(1)}`).concat([...years].reverse().map(yr => `${x(yr).toFixed(1)},${y(tempBand(cur(yr), yr)[0]).toFixed(1)}`));
+  const bandOf = f => years.map(yr => `${x(yr).toFixed(1)},${y(tempBand(f(yr), yr)[1]).toFixed(1)}`).concat([...years].reverse().map(yr => `${x(yr).toFixed(1)},${y(tempBand(f(yr), yr)[0]).toFixed(1)}`));
+  const band = bandOf(cur), bandBau = bandOf(yr => tempCurve(TEMP.bau, 0, yr));
   // Endbeschriftungen ohne Überlappung: nach Höhe sortieren und mit Mindestabstand auseinanderschieben
   const lx = W - Rr + 6, GAP = 10;
   const labels = [
@@ -659,10 +660,10 @@ function renderTemp(g = S.g) {
     ${[1.5, 2.0, 2.5, 3.0, 3.5].map(v => `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#334155" stroke-width="${v === 1.5 ? 0 : 0.6}"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end" font-size="8" fill="#94a3b8">${fmt1(v)}°</text>`).join('')}
     ${[2025, 2050, 2075, 2100].map(yr => `<text x="${x(yr)}" y="${H - 6}" text-anchor="middle" font-size="8" fill="#94a3b8">${yr}</text>`).join('')}
     <line x1="${L}" x2="${W - Rr}" y1="${y(1.5)}" y2="${y(1.5)}" stroke="#34d399" stroke-width="1" stroke-dasharray="2 3"/>
+    <polygon points="${bandBau.join(' ')}" fill="#94a3b8" opacity=".14"/>
     <path d="${path(yr => tempCurve(TEMP.bau, 0, yr))}" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
     <polygon points="${band.join(' ')}" fill="${col}" opacity=".18"><title>Wahrscheinlicher Bereich</title></polygon>
     <path d="${path(yr => tempCurve(w.t2100, w.p, yr))}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="${L + 4}" y="${T + 7}" font-size="7" fill="#94a3b8">Band: wahrscheinlicher Bereich</text>
     <circle cx="${x(2100)}" cy="${yEnd}" r="3.5" fill="${col}" stroke="#1e293b" stroke-width="1.5"/>
     ${labelSvg}
     <circle cx="${x(TEMP.nowYear)}" cy="${y(TEMP.now)}" r="2.5" fill="#f1f5f9"/>
@@ -949,7 +950,7 @@ function renderCity() {
   o.push(`<ellipse cx="200" cy="133" rx="${on('stau') ? 30 : 22}" ry="${on('stau') ? 7 : 5}" fill="#38bdf8"/><g class="${cls('stau')}"><polygon points="${on('stau') ? '226,121 234,121 237,141 223,141' : '224,128 231,128 233,140 222,140'}" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/></g>`);
   if (on('alpin')) { const p = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) p.push(`<rect x="${58 + c * 10 + r * 6}" y="${116 + r * 8}" width="8" height="3.5" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".5"/>`); o.push(`<g class="${cls('alpin')}"><title>Alpine Solaranlage</title>${p.join('')}</g>`); }
   if (on('wind')) o.push(`<g class="${cls('wind')}"><title>Windpark</title>` + [[680, 92], [762, 82], [845, 80], [912, 88]].map(([x, y], i) => `<line x1="${x}" y1="210" x2="${x}" y2="${y}" stroke="#f8fafc" stroke-width="2.5"/><g transform="translate(${x},${y})"><g>${[0, 120, 240].map(a => `<line x1="0" y1="0" x2="0" y2="-24" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" transform="rotate(${a + i * 17})"/>`).join('')}<circle r="2.5" fill="#cbd5e1"/>${spinAnim(2.6 + i * 0.3)}</g></g>`).join('') + '</g>');
-  o.push(`<path d="M1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L1000,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L1000,210 Z" fill="#4d7c0f"/>`);
+  o.push(`<path d="M980,142 L1000,142 Q1100,126 1200,138 T1400,130 T1600,146 T1800,136 T2100,144 L2100,210 L980,210 Z" fill="#5b8a1f"/><path d="M560,205 Q640,138 720,146 T880,130 T1000,142 L1000,210 L560,210 Z" fill="#5b8a1f"><title>Jurahöhen</title></path><path d="M640,210 Q760,165 1000,175 L1000,210 Z" fill="#4d7c0f"/><path d="M985,175.5 L1000,175 Q1300,166 1800,182 T2100,178 L2100,210 L985,210 Z" fill="#4d7c0f"/>`);
   const kernOn = S.history.length <= 2 || has(S, 'kern');
   o.push(`<g opacity="${kernOn ? 1 : 0.45}"><title>Kernkraftwerk ${kernOn ? '(in Betrieb)' : '(abgeschaltet)'}</title><path d="M942,150 Q949,128 945,106 L969,106 Q965,128 972,150 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width=".8"/>${kernOn ? [0, 1.3, 2.6].map(d => puff(957, 100, '#fff', 6, 4, d, 'steam')).join('') : ''}</g>`);
   if (on('netz')) { const xs = [300, 445, 590, 700]; o.push(`<g class="${cls('netz')}"><title>Ausgebautes Stromnetz</title>` + xs.map(x => `<polygon points="${x - 7},212 ${x},140 ${x + 7},212" fill="none" stroke="#94a3b8" stroke-width="1.5"/><line x1="${x - 13}" y1="148" x2="${x + 13}" y2="148" stroke="#94a3b8" stroke-width="1.5"/>`).join('') + xs.slice(0, -1).map((x, i) => [-13, 13].map(dx => `<path d="M${x + dx},148 Q${(x + xs[i + 1]) / 2},162 ${xs[i + 1] + dx},148" stroke="#64748b" stroke-width=".8" fill="none"/>`).join('')).join('') + '</g>'); }
