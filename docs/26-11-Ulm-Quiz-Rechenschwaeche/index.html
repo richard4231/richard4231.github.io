@@ -38,10 +38,14 @@ body{
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
 .wrap{max-width:46rem;margin:0 auto;padding:0 1.25rem}
 
-.intro{padding:3rem 0 1.5rem}
+.intro{padding-top:3rem;padding-bottom:1.5rem}
 .intro h1{font-size:clamp(2rem,6vw,3rem);line-height:1.08;margin:0 0 .75rem;letter-spacing:-.01em}
 .intro p{margin:.4rem 0;color:var(--muted);max-width:38rem}
 .intro .src{color:var(--ink)}
+.howto summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:.95rem;margin:.6rem 0 .4rem;width:max-content;max-width:100%}
+.howto .when-closed{display:none}
+.howto:not([open]) .when-open{display:none}
+.howto:not([open]) .when-closed{display:inline}
 
 .bar{
   position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
@@ -50,15 +54,16 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   border-bottom:1px solid var(--line);
 }
 .bar .wrap{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;padding-top:.7rem;padding-bottom:.7rem}
-.field{display:grid;grid-template-columns:repeat(10,auto);gap:5px 5px}
-.field button:nth-child(10n+6){margin-left:9px}
+/* Zwanzigerfeld: 2 Zeilen à 10, Fünfergruppen; Frage 1–14 Wertung, 15–20 Zusatz */
+.field{display:grid;grid-template-columns:repeat(10,auto);gap:6px 5px}
+.field .dot:nth-child(10n+6){margin-left:10px}
 .dot{
   width:20px;height:20px;border-radius:50%;padding:0;cursor:pointer;
   border:2px solid var(--muted);background:transparent;
 }
-.dot[data-state="ok"]{background:var(--ok);border-color:var(--ok)}
-.dot[data-state="no"]{background:var(--red);border-color:var(--red)}
-.dot[data-state="part"]{border-color:var(--part);background:linear-gradient(90deg,var(--part) 50%,transparent 50%)}
+.dot.extra{background:color-mix(in srgb,var(--muted) 30%,transparent);border-color:color-mix(in srgb,var(--muted) 30%,transparent)}
+.dot.extra[data-state="extra"]{background:var(--muted);border-color:var(--muted)}
+.dot.extra[data-state="seen"]{background:color-mix(in srgb,var(--muted) 30%,transparent);border-color:var(--blue)}
 .dot[data-state="seen"]{border-color:var(--blue);border-style:dashed}
 .dot:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 .score{font-size:.95rem;color:var(--muted)}
@@ -114,6 +119,36 @@ button.btn.ghost{background:transparent;color:var(--blue)}
 .rate button[aria-pressed="true"][data-v="part"]{border-color:var(--part);background:var(--partbg)}
 .rate button[aria-pressed="true"][data-v="no"]{border-color:var(--red);background:var(--nobg)}
 
+.note{font-size:.9rem;font-weight:700;color:var(--part);margin:.6rem 0 0}
+.fb .small{font-size:.9rem;color:var(--muted)}
+.part-head{margin:2.2rem 0 1rem}
+.part-head:first-child{margin-top:0}
+.part-head h2{font-size:1.35rem;margin:0 0 .3rem}
+.part-head p{margin:0;color:var(--muted)}
+.q.extra{border-style:dashed}
+.q.extra .kind::after{content:" · Zusatzfrage";font-weight:400;color:var(--muted)}
+
+.eval{
+  background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);
+  border-radius:6px;padding:1.4rem;margin:0 0 2rem;
+}
+.eval h2{margin:0 0 .4rem;font-size:1.35rem}
+.eval p{margin:.4rem 0;color:var(--muted)}
+.chips{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:.9rem .3rem;max-width:36rem;margin:1.2rem 0}
+.chip:nth-child(10n+6){margin-left:.7rem}
+.chip{display:flex;flex-direction:column;align-items:center;gap:.2rem;font-size:.85rem;color:var(--muted)}
+.chip svg{width:100%;max-width:40px;height:auto;aspect-ratio:1;display:block}
+.chip.extra{opacity:.4}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:.88rem;color:var(--muted);margin:.4rem 0 .8rem}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.legend svg{width:18px;height:18px;flex:none}
+.who{display:block;font-size:.9rem;color:var(--muted);margin-top:1rem}
+.who input{
+  display:block;width:100%;max-width:22rem;margin-top:.3rem;padding:.45rem .6rem;
+  font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:5px;
+}
+.savehint{font-size:.85rem}
+
 .end{border-top:1px solid var(--line);padding-top:1.5rem}
 .end p{color:var(--muted)}
 [hidden]{display:none!important}
@@ -122,7 +157,8 @@ button.btn.ghost{background:transparent;color:var(--blue)}
   .q{padding:1.1rem 1rem 1rem}
 }
 @media print{
-  .bar,.actions,.end .actions{display:none}
+  .bar,.actions,.end .actions,.who,.savehint{display:none}
+  .eval{break-inside:avoid}
   .q{break-inside:avoid}
 }
 </style>
@@ -131,18 +167,42 @@ button.btn.ghost{background:transparent;color:var(--blue)}
 
 <header class="wrap intro">
   <h1>Rechenschwäche in der Sekundarstufe</h1>
-  <p class="src">Quiz zu Volker Ulm (2022), Vorwort und Kapitel A, S. 4–29</p>
-  <p>20 Fragen in Textreihenfolge: Single Choice, Multiple Choice und offene Kurzantworten. Jede Frage zählt 1 Punkt. Bei offenen Fragen vergleichst du deine Antwort mit dem Erwartungshorizont und schätzt dich selbst ein. Bei Fragen zu Inhalten ab S. 19 findest du in der Kopfzeile einen Hinweis, wo die Antwort in der Handreichung zu finden ist. Die Antwortoptionen werden bei jedem Laden neu gemischt.</p>
+  <p class="src">Quiz zum Text <strong>Rechenschwäche in der Sekundarstufe</strong> (Ulm, 2022)</p>
+  <details class="howto" id="howto">
+    <summary><span class="when-open">Hinweise einklappen</span><span class="when-closed">Hinweise zum Quiz anzeigen</span></summary>
+  <p>Mit diesem Quiz überprüfst du, ob du den Text verstanden hast. Die Fragen 1–14 beziehen sich auf S. 4–18 und bilden die Gesamtwertung; jede zählt 1 Punkt. Ist eine Antwort falsch oder teilweise richtig, kannst du es einmal nochmals versuchen. Im Zweitversuch zählt die Frage nur noch halb.</p>
+  <p>Die Zusatzfragen 15–20 gehen über S. 18 hinaus. Du erhältst zu jeder eine Rückmeldung, sie fliessen aber nicht in die Gesamtwertung ein; in der Kopfzeile steht, wo die Antwort in der Handreichung zu finden ist.</p>
+  <p>Bei offenen Fragen vergleichst du deine Antwort mit dem Erwartungshorizont und schätzt dich selbst ein. Am Schluss kannst du deine Auswertung als Bild oder als HTML-Datei speichern. Die Antwortoptionen sind gemischt; ihre Reihenfolge bleibt beim Neuladen gleich.</p>
+  <p>Dein Zwischenstand wird in diesem Browser auf deinem Gerät zwischengespeichert: Beim Neuladen oder Wiederöffnen machst du dort weiter, wo du aufgehört hast.</p>
+  </details>
 </header>
 
 <div class="bar">
   <div class="wrap">
     <nav class="field" id="field" aria-label="Fortschritt, eine Kugel pro Frage"></nav>
-    <div class="score" aria-live="polite"><strong id="pts">0</strong> von 20 Punkten, <span id="done">0</span> beantwortet</div>
+    <div class="score" id="score" aria-live="polite" hidden><span id="done">0</span> von <span class="ncore">14</span> bearbeitet · <strong id="pts">0</strong> Punkte</div>
   </div>
 </div>
 
 <main class="wrap" id="quiz"></main>
+
+<section class="wrap" aria-labelledby="evalTitle">
+  <div class="eval">
+    <h2 id="evalTitle">Auswertung</h2>
+    <p>Ein Legeplättchen pro Frage, in Fünfergruppen. Die Gesamtwertung umfasst die Fragen 1–<span class="ncore">14</span>.</p>
+    <div class="chips" id="chips"></div>
+    <div class="legend" id="legend"></div>
+    <p id="xtra"></p>
+    <label class="who">Name (optional, erscheint auf der gespeicherten Auswertung)
+      <input id="who" type="text" autocomplete="name">
+    </label>
+    <div class="actions">
+      <button class="btn" id="savePng">Als Bild speichern (PNG)</button>
+      <button class="btn ghost" id="saveHtml">Als HTML-Datei speichern</button>
+    </div>
+    <p class="savehint">Dein Zwischenstand liegt nur in diesem Browser auf deinem Gerät. «Quiz zurücksetzen» löscht ihn. Die gespeicherte Datei (PNG oder HTML) kannst du weitergeben.</p>
+  </div>
+</section>
 
 <section class="wrap end">
   <p>«Alle Lösungen einblenden» zeigt Lösungen und Erwartungshorizonte ohne Bewertung, etwa zur Besprechung im Plenum.</p>
@@ -156,7 +216,7 @@ button.btn.ghost{background:transparent;color:var(--blue)}
 <script>
 const Q = [
 { kind:"open", page:"S. 4",
-  q:"Wie kann ein Kind mit Rechenschwäche die Grundschule trotzdem mit einer mittleren Mathematiknote abschliessen – und warum funktioniert das in der Sekundarstufe nicht mehr?",
+  q:"Wie kann ein Kind mit Rechenschwäche die Grundschule trotzdem mit einer mittleren Mathematiknote abschliessen, und warum funktioniert das in der Sekundarstufe nicht mehr?",
   model:[
     "Verständnisdefizite werden durch Auswendiglernen von Ergebnissen, ein gutes Gedächtnis und fleissiges Üben kompensiert.",
     "In der Sekundarstufe bauen negative Zahlen, Brüche, Variablen und Terme auf dem Verständnis natürlicher Zahlen auf.",
@@ -194,7 +254,7 @@ const Q = [
   q:"Welche Aussagen zur Multiplikation entsprechen dem Text?",
   options:[
     ["«Max geht dreimal in den Keller und holt jeweils fünf Flaschen» steht für die zeitlich-sukzessive Grundvorstellung.",1],
-    ["Mit der Reihenfolgevorstellung lässt sich 3 · 5 als Vorwärtszählen in Fünfersprüngen bearbeiten – laut Ulm auch im Tausenderraum ein tragfähiger Weg.",0],
+    ["Mit der Reihenfolgevorstellung lässt sich 3 · 5 als Vorwärtszählen in Fünfersprüngen bearbeiten; laut Ulm ist das auch im Tausenderraum ein tragfähiger Weg.",0],
     ["Die räumlich-simultane Grundvorstellung braucht keine Handlung: Die Objekte liegen bereits strukturiert vor, z. B. drei Würfel mit je fünf Augen.",1],
     ["Die grundlegende Vorstellung zur Multiplikation ist das Zusammenfügen zweier disjunkter Mengen.",0],
     ["Ein rechteckiges Muster aus dreimal fünf Punkten eignet sich als klar strukturierte Visualisierung von 3 · 5.",1]
@@ -222,7 +282,7 @@ const Q = [
   q:"Erkläre am Beispiel der Zahl 58, warum das Stellenwertsystem ohne Anzahlvorstellung nicht verstanden werden kann.",
   model:[
     "Mit der Reihenfolgevorstellung allein ist 58 nur die Position zwischen 57 und 59.",
-    "Im Stellenwertsystem steht die 5 für fünf Zehner (Bündel aus je zehn Einern) und die 8 für acht Einer – es geht um Grösse und Anzahl von Bündeln, also um «Wie viele?».",
+    "Im Stellenwertsystem steht die 5 für fünf Zehner (Bündel aus je zehn Einern) und die 8 für acht Einer. Es geht um Grösse und Anzahl von Bündeln, also um «Wie viele?».",
     "Bündelungsprinzip: Die Position einer Ziffer gibt die Bündelart an, ihr Wert die Anzahl der Bündel. Darauf beruhen auch halbschriftliche und schriftliche Verfahren."
   ]},
 { kind:"mc", page:"S. 12",
@@ -244,7 +304,7 @@ const Q = [
     ["Lena hat eine erst in der Sekundarstufe entstandene Rechenschwäche.",0],
     ["Lena hat keine Rechenschwäche; ihre Schwierigkeiten betreffen Inhalte der Sekundarstufe.",1]
   ],
-  exp:"Rechenschwäche bezieht sich auf natürliche Zahlen und damit auf Inhalte der Jahrgangsstufen 1–4. Rechenschwache Lernende haben in der Sekundarstufe meist erhebliche Schwierigkeiten – umgekehrt hat aber nicht jede Person mit Schwierigkeiten in der Sekundarstufe eine Rechenschwäche."},
+  exp:"Rechenschwäche bezieht sich auf natürliche Zahlen und damit auf Inhalte der Jahrgangsstufen 1–4. Rechenschwache Lernende haben in der Sekundarstufe meist erhebliche Schwierigkeiten. Umgekehrt hat aber nicht jede Person mit Schwierigkeiten in der Sekundarstufe eine Rechenschwäche."},
 { kind:"mc", page:"S. 16",
   q:"Welche Symptomfelder von Rechenschwäche nennt Schipper (2005)?",
   options:[
@@ -255,12 +315,12 @@ const Q = [
     ["Prüfungsangst",0],
     ["Intermodalitätsprobleme",1]
   ],
-  exp:"Schipper nennt vier Symptomfelder. «Schwierigkeiten im Klassifizieren» stammt aus Gaidoschiks Merkmalsliste für die erste Jahrgangsstufe. Nicht alle rechenschwachen Kinder zeigen Auffälligkeiten in allen Feldern – und nicht alle mit Auffälligkeiten sind rechenschwach."},
+  exp:"Schipper nennt vier Symptomfelder. «Schwierigkeiten im Klassifizieren» stammt aus Gaidoschiks Merkmalsliste für die erste Jahrgangsstufe. Nicht alle rechenschwachen Kinder zeigen Auffälligkeiten in allen Feldern, und nicht alle mit Auffälligkeiten sind rechenschwach."},
 { kind:"open", page:"S. 16",
   q:"Was versteht man unter Intermodalitätsproblemen? Nenne ein Beispiel aus dem Mathematikunterricht.",
   model:[
     "Informationen lassen sich durch Handlungen, Bilder und Symbole darstellen; im Unterricht wird laufend zwischen diesen Darstellungen übersetzt.",
-    "Rechenschwachen Kindern gelingen diese wechselseitigen Übersetzungen oft nicht – die Welt der Anschauungsmaterialien hat für sie scheinbar wenig mit der Welt der Rechenaufgaben zu tun.",
+    "Rechenschwachen Kindern gelingen diese wechselseitigen Übersetzungen oft nicht. Die Welt der Anschauungsmaterialien hat für sie scheinbar wenig mit der Welt der Rechenaufgaben zu tun.",
     "Mögliches Beispiel: Ein Kind löst 3 · 5 am Punktefeld, kann aber keine passende Sachsituation formulieren oder die Rechnung dem Bild nicht zuordnen."
   ]},
 { kind:"sc", page:"S. 18",
@@ -272,6 +332,14 @@ const Q = [
     ["Etwa 20 %",0]
   ],
   exp:"Die Literaturangaben schwanken zwischen 2 % und 20 %, weil die Grenzziehung zwischen «normal» und «rechenschwach» immer ein Stück weit willkürlich ist. Die Faustregel von Ulm lautet etwa 5 %. Er geht davon aus, dass der Anteil in der Sekundarstufe nicht viel geringer ist."},
+{ kind:"open", page:"S. 12–13", reflect:true,
+  q:"Reflexion: Ulm verwendet «Rechenschwäche», «Rechenstörung» und «Dyskalkulie» synonym, bevorzugt aber «Rechenschwäche». Welche Gründe nennt er, und wo siehst du eine Grenze dieser Position?",
+  model:[
+    "Griechisch-lateinische Begriffe (Dyskalkulie, Arithmasthenie …) rücken das Phänomen in den Bereich der Krankheiten.",
+    "Damit wird teils die Zuständigkeit von der Schule weg zu kommerziellen «Instituten» verlagert (Lorenz 2003b).",
+    "Bedrohlich klingende Labels wirken auf das Kind; «Schwäche» signalisiert dagegen, dass sie durch gezieltes Training gemindert, überwunden oder ihr vorgebeugt werden kann.",
+    "Mögliche Grenzen (eigene Begründung gefragt): Klinische Klassifikationen unterscheiden enger; der synonyme Gebrauch kann Fälle verdecken, die trotz Förderung bestehen bleiben; solche Fälle räumt Ulm später selbst ein (Kap. K). Je nach Bildungssystem hängen Nachteilsausgleich oder Ressourcen an der Begrifflichkeit."
+  ]},
 { kind:"mc", page:"S. 19–20", chapter:"Kapitel A, Abschnitt 8 · Vertiefung: Kapitel B–I",
   q:"Welche Verfahren ordnet Ulm den prozessorientierten Diagnoseverfahren zu?",
   options:[
@@ -286,7 +354,7 @@ const Q = [
 { kind:"open", page:"S. 20", chapter:"Kapitel A, Abschnitt 8 · Vertiefung: Kapitel I (BFD) und H (Gaidoschik)",
   q:"Was meint «Denkanalyse», und warum wird sie auch bei richtigen Endergebnissen durchgeführt?",
   model:[
-    "Im Diagnosegespräch wird das Kind gebeten, seinen Rechenweg zu verbalisieren oder mit Material zu zeigen («Erkläre mir bitte, wie du das gerechnet hast.») – es wird zu lautem Denken angeregt.",
+    "Im Diagnosegespräch wird das Kind gebeten, seinen Rechenweg zu verbalisieren oder mit Material zu zeigen («Erkläre mir bitte, wie du das gerechnet hast.»). So wird es zu lautem Denken angeregt.",
     "So lässt sich erfassen, welche Vorstellungen und Strategien es nutzt und welche Fehlvorstellungen sich verfestigt haben (Begriff nach Gaidoschik 2004).",
     "Richtige Ergebnisse können auch auf wenig tragfähigen Wegen entstehen, etwa durch zählendes Rechnen oder Rechentricks, die nur bei bestimmten Zahlen funktionieren."
   ]},
@@ -298,20 +366,20 @@ const Q = [
     ["Er addiert die Einer, statt sie zu subtrahieren.",0],
     ["Er verrechnet Zehner und Einer getrennt und zieht jeweils die kleinere von der grösseren Ziffer ab.",1]
   ],
-  exp:"Beispiel aus Schipper (2005): Die Ergebnisse sind falsch, aber nicht zufällig – dahinter steht ein konsequent angewandtes, fehlerhaftes Verfahren. Ein produktorientierter Test registriert nur «falsch»; erst die Denkanalyse deckt die Strategie auf. Bei der Addition zeigt sich dasselbe Muster: 34 + 48 = 712."},
+  exp:"Beispiel aus Schipper (2005): Die Ergebnisse sind falsch, aber nicht zufällig: Dahinter steht ein konsequent angewandtes, fehlerhaftes Verfahren. Ein produktorientierter Test registriert nur «falsch»; erst die Denkanalyse deckt die Strategie auf. Bei der Addition zeigt sich dasselbe Muster: 34 + 48 = 712."},
 { kind:"mc", page:"S. 23–24", chapter:"Kapitel A, Abschnitt 10",
   q:"Welche Kritikpunkte an Diskrepanzdefinitionen (Rechenleistung deutlich unter dem IQ) führt Ulm an?",
   options:[
-    ["Kinder, die im Rechentest und im IQ-Test schwach abschneiden, erhalten kein Label – obwohl sie Förderung bräuchten.",1],
+    ["Kinder, die im Rechentest und im IQ-Test schwach abschneiden, werden nicht als rechenschwach diagnostiziert, und damit wird ihnen Förderung verwehrt.",1],
     ["Das Verfahren ist für den Schulalltag zu aufwändig und kompliziert.",0],
-    ["Ob jemand das Label erhält, hängt von der Wahl des IQ-Tests und des Rechentests ab.",1],
+    ["Ob ein Kind als rechenschwach diagnostiziert wird, hängt von der Wahl des IQ-Tests und des Rechentests ab.",1],
     ["Die Definition suggeriert eine zeitlich stabile Personeneigenschaft, obwohl Rechenschwäche durch Förderung behoben werden kann.",1],
     ["IQ-Tests erfassen die Rechenwege der Kinder zu detailliert.",0],
-    ["Die Definition suggeriert, die Schwierigkeiten gingen in «höherer Mathematik» zurück – dabei bauen Brüche, Terme und Funktionen auf natürlichen Zahlen auf.",1]
+    ["Die Definition suggeriert, die Schwierigkeiten gingen in «höherer Mathematik» zurück, obwohl Brüche, Terme und Funktionen auf natürlichen Zahlen aufbauen.",1]
   ],
   exp:"Ulm nennt das Verfahren im Gegenteil formal, mechanistisch und relativ einfach. Zusätzlich: Durch den Teufelskreis können auch IQ-Werte sinken, sodass die geforderte Diskrepanz paradoxerweise verschwindet. Und beide Testarten erfassen nur Endergebnisse, nicht das Denken."},
 { kind:"sc", page:"S. 26", chapter:"Kapitel A, Abschnitt 11 (Ursachenbereich «Familiäres Umfeld»)",
-  q:"Eltern bringen ihrem Kind bei, Zehner und Einer «einfach getrennt» zu rechnen, damit es schneller zum Ergebnis kommt – ohne Bezug zu Bündeln oder Material. Wie ordnet Ulm solche Hilfen ein?",
+  q:"Eltern bringen ihrem Kind bei, Zehner und Einer «einfach getrennt» zu rechnen, damit es schneller zum Ergebnis kommt, ohne sich auf Bündel oder Material zu beziehen. Wie ordnet Ulm solche Hilfen ein?",
   options:[
     ["Als gutgemeinte «Rechentricks», die schematisch ausgeführt werden, den Aufbau von Vorstellungen unterlaufen und in eine Sackgasse führen können",1],
     ["Als sinnvolle Vorstufe zum schriftlichen Rechnen, die die Schule aufgreifen sollte",0],
@@ -320,30 +388,31 @@ const Q = [
   ],
   exp:"Ulm ordnet das dem Ursachenbereich «Familiäres Umfeld» zu. Daneben nennt er die Bereiche «Kind» und «Schule» (z. B. zu wenig Gewicht auf Grundvorstellungen und die Ablösung vom zählenden Rechnen). Kein Risikofaktor führt zwangsläufig zu Rechenschwäche."},
 { kind:"open", page:"S. 27–28", chapter:"Kapitel A, Abschnitte 12 und 13",
-  q:"Warum hilft «einfach mehr üben» bei Rechenschwäche nicht – und wie hängt das mit dem «Teufelskreis Rechenschwäche» zusammen?",
+  q:"Warum hilft «einfach mehr üben» bei Rechenschwäche nicht, und wie hängt das mit dem «Teufelskreis Rechenschwäche» zusammen?",
   model:[
     "Entscheidend ist, was das Kind beim Üben denkt. Ohne gleichzeitigen Aufbau von Grundvorstellungen und Stellenwertverständnis festigt Üben bestehende Fehlvorstellungen und zählende Strategien oder führt zu verständnislosem Auswendiglernen.",
     "In neuen Zahlenräumen oder höheren Jahrgangsstufen fehlt dann transferfähiges Wissen.",
     "Teufelskreis (Gaidoschik 2019): Trotz Anstrengung bleiben Misserfolge → Unlust, Übungsverweigerung → Selbstzweifel, negatives Selbstbild → allgemeine Schulunlust → Misserfolge in anderen Fächern → Verstärkung des negativen Selbstbilds."
-  ]},
-{ kind:"open", page:"S. 12–13", reflect:true,
-  q:"Reflexion: Ulm verwendet «Rechenschwäche», «Rechenstörung» und «Dyskalkulie» synonym, bevorzugt aber «Rechenschwäche». Welche Gründe nennt er – und wo siehst du eine Grenze dieser Position?",
-  model:[
-    "Griechisch-lateinische Begriffe (Dyskalkulie, Arithmasthenie …) rücken das Phänomen in den Bereich der Krankheiten.",
-    "Damit wird teils die Zuständigkeit von der Schule weg zu kommerziellen «Instituten» verlagert (Lorenz 2003b).",
-    "Bedrohlich klingende Labels wirken auf das Kind; «Schwäche» signalisiert dagegen, dass sie durch gezieltes Training gemindert, überwunden oder ihr vorgebeugt werden kann.",
-    "Mögliche Grenzen (eigene Begründung gefragt): Klinische Klassifikationen unterscheiden enger; der synonyme Gebrauch kann Fälle verdecken, die trotz Förderung bestehen bleiben – solche Fälle räumt Ulm später selbst ein (Kap. K). Je nach Bildungssystem hängen Nachteilsausgleich oder Ressourcen an der Begrifflichkeit."
   ]}
 ];
 
 const KIND = {sc:"Single Choice", mc:"Multiple Choice", open:"Offene Kurzantwort"};
 const VALUE = {ok:1, part:.5, no:0};
-const state = Array(Q.length).fill(null);
+// Gesamtwertung: Fragen, deren Seitenangabe bis und mit S. 18 beginnt; alles danach sind Zusatzfragen.
+const LAST_CORE_PAGE = 18;
+Q.forEach(q=>{ q.extra = parseInt(q.page.match(/\d+/)[0],10) > LAST_CORE_PAGE; });
+const CORE = Q.map((q,i)=>i).filter(i=>!Q[i].extra);
+const EXTRA = Q.map((q,i)=>i).filter(i=>Q[i].extra);
+document.querySelectorAll(".ncore").forEach(el=>el.textContent=CORE.length);
+
+const blank = () => ({tries:0, v1:null, v2:null, c1:null, c2:null, final:false, seen:false, self:null});
+const rec = Q.map(blank);
 const quiz = document.getElementById("quiz");
 const field = document.getElementById("field");
 const cards = [];
+const dots = [];
 
-function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -351,12 +420,44 @@ function shuffle(arr){
   }
   return arr;
 }
-Q.forEach(q=>{ if(q.options) shuffle(q.options); });
+
+/* ---------- Zwischenspeicher (localStorage, nur lokal im Browser) ---------- */
+const KEY="quizUlmRechenschwaeche2022";
+const SIG=Q.map(q=>q.q.length+":"+(q.options?q.options.length:0)).join(",");
+let save={sig:SIG,orders:{},rec:[],texts:[],who:"",howto:false};
+try{
+  const p=JSON.parse(localStorage.getItem(KEY)||"null");
+  if(p && p.sig===SIG) save=Object.assign(save,p);
+}catch(e){}
+function persist(){
+  try{ localStorage.setItem(KEY,JSON.stringify(save)); }catch(e){}
+}
+const ORIG=Q.map(q=>q.options?q.options.slice():null);
+Q.forEach((q,i)=>{
+  if(!q.options) return;
+  let ord=save.orders[i];
+  const ok=Array.isArray(ord)&&ord.length===q.options.length&&new Set(ord).size===ord.length&&ord.every(k=>Number.isInteger(k)&&k>=0&&k<ord.length);
+  if(!ok) ord=shuffle([...ORIG[i].keys()]);
+  save.orders[i]=ord;
+  q.options=ord.map(k=>ORIG[i][k]);
+});
+rec.forEach((_,i)=>{ if(save.rec[i] && typeof save.rec[i]==="object") rec[i]=Object.assign(blank(),save.rec[i]); });
+
+
+/* ---------- Aufbau ---------- */
+
+function partHead(title,text){
+  const h=document.createElement("header"); h.className="part-head";
+  h.innerHTML=`<h2>${title}</h2><p>${text}</p>`;
+  quiz.appendChild(h);
+}
 
 Q.forEach((q,i)=>{
   const n=i+1;
+  if(i===CORE[0]) partHead("Verständnisfragen",`S. 4–${LAST_CORE_PAGE} · Diese Fragen bilden die Gesamtwertung.`);
+  if(i===EXTRA[0]) partHead("Zusatzfragen",`Ab S. ${LAST_CORE_PAGE+1} · Rückmeldung pro Frage, ohne Einfluss auf die Gesamtwertung.`);
   const card=document.createElement("article");
-  card.className="q"; card.id="q"+n; card.dataset.kind=q.kind;
+  card.className="q"+(q.extra?" extra":""); card.id="q"+n; card.dataset.kind=q.kind;
   let body=`<div class="meta"><span class="kind">${q.reflect?"Offene Kurzantwort, Reflexion":KIND[q.kind]}</span><span>${esc(q.page)}${q.chapter?` · <span class="chap">${esc(q.chapter)}</span>`:""}</span></div>
   <h2><span class="n">${n}</span>${esc(q.q)}</h2>`;
   if(q.kind==="mc") body+=`<p class="hint">Mehrere Antworten können richtig sein.</p>`;
@@ -364,7 +465,12 @@ Q.forEach((q,i)=>{
     const type=q.kind==="sc"?"radio":"checkbox";
     body+=`<fieldset><legend class="hint" style="position:absolute;left:-9999px">Antwortoptionen zu Frage ${n}</legend>`+
       q.options.map((o,k)=>`<label class="opt"><input type="${type}" name="q${n}" value="${k}"><span>${esc(o[0])}</span><span class="mark"></span></label>`).join("")+
-      `</fieldset><div class="actions"><button class="btn check">Antwort prüfen</button></div><div class="msg" hidden>Wähle zuerst eine Antwort aus.</div>`;
+      `</fieldset><p class="note" hidden></p>
+      <div class="actions">
+        <button class="btn check">Antwort prüfen</button>
+        <button class="btn retry" hidden>Nochmals versuchen</button>
+        <button class="btn ghost solve" hidden>Lösung zeigen</button>
+      </div><div class="msg" hidden>Wähle zuerst eine Antwort aus.</div>`;
   } else {
     body+=`<label style="position:absolute;left:-9999px" for="t${n}">Deine Antwort zu Frage ${n}</label>
     <textarea id="t${n}" placeholder="Deine Antwort in zwei bis vier Sätzen"></textarea>
@@ -373,103 +479,390 @@ Q.forEach((q,i)=>{
   body+=`<div class="fb" hidden></div>`;
   card.innerHTML=body;
   quiz.appendChild(card); cards.push(card);
-  card.querySelector(".check").addEventListener("click",()=>{
-    if(card.dataset.checked) retry(i); else check(i,true);
-  });
+
+  if(q.kind==="open"){
+    card.querySelector("textarea").addEventListener("input",e=>{ save.texts[i]=e.target.value; persist(); });
+    card.querySelector(".check").addEventListener("click",()=>{
+      if(card.dataset.checked) card.querySelector("textarea").focus(); else showHorizon(i,true);
+    });
+  } else {
+    card.querySelector(".check").addEventListener("click",()=>evaluate(i));
+    card.querySelector(".retry").addEventListener("click",()=>startRetry(i));
+    card.querySelector(".solve").addEventListener("click",()=>finalize(i));
+  }
 
   const d=document.createElement("button");
-  d.className="dot"; d.type="button"; d.setAttribute("aria-label",`Frage ${n}: offen`);
+  d.className="dot"+(q.extra?" extra":""); d.type="button";
   d.addEventListener("click",()=>{card.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});});
-  field.appendChild(d);
+  if(q.extra) d.title="Zusatzfrage (nicht in der Gesamtwertung)";
+  field.appendChild(d); dots.push(d);
 });
-const dots=[...field.children];
 
-function check(i,scored){
-  const q=Q[i], card=cards[i], fb=card.querySelector(".fb"), btn=card.querySelector(".check");
-  if(q.kind==="open"){
-    fb.innerHTML=`<p class="verdict">Erwartungshorizont</p><ul>${q.model.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>`+
-      (scored?`<div class="rate" role="group" aria-label="Selbsteinschätzung"><span>Deine Einschätzung:</span>
-        <button type="button" data-v="ok" aria-pressed="false">Getroffen</button>
-        <button type="button" data-v="part" aria-pressed="false">Teilweise</button>
-        <button type="button" data-v="no" aria-pressed="false">Noch nicht</button></div>`:"");
-    fb.hidden=false;
-    fb.querySelectorAll(".rate button").forEach(b=>b.addEventListener("click",()=>{
-      fb.querySelectorAll(".rate button").forEach(x=>x.setAttribute("aria-pressed","false"));
-      b.setAttribute("aria-pressed","true");
-      setState(i,b.dataset.v);
-    }));
-    btn.textContent="Antwort überarbeiten"; card.dataset.checked="1";
-    if(!scored && !state[i]) setState(i,"seen");
-    return;
+/* ---------- Bewertung ---------- */
+const correctIdx = q => q.options.map((o,k)=>o[1]?k:-1).filter(k=>k>=0);
+function grade(q,chosen){
+  const correct=correctIdx(q);
+  const wrong=chosen.some(k=>!correct.includes(k));
+  const hits=chosen.filter(k=>correct.includes(k)).length;
+  if(!wrong && hits===correct.length) return "ok";
+  if(q.kind==="mc" && !wrong && hits>0) return "part";
+  return "no";
+}
+function verdictText(q,chosen,v){
+  if(v==="ok") return "Richtig.";
+  if(v==="part"){
+    const correct=correctIdx(q), hits=chosen.filter(k=>correct.includes(k)).length;
+    return `Teilweise richtig: ${hits} von ${correct.length} richtigen Antworten gefunden.`;
   }
+  return q.kind==="mc" ? "Nicht ganz: Mindestens eine gewählte Antwort ist falsch." : "Nicht richtig.";
+}
+// Anteil eines Punktes (0 … 1) oder null, solange unbeantwortet
+function frac(i){
+  const q=Q[i], r=rec[i];
+  if(q.kind==="open") return r.self ? VALUE[r.self] : null;
+  if(r.v2) return VALUE[r.v2]/2;
+  if(r.v1) return VALUE[r.v1];
+  return null;
+}
+
+function evaluate(i){
+  const q=Q[i], card=cards[i], r=rec[i];
   const inputs=[...card.querySelectorAll("input")];
   const chosen=inputs.filter(x=>x.checked).map(x=>+x.value);
   const msg=card.querySelector(".msg");
-  if(scored && !chosen.length){msg.hidden=false; return;}
+  if(!chosen.length){msg.hidden=false; return;}
   msg.hidden=true;
-  const correct=q.options.map((o,k)=>o[1]?k:-1).filter(k=>k>=0);
-  const labels=[...card.querySelectorAll(".opt")];
-  labels.forEach((l,k)=>{
+  const v=grade(q,chosen);
+  if(r.tries===0){
+    r.tries=1; r.v1=v; r.c1=chosen;
+    if(v==="ok") finalize(i); else pending(i);
+  } else {
+    r.tries=2; r.v2=v; r.c2=chosen;
+    finalize(i);
+  }
+}
+
+// Erstversuch falsch oder teilweise richtig: Lösung noch nicht zeigen, Zweitversuch anbieten
+function pending(i){
+  const q=Q[i], card=cards[i], r=rec[i], fb=card.querySelector(".fb");
+  card.querySelectorAll("input").forEach(x=>x.disabled=true);
+  fb.innerHTML=`<p class="verdict ${r.v1}">${verdictText(q,r.c1,r.v1)}</p>
+    <p>Du kannst es einmal nochmals versuchen${q.extra?"":". Im Zweitversuch zählt die Frage nur noch halb"}. Oder lass dir direkt die Lösung zeigen.</p>`;
+  fb.hidden=false;
+  card.querySelector(".check").hidden=true;
+  card.querySelector(".retry").hidden=false;
+  card.querySelector(".solve").hidden=false;
+  paint(i);
+}
+
+function startRetry(i){
+  const q=Q[i], card=cards[i];
+  const inputs=[...card.querySelectorAll("input")];
+  inputs.forEach(x=>x.disabled=false);
+  card.querySelector(".fb").hidden=true;
+  const note=card.querySelector(".note");
+  note.textContent = q.extra ? "Zweitversuch" : "Zweitversuch: Die Frage zählt nur noch halb.";
+  note.hidden=false;
+  const btn=card.querySelector(".check");
+  btn.textContent="Zweitversuch prüfen"; btn.hidden=false;
+  card.querySelector(".retry").hidden=true;
+  card.querySelector(".solve").hidden=true;
+  inputs[0].focus();
+}
+
+// Abschluss: Lösung mit Markierungen und Erläuterung zeigen
+function finalize(i){
+  const q=Q[i], card=cards[i], r=rec[i], fb=card.querySelector(".fb");
+  r.final=true;
+  const chosen=r.c2||r.c1||[], v=r.v2||r.v1, scored=!!v;
+  const inputs=[...card.querySelectorAll("input")];
+  inputs.forEach(x=>{x.checked=chosen.includes(+x.value); x.disabled=true;});
+  const correct=correctIdx(q);
+  card.querySelectorAll(".opt").forEach((l,k)=>{
     const isC=correct.includes(k), isCh=chosen.includes(k), mk=l.querySelector(".mark");
+    l.classList.remove("is-correct","is-wrong","is-missed"); mk.textContent="";
     if(isC && isCh){l.classList.add("is-correct"); mk.textContent="richtig";}
     else if(!isC && isCh){l.classList.add("is-wrong"); mk.textContent="falsch";}
     else if(isC){l.classList.add(scored?"is-missed":"is-correct"); mk.textContent=scored?"fehlt":"richtig";}
   });
-  inputs.forEach(x=>x.disabled=true);
-  let v=null, label="Lösung";
-  if(scored){
-    const wrongChosen=chosen.some(k=>!correct.includes(k));
-    const hits=chosen.filter(k=>correct.includes(k)).length;
-    if(!wrongChosen && hits===correct.length){v="ok";label="Richtig.";}
-    else if(q.kind==="mc" && !wrongChosen && hits>0){v="part";label=`Teilweise richtig: ${hits} von ${correct.length} richtigen Antworten gefunden.`;}
-    else {v="no";label=q.kind==="mc"?"Nicht ganz: Mindestens eine gewählte Antwort ist falsch.":"Nicht richtig.";}
-  }
-  fb.innerHTML=`<p class="verdict ${v||""}">${label}</p><p>${esc(q.exp)}</p>`;
+  let head;
+  if(!scored) head=`<p class="verdict">Lösung</p>`;
+  else if(r.v2) head=`<p class="verdict ${v}">Zweitversuch: ${verdictText(q,chosen,v)}</p>`+
+    (q.extra?"":`<p class="small">Im Zweitversuch zählt die Frage nur halb.</p>`);
+  else head=`<p class="verdict ${v}">${verdictText(q,chosen,v)}</p>`;
+  fb.innerHTML=head+`<p>${esc(q.exp)}</p>`;
   fb.hidden=false;
-  btn.textContent="Nochmals versuchen"; card.dataset.checked="1";
-  setState(i, v || (state[i]||"seen"));
+  card.querySelector(".note").hidden=true;
+  card.querySelector(".msg").hidden=true;
+  ["check","retry","solve"].forEach(c=>card.querySelector("."+c).hidden=true);
+  if(!scored) r.seen=true;
+  paint(i);
 }
 
-function retry(i){
-  const card=cards[i], q=Q[i], btn=card.querySelector(".check"), fb=card.querySelector(".fb");
-  if(q.kind==="open"){
-    // Erwartungshorizont bleibt sichtbar; Text kann weiter bearbeitet werden
-    card.querySelector("textarea").focus(); return;
+function showHorizon(i,scored){
+  const q=Q[i], card=cards[i], fb=card.querySelector(".fb"), btn=card.querySelector(".check");
+  fb.innerHTML=`<p class="verdict">Erwartungshorizont</p><ul>${q.model.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>`+
+    (scored?`<div class="rate" role="group" aria-label="Selbsteinschätzung"><span>Deine Einschätzung:</span>
+      <button type="button" data-v="ok" aria-pressed="false">Getroffen</button>
+      <button type="button" data-v="part" aria-pressed="false">Teilweise</button>
+      <button type="button" data-v="no" aria-pressed="false">Noch nicht</button></div>`:"");
+  fb.hidden=false;
+  fb.querySelectorAll(".rate button").forEach(b=>b.addEventListener("click",()=>{
+    fb.querySelectorAll(".rate button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    rec[i].self=b.dataset.v; paint(i);
+  }));
+  btn.textContent="Antwort überarbeiten"; card.dataset.checked="1";
+  if(scored) rec[i].shown=true; else rec[i].seen=true;
+  paint(i);
+}
+
+/* ---------- Anzeige: Kugeln, Punkte, Legeplättchen ---------- */
+const fracText = f => f===1?"richtig":f===0?"nicht richtig":f===.5?"halb (teilweise oder im Zweitversuch richtig)":"Viertel (im Zweitversuch teilweise richtig)";
+function fillCSS(f){
+  if(f>=1) return "var(--ok)";
+  if(f<=0) return "var(--red)";
+  const p=f*100;
+  return `conic-gradient(var(--ok) 0 ${p}%, var(--red) ${p}% 100%)`;
+}
+function paint(i){
+  const q=Q[i], r=rec[i], d=dots[i], f=frac(i);
+  d.removeAttribute("data-state"); d.style.background=""; d.style.borderColor="";
+  let txt="offen";
+  if(q.extra){
+    if(f!==null){d.dataset.state="extra"; txt="bearbeitet";}
+    else if(r.seen){d.dataset.state="seen"; txt="Lösung angesehen";}
+  } else if(f!==null){
+    d.style.background=fillCSS(f); d.style.borderColor=f>0?"var(--ok)":"var(--red)";
+    txt=fracText(f);
+  } else if(r.seen){d.dataset.state="seen"; txt="Lösung angesehen";}
+  if(r.tries===1 && !r.final) txt+=", Zweitversuch möglich";
+  d.setAttribute("aria-label",`${q.extra?"Zusatzfrage":"Frage"} ${i+1}: ${txt}`);
+  updateTotals();
+  save.rec[i]=rec[i]; persist();
+}
+
+const PAGE_COL = {ok:"var(--ok)", no:"var(--red)", empty:"var(--muted)", rim:"var(--line)"};
+const FILE_COL = {ok:"#2D7A4B", no:"#C4362F", empty:"#8A93A8", rim:"#D3D9E3"};
+function chipSVG(f,c,size){
+  const dim=size?` width="${size}" height="${size}"`:"";
+  const open=`<svg viewBox="0 0 40 40"${dim} aria-hidden="true">`;
+  if(f===null) return open+`<circle cx="20" cy="20" r="17" style="fill:none;stroke:${c.empty};stroke-width:2;stroke-dasharray:4 3"/></svg>`;
+  let inner;
+  if(f>=1) inner=`<circle cx="20" cy="20" r="18" style="fill:${c.ok}"/>`;
+  else if(f<=0) inner=`<circle cx="20" cy="20" r="18" style="fill:${c.no}"/>`;
+  else{
+    const a=2*Math.PI*f, x=(20+18*Math.sin(a)).toFixed(2), y=(20-18*Math.cos(a)).toFixed(2);
+    inner=`<circle cx="20" cy="20" r="18" style="fill:${c.no}"/><path d="M20 20 L20 2 A18 18 0 ${f>.5?1:0} 1 ${x} ${y} Z" style="fill:${c.ok}"/>`;
   }
-  card.querySelectorAll(".opt").forEach(l=>{l.classList.remove("is-correct","is-wrong","is-missed");l.querySelector(".mark").textContent="";});
-  card.querySelectorAll("input").forEach(x=>{x.disabled=false;x.checked=false;});
-  fb.hidden=true; fb.innerHTML=""; delete card.dataset.checked;
-  btn.textContent="Antwort prüfen";
-  setState(i,null);
+  return open+inner+`<circle cx="20" cy="20" r="18" style="fill:none;stroke:${c.rim};stroke-width:1.5"/></svg>`;
 }
+function legendItems(){
+  const items=[[1,"richtig"],[.5,"teilweise richtig oder im Zweitversuch richtig"]];
+  if(CORE.some(i=>frac(i)===.25)) items.push([.25,"im Zweitversuch teilweise richtig"]);
+  items.push([0,"nicht richtig"],[null,"noch offen"]);
+  return items;
+}
+const slots = () => [...CORE.map(i=>({i,f:frac(i),extra:false})),...EXTRA.map(i=>({i,f:frac(i),extra:true}))];
+function chipsHTML(c,aria){
+  return slots().map(({i,f,extra})=>{
+    return `<div class="chip${extra?" extra":""}"${aria?` role="img" aria-label="${extra?"Zusatzfrage":"Frage"} ${i+1}: ${f===null?"offen":fracText(f)}"`:""}>${chipSVG(f,c)}<span>${i+1}</span></div>`;
+  }).join("");
+}
+const extraDone = () => EXTRA.filter(i=>frac(i)!==null).length;
 
-function setState(i,v){
-  state[i]=v;
-  const d=dots[i];
-  if(v) d.dataset.state=v; else d.removeAttribute("data-state");
-  const txt={ok:"richtig",part:"teilweise",no:"noch nicht richtig",seen:"Lösung angesehen"}[v]||"offen";
-  d.setAttribute("aria-label",`Frage ${i+1}: ${txt}`);
-  const pts=state.reduce((s,x)=>s+(VALUE[x]??0),0);
-  const done=state.filter(x=>x && x!=="seen").length;
+function updateTotals(){
+  const pts=CORE.reduce((s,i)=>s+(frac(i)??0),0);
+  const done=CORE.filter(i=>frac(i)!==null).length;
   document.getElementById("pts").textContent=pts.toLocaleString("de-CH");
   document.getElementById("done").textContent=done;
+  document.getElementById("score").hidden=!done;
+  document.getElementById("chips").innerHTML=chipsHTML(PAGE_COL,true);
+  document.getElementById("legend").innerHTML=legendItems().map(([f,t])=>`<span>${chipSVG(f,PAGE_COL)}${t}</span>`).join("");
+  document.getElementById("xtra").textContent=EXTRA.length?`Zusatzfragen (ab S. ${LAST_CORE_PAGE+1}): ${extraDone()} von ${EXTRA.length} bearbeitet. Sie erscheinen grau.`:"";
 }
 
+/* ---------- Speichern ---------- */
+const TITLE="Rechenschwäche in der Sekundarstufe";
+const SUB=`Quiz zu Volker Ulm (2022), S. 4–${LAST_CORE_PAGE} · Auswertung`;
+function stamp(){
+  const d=new Date();
+  return {iso:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`,
+          ch:d.toLocaleDateString("de-CH",{day:"numeric",month:"long",year:"numeric"})};
+}
+function whoLine(){
+  const who=document.getElementById("who").value.trim();
+  return (who?who+" · ":"")+stamp().ch;
+}
+function download(blob,name){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1500);
+}
+
+function drawChip(ctx,cx,cy,R,f){
+  ctx.save();
+  if(f===null){
+    ctx.setLineDash([5,4]); ctx.lineWidth=2; ctx.strokeStyle=FILE_COL.empty;
+    ctx.beginPath(); ctx.arc(cx,cy,R-1,0,2*Math.PI); ctx.stroke(); ctx.restore(); return;
+  }
+  ctx.fillStyle=f>0?FILE_COL.ok:FILE_COL.no;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.fill();
+  if(f>0 && f<1){
+    ctx.fillStyle=FILE_COL.no;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,-Math.PI/2+2*Math.PI*f,3*Math.PI/2); ctx.closePath(); ctx.fill();
+  }
+  ctx.lineWidth=1.5; ctx.strokeStyle=FILE_COL.rim;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+  ctx.restore();
+}
+function renderPng(ctx,W){
+  const pad=48, F="'Atkinson Hyperlegible', system-ui, sans-serif";
+  let y=pad;
+  ctx.fillStyle="#FFFFFF"; ctx.fillRect(0,0,W,4000);
+  ctx.fillStyle="#2C64A8"; ctx.fillRect(0,0,8,4000);
+  ctx.textBaseline="top"; ctx.fillStyle="#18233A"; ctx.font=`700 32px ${F}`;
+  ctx.fillText(TITLE,pad,y); y+=44;
+  ctx.fillStyle="#566079"; ctx.font=`19px ${F}`;
+  ctx.fillText(SUB,pad,y); y+=28;
+  ctx.fillText(whoLine(),pad,y); y+=52;
+  const cols=10, gap=18, cell=(W-2*pad-gap)/cols, R=30, rowH=2*R+46;
+  const all=slots();
+  all.forEach((o,k)=>{
+    const col=k%cols, cx=pad+cell*col+cell/2+(col>=5?gap:0), cy=y+Math.floor(k/cols)*rowH+R;
+    ctx.save(); if(o.extra) ctx.globalAlpha=.4;
+    drawChip(ctx,cx,cy,R,o.f);
+    ctx.fillStyle="#566079"; ctx.font=`17px ${F}`; ctx.textAlign="center";
+    ctx.fillText(String(o.i+1),cx,cy+R+8); ctx.textAlign="left";
+    ctx.restore();
+  });
+  y+=Math.ceil(all.length/cols)*rowH+14;
+  ctx.font=`16px ${F}`;
+  let x=pad;
+  legendItems().forEach(([f,t])=>{
+    const w=26+ctx.measureText(t).width+28;
+    if(x+w>W-pad){x=pad; y+=30;}
+    drawChip(ctx,x+9,y+9,9,f);
+    ctx.fillStyle="#566079"; ctx.fillText(t,x+26,y);
+    x+=w;
+  });
+  y+=46;
+  if(EXTRA.length){
+    ctx.fillStyle="#18233A"; ctx.font=`17px ${F}`;
+    ctx.fillText(`Zusatzfragen (ab S. ${LAST_CORE_PAGE+1}): ${extraDone()} von ${EXTRA.length} bearbeitet (graue Plättchen, nicht in der Gesamtwertung)`,pad,y); y+=30;
+  }
+  return y+pad-16;
+}
+async function savePng(){
+  try{ await document.fonts.ready; }catch(e){}
+  const W=900, S=2;
+  const probe=document.createElement("canvas").getContext("2d");
+  const H=renderPng(probe,W);
+  const cv=document.createElement("canvas");
+  cv.width=W*S; cv.height=H*S;
+  const ctx=cv.getContext("2d"); ctx.scale(S,S);
+  renderPng(ctx,W);
+  cv.toBlob(b=>{ if(b) download(b,`Auswertung-Quiz-Ulm-${stamp().iso}.png`); },"image/png");
+}
+
+function answerBlock(i){
+  if(Q[i].kind!=="open") return "";
+  const t=cards[i].querySelector("textarea").value.trim();
+  return t?`<blockquote>${esc(t)}</blockquote>`:"";
+}
+function saveHtml(){
+  const row=i=>`<tr><td class="n">${i+1}</td><td class="c">${chipSVG(frac(i),FILE_COL,30)}</td><td>${esc(Q[i].q)}<div class="pg">${esc(Q[i].page)}</div>${answerBlock(i)}</td></tr>`;
+  const xrow=i=>`<tr><td class="n">${i+1}</td><td class="c st">${frac(i)!==null?"bearbeitet":"offen"}</td><td>${esc(Q[i].q)}<div class="pg">${esc(Q[i].page)}</div>${answerBlock(i)}</td></tr>`;
+  const doc=`<!DOCTYPE html>
+<html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auswertung Quiz Ulm</title>
+<style>
+body{margin:0;background:#F1F3F7;color:#18233A;font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:46rem;margin:0 auto;padding:2rem 1rem 3rem}
+.card{background:#fff;border:1px solid #D3D9E3;border-left:4px solid #2C64A8;border-radius:6px;padding:1.4rem;margin-bottom:1.5rem}
+h1{margin:0 0 .3rem;font-size:1.7rem;line-height:1.15} h2{font-size:1.2rem;margin:0 0 .6rem}
+.muted,.pg{color:#566079} .pg{font-size:.85rem}
+.chips{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:.9rem .3rem;max-width:36rem;margin:1.2rem 0}
+.chip:nth-child(10n+6){margin-left:.7rem}
+.chip{display:flex;flex-direction:column;align-items:center;gap:.2rem;font-size:.85rem;color:#566079}
+.chip svg{width:100%;max-width:40px;height:auto;aspect-ratio:1}
+.chip.extra{opacity:.4}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:.88rem;color:#566079}
+.legend span{display:inline-flex;align-items:center;gap:.4rem} .legend svg{width:18px;height:18px}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+td{border-top:1px solid #D3D9E3;padding:.6rem .4rem;vertical-align:top}
+td.n{color:#566079;width:2rem} td.c{width:3rem} td.st{font-size:.85rem;color:#566079;width:5.5rem}
+blockquote{margin:.5rem 0 0;padding:.5rem .7rem;background:#F1F3F7;border-radius:4px;white-space:pre-wrap}
+</style></head><body><main>
+<div class="card">
+<h1>${esc(TITLE)}</h1>
+<p class="muted">${esc(SUB)}<br>${esc(whoLine())}</p>
+<div class="chips">${chipsHTML(FILE_COL,false)}</div>
+<div class="legend">${legendItems().map(([f,t])=>`<span>${chipSVG(f,FILE_COL)}${t}</span>`).join("")}</div>
+</div>
+<div class="card"><h2>Verständnisfragen (S. 4–${LAST_CORE_PAGE})</h2><table>${CORE.map(row).join("")}</table></div>
+${EXTRA.length?`<div class="card"><h2>Zusatzfragen (ab S. ${LAST_CORE_PAGE+1})</h2><table>${EXTRA.map(xrow).join("")}</table></div>`:""}
+<p class="muted" style="font-size:.85rem">Quelle: Ulm, V. (2022). <i>Rechenschwäche in der Sekundarstufe – Diagnostik und Förderung von Schülerinnen und Schülern</i> (2. Aufl.). Mathematikdidaktik im Kontext, Heft 5. Universität Bayreuth.</p>
+</main><\/body><\/html>`;
+  download(new Blob([doc],{type:"text/html;charset=utf-8"}),`Auswertung-Quiz-Ulm-${stamp().iso}.html`);
+}
+document.getElementById("savePng").addEventListener("click",savePng);
+document.getElementById("saveHtml").addEventListener("click",saveHtml);
+
+/* ---------- Alle Lösungen / Zurücksetzen ---------- */
 document.getElementById("revealAll").addEventListener("click",()=>{
-  Q.forEach((q,i)=>{ if(!cards[i].dataset.checked) check(i,false); });
+  Q.forEach((q,i)=>{
+    if(q.kind==="open"){ if(!cards[i].dataset.checked) showHorizon(i,false); }
+    else if(!rec[i].final) finalize(i);
+  });
 });
 document.getElementById("reset").addEventListener("click",()=>{
   Q.forEach((q,i)=>{
-    const card=cards[i];
+    const card=cards[i], fb=card.querySelector(".fb");
+    rec[i]=blank();
+    fb.hidden=true; fb.innerHTML="";
     if(q.kind==="open"){
       card.querySelector("textarea").value="";
-      const fb=card.querySelector(".fb"); fb.hidden=true; fb.innerHTML="";
       delete card.dataset.checked; card.querySelector(".check").textContent="Erwartungshorizont zeigen";
-      setState(i,null);
-    } else retry(i);
+    } else {
+      card.querySelectorAll(".opt").forEach(l=>{l.classList.remove("is-correct","is-wrong","is-missed");l.querySelector(".mark").textContent="";});
+      card.querySelectorAll("input").forEach(x=>{x.disabled=false;x.checked=false;});
+      const btn=card.querySelector(".check"); btn.textContent="Antwort prüfen"; btn.hidden=false;
+      card.querySelector(".retry").hidden=true; card.querySelector(".solve").hidden=true;
+      card.querySelector(".note").hidden=true; card.querySelector(".msg").hidden=true;
+    }
+    paint(i);
   });
+  save.texts=[]; persist();
   window.scrollTo({top:0});
 });
+
+/* ---------- Zwischenstand wiederherstellen ---------- */
+Q.forEach((q,i)=>{
+  const r=rec[i], card=cards[i];
+  if(q.kind==="open"){
+    if(save.texts[i]) card.querySelector("textarea").value=save.texts[i];
+    if(r.shown||r.self){
+      showHorizon(i,true);
+      if(r.self){ const b=card.querySelector('.rate button[data-v="'+r.self+'"]'); if(b) b.setAttribute("aria-pressed","true"); }
+    } else if(r.seen) showHorizon(i,false);
+    return;
+  }
+  const first=r.c1||[];
+  if(r.final) finalize(i);
+  else if(r.tries===1){
+    card.querySelectorAll("input").forEach(x=>{x.checked=first.includes(+x.value);});
+    pending(i);
+  }
+});
+const whoEl=document.getElementById("who");
+whoEl.value=save.who||"";
+whoEl.addEventListener("input",()=>{ save.who=whoEl.value; persist(); });
+const howto=document.getElementById("howto");
+howto.open=save.howto===true;
+howto.addEventListener("toggle",()=>{ save.howto=howto.open; persist(); });
+Q.forEach((q,i)=>paint(i));
 </script>
 </body>
 </html>
