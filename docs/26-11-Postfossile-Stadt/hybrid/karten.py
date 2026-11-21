@@ -138,7 +138,7 @@ def card_facts(m):
         'klima': klima, 'strom': strom, 'kreis': LV.get(fx.get('kreis')),
         'where': ('weniger CO₂: ' + ', '.join(where)) if where else ('keine direkte Wirkung' if not clim else 'mehr CO₂ im Inland'),
         'cost': ('Einnahmen +' + '●' * -m['cost']) if m['cost'] < 0 else ('Kosten ' + '●' * m['cost']),
-        'acc': '👍 beliebt' if m['acc'] > 0 else '👎 umstritten' if m['acc'] < 0 else '😐 neutral',
+        'acc': '🙂 beliebt' if m['acc'] > 0 else '🙁 umstritten' if m['acc'] < 0 else '😐 neutral',
         'hints': hints,
     }
 
@@ -166,25 +166,43 @@ def borders(cell, top_color):
         b.append(e)
     tcPr.append(b)
     mar = OxmlElement('w:tcMar')
-    for side, v in (('top', 110), ('left', 170), ('bottom', 80), ('right', 170)):
+    for side, v in (('top', 80), ('left', 150), ('bottom', 60), ('right', 150)):
         e = OxmlElement(f'w:{side}'); e.set(qn('w:w'), str(v)); e.set(qn('w:type'), 'dxa'); mar.append(e)
     tcPr.append(mar)
 
 
+TWEMOJI = HERE.parent / 'assets' / 'twemoji-png'          # Twemoji (CC-BY 4.0, https://github.com/jdecked/twemoji)
+EMOJI_RE = re.compile('([\U0001F300-\U0001FAFF\u2600-\u27BF\u2935])\uFE0F?')
+
+
 def run(p, text, size=8, bold=False, color=None, fill=None):
-    r = p.add_run(text)
-    r.font.size = Pt(size); r.bold = bold
-    if color:
-        r.font.color.rgb = RGBColor.from_string(color)
-    if fill:
-        shade(r._r, fill)
-    return r
+    """Text-Lauf; Emojis werden als Twemoji-Bilder eingesetzt (sonst je nach Word-Version unterschiedlich)."""
+    last = None
+    for i, part in enumerate(EMOJI_RE.split(text)):
+        if i % 2 == 0:
+            if not part:
+                continue
+            r = p.add_run(part)
+        else:
+            png = TWEMOJI / f'{ord(part):x}.png'
+            if not png.exists():
+                r = p.add_run(part)
+            else:
+                r = p.add_run()
+                r.add_picture(str(png), height=Pt(size * 1.15))
+        r.font.size = Pt(size); r.bold = bold
+        if color:
+            r.font.color.rgb = RGBColor.from_string(color)
+        if fill:
+            shade(r._r, fill)
+        last = r
+    return last
 
 
 def para(cell, first=False, after=1.5):
     p = cell.paragraphs[0] if first else cell.add_paragraph()
     p.paragraph_format.space_after = Pt(after); p.paragraph_format.space_before = Pt(0)
-    p.paragraph_format.line_spacing = 1.05
+    p.paragraph_format.line_spacing = 1.0
     return p
 
 
@@ -200,11 +218,11 @@ def fill_card(cell, m):
     col = CAT_COL.get(m['cat'], '475569')
     borders(cell, col)
     p = para(cell, first=True)
-    run(p, f['nr'] + '  ', 12, True, col)
+    run(p, f['nr'] + '  ', 11, True, col)
     run(p, f['tags'] + '  ', 7, color='475569')
     run(p, f['lvl'], 7, True, '0F172A', 'E2E8F0')
     p = para(cell, after=2)
-    run(p, f"{m['icon']} {m['title']}", 13, True, '0F172A')
+    run(p, f"{m['icon']} {m['title']}", 12, True, '0F172A')
     p = para(cell)
     run(p, f" Klima {bars(f['klima'])} {LV.get(f['klima'], '–')} ", 9, True, fill=LV_FILL[f['klima']])
     run(p, '  ')
@@ -215,11 +233,11 @@ def fill_card(cell, m):
     p = para(cell)
     run(p, f['where'], 8, color='475569')
     p = para(cell, after=2.5)
-    run(p, m['why'], 9.5)
+    run(p, m['why'], 9)
     for h in f['hints']:
         p = para(cell, after=1)
         shade(p._p, 'F1F5F9')
-        run(p, h, 8, color='334155')
+        run(p, h, 7.5, color='334155')
     p = para(cell, after=0)
     p.paragraph_format.space_before = Pt(3)
     run(p, f['cost'], 10, True)
@@ -241,7 +259,7 @@ run(rules, 'Seestadt 2045 – Hybridspiel mit Karten', 20, True)
 steps = [
     ('Vorbereitung', 'Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.'),
     ('Vorschlagen', 'Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.'),
-    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget (●, siehe Beamer) nicht übersteigen. Abgaben bringen Geld. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
+    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget (●, siehe Beamer) nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
     ('Beschliessen', 'Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.'),
     ('Auswerten', 'Ereignis und Drehmeter gemeinsam anschauen. Beschlossene Karten offen in die Mitte legen.'),
 ]
@@ -256,6 +274,8 @@ for t in ['Ziel 2045: alle Drehmeter im grünen Bereich. Ungenutztes Budget blei
           'Wirkung: ▮▮▮ gross · ▮▮ mittel · ▮ wenig · ▼ rückläufig. Wer entscheidet: Gemeinde, Kanton oder Bund.']:
     p = doc.add_paragraph(); p.paragraph_format.left_indent = Mm(12); p.paragraph_format.space_after = Pt(4)
     run(p, '• ' + t, 12)
+p = doc.add_paragraph(); p.paragraph_format.left_indent = Mm(12); p.paragraph_format.space_before = Pt(24)
+run(p, 'Emojis: Twemoji (CC BY 4.0), github.com/jdecked/twemoji', 9, color='64748B')
 doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
 
 # Karten: 2 × 4 pro Seite, Schnittlinien gestrichelt
@@ -263,8 +283,11 @@ rows = (len(MEASURES) + 1) // 2
 tbl = doc.add_table(rows=rows, cols=2)
 tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
 tbl.autofit = False
+# Abstand zwischen den Karten (Zellabstand 1,5 mm)
+tblPr = tbl._tbl.tblPr
+sp = OxmlElement('w:tblCellSpacing'); sp.set(qn('w:w'), '85'); sp.set(qn('w:type'), 'dxa'); tblPr.append(sp)
 for r_i, row in enumerate(tbl.rows):
-    row.height = Mm(69); row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+    row.height = Mm(66); row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
     trPr = row._tr.get_or_add_trPr(); cs = OxmlElement('w:cantSplit'); trPr.append(cs)
     for c_i, cell in enumerate(row.cells):
         cell.width = Mm(97)
