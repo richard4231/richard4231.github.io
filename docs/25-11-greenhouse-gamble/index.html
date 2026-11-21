@@ -1,386 +1,326 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klimawandel-Glücksrad</title>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(to bottom right, #0f172a, #1e293b);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        .container {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            padding: 2rem;
-            max-width: 42rem;
-            width: 100%;
-        }
-        h1 {
-            font-size: 1.875rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #1e293b;
-        }
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .toggle-label {
-            font-weight: 600;
-        }
-        .toggle-label.active-red { color: #dc2626; }
-        .toggle-label.active-blue { color: #2563eb; }
-        .toggle-label.inactive { color: #94a3b8; }
-        .toggle-button {
-            position: relative;
-            width: 4rem;
-            height: 2rem;
-            border-radius: 9999px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .toggle-button.red { background-color: #dc2626; }
-        .toggle-button.blue { background-color: #2563eb; }
-        .toggle-button.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .toggle-slider {
-            position: absolute;
-            top: 0.25rem;
-            width: 1.5rem;
-            height: 1.5rem;
-            background: white;
-            border-radius: 9999px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
-        }
-        .toggle-slider.left { transform: translateX(0.25rem); }
-        .toggle-slider.right { transform: translateX(2.25rem); }
-        .wheel-container {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        .pointer {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translate(-50%, -0.75rem);
-            z-index: 10;
-        }
-        .pointer-triangle {
-            width: 0;
-            height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 35px solid rgba(220, 38, 38, 0.8);
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-        }
-        .button-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-        }
-        .spin-button {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            font-size: 1.125rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .spin-button.active {
-            background: linear-gradient(to right, #9333ea, #db2777);
-            color: white;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-        }
-        .spin-button.active:hover {
-            background: linear-gradient(to right, #7e22ce, #be185d);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
-        }
-        .spin-button.disabled {
-            background-color: #cbd5e1;
-            color: #64748b;
-            cursor: not-allowed;
-        }
-        .result-container {
-            height: 8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .result-box {
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            width: 100%;
-        }
-        .result-label {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 0.5rem;
-        }
-        .result-value {
-            font-size: 1.875rem;
-            font-weight: bold;
-        }
-        .placeholder-text {
-            text-align: center;
-            color: #94a3b8;
-            font-size: 1.125rem;
-        }
-        .info-text {
-            margin-top: 1.5rem;
-            font-size: 0.875rem;
-            color: #475569;
-            text-align: center;
-        }
-    </style>
-    
-    <!-- React und ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel Standalone für JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klima-Roulette</title>
+<style>
+:root {
+    --bg: #0f1b2d;
+    --panel: #172640;
+    --panel-2: #1e3252;
+    --line: #2c4468;
+    --text: #e8eef7;
+    --muted: #93a6c0;
+    --accent: #6fb3a0;
+    --ohne: #e2793f;
+    --mit: #5ba3b8;
+    --heute: #e8d77a;
+    --size: max(12rem, min(calc(100vw - 2rem), calc(100dvh - 25rem)));
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: radial-gradient(circle at 50% 30%, #1a2d4a, var(--bg) 70%);
+    color: var(--text);
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .75rem 1rem;
+}
+h1 { font-size: 1.15rem; font-weight: 650; letter-spacing: .01em; }
+.seg {
+    display: inline-grid; grid-template-columns: repeat(3, 1fr); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 999px; padding: 3px;
+}
+.seg button {
+    border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600;
+    font-size: .9rem; padding: .4rem .8rem; border-radius: 999px; cursor: pointer;
+    transition: background .25s, color .25s;
+}
+.seg button.on[data-s="ohne"] { background: var(--ohne); color: #1b1208; }
+.seg button.on[data-s="heute"] { background: var(--heute); color: #2a2404; }
+.seg button.on[data-s="mit"]  { background: var(--mit);  color: #07202a; }
+.seg button:disabled { cursor: not-allowed; opacity: .6; }
+.icon-btn {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); cursor: pointer; display: grid; place-items: center;
+}
+.icon-btn:hover { background: var(--panel-2); }
+
+main {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: .75rem; padding: .25rem 1rem 0; overflow-y: auto;
+}
+.stage { display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+.wheel-wrap { position: relative; width: var(--size); height: var(--size); }
+.wheel-wrap svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 24px rgba(0,0,0,.45)); }
+.pointer {
+    position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 2;
+    width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+    border-top: 26px solid #f4f1e8; filter: drop-shadow(0 3px 3px rgba(0,0,0,.4));
+}
+.side { display: flex; flex-direction: column; align-items: center; gap: .75rem; width: min(100%, 22rem); }
+.spin {
+    border: 0; border-radius: 999px; padding: .75rem 2rem; font: inherit; font-weight: 700;
+    font-size: 1rem; color: #0b1a14; background: var(--accent); cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .15s, filter .15s;
+}
+.spin:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+.spin:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+.result {
+    min-height: 3.4rem; display: flex; align-items: center; justify-content: center;
+    gap: .6rem; font-size: 1.5rem; font-weight: 700;
+}
+.result .dot { width: 1rem; height: 1rem; border-radius: 50%; }
+.result.idle { color: var(--muted); font-size: 1rem; font-weight: 400; }
+.legend { list-style: none; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: .35rem .8rem; }
+.legend li { display: grid; grid-template-columns: .9rem 1fr auto; align-items: center; gap: .6rem; padding: .22rem 0; font-size: .85rem; border-bottom: 1px solid var(--line); }
+.legend li:last-child { border-bottom: 0; }
+.legend i { width: .9rem; height: .9rem; border-radius: 4px; display: block; }
+.legend b { font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.live { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: .5rem .8rem .3rem; display: none; }
+body.hist-on .live { display: block; }
+.live h4 { font-size: .75rem; color: var(--muted); font-weight: 600; margin-bottom: .1rem; }
+.live svg { width: 100%; height: auto; display: block; }
+body.hist-on { --size: max(12rem, min(calc(100vw - 2rem), calc(100dvh - 34rem))); }
+.side { justify-content: flex-start; padding-top: 2.75rem; }
+.legend { min-height: 10rem; }
+.row { display: flex; align-items: center; gap: .6rem; font-size: .9rem; margin-bottom: .6rem; }
+footer { padding: .5rem 1rem .7rem; text-align: center; font-size: .75rem; color: var(--muted); }
+footer a, dialog a { color: var(--accent); }
+
+/* Breite Fenster: Rad links, Bedienung rechts */
+@media (min-aspect-ratio: 5/4) {
+    :root, body.hist-on { --size: min(calc(100dvh - 7.5rem), 60vw); }
+    main { flex-direction: row; gap: 3rem; justify-content: center; align-items: center; }
+    .side { height: var(--size); overflow-y: auto; }
+}
+
+dialog {
+    margin: auto; width: min(44rem, calc(100vw - 1.5rem)); max-height: calc(100dvh - 1.5rem);
+    border: 1px solid var(--line); border-radius: 1rem; background: var(--panel); color: var(--text);
+    padding: 0; overflow: hidden;
+}
+dialog::backdrop { background: rgba(5, 10, 20, .65); }
+.dlg { display: flex; flex-direction: column; max-height: calc(100dvh - 1.5rem); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); }
+.dlg-head h2 { font-size: 1.05rem; }
+.dlg-body { padding: 1rem 1.2rem 1.2rem; overflow: auto; display: grid; gap: 1.2rem; }
+.dlg h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .5rem; }
+.dlg p, .dlg li { font-size: .9rem; line-height: 1.45; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+.card { background: var(--panel-2); border-radius: .7rem; padding: .7rem .8rem; border-top: 3px solid; }
+.card.heute { border-color: var(--heute); }
+.card.ohne { border-color: var(--ohne); } .card.mit { border-color: var(--mit); }
+.card b { display: block; margin-bottom: .2rem; }
+.btn {
+    border: 1px solid var(--accent); background: transparent; color: var(--accent); font: inherit;
+    font-weight: 600; padding: .5rem 1rem; border-radius: 999px; cursor: pointer;
+}
+.btn:hover { background: var(--accent); color: #0b1a14; }
+.hist { display: grid; gap: 1rem; margin-top: .8rem; }
+.hist h4 { font-size: .85rem; margin-bottom: .3rem; }
+.hist svg { width: 100%; height: auto; display: block; }
+.note { color: var(--muted); font-size: .8rem !important; }
+@media (max-width: 620px) { .cards { grid-template-columns: 1fr; } .seg button { padding: .4rem .55rem; font-size: .8rem; } h1 { font-size: 1rem; } }
+</style>
 </head>
 <body>
-    <div id="root"></div>
+<header>
+    <h1>Klima-Roulette</h1>
+    <div class="seg" id="seg">
+        <button data-s="ohne" class="on">Ohne Policy (2009)</button>
+        <button data-s="heute">Heutige Politik (2025)</button>
+        <button data-s="mit">Starker Klimaschutz (2009)</button>
+    </div>
+    <button class="icon-btn" id="openSettings" aria-label="Einstellungen" title="Einstellungen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+</header>
 
-    <script type="text/babel">
-        const { useState, useRef } = React;
+<main>
+    <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <svg id="wheel" viewBox="0 0 400 400"></svg>
+    </div>
+    <div class="side">
+        <button class="spin" id="spin">Rad drehen</button>
+        <div class="result idle" id="result">Wie warm wird es bis 2100?</div>
+        <ul class="legend" id="legend"></ul>
+        <div class="live"><h4 id="liveTitle"></h4><div id="liveHist"></div></div>
+    </div>
+</main>
 
-        // Lucide Play Icon als SVG
-        const PlayIcon = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-        );
+<footer>
+    Nach der Idee des «Greenhouse Gamble» vom <a href="https://cs3.mit.edu/resources/gamble" target="_blank" rel="noopener">MIT Joint Program</a> (2009) · Mehr in den Einstellungen
+</footer>
 
-        const Gluecksrad = () => {
-            const [scenario, setScenario] = useState('ohne');
-            const [rotation, setRotation] = useState(0);
-            const [isSpinning, setIsSpinning] = useState(false);
-            const [result, setResult] = useState(null);
-            const wheelRef = useRef(null);
+<dialog id="dlg">
+  <div class="dlg">
+    <div class="dlg-head"><h2>Einstellungen</h2><button class="icon-btn" id="closeSettings" aria-label="Schliessen">✕</button></div>
+    <div class="dlg-body">
+      <section>
+        <h3>Szenarien</h3>
+        <div class="cards">
+            <div class="card ohne"><b>Ohne Policy (2009)</b><p>Es gibt keinen zusätzlichen Klimaschutz. Der Ausstoss von Treibhausgasen steigt weiter. Werte aus dem MIT-Original von 2009.</p></div>
+            <div class="card heute"><b>Heutige Politik (2025)</b><p>Die Klimaschutz-Massnahmen, die heute gelten, bleiben bestehen. Gestützt auf den UNEP-Bericht 2025 (rund 2,8 °C), von mir als Näherung nachgebaut.</p></div>
+            <div class="card mit"><b>Starker Klimaschutz (2009)</b><p>Alle Länder senken ihre Emissionen stark, sodass die Treibhausgase in der Luft nicht weiter zunehmen. Werte aus dem MIT-Original.</p></div>
+        </div>
+        <p class="note" style="margin-top:.5rem">Je grösser ein Sektor, desto wahrscheinlicher ist diese Erwärmung bis 2100 (im Vergleich zu vor der Industrialisierung). Die Räder zeigen Unsicherheit, keine genaue Prognose. Das Rad «Ohne Policy» ist heute überholt, da die Welt schon mehr Klimaschutz betreibt.</p>
+      </section>
 
-            // Sektoren für "Ohne Policy" (linke Scheibe) - mit korrekten Winkeln
-            const sectorsOhne = [
-                { label: '2.5-3°C', angle: 4, color: '#00CED1', startAngle: 0 },
-                { label: '3-4°C', angle: 48.3, color: '#32CD32', startAngle: 4 },
-                { label: '4-5°C', angle: 114.6, color: '#FFD700', startAngle: 52.3 },
-                { label: '5-6°C', angle: 118.7, color: '#FFA500', startAngle: 166.9 },
-                { label: '6-7°C', angle: 54.5, color: '#FF4500', startAngle: 285.6 },
-                { label: '>7°C', angle: 20, color: '#8B0000', startAngle: 340.1 }
-            ];
+      <section>
+        <h3>Histogramm</h3>
+        <label class="row"><input type="checkbox" id="histToggle"> Histogramm anzeigen: Es füllt sich mit jeder Drehung</label>
+        <button class="btn" id="reset">Zwischenstand zurücksetzen</button>
+        <p class="note" style="margin-top:.4rem">Deine Drehungen bleiben in diesem Browser gespeichert, bis du zurücksetzt.</p>
+      </section>
 
-            // Sektoren für "Mit Policy" (rechte Scheibe) - mit korrekten Winkeln
-            const sectorsMit = [
-                { label: '1-2°C', angle: 77.3, color: '#0047AB', startAngle: 0 },
-                { label: '2-2.5°C', angle: 148.8, color: '#1E90FF', startAngle: 77.3 },
-                { label: '2.5-3°C', angle: 95.6, color: '#00CED1', startAngle: 226.1 },
-                { label: '3-4°C', angle: 38.4, color: '#32CD32', startAngle: 321.7 }
-            ];
+      <section>
+        <h3>Viele Drehungen auf einmal</h3>
+        <button class="btn" id="simulate">10 000 Drehungen simulieren</button>
+        <div class="hist" id="hist"></div>
+      </section>
 
-            const currentSectors = scenario === 'ohne' ? sectorsOhne : sectorsMit;
+      <section>
+        <h3>Ursprüngliche Idee</h3>
+        <p>Forschende am MIT (USA) haben die Unsicherheit der Klimaprognosen als zwei Roulette-Räder dargestellt: eines ohne und eines mit starkem Klimaschutz. Niemand weiss genau, wie warm es wird, aber manche Werte sind wahrscheinlicher als andere. Quelle: Sokolov et al. (2009), <em>Journal of Climate</em> 22(19). Diese App ist eine vereinfachte Nachbildung; die Werte sind der Originalgrafik nachempfunden. Das Original stammt von 2009, das Rad «Heutige Politik» ist eine eigene, grobe Ergänzung.</p>
+        <p style="margin-top:.4rem"><a href="https://cs3.mit.edu/resources/gamble" target="_blank" rel="noopener">Original: MIT «Greenhouse Gamble»</a></p>
+      </section>
+    </div>
+  </div>
+</dialog>
 
-            const spinWheel = () => {
-                if (isSpinning) return;
-                
-                setIsSpinning(true);
-                setResult(null);
-                
-                const spins = 5 + Math.random() * 3;
-                const randomAngle = Math.random() * 360;
-                const totalRotation = spins * 360 + randomAngle;
-                
-                setRotation(rotation + totalRotation);
-                
-                setTimeout(() => {
-                    const finalAngle = (rotation + totalRotation) % 360;
-                    const normalizedAngle = (360 - finalAngle) % 360;
-                    
-                    let cumulativeAngle = 0;
-                    for (const sector of currentSectors) {
-                        cumulativeAngle += sector.angle;
-                        if (normalizedAngle < cumulativeAngle) {
-                            setResult(sector);
-                            break;
-                        }
-                    }
-                    
-                    setIsSpinning(false);
-                }, 4000);
-            };
+<script>
+// Farbskala: kalt → heiss, aufeinander abgestimmt; gleiche Klassen = gleiche Farbe in beiden Rädern
+const C = {
+    '1–2 °C':   { c: '#3b6ea5', t: '#fff' },
+    '2–2.5 °C': { c: '#5ba3b8', t: '#06202a' },
+    '2.5–3 °C': { c: '#8cc7a1', t: '#0e2a1a' },
+    '3–4 °C':   { c: '#e8d77a', t: '#3a3205' },
+    '4–5 °C':   { c: '#f0b05a', t: '#3a2305' },
+    '5–6 °C':   { c: '#e2793f', t: '#fff' },
+    '6–7 °C':   { c: '#c4452f', t: '#fff' },
+    '>7 °C':    { c: '#8e2430', t: '#fff' }
+};
+const mk = list => { let s = 0; return list.map(([label, angle]) => { const o = { label, angle, ...C[label], start: s }; s += angle; return o; }); };
+const SECTORS = {
+    ohne: mk([['2.5–3 °C', 4], ['3–4 °C', 48.3], ['4–5 °C', 114.6], ['5–6 °C', 118.7], ['6–7 °C', 54.5], ['>7 °C', 20]]),
+    heute: mk([['1–2 °C', 14.4], ['2–2.5 °C', 100.8], ['2.5–3 °C', 111.6], ['3–4 °C', 118.8], ['4–5 °C', 14.4]]),
+    mit:  mk([['1–2 °C', 77.3], ['2–2.5 °C', 148.8], ['2.5–3 °C', 95.6], ['3–4 °C', 38.4]])
+};
+const total = k => SECTORS[k].reduce((a, s) => a + s.angle, 0);
 
-            const createSectorPath = (cx, cy, radius, startAngle, endAngle) => {
-                const start = (startAngle - 90) * (Math.PI / 180);
-                const end = (endAngle - 90) * (Math.PI / 180);
-                
-                const x1 = cx + radius * Math.cos(start);
-                const y1 = cy + radius * Math.sin(start);
-                const x2 = cx + radius * Math.cos(end);
-                const y2 = cy + radius * Math.sin(end);
-                
-                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-                
-                return `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-            };
+const KEY = 'gg-live';
+const NAMES = { ohne: 'Ohne Policy (2009)', heute: 'Heutige Politik (2025)', mit: 'Starker Klimaschutz (2009)' };
+let store = { show: false, cnt: { ohne: [], heute: [], mit: [] } };
+try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.cnt) store = j; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+const counts = k => { const c = store.cnt[k] || []; return SECTORS[k].map((_, i) => c[i] || 0); };
+function renderLive() {
+    document.body.classList.toggle('hist-on', store.show);
+    $('histToggle').checked = store.show;
+    if (!store.show) return;
+    const c = counts(scenario), n = c.reduce((a, b) => a + b, 0);
+    $('liveTitle').textContent = n ? `${n} Drehung${n > 1 ? 'en' : ''}` : 'Noch nicht gedreht';
+    $('liveHist').innerHTML = histSvg(scenario, c, 220, 120);
+}
 
-            const getLabelPosition = (cx, cy, radius, startAngle, angle) => {
-                const midAngle = (startAngle + angle / 2 - 90) * (Math.PI / 180);
-                const labelRadius = radius * 0.7;
-                return {
-                    x: cx + labelRadius * Math.cos(midAngle),
-                    y: cy + labelRadius * Math.sin(midAngle)
-                };
-            };
+let scenario = 'ohne', rotation = 0, spinning = false;
+const $ = id => document.getElementById(id);
+const wheel = $('wheel');
 
-            return (
-                <div className="container">
-                    <h1>Klimawandel-Glücksrad</h1>
-                    
-                    {/* Szenario-Umschalter */}
-                    <div className="toggle-container">
-                        <span className={`toggle-label ${scenario === 'ohne' ? 'active-red' : 'inactive'}`}>
-                            Ohne Policy
-                        </span>
-                        <button
-                            onClick={() => {
-                                if (!isSpinning) {
-                                    setScenario(scenario === 'ohne' ? 'mit' : 'ohne');
-                                    setResult(null);
-                                }
-                            }}
-                            className={`toggle-button ${scenario === 'mit' ? 'blue' : 'red'} ${isSpinning ? 'disabled' : ''}`}
-                            disabled={isSpinning}
-                        >
-                            <div className={`toggle-slider ${scenario === 'mit' ? 'right' : 'left'}`} />
-                        </button>
-                        <span className={`toggle-label ${scenario === 'mit' ? 'active-blue' : 'inactive'}`}>
-                            Mit Policy
-                        </span>
-                    </div>
+const pt = (r, a) => { const t = (a - 90) * Math.PI / 180; return [200 + r * Math.cos(t), 200 + r * Math.sin(t)]; };
+function drawWheel() {
+    const secs = SECTORS[scenario], T = total(scenario), k = 360 / T;
+    let h = '<circle cx="200" cy="200" r="196" fill="#f4f1e8"/>';
+    secs.forEach(s => {
+        const a0 = s.start * k, a1 = (s.start + s.angle) * k, [x1, y1] = pt(184, a0), [x2, y2] = pt(184, a1);
+        h += `<path d="M200 200L${x1} ${y1}A184 184 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x2} ${y2}Z" fill="${s.c}" stroke="#f4f1e8" stroke-width="2"/>`;
+        if (s.angle * k >= 14) {
+            const mid = (a0 + a1) / 2, [x, y] = pt(128, mid);
+            h += `<text x="${x}" y="${y}" transform="rotate(${mid} ${x} ${y})" text-anchor="middle" dominant-baseline="middle" fill="${s.t}" font-size="${s.angle * k > 30 ? 20 : 14}" font-weight="700">${s.label.replace(' °C', '°')}</text>`;
+        }
+    });
+    h += '<circle cx="200" cy="200" r="26" fill="#f4f1e8"/><circle cx="200" cy="200" r="11" fill="#172640"/>';
+    wheel.innerHTML = h;
+    $('legend').innerHTML = secs.map(s => `<li><i style="background:${s.c}"></i><span>${s.label}</span><b>${(s.angle / T * 100).toFixed(0)} %</b></li>`).join('');
+    renderLive();
+}
+function setScenario(s) {
+    if (spinning) return;
+    scenario = s; rotation = 0;
+    wheel.style.transition = 'none'; wheel.style.transform = 'rotate(0deg)';
+    document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+    const r = $('result'); r.className = 'result idle'; r.textContent = 'Wie warm wird es bis 2100?';
+    drawWheel();
+}
+function pick(secs, T) {
+    const x = Math.random() * T; let c = 0;
+    for (const s of secs) { c += s.angle; if (x < c) return s; }
+    return secs[secs.length - 1];
+}
+function spin() {
+    if (spinning) return;
+    spinning = true;
+    $('spin').disabled = true; $('spin').textContent = 'Dreht …';
+    document.querySelectorAll('#seg button').forEach(b => b.disabled = true);
+    const r = $('result'); r.className = 'result idle'; r.innerHTML = '&nbsp;';
+    rotation += (5 + Math.random() * 3) * 360 + Math.random() * 360;
+    wheel.style.transition = 'transform 4s cubic-bezier(.17,.67,.12,1)';
+    wheel.style.transform = `rotate(${rotation}deg)`;
+    setTimeout(() => {
+        const T = total(scenario), at = ((360 - rotation % 360) % 360) / 360 * T;
+        const s = SECTORS[scenario].find(s => at >= s.start && at < s.start + s.angle) || SECTORS[scenario][0];
+        r.className = 'result';
+        r.innerHTML = `<span class="dot" style="background:${s.c}"></span><span style="color:${s.c}">${s.label}</span>`;
+        const c = counts(scenario); c[SECTORS[scenario].indexOf(s)]++; store.cnt[scenario] = c; save(); renderLive();
+        spinning = false;
+        $('spin').disabled = false; $('spin').textContent = 'Rad drehen';
+        document.querySelectorAll('#seg button').forEach(b => b.disabled = false);
+    }, 4100);
+}
 
-                    {/* Glücksrad */}
-                    <div className="wheel-container">
-                        {/* Zeiger oben - klassischer roter Pfeil */}
-                        <div className="pointer">
-                            <div className="pointer-triangle" />
-                        </div>
-                        
-                        <svg
-                            ref={wheelRef}
-                            width="400"
-                            height="400"
-                            viewBox="0 0 400 400"
-                            style={{
-                                transform: `rotate(${rotation}deg)`,
-                                transition: isSpinning ? 'transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none'
-                            }}
-                        >
-                            <g>
-                                {currentSectors.map((sector, index) => {
-                                    const { x, y } = getLabelPosition(200, 200, 180, sector.startAngle, sector.angle);
-                                    const endAngle = sector.startAngle + sector.angle;
-                                    
-                                    return (
-                                        <g key={index}>
-                                            <path
-                                                d={createSectorPath(200, 200, 180, sector.startAngle, endAngle)}
-                                                fill={sector.color}
-                                                stroke="white"
-                                                strokeWidth="3"
-                                            />
-                                            <text
-                                                x={x}
-                                                y={y}
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                                fill="white"
-                                                fontSize="18"
-                                                fontWeight="bold"
-                                                style={{pointerEvents: 'none'}}
-                                            >
-                                                {sector.label}
-                                            </text>
-                                        </g>
-                                    );
-                                })}
-                                
-                                {/* Mittelpunkt */}
-                                <circle cx="200" cy="200" r="30" fill="white" stroke="#333" strokeWidth="3" />
-                                <circle cx="200" cy="200" r="15" fill="#333" />
-                            </g>
-                        </svg>
-                    </div>
+// Simulation + Histogramm
+function histSvg(key, cnt, W, H) {
+    const secs = SECTORS[key], n = cnt.reduce((a, b) => a + b, 0), max = Math.max(1, ...cnt), pad = 22, bw = (W - 10) / secs.length, fs = W > 300 ? 13 : 10;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogramm ${key}">`;
+    secs.forEach((s, i) => {
+        const h = cnt[i] / max * (H - pad - 18), x = 5 + i * bw + bw * .12, w = bw * .76, y = H - pad - h;
+        const top = n > 0 && cnt[i] === max;
+        svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${s.c}" ${top ? 'stroke="#f4f1e8" stroke-width="2"' : ''}/>`;
+        svg += `<text x="${x + w / 2}" y="${y - 5}" text-anchor="middle" fill="#e8eef7" font-size="${fs}" font-weight="${top ? 700 : 400}">${n ? (cnt[i] / n * 100).toFixed(W > 300 ? 1 : 0) + ' %' : ''}</text>`;
+        svg += `<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle" fill="#93a6c0" font-size="${fs}">${s.label.replace(' °C', '°')}</text>`;
+    });
+    return svg + '</svg>';
+}
+function histogram(key, n) {
+    const secs = SECTORS[key], T = total(key), cnt = secs.map(() => 0);
+    for (let i = 0; i < n; i++) cnt[secs.indexOf(pick(secs, T))]++;
+    const mode = secs[cnt.indexOf(Math.max(...cnt))].label;
+    return `<div><h4>${NAMES[key]} – am häufigsten: ${mode}</h4>${histSvg(key, cnt, 600, 190)}</div>`;
+}
+function simulate() {
+    const n = 10000;
+    $('hist').innerHTML = histogram('ohne', n) + histogram('heute', n) + histogram('mit', n) +
+        `<p class="note">${n.toLocaleString('de-CH')} Drehungen pro Rad. Die höchsten Säulen gehören zu den grössten Sektoren. Die Verteilung zeigt, wie unsicher die Prognose ist.</p>`;
+}
 
-                    {/* Drehen Button */}
-                    <div className="button-container">
-                        <button
-                            onClick={spinWheel}
-                            disabled={isSpinning}
-                            className={`spin-button ${isSpinning ? 'disabled' : 'active'}`}
-                        >
-                            <PlayIcon />
-                            {isSpinning ? 'Dreht...' : 'Rad drehen!'}
-                        </button>
-                    </div>
-
-                    {/* Ergebnis - feste Höhe */}
-                    <div className="result-container">
-                        {result ? (
-                            <div className="result-box" style={{ backgroundColor: result.color + '20' }}>
-                                <p className="result-label">Ergebnis:</p>
-                                <p className="result-value" style={{ color: result.color }}>
-                                    {result.label}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="placeholder-text">
-                                Drehe das Rad für ein Ergebnis
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="info-text">
-                        <p>Temperaturanstieg bis 2100 basierend auf verschiedenen Klimaszenarien</p>
-                    </div>
-                </div>
-            );
-        };
-
-        // Render App
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Gluecksrad />);
-    </script>
+$('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setScenario(b.dataset.s); });
+$('spin').addEventListener('click', spin);
+$('histToggle').addEventListener('change', e => { store.show = e.target.checked; save(); renderLive(); });
+$('reset').addEventListener('click', () => { store.cnt = { ohne: [], heute: [], mit: [] }; save(); renderLive(); });
+$('simulate').addEventListener('click', simulate);
+$('openSettings').addEventListener('click', () => $('dlg').showModal());
+$('closeSettings').addEventListener('click', () => $('dlg').close());
+$('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
+drawWheel();
+</script>
 </body>
 </html>
