@@ -137,7 +137,7 @@ def card_facts(m):
         'tags': ' · '.join(CATS[t]['label'] for t in TAGS.get(m['id'], [m['cat']])),
         'klima': klima, 'strom': strom, 'kreis': LV.get(fx.get('kreis')),
         'where': ('weniger CO₂: ' + ', '.join(where)) if where else ('keine direkte Wirkung' if not clim else 'mehr CO₂ im Inland'),
-        'cost': ('Einnahmen +' + '●' * -m['cost']) if m['cost'] < 0 else ('Kosten ' + '●' * m['cost']),
+        'cost': ('Einnahmen +' + '🪙' * -m['cost']) if m['cost'] < 0 else ('Kosten ' + '🪙' * m['cost']),
         'acc': '🙂 beliebt' if m['acc'] > 0 else '🙁 umstritten' if m['acc'] < 0 else '😐 neutral',
         'hints': hints,
     }
@@ -184,7 +184,7 @@ def run(p, text, size=8, bold=False, color=None, fill=None):
                 continue
             r = p.add_run(part)
         else:
-            png = TWEMOJI / f'{ord(part):x}.png'
+            png = TWEMOJI / ('1fa99-silber.png' if part == '\U0001FA99' else f'{ord(part):x}.png')   # Münze silbern
             if not png.exists():
                 r = p.add_run(part)
             else:
@@ -259,7 +259,7 @@ run(rules, 'Seestadt 2045 – Hybridspiel mit Karten', 20, True)
 steps = [
     ('Vorbereitung', 'Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.'),
     ('Vorschlagen', 'Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.'),
-    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget (●, siehe Beamer) nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
+    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget (🪙, siehe Beamer) nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
     ('Beschliessen', 'Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.'),
     ('Auswerten', 'Ereignis und Drehmeter gemeinsam anschauen. Beschlossene Karten offen in die Mitte legen.'),
 ]
