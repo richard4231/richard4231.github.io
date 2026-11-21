@@ -95,7 +95,7 @@
   .hov > .hov-body { display: none; }
   .hov:hover > .hov-body, .hov:focus > .hov-body, .hov:focus-within > .hov-body { display: block; }
   .hov { cursor: help; }
-  img.tw.coin { filter: grayscale(1) contrast(1.3) brightness(.92); }   /* Silbermünze */
+  img.tw.coin { filter: grayscale(1) contrast(1.35) brightness(.72); }   /* Silbermünze */
   img.tw { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin: 0 .04em; }
   .flash-up { animation: flashup 1.7s ease-out 1; }
   .flash-down { animation: flashdown 1.7s ease-out 1; }
@@ -1201,7 +1201,7 @@ const HYBRID_RULES = () => `
   <ol>
     <li><b>Vorbereitung:</b> Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.</li>
     <li><b>Vorschlagen:</b> Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.</li>
-    <li><b>Verhandeln:</b> Alle Beschlüsse zusammen dürfen das Budget (🪙, siehe Beamer) nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens ${CFG.picks} Beschlüsse, bei Gegenwind ${CFG.picks - 1}. Tauschen und Passen sind erlaubt.</li>
+    <li><b>Verhandeln:</b> Alle Beschlüsse zusammen dürfen das Budget nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens ${CFG.picks} Beschlüsse, bei Gegenwind ${CFG.picks - 1}. Tauschen und Passen sind erlaubt.</li>
     <li><b>Beschliessen:</b> Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.</li>
     <li><b>Auswerten:</b> Ereignis und Drehmeter gemeinsam anschauen. Beschlossene Karten offen in die Mitte legen.</li>
   </ol>

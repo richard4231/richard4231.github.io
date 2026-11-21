@@ -259,7 +259,7 @@ run(rules, 'Seestadt 2045 – Hybridspiel mit Karten', 20, True)
 steps = [
     ('Vorbereitung', 'Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.'),
     ('Vorschlagen', 'Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.'),
-    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget (🪙, siehe Beamer) nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
+    ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
     ('Beschliessen', 'Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.'),
     ('Auswerten', 'Ereignis und Drehmeter gemeinsam anschauen. Beschlossene Karten offen in die Mitte legen.'),
 ]
