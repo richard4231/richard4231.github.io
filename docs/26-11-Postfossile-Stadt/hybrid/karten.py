@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Aktionskarten für das Hybridspiel «Seestadt 2045» (einfache Version) als Word-Datei.
+"""Aktionskarten für das Hybridspiel «Seestadt 2045»  als Word-Datei.
 Inspiriert durch Postfossil Cities. Anders als im Vorbild beruhen die Annahmen nicht auf wissenschaftlich fundierten Werten, sondern sind grobe Schätzungen.
 
-Liest die Massnahmen direkt aus einfach.html, damit Karten und Spiel immer übereinstimmen.
+Liest die Massnahmen direkt aus index.html, damit Karten und Spiel immer übereinstimmen.
 Die Texte lassen sich danach in Word bearbeiten.
 
     pip install python-docx
-    python3 karten.py                      # liest ../einfach.html, schreibt Aktionskarten.docx
-    python3 karten.py pfad/einfach.html ausgabe.docx
+    python3 karten.py                      # liest ../index.html, schreibt Aktionskarten.docx
+    python3 karten.py pfad/index.html ausgabe.docx
 
 Die Hinweise (Kombinationen, Überschneidungen, Klimabonus) folgen denselben Regeln wie
-cardFacts() in einfach.html. Wer dort Regeln ändert, passt card_facts() hier mit an.
+cardFacts() in index.html. Wer dort Regeln ändert, passt card_facts() hier mit an.
 """
 import re
 import sys
@@ -24,7 +24,7 @@ from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
 HERE = Path(__file__).resolve().parent
-SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE.parent / 'einfach.html'
+SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE.parent / 'index.html'
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE / 'Aktionskarten.docx'
 
 # ---------------------------------------------------------------- JS-Daten lesen
@@ -257,7 +257,7 @@ picks = CFG['picks']
 rules = doc.add_paragraph(); rules.paragraph_format.left_indent = Mm(12)
 run(rules, 'Seestadt 2045 – Hybridspiel mit Karten', 20, True)
 steps = [
-    ('Vorbereitung', 'Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet die einfache Version am Beamer.'),
+    ('Vorbereitung', 'Karten ausschneiden, mischen und an vier Gruppen verteilen. Die Spielleitung startet das Spiel am Beamer.'),
     ('Vorschlagen', 'Pro Legislatur wählt jede Gruppe höchstens eine Karte und stellt sie den anderen vor.'),
     ('Verhandeln', f'Alle Beschlüsse zusammen dürfen das Budget nicht übersteigen. Abgaben bringen Geld, sind aber unbeliebt. Höchstens {picks} Beschlüsse, bei Gegenwind {picks - 1}. Tauschen und Passen sind erlaubt.'),
     ('Beschliessen', 'Karten der Spielleitung geben. Sie tippt die Nummern ins Suchfeld (z. B. «10 15 24 36») und drückt Enter.'),
